@@ -714,7 +714,7 @@ function defaults(){
     mood:{}, notes:{}, weight:{},
     focus:0,
     profile:{ id:uid(), name:'Moi', avatar:'💪' },
-    friends:[],
+    friends:[], pendingDrop:[], syncAt:0,
     notified:{},
     seeded:false
   };
@@ -731,6 +731,7 @@ function load(){
     for(var k in d){ if(!(k in o)) o[k]=d[k]; }
     if(!Array.isArray(o.habits))  o.habits  = [];
     if(!Array.isArray(o.friends)) o.friends = [];
+    if(!Array.isArray(o.pendingDrop)) o.pendingDrop = [];
     if(!o.log     || typeof o.log!=='object')     o.log={};
     if(!o.mood    || typeof o.mood!=='object')    o.mood={};
     if(!o.notes   || typeof o.notes!=='object')   o.notes={};
@@ -1455,6 +1456,74 @@ function periodScores(){
     xp:    totalXP()
   };
 }
+/* ========================================================================= */
+/*            CLASSEMENT PARTAGÉ  (seule partie qui sort du téléphone)        */
+/* ========================================================================= */
+/* Ce qui part : blaze, avatar, points du jour/semaine/mois et XP. Rien d'autre.
+   Les habitudes, les notes, le poids et le journal ne quittent pas l'appareil. */
+var API='/api/board';
+var netOff=false;            /* pas de base branchée, ou fichier ouvert en local */
+var syncing=false, syncFail=0;
+
+function netReady(){ return !netOff && (location.protocol==='http:'||location.protocol==='https:'); }
+function api(payload){
+  if(!netReady()) return Promise.reject(new Error('off'));
+  return fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify(payload)})
+    .then(function(r){
+      if(r.status===501){ netOff=true; throw new Error('no_store'); }   /* aucune base : on arrête d'essayer */
+      if(!r.ok) throw new Error('http '+r.status);
+      return r.json();
+    });
+}
+function wireMe(){
+  var sc=periodScores(), p=state.profile;
+  return {id:p.id, name:p.name, avatar:p.avatar,
+          day:sc.day, dayK:sc.dayK, week:sc.week, weekK:sc.weekK,
+          month:sc.month, monthK:sc.monthK, xp:sc.xp, at:today(), ts:Date.now()};
+}
+/* On complète, on n'écrase jamais : un ami connu localement reste si le serveur
+   ne le renvoie pas (hors ligne, base vide), et un nouveau venu s'ajoute seul. */
+function mergeFriends(list){
+  var changed=false, mine=state.profile.id;
+  (list||[]).forEach(function(f){
+    if(!f || !f.id || f.id===mine) return;
+    if(state.pendingDrop.indexOf(f.id)>-1) return;    /* retrait pas encore parti */
+    var found=null;
+    for(var i=0;i<state.friends.length;i++) if(state.friends[i].id===f.id) found=state.friends[i];
+    if(found && (+f.ts||0) < (+found.ts||0)) return;  /* fiche du serveur plus vieille : on garde la nôtre */
+    if(found){
+      if(found.name!==f.name||found.avatar!==f.avatar||found.day!==f.day||
+         found.week!==f.week||found.month!==f.month||found.xp!==f.xp) changed=true;
+      found.name=f.name; found.avatar=f.avatar; found.at=f.at||found.at; found.ts=+f.ts||found.ts||0;
+      found.day=f.day; found.dayK=f.dayK; found.week=f.week; found.weekK=f.weekK;
+      found.month=f.month; found.monthK=f.monthK; found.xp=f.xp;
+    }else{
+      state.friends.push(f); changed=true;
+    }
+  });
+  return changed;
+}
+function syncNow(force){
+  if(syncing || !netReady()) return Promise.resolve(false);
+  if(!force && Date.now()-(state.syncAt||0) < 25000) return Promise.resolve(false);
+  syncing=true;
+  return api({action:'sync', me:wireMe(), drop:state.pendingDrop.slice(0,20)})
+    .then(function(o){
+      syncing=false; syncFail=0; state.syncAt=Date.now();
+      (o.dropped||[]).forEach(function(id){
+        var i=state.pendingDrop.indexOf(id); if(i>-1) state.pendingDrop.splice(i,1);
+      });
+      var changed=mergeFriends(o.friends);
+      save();
+      if(changed && state.tab==='profil' && !coachOn) render();
+      return changed;
+    })
+    .catch(function(){ syncing=false; syncFail++; return false; });
+}
+var syncT=null;
+function syncLater(){ clearTimeout(syncT); syncT=setTimeout(function(){ syncNow(false); },4000); }
+
 function b64e(s){ return btoa(unescape(encodeURIComponent(s))); }
 function b64d(s){ return decodeURIComponent(escape(atob(s))); }
 function myCode(){
@@ -1462,7 +1531,7 @@ function myCode(){
   return b64e(JSON.stringify({
     i:p.id, n:p.name, a:p.avatar,
     d:[s.day,s.dayK], w:[s.week,s.weekK], m:[s.month,s.monthK],
-    x:s.xp, t:today()
+    x:s.xp, t:today(), s:Date.now()
   }));
 }
 function addFriend(code){
@@ -1476,12 +1545,18 @@ function addFriend(code){
           day:+(o.d&&o.d[0])||0,  dayK:(o.d&&o.d[1])||'',
           week:+(o.w&&o.w[0])||0, weekK:(o.w&&o.w[1])||'',
           month:+(o.m&&o.m[0])||0,monthK:(o.m&&o.m[1])||'',
-          xp:+o.x||0, at:o.t||today() };
+          xp:+o.x||0, at:o.t||today(), ts:+o.s||Date.now() };
   var idx=-1;
   for(var i=0;i<state.friends.length;i++) if(state.friends[i].id===f.id) idx=i;
   if(idx>-1){ state.friends[idx]=f; toast(f.name+' mis à jour','🔄'); }
   else { state.friends.push(f); toast(f.name+' ajouté au classement','🤝'); }
+  var back=state.pendingDrop.indexOf(f.id);
+  if(back>-1) state.pendingDrop.splice(back,1);      /* on l'avait retiré : il revient */
   save(); buzz(30); render();
+  /* le lien est posé dans les deux sens : lui n'aura rien à coller pour te voir */
+  api({action:'link', me:state.profile.id, target:f.id})
+    .then(function(){ toast('Il te verra apparaître de son côté','🔗'); return syncNow(true); })
+    .catch(function(){});
 }
 function ageTxt(k){
   if(!k) return '';
@@ -1512,6 +1587,14 @@ function leaderboard(){
       (r.me?'':'<button class="del" data-act="unfriend" data-id="'+r.id+'" aria-label="Retirer">'+ic('trash')+'</button>')+
     '</div>';
   }).join('');
+}
+function syncLabel(){
+  if(location.protocol==='file:') return 'Fichier local : classement à la main';
+  if(netOff)   return 'Classement partagé non branché';
+  if(syncFail) return 'Serveur injoignable — réessai plus tard';
+  if(!state.syncAt) return 'Pas encore synchronisé';
+  var m=Math.round((Date.now()-state.syncAt)/60000);
+  return m<1 ? 'Synchronisé à l\'instant' : 'Synchronisé il y a '+m+' min';
 }
 function viewProfil(){
   var s=periodScores(), b=badgeState(), r=rankOf(b.xp), p=state.profile;
@@ -1554,7 +1637,10 @@ function viewProfil(){
       '<button class="'+(lbTab==='week'?'on':'')+'" data-act="lb" data-p="week">Semaine</button>'+
       '<button class="'+(lbTab==='month'?'on':'')+'" data-act="lb" data-p="month">Mois</button>'+
     '</div>'+ leaderboard() +
-    '<div class="small muted center" style="margin-top:10px">Les scores d\'un ami ne comptent que si son code date de la même période.</div>'+
+    '<div class="row" style="margin-top:12px;justify-content:space-between">'+
+      '<span class="small muted">'+esc(syncLabel())+'</span>'+
+      '<button class="lnk" data-act="resync">Rafraîchir</button>'+
+    '</div>'+
   '</section>';
 
   h+='<div class="sec"><h2>Amis</h2></div>';
@@ -1563,7 +1649,9 @@ function viewProfil(){
     '<div class="field" style="margin-top:12px"><label>Ajouter / mettre à jour un ami</label>'+
       '<textarea id="fcode" rows="3" placeholder="Colle ici le code de ton pote…"></textarea></div>'+
     '<button class="btn wide" data-act="addfriend">'+ic('plus')+' Ajouter au classement</button>'+
-    '<div class="small muted center" style="margin-top:9px">Tout est local : vous vous échangez vos codes à la main (SMS, WhatsApp…).</div>'+
+    '<div class="small muted center" style="margin-top:9px">'+
+      'Un seul des deux a besoin de coller le code : dès que ton pote ajoute le tien, '+
+      'tu le vois apparaître ici tout seul.</div>'+
   '</section>';
 
   h+='<div class="sec"><h2>Aide</h2></div>';
@@ -1599,7 +1687,15 @@ function viewProfil(){
     '</div></details>';
   h+='</div>';
   h+='<button class="btn wide" data-act="retuto" style="margin-top:4px">'+ic('cap')+' Revoir le tutoriel</button>';
-  h+='<div class="center" style="margin:20px 0 6px"><div class="small muted">Tout est stocké sur ton téléphone.</div>'+
+  h+='<details>'+sum('profile','Ce qui sort de ton téléphone')+'<div class="dc">'+
+    'Une seule chose : le classement. Partent en ligne ton <b>blaze</b>, ton <b>avatar</b>, '+
+    'tes <b>points</b> du jour, de la semaine et du mois, et ton <b>XP</b>. C\'est tout.<br><br>'+
+    'Ne sortent jamais : tes habitudes et leurs étapes, tes notes de journal, ton poids, '+
+    'tes humeurs, ton historique. Ils restent dans le stockage de ce téléphone.<br><br>'+
+    'Il n\'y a ni compte ni mot de passe : ton identifiant est un tirage au hasard et fait '+
+    'office de clé. Ne publie pas ton code en public, donne-le à tes potes.'+
+    '</div></details>';
+  h+='<div class="center" style="margin:20px 0 6px"><div class="small muted">Habitudes, notes et poids restent sur ton téléphone.</div>'+
      '<div class="ver" style="margin-top:5px">CADENCE · '+esc(BUILD)+'</div></div>';
   return h;
 }
@@ -1976,7 +2072,9 @@ document.addEventListener('click', function(ev){
   if(a==='tab'){
     var nt=el.getAttribute('data-tab');
     if(locked(nt)){ buzz([15,40,15]); toast('Valide d\'abord tes tâches du jour','🔒'); return; }
-    state.tab=nt; pendingDel=null; save(); render(); toTop(); return;
+    state.tab=nt; pendingDel=null; save(); render(); toTop();
+    if(nt==='profil') syncNow(true);      /* on arrive sur le classement : on le rafraîchit */
+    return;
   }
   if(a==='ptoggle'){
     var pk=today();
@@ -2017,7 +2115,7 @@ document.addEventListener('click', function(ev){
     var was=isDone(key,h.id);
     setDone(key,h,!was);
     if(!was){ justDone=h.id; buzz([25,40,25]); toast('+'+(entry(key,h.id).pts)+' pts — '+h.name,'✅'); }
-    render(); return;
+    render(); syncLater(); return;
   }
   if(a==='del'){
     if(pendingDel===id){ clearTimeout(delT); pendingDel=null; delHabit(id); }
@@ -2038,7 +2136,7 @@ document.addEventListener('click', function(ev){
     if(!openHabit) return;
     var r=toggleStep(key,openHabit,+el.getAttribute('data-i'));
     buzz(r==='done'?[30,50,30]:15);
-    if(r==='done') toast('Tâche validée — +'+(entry(key,openHabit.id).pts)+' pts','🔥');
+    if(r==='done'){ toast('Tâche validée — +'+(entry(key,openHabit.id).pts)+' pts','🔥'); syncLater(); }
     renderSheet(); render(); return;
   }
   if(a==='timer'){ toggleTimer(el.getAttribute('data-key'), +el.getAttribute('data-i')); return; }
@@ -2092,6 +2190,15 @@ document.addEventListener('click', function(ev){
 
   /* --- profil --- */
   if(a==='lb'){ lbTab=el.getAttribute('data-p'); render(); return; }
+  if(a==='resync'){
+    if(!netReady()){ toast('Classement hors ligne — codes à la main','📴'); return; }
+    toast('Synchronisation…','🔄');
+    syncNow(true).then(function(ch){
+      render();
+      toast(syncFail?'Serveur injoignable':(ch?'Classement à jour':'Rien de nouveau'), syncFail?'⚠️':'✅');
+    });
+    return;
+  }
   if(a==='avatar'){
     var pn=$('#pname'); if(pn) state.profile.name=pn.value.trim()||'Moi';
     state.profile.avatar=el.getAttribute('data-a'); save(); buzz(20); render(); return;
@@ -2099,7 +2206,7 @@ document.addEventListener('click', function(ev){
   if(a==='psave'){
     var p2=$('#pname');
     state.profile.name=(p2?p2.value.trim():'')||'Moi';
-    save(); toast('Profil enregistré','👤'); render(); return;
+    save(); toast('Profil enregistré','👤'); render(); syncNow(true); return;
   }
   if(a==='badge'){
     var bid=el.getAttribute('data-b'), st2=badgeState();
@@ -2113,7 +2220,14 @@ document.addEventListener('click', function(ev){
   if(a==='unfriend'){
     if(!window.confirm('Retirer cet ami du classement ?')) return;
     state.friends=state.friends.filter(function(f){ return f.id!==id; });
-    save(); toast('Ami retiré','🗑️'); render(); return;
+    if(state.pendingDrop.indexOf(id)<0) state.pendingDrop.push(id);
+    save(); toast('Ami retiré','🗑️'); render();
+    /* sans effacer le lien, il reviendrait à la synchro suivante */
+    api({action:'unlink', me:state.profile.id, target:id})
+      .then(function(){
+        var i=state.pendingDrop.indexOf(id); if(i>-1) state.pendingDrop.splice(i,1); save();
+      }).catch(function(){});
+    return;
   }
   if(a==='ics'){ makeICS(); return; }
   if(a==='notifperm'){ askNotif(); return; }
@@ -2167,7 +2281,7 @@ function toTop(){ try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ wi
 var TOUR=[
  /* ---------- partie 1 : poser sa journée ---------- */
  {tab:'jour', sel:null, t:'Bienvenue dans Cadence',
-  x:"Ton carnet de discipline. Tout reste sur ton téléphone, rien ne part sur internet. Six étapes, et tu sais tout faire."},
+  x:"Ton carnet de discipline. Tes habitudes, tes notes et ton poids restent sur ton téléphone ; seuls tes points partent en ligne, pour le classement entre potes. Six étapes, et tu sais tout faire."},
  {tab:'jour', sel:'#planlist|#planhead', t:'Chaque jour commence ici',
   x:"Tu choisis d'abord ce que tu fais aujourd'hui. Touche une tâche pour la retirer de ta journée — repos, imprévu, blessure : elle ne comptera pas contre toi."},
  {tab:'jour', sel:'#fab', t:'Ajoute ce que tu veux',
@@ -2178,7 +2292,7 @@ var TOUR=[
  {tab:'jour', sel:'.dayhead', t:'Ta journée',
   x:"L'anneau montre ton avancement, à côté tes points et ta meilleure série. Touche une tâche pour cocher ses étapes une par une, ou la coche pour la valider d'un coup : 10 points, +5 si tu es dans l'heure. Le bouton ⚡ lance le mode focus."},
  {tab:'jour', sel:'.tabs', t:'Le reste de l\'app',
-  x:"Stats : ta régularité mois par mois et tes records. Habitudes : réorganiser et modifier. Journal : humeur, note, poids. Profil : ton rang, tes badges, le classement entre potes et l'aide."}
+  x:"Stats : ta régularité mois par mois et tes records. Habitudes : réorganiser et modifier. Journal : humeur, note, poids. Profil : ton rang, tes badges, et le classement — envoie ton code à un pote, dès qu'il l'ajoute vous apparaissez chacun chez l'autre."}
 ];
 var PART1=4;                      /* étapes 0..3 : avant la validation du jour */
 var coachOn=false, coachI=0, coachTo=0;
@@ -2312,6 +2426,8 @@ function boot(){
   render();
   maybeTour();
 
+  syncNow(true);   /* on récupère ceux qui t'ont ajouté depuis la dernière fois */
+
   /* rappels : toutes les 20 s tant que l'app est ouverte */
   setTimeout(checkReminders, 1500);
   setInterval(checkReminders, 20000);
@@ -2326,7 +2442,7 @@ function boot(){
     if(document.visibilityState==='visible'){
       var t=today();
       if(t!==lastDay){ lastDay=t; statsMonth=null; }
-      render(); checkReminders();
+      render(); checkReminders(); syncNow(false);
     }
   });
 }
