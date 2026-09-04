@@ -627,6 +627,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
 var BUILD = 'v3 · 2026-09-04';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var TUTO_V = 3;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
   "La discipline bat la motivation.",
@@ -707,7 +708,7 @@ function defaults(){
     v:1, theme:'dark', tab:'jour',
     planned:'',   /* date de la dernière journée validée : verrouille le reste tant qu'elle diffère d'aujourd'hui */
     off:{},       /* 'YYYY-MM-DD' -> [ids retirés de la journée]                                                 */
-    tutoSeen:false, tutoStep:0,
+    tutoSeen:false, tutoStep:0, tutoV:0,
     habits:[],
     log:{},      /* 'YYYY-MM-DD' -> { habitId:{done,steps[],pts,doneAt} }  */
     mood:{}, notes:{}, weight:{},
@@ -737,7 +738,7 @@ function load(){
     if(!o.notified|| typeof o.notified!=='object')o.notified={};
     if(!o.off     || typeof o.off!=='object')     o.off={};
     if(typeof o.planned!=='string') o.planned='';
-    o.tutoStep=+o.tutoStep||0;
+    o.tutoStep=+o.tutoStep||0; o.tutoV=+o.tutoV||0;
     if(!o.profile || !o.profile.id) o.profile = d.profile;
     o.focus = +o.focus || 0;
     state = o;
@@ -2125,7 +2126,7 @@ document.addEventListener('click', function(ev){
   if(a==='cprev'){ coachPrev(); return; }
   if(a==='cskip'){ closeTour(true); toast('Tuto passé — tu peux le revoir dans Profil › Aide','👍'); return; }
   if(a==='retuto'){
-    state.tutoSeen=false; state.tutoStep=dayReady()?PART1:0; save();
+    state.tutoSeen=false; state.tutoStep=0; save();
     maybeTour(); return;
   }
 
@@ -2166,40 +2167,20 @@ function toTop(){ try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ wi
 var TOUR=[
  /* ---------- partie 1 : poser sa journée ---------- */
  {tab:'jour', sel:null, t:'Bienvenue dans Cadence',
-  x:"Ton carnet de discipline. Tout reste sur ton téléphone, rien ne part sur internet. Trente secondes de visite et tu sais tout faire."},
- {tab:'jour', sel:'#planhead', t:'Chaque jour commence ici',
-  x:"Avant d'attaquer, tu poses ta journée. Tant qu'elle n'est pas validée, seuls cet écran et ton profil sont ouverts — le reste attend."},
- {tab:'jour', sel:'.pcard', t:'Garde-la ou retire-la',
-  x:"Touche une tâche pour la sortir de la journée : imprévu, blessure, repos. Une tâche retirée ne compte pas contre toi dans les stats."},
+  x:"Ton carnet de discipline. Tout reste sur ton téléphone, rien ne part sur internet. Six étapes, et tu sais tout faire."},
+ {tab:'jour', sel:'#planlist|#planhead', t:'Chaque jour commence ici',
+  x:"Tu choisis d'abord ce que tu fais aujourd'hui. Touche une tâche pour la retirer de ta journée — repos, imprévu, blessure : elle ne comptera pas contre toi."},
  {tab:'jour', sel:'#fab', t:'Ajoute ce que tu veux',
-  x:"Le + crée une tâche : nom, emoji, heure de rappel, répétition (⚡ juste aujourd'hui ou 🔁 récurrente avec les jours), étapes et couleur."},
+  x:"Le + crée une tâche : nom, emoji, heure de rappel, étapes et couleur. « Juste aujourd'hui » disparaît demain, « récurrente » revient les jours que tu choisis."},
  {tab:'jour', sel:'[data-act="planok"]', t:'Valide ta journée',
-  x:"Ce bouton ouvre Stats, Habitudes et Journal. Appuie dessus quand ta liste te va — la visite reprend juste après."},
+  x:"Ce bouton ouvre Stats, Habitudes et Journal, cadenassés tant que ta journée n'est pas posée. Appuie dessus : la visite reprend juste après."},
  /* ---------- partie 2 : l'app débloquée ---------- */
- {tab:'jour', sel:'.dayhead', t:'Ton tableau de bord',
-  x:"L'anneau, c'est le pourcentage de ta journée. À côté : les points gagnés et ta meilleure série. Le bouton ⚡ lance le mode focus, une tâche à la fois avec le chrono qui tourne."},
- {tab:'jour', sel:'.task', t:'Une tâche, une routine',
-  x:"Emoji, heure (rouge si elle est passée), avancement des étapes et série 🔥. Touche la carte : ses étapes se cochent une par une, et un chrono ⏱ apparaît sur celles écrites en « 5 min » ou « 20 min »."},
- {tab:'jour', sel:'.tright', t:'Valider, ou supprimer',
-  x:"La coche valide d'un coup : 10 points, et 5 de plus si tu la fais dans l'heure qui suit son horaire. La poubelle, elle, demande confirmation en deux taps."},
- {tab:'stats', sel:'.mgrid', t:'Ton mois en un coup d\'œil',
-  x:"Une case par jour : plus c'est vert, plus tu as tenu. Rouge pâle quand la journée a été ratée, éteint pour ce qui n'est pas encore arrivé. Les flèches ◀ ▶ changent de mois."},
- {tab:'stats', sel:'.bars', t:'Ta régularité',
-  x:"Les huit dernières semaines, la meilleure en vert. En dessous : le tableau de la semaine, tes records, et trois bilans écrits tout seuls (aujourd'hui, la semaine, le mois)."},
- {tab:'journal', sel:'.moods', t:'Le journal',
-  x:"Ton humeur en un tap, une note qui s'enregistre au fil de la frappe, ton poids avec la courbe des trente dernières pesées."},
- {tab:'profil', sel:'.rankcard', t:'Ton rang',
-  x:"Tous tes points s'additionnent en XP, et l'XP donne ton rang : Recrue, Soldat, Guerrier, Machine, Inarrêtable, Légende."},
- {tab:'profil', sel:'.badges', t:'Douze badges',
-  x:"Ils tombent tout seuls : première tâche, journée parfaite, série de trente, cinq cents tâches… Ils restent gris tant qu'ils ne sont pas gagnés."},
- {tab:'profil', sel:'.lbtabs', t:'Le classement entre potes',
-  x:"Copie ton code ami, envoie-le par SMS, colle le sien : vous vous comparez sur le jour, la semaine et le mois. Aucun compte à créer, aucun serveur."},
- {tab:'profil', sel:'#helpbox', t:'L\'aide, et les rappels',
-  x:"Installation sur l'écran d'accueil, explication franche des notifications (avec le fichier .ics pour être prévenu même app fermée), et la sauvegarde de tes données."},
- {sel:null, t:'À toi de jouer',
-  x:"Une tâche cochée, c'est un vote pour la personne que tu veux devenir. Reviens demain. Et le jour d'après."}
+ {tab:'jour', sel:'.dayhead', t:'Ta journée',
+  x:"L'anneau montre ton avancement, à côté tes points et ta meilleure série. Touche une tâche pour cocher ses étapes une par une, ou la coche pour la valider d'un coup : 10 points, +5 si tu es dans l'heure. Le bouton ⚡ lance le mode focus."},
+ {tab:'jour', sel:'.tabs', t:'Le reste de l\'app',
+  x:"Stats : ta régularité mois par mois et tes records. Habitudes : réorganiser et modifier. Journal : humeur, note, poids. Profil : ton rang, tes badges, le classement entre potes et l'aide."}
 ];
-var PART1=5;                      /* étapes 0..4 : avant la validation du jour */
+var PART1=4;                      /* étapes 0..3 : avant la validation du jour */
 var coachOn=false, coachI=0, coachTo=0;
 
 function startTour(from,to){
@@ -2211,19 +2192,32 @@ function closeTour(done){
   coachOn=false;
   $('#coach').classList.remove('on');
   state.tutoStep=coachI;
-  if(done){ state.tutoSeen=true; state.tutoStep=TOUR.length; state.tab='jour'; }
+  if(done){ state.tutoSeen=true; state.tutoV=TUTO_V; state.tutoStep=TOUR.length; state.tab='jour'; }
   save(); render();
+}
+/* première cible présente parmi les sélecteurs séparés par | */
+function coachFind(sel){
+  if(!sel) return null;
+  var parts=sel.split('|');
+  for(var i=0;i<parts.length;i++){ var el=$(parts[i]); if(el) return el; }
+  return null;
+}
+/* un élément fixe (le +, la barre d'onglets) est déjà à l'écran : inutile de faire défiler */
+function isFixed(el){
+  for(var n=el; n && n!==document.body; n=n.parentElement){
+    if(getComputedStyle(n).position==='fixed') return true;
+  }
+  return false;
 }
 function coachShow(){
   var st=TOUR[coachI];
   if(!coachOn || !st){ closeTour(true); return; }
   if(st.tab && state.tab!==st.tab){ state.tab=st.tab; render(); }
-  var el = st.sel ? $(st.sel) : null;
+  var el = coachFind(st.sel);
   if(el){
     try{
-      /* un élément fixe (le +, la barre d'onglets) ne bouge pas ; les autres,
-         on les remonte juste sous l'en-tête pour dégager la place en dessous. */
-      if(getComputedStyle(el).position!=='fixed'){
+      /* on remonte la cible juste sous l'en-tête pour dégager la place à la bulle */
+      if(!isFixed(el)){
         window.scrollBy(0, el.getBoundingClientRect().top - ($('#topbar').offsetHeight+12));
       }
     }catch(e){}
@@ -2233,7 +2227,7 @@ function coachShow(){
 function coachPlace(st){
   if(!coachOn) return;
   var hole=$('#chole'), box=$('#cbox');
-  var el = st.sel ? $(st.sel) : null, r=null;
+  var el = coachFind(st.sel), r=null;
   if(el){
     r=el.getBoundingClientRect();
     if(r.width<2 || r.height<2 || r.bottom<0 || r.top>window.innerHeight) { el=null; r=null; }
@@ -2285,7 +2279,17 @@ function coachNext(){
 }
 function coachPrev(){ if(coachI>0){ coachI--; coachShow(); } }
 function maybeTour(){
+  /* Tutoriel jamais vu DANS CETTE VERSION : on repart du début, quel que soit l'état
+     précédent. Sans ça, un tutoStep resté bloqué au-delà du début (tuto interrompu,
+     données d'une version antérieure) empêchait le tutoriel de reparaître à jamais. */
+  if((state.tutoV||0) < TUTO_V){
+    state.tutoSeen=false; state.tutoStep=0; state.tutoV=TUTO_V; save();
+  }
+  if(state.tutoStep<0 || state.tutoStep>TOUR.length) state.tutoStep=0;   /* valeur aberrante */
   if(state.tutoSeen) return;
+  /* le tutoriel commence par le rituel du matin : si la journée est déjà validée,
+     on remet l'écran de choix devant, sinon les premières étapes n'ont plus de sujet. */
+  if(state.tutoStep===0 && dayReady()){ state.planned=''; render(); save(); }
   if(!dayReady()){
     if(state.tutoStep>=PART1) return;     /* partie 1 déjà vue : on attend la validation du jour */
     startTour(state.tutoStep, PART1);
