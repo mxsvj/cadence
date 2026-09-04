@@ -347,6 +347,53 @@ details .dc li{margin-bottom:5px}
 .fxact{display:flex;gap:10px;margin-top:16px}
 .fxact .btn{flex:1;padding:15px}
 
+/* ============ écran « choisis ta journée » ============ */
+.pcard{display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:9px;position:relative;overflow:hidden}
+.pcard:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc);opacity:.9}
+.pchk{width:26px;height:26px;flex:0 0 26px;border-radius:9px;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;transition:all .2s}
+.pcard.on .pchk{background:var(--grn);border-color:var(--grn);color:#08130D}
+.pcard.off{opacity:.42}
+.pcard.off:before{background:var(--mut2)}
+.planbar{position:sticky;bottom:calc(env(safe-area-inset-bottom) + 76px);z-index:20;margin-top:16px;
+  padding:12px 0 4px;background:linear-gradient(180deg,transparent,var(--bg) 42%)}
+.lnk{font-size:12.5px;color:var(--mut);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.tab.lock{opacity:.34}
+.tab.lock i{filter:grayscale(1)}
+
+/* ============ tutoriel (projecteur) ============ */
+#coach{position:fixed;inset:0;z-index:88;display:none}
+#coach.on{display:block}
+#chole{position:fixed;left:50%;top:50%;width:0;height:0;border-radius:18px;
+  border:2px solid var(--acc);pointer-events:none;
+  box-shadow:0 0 0 9999px rgba(9,7,6,.80), 0 0 22px rgba(255,77,54,.35);
+  transition:left .36s cubic-bezier(.3,1.05,.4,1),top .36s cubic-bezier(.3,1.05,.4,1),
+             width .36s cubic-bezier(.3,1.05,.4,1),height .36s cubic-bezier(.3,1.05,.4,1)}
+#chole.none{border-color:transparent;box-shadow:0 0 0 9999px rgba(9,7,6,.88)}
+html[data-theme="light"] #chole{box-shadow:0 0 0 9999px rgba(28,18,12,.72), 0 0 22px rgba(255,77,54,.3)}
+html[data-theme="light"] #chole.none{box-shadow:0 0 0 9999px rgba(28,18,12,.8)}
+#cbox{position:fixed;left:16px;right:16px;max-width:calc(var(--maxw) - 32px);margin:0 auto;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--sh2);
+  padding:16px;animation:pop .26s ease both}
+#cbox .cstep{font-size:10.5px;font-weight:800;letter-spacing:.14em;color:var(--acc);text-transform:uppercase}
+#cbox h3{font-size:20px;margin:6px 0 7px}
+#cbox p{margin:0;font-size:13.5px;color:var(--mut);line-height:1.58}
+#cbox .cnav{display:flex;gap:8px;align-items:center;margin-top:14px}
+#cbox .cnav .skip{margin-right:auto;font-size:12px;color:var(--mut2);font-weight:700;
+  text-decoration:underline;text-underline-offset:3px}
+#cbox .cnav .btn{padding:10px 15px}
+@media (max-height:660px){
+  #cbox{padding:13px 14px}
+  #cbox h3{font-size:18px;margin:5px 0 6px}
+  #cbox p{font-size:12.8px;line-height:1.5}
+  #cbox .cnav{margin-top:11px}
+  #cbox .cnav .btn{padding:9px 13px}
+}
+.cdots{display:flex;gap:4px;justify-content:center;margin-top:12px}
+.cdots i{width:5px;height:5px;border-radius:5px;background:var(--line);transition:all .25s}
+.cdots i.on{background:var(--acc);width:15px}
+
 /* ============ toast ============ */
 #toast{position:fixed;left:50%;transform:translateX(-50%) translateY(24px);z-index:99;
   bottom:calc(env(safe-area-inset-bottom) + 96px);max-width:calc(100% - 32px);
@@ -377,6 +424,7 @@ details .dc li{margin-bottom:5px}
 </div>
 
 <div id="focus"></div>
+<div id="coach" data-act="cnext"><div id="chole"></div><div id="cbox" data-act="cnop"></div></div>
 <div id="toast"></div>
 
 <script>
@@ -500,6 +548,9 @@ var BADGES = [
 function defaults(){
   return {
     v:1, theme:'dark', tab:'jour',
+    planned:'',   /* date de la dernière journée validée : verrouille le reste tant qu'elle diffère d'aujourd'hui */
+    off:{},       /* 'YYYY-MM-DD' -> [ids retirés de la journée]                                                 */
+    tutoSeen:false, tutoStep:0,
     habits:[],
     log:{},      /* 'YYYY-MM-DD' -> { habitId:{done,steps[],pts,doneAt} }  */
     mood:{}, notes:{}, weight:{},
@@ -527,6 +578,9 @@ function load(){
     if(!o.notes   || typeof o.notes!=='object')   o.notes={};
     if(!o.weight  || typeof o.weight!=='object')  o.weight={};
     if(!o.notified|| typeof o.notified!=='object')o.notified={};
+    if(!o.off     || typeof o.off!=='object')     o.off={};
+    if(typeof o.planned!=='string') o.planned='';
+    o.tutoStep=+o.tutoStep||0;
     if(!o.profile || !o.profile.id) o.profile = d.profile;
     o.focus = +o.focus || 0;
     state = o;
@@ -550,15 +604,23 @@ function seed(){
 }
 
 /* ------------------------------------------------------- logique habitudes */
+/* au calendrier : cette habitude tombe-t-elle ce jour-là ? */
 function scheduled(h,key){
   if(h.createdAt && key < h.createdAt) return false;
   if(h.type==='once') return h.date===key;
   return (h.days||[]).indexOf(fromKey(key).getDay()) > -1;
 }
-function habitsFor(key){
-  return state.habits.filter(function(h){ return scheduled(h,key); })
-    .sort(function(a,b){ return toMin(a.time)-toMin(b.time) || a.name.localeCompare(b.name); });
-}
+/* retirée à la main de cette journée-là */
+function isOff(key,id){ var a=state.off[key]; return !!(a && a.indexOf(id)>-1); }
+/* retenue pour la journée = au calendrier ET pas retirée */
+function planned(h,key){ return scheduled(h,key) && !isOff(key,h.id); }
+function byTime(a,b){ return toMin(a.time)-toMin(b.time) || a.name.localeCompare(b.name); }
+function scheduledFor(key){ return state.habits.filter(function(h){ return scheduled(h,key); }).sort(byTime); }
+function habitsFor(key){ return state.habits.filter(function(h){ return planned(h,key); }).sort(byTime); }
+/* la journée du jour a-t-elle été validée ? */
+function dayReady(){ return state.planned===today(); }
+/* tant qu'elle ne l'est pas : rien d'autre que Jour et Profil */
+function locked(tab){ return !dayReady() && tab!=='jour' && tab!=='profil'; }
 function habitById(id){
   for(var i=0;i<state.habits.length;i++) if(state.habits[i].id===id) return state.habits[i];
   return null;
@@ -667,7 +729,7 @@ function streakOf(h){
   while(guard++ < 1200){
     var key=dk(d);
     if(h.createdAt && key<h.createdAt) break;
-    if(scheduled(h,key)){
+    if(planned(h,key)){
       if(isDone(key,h.id)) s++;
       else if(key!==t) break;
     }
@@ -679,7 +741,7 @@ function bestStreakOf(h){
   var best=0,cur=0,d=fromKey(h.createdAt||firstDay()),end=nowD();
   while(d<=end){
     var key=dk(d);
-    if(scheduled(h,key)){
+    if(planned(h,key)){
       if(isDone(key,h.id)){ cur++; if(cur>best) best=cur; }
       else if(key!==today()) cur=0;
     }
@@ -778,8 +840,8 @@ var pendingDel=null, delT=null, statsMonth=null, lbTab='day';
 
 function renderTabs(){
   $('#tabs').innerHTML = TABS.map(function(t){
-    return '<button class="tab'+(state.tab===t[0]?' on':'')+'" data-act="tab" data-tab="'+t[0]+'">'+
-           '<i>'+t[1]+'</i>'+t[2]+'</button>';
+    return '<button class="tab'+(state.tab===t[0]?' on':'')+(locked(t[0])?' lock':'')+
+           '" data-act="tab" data-tab="'+t[0]+'">'+'<i>'+t[1]+'</i>'+t[2]+'</button>';
   }).join('');
 }
 function ring(pct,size){
@@ -810,14 +872,16 @@ function render(){
   document.documentElement.setAttribute('data-theme', state.theme);
   $('[data-act="theme"]').textContent = state.theme==='dark' ? '🌙' : '☀️';
   var mt=$('meta[name="theme-color"]'); if(mt) mt.setAttribute('content', state.theme==='dark'?'#14110F':'#FBF7F4');
+  if(locked(state.tab)) state.tab='jour';
   renderTabs();
   var v=$('#view');
-  if(state.tab==='jour')           v.innerHTML=viewJour();
+  if(state.tab==='jour')           v.innerHTML= dayReady() ? viewJour() : viewPlan();
   else if(state.tab==='stats')     v.innerHTML=viewStats();
   else if(state.tab==='habitudes') v.innerHTML=viewHabitudes();
   else if(state.tab==='journal'){  v.innerHTML=viewJournal(); bindJournal(); }
   else                             v.innerHTML=viewProfil();
   $('#fab').classList.toggle('hide', !(state.tab==='jour'||state.tab==='habitudes'));
+  $('#topbar [data-act="gofocus"]').classList.toggle('hide', !dayReady());
 }
 
 /* --------------------------------------------------------------- ONGLET JOUR */
@@ -841,6 +905,44 @@ function taskCard(h,key,done){
       '<button class="chk'+(done?' on':'')+'" data-act="toggle" data-id="'+h.id+'" aria-label="Valider">✓</button>'+
       '<button class="del'+(sure?' sure':'')+'" data-act="del" data-id="'+h.id+'" aria-label="Supprimer">'+(sure?'Sûr ?':'🗑️')+'</button>'+
     '</div></article>';
+}
+
+/* Écran d'ouverture de chaque journée : on choisit ce qu'on fait avant tout le reste. */
+function viewPlan(){
+  var key=today(), all=scheduledFor(key);
+  var kept=all.filter(function(x){ return !isOff(key,x.id); });
+  var h='';
+
+  h+='<section class="card pop" id="planhead" style="padding:16px 15px">'+
+     '<div class="date" style="font-size:11.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--acc)">'+
+       esc(frDate(nowD()))+'</div>'+
+     '<h1 style="font-size:26px;margin:4px 0 7px">Ta journée</h1>'+
+     '<p class="muted small" style="margin:0">Choisis ce que tu fais aujourd\'hui, puis valide. '+
+     'Stats, Habitudes et Journal s\'ouvrent une fois ta journée posée.</p>'+
+     '</section>';
+
+  h+='<div class="sec"><h2>Prévu aujourd\'hui</h2><span>'+kept.length+'/'+all.length+' retenue'+(kept.length>1?'s':'')+'</span></div>';
+  if(!all.length){
+    h+='<div class="card empty"><span class="e">🌱</span>Rien de prévu ce '+esc(DAYS[nowD().getDay()])+'.<br>'+
+       'Crée une tâche avec <b>+</b>, ou valide une journée de repos.</div>';
+  }else{
+    h+='<div id="planlist">'+all.map(function(x){
+      var on=!isOff(key,x.id);
+      return '<article class="card lift pcard'+(on?' on':' off')+'" data-act="ptoggle" data-id="'+x.id+'"'+
+        (x.color?' style="--acc:'+esc(x.color)+'"':'')+'>'+
+        '<span class="pchk">✓</span><span class="emo">'+esc(x.emoji||'⭐')+'</span>'+
+        '<div class="tmain"><div class="tname">'+esc(x.name)+'</div><div class="tmeta">'+
+          '<span>'+(x.time?esc(x.time)+' · ':'')+esc(schedLabel(x))+'</span>'+
+          ((x.steps||[]).length?'<span>'+x.steps.length+' étapes</span>':'')+
+        '</div></div></article>';
+    }).join('')+'</div>';
+  }
+  h+='<button class="btn wide" data-act="new">+ Ajouter une tâche</button>';
+  h+='<div class="planbar"><button class="btn pri wide" data-act="planok">'+
+     (kept.length ? 'Valider ma journée · '+kept.length+' tâche'+(kept.length>1?'s':'')
+                  : 'Valider une journée de repos')+'</button></div>';
+  h+='<div class="quote"><p>« '+esc(quoteOfDay())+' »</p><small>CADENCE · '+esc(frShort(nowD()))+'</small></div>';
+  return h;
 }
 
 function viewJour(){
@@ -871,6 +973,7 @@ function viewJour(){
     h+=done.map(function(x){ return taskCard(x,key,true); }).join('');
   }
 
+  h+='<button class="btn ghost wide sm" data-act="replan" style="margin-top:14px">✏️ Modifier ma journée</button>';
   h+='<div class="quote"><p>« '+esc(quoteOfDay())+' »</p><small>CADENCE · '+esc(frShort(nowD()))+'</small></div>';
   return h;
 }
@@ -984,7 +1087,7 @@ function weekTable(){
     var tds='';
     for(var i=0;i<7;i++){
       var key=dk(addDays(mon,i));
-      if(!scheduled(h,key))        tds+='<td class="na">·</td>';
+      if(!planned(h,key))          tds+='<td class="na">·</td>';
       else if(isDone(key,h.id))    tds+='<td class="yes">✓</td>';
       else if(key>=t)              tds+='<td class="na">◦</td>';
       else                         tds+='<td class="no">✕</td>';
@@ -1289,6 +1392,7 @@ function viewProfil(){
   '</section>';
 
   h+='<div class="sec"><h2>Aide</h2></div>';
+  h+='<div id="helpbox">';
   h+='<details><summary>📲 Installer sur iPhone</summary><div class="dc">'+
     '<ol><li>Ouvre cette page dans <b>Safari</b>.</li>'+
     '<li>Appuie sur <b>Partager</b> (le carré avec la flèche).</li>'+
@@ -1317,6 +1421,8 @@ function viewProfil(){
     'La somme de tous tes points, c\'est ton <b>XP</b>, et l\'XP donne ton rang :<br>'+
     RANKS.map(function(x){ return x.e+' '+x.n+' — '+x.xp+' XP'; }).join('<br>')+
     '</div></details>';
+  h+='</div>';
+  h+='<button class="btn wide" data-act="retuto" style="margin-top:4px">🎓 Revoir le tutoriel</button>';
   h+='<div class="center small muted" style="margin:18px 0 6px">CADENCE · tout est stocké sur ton téléphone</div>';
   return h;
 }
@@ -1491,6 +1597,7 @@ function focusList(){
   });
 }
 function focusOpen(){
+  if(!dayReady()){ toast('Valide d\'abord ta journée','🔒'); return; }
   if(!habitsFor(today()).length){ toast('Rien à faire aujourd\'hui','🌱'); return; }
   fxSkipped=[]; fxStart=Date.now();
   state.focus=(state.focus||0)+1; save();
@@ -1552,6 +1659,7 @@ function showBanner(h){
   showBanner.t=setTimeout(function(){ b.classList.add('hide'); },30000);
 }
 function checkReminders(){
+  if(!dayReady() || coachOn) return;   /* rien à rappeler tant que la journée n'est pas posée */
   var key=today(), now=toMin(nowHM());
   if(!state.notified[key]) state.notified[key]={};
   var hs=habitsFor(key);
@@ -1676,8 +1784,10 @@ function importData(){
 /* ======================================================================= */
 /* la note du journal est en saisie libre : on la range avant tout re-render */
 function flushNote(){
-  var ta=$('#note');
-  if(ta && state.tab==='journal'){ clearTimeout(noteT); state.notes[today()]=ta.value; save(); }
+  var ta=$('#note'); if(!ta || state.tab!=='journal') return;
+  var k=today();
+  if((state.notes[k]||'')===ta.value) return;
+  clearTimeout(noteT); state.notes[k]=ta.value; save();
 }
 document.addEventListener('click', function(ev){
   var el = ev.target.closest ? ev.target.closest('[data-act]') : null;
@@ -1686,7 +1796,38 @@ document.addEventListener('click', function(ev){
   var a=el.getAttribute('data-act'), id=el.getAttribute('data-id'), key=today();
 
   /* --- navigation --- */
-  if(a==='tab'){ state.tab=el.getAttribute('data-tab'); pendingDel=null; save(); render(); toTop(); return; }
+  if(a==='tab'){
+    var nt=el.getAttribute('data-tab');
+    if(locked(nt)){ buzz([15,40,15]); toast('Valide d\'abord tes tâches du jour','🔒'); return; }
+    state.tab=nt; pendingDel=null; save(); render(); toTop(); return;
+  }
+  if(a==='ptoggle'){
+    var pk=today();
+    if(!state.off[pk]) state.off[pk]=[];
+    var pi=state.off[pk].indexOf(id);
+    if(pi>-1){
+      state.off[pk].splice(pi,1);
+    }else{
+      state.off[pk].push(id);
+      /* retirée de la journée = pas faite aujourd'hui : on efface son résultat du jour,
+         sinon ses points resteraient comptés alors que la tâche n'apparaît plus. */
+      if(state.log[pk] && state.log[pk][id]){
+        var was=state.log[pk][id].done;
+        delete state.log[pk][id];
+        if(was) toast('Retirée de la journée — ses points sont annulés','↩︎');
+      }
+    }
+    save(); buzz(18); render(); return;
+  }
+  if(a==='planok'){
+    state.planned=today(); save(); buzz([30,50,30]);
+    var kept=habitsFor(today()).length;
+    toast(kept? 'Journée validée · '+kept+' tâche'+(kept>1?'s':'') : 'Journée de repos validée','🔓');
+    render(); toTop();
+    if(!state.tutoSeen) setTimeout(function(){ startTour(Math.max(state.tutoStep,PART1), TOUR.length); }, 480);
+    return;
+  }
+  if(a==='replan'){ state.planned=''; save(); render(); toTop(); return; }
   if(a==='theme'){ state.theme = state.theme==='dark'?'light':'dark'; save(); render(); return; }
   if(a==='gofocus'){ focusOpen(); return; }
   if(a==='bclose'){ $('#banner').classList.add('hide'); return; }
@@ -1802,6 +1943,16 @@ document.addEventListener('click', function(ev){
   if(a==='export'){ exportData(); return; }
   if(a==='import'){ importData(); return; }
 
+  /* --- tutoriel --- */
+  if(a==='cnop')  return;
+  if(a==='cnext'){ if(coachOn) coachNext(); return; }
+  if(a==='cprev'){ coachPrev(); return; }
+  if(a==='cskip'){ closeTour(true); toast('Tuto passé — tu peux le revoir dans Profil › Aide','👍'); return; }
+  if(a==='retuto'){
+    state.tutoSeen=false; state.tutoStep=dayReady()?PART1:0; save();
+    maybeTour(); return;
+  }
+
   /* --- focus --- */
   if(a==='fxclose'){ focusClose(); return; }
   if(a==='fxstep'){
@@ -1832,6 +1983,143 @@ document.addEventListener('keydown', function(ev){
 function toTop(){ try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ window.scrollTo(0,0); } }
 
 /* ======================================================================= */
+/*                        TUTORIEL (projecteur)                            */
+/* ======================================================================= */
+/* Un seul parcours, coupé en deux : les 5 premières étapes expliquent l'écran
+   de choix de la journée, les suivantes visitent l'app une fois débloquée.  */
+var TOUR=[
+ /* ---------- partie 1 : poser sa journée ---------- */
+ {tab:'jour', sel:null, t:'Bienvenue dans Cadence',
+  x:"Ton carnet de discipline. Tout reste sur ton téléphone, rien ne part sur internet. Trente secondes de visite et tu sais tout faire."},
+ {tab:'jour', sel:'#planhead', t:'Chaque jour commence ici',
+  x:"Avant d'attaquer, tu poses ta journée. Tant qu'elle n'est pas validée, seuls cet écran et ton profil sont ouverts — le reste attend."},
+ {tab:'jour', sel:'.pcard', t:'Garde-la ou retire-la',
+  x:"Touche une tâche pour la sortir de la journée : imprévu, blessure, repos. Une tâche retirée ne compte pas contre toi dans les stats."},
+ {tab:'jour', sel:'#fab', t:'Ajoute ce que tu veux',
+  x:"Le + crée une tâche : nom, emoji, heure de rappel, répétition (⚡ juste aujourd'hui ou 🔁 récurrente avec les jours), étapes et couleur."},
+ {tab:'jour', sel:'[data-act="planok"]', t:'Valide ta journée',
+  x:"Ce bouton ouvre Stats, Habitudes et Journal. Appuie dessus quand ta liste te va — la visite reprend juste après."},
+ /* ---------- partie 2 : l'app débloquée ---------- */
+ {tab:'jour', sel:'.dayhead', t:'Ton tableau de bord',
+  x:"L'anneau, c'est le pourcentage de ta journée. À côté : les points gagnés et ta meilleure série. Le bouton ⚡ lance le mode focus, une tâche à la fois avec le chrono qui tourne."},
+ {tab:'jour', sel:'.task', t:'Une tâche, une routine',
+  x:"Emoji, heure (rouge si elle est passée), avancement des étapes et série 🔥. Touche la carte : ses étapes se cochent une par une, et un chrono ⏱ apparaît sur celles écrites en « 5 min » ou « 20 min »."},
+ {tab:'jour', sel:'.tright', t:'Valider, ou supprimer',
+  x:"La coche valide d'un coup : 10 points, et 5 de plus si tu la fais dans l'heure qui suit son horaire. La poubelle, elle, demande confirmation en deux taps."},
+ {tab:'stats', sel:'.mgrid', t:'Ton mois en un coup d\'œil',
+  x:"Une case par jour : plus c'est vert, plus tu as tenu. Rouge pâle quand la journée a été ratée, éteint pour ce qui n'est pas encore arrivé. Les flèches ◀ ▶ changent de mois."},
+ {tab:'stats', sel:'.bars', t:'Ta régularité',
+  x:"Les huit dernières semaines, la meilleure en vert. En dessous : le tableau de la semaine, tes records, et trois bilans écrits tout seuls (aujourd'hui, la semaine, le mois)."},
+ {tab:'journal', sel:'.moods', t:'Le journal',
+  x:"Ton humeur en un tap, une note qui s'enregistre au fil de la frappe, ton poids avec la courbe des trente dernières pesées."},
+ {tab:'profil', sel:'.rankcard', t:'Ton rang',
+  x:"Tous tes points s'additionnent en XP, et l'XP donne ton rang : Recrue, Soldat, Guerrier, Machine, Inarrêtable, Légende."},
+ {tab:'profil', sel:'.badges', t:'Douze badges',
+  x:"Ils tombent tout seuls : première tâche, journée parfaite, série de trente, cinq cents tâches… Ils restent gris tant qu'ils ne sont pas gagnés."},
+ {tab:'profil', sel:'.lbtabs', t:'Le classement entre potes',
+  x:"Copie ton code ami, envoie-le par SMS, colle le sien : vous vous comparez sur le jour, la semaine et le mois. Aucun compte à créer, aucun serveur."},
+ {tab:'profil', sel:'#helpbox', t:'L\'aide, et les rappels',
+  x:"Installation sur l'écran d'accueil, explication franche des notifications (avec le fichier .ics pour être prévenu même app fermée), et la sauvegarde de tes données."},
+ {sel:null, t:'À toi de jouer',
+  x:"Une tâche cochée, c'est un vote pour la personne que tu veux devenir. Reviens demain. Et le jour d'après."}
+];
+var PART1=5;                      /* étapes 0..4 : avant la validation du jour */
+var coachOn=false, coachI=0, coachTo=0;
+
+function startTour(from,to){
+  coachOn=true; coachI=from; coachTo=to;
+  $('#coach').classList.add('on');
+  coachShow();
+}
+function closeTour(done){
+  coachOn=false;
+  $('#coach').classList.remove('on');
+  state.tutoStep=coachI;
+  if(done){ state.tutoSeen=true; state.tutoStep=TOUR.length; state.tab='jour'; }
+  save(); render();
+}
+function coachShow(){
+  var st=TOUR[coachI];
+  if(!coachOn || !st){ closeTour(true); return; }
+  if(st.tab && state.tab!==st.tab){ state.tab=st.tab; render(); }
+  var el = st.sel ? $(st.sel) : null;
+  if(el){
+    try{
+      /* un élément fixe (le +, la barre d'onglets) ne bouge pas ; les autres,
+         on les remonte juste sous l'en-tête pour dégager la place en dessous. */
+      if(getComputedStyle(el).position!=='fixed'){
+        window.scrollBy(0, el.getBoundingClientRect().top - ($('#topbar').offsetHeight+12));
+      }
+    }catch(e){}
+  }
+  setTimeout(function(){ coachPlace(st); },80);
+}
+function coachPlace(st){
+  if(!coachOn) return;
+  var hole=$('#chole'), box=$('#cbox');
+  var el = st.sel ? $(st.sel) : null, r=null;
+  if(el){
+    r=el.getBoundingClientRect();
+    if(r.width<2 || r.height<2 || r.bottom<0 || r.top>window.innerHeight) { el=null; r=null; }
+  }
+  if(r){
+    var pad = st.pad==null ? 8 : st.pad;
+    hole.className='';
+    hole.style.left  =(r.left-pad)+'px';
+    hole.style.top   =(r.top-pad)+'px';
+    hole.style.width =(r.width+pad*2)+'px';
+    hole.style.height=(r.height+pad*2)+'px';
+  }else{
+    hole.className='none';
+    hole.style.left='50%'; hole.style.top='50%'; hole.style.width='0px'; hole.style.height='0px';
+  }
+  var last = coachI===coachTo-1;
+  var partEnd = last && coachTo===PART1;      /* fin de la partie 1 : on rend la main */
+  box.innerHTML=
+    '<div class="cstep">Étape '+(coachI+1)+' sur '+TOUR.length+'</div>'+
+    '<h3>'+esc(TOUR[coachI].t)+'</h3><p>'+esc(TOUR[coachI].x)+'</p>'+
+    '<div class="cnav">'+
+      '<button class="skip" data-act="cskip">Passer le tuto</button>'+
+      (coachI>0 ? '<button class="btn sm" data-act="cprev">◀</button>' : '')+
+      '<button class="btn pri sm" data-act="cnext">'+
+        (partEnd ? "J'ai compris" : last ? "C'est parti 🔥" : 'Suivant ▶')+'</button>'+
+    '</div>'+
+    '<div class="cdots">'+TOUR.map(function(_,i){ return '<i class="'+(i===coachI?'on':'')+'"></i>'; }).join('')+'</div>';
+
+  /* la bulle prend le plus grand espace libre, et sa hauteur y est bornée :
+     elle ne recouvre jamais la zone éclairée, même sur un petit écran. */
+  var H=window.innerHeight, top;
+  if(!r){
+    box.style.maxHeight=(H-36)+'px';
+    top=Math.max(18,(H-box.offsetHeight)/2);
+  }else{
+    var below=H-r.bottom-14, above=r.top-14;
+    var under=below>=above;
+    box.style.maxHeight=Math.max(130,(under?below:above)-10)+'px';
+    var bh=box.offsetHeight;
+    top = under ? r.bottom+14 : Math.max(8, r.top-14-bh);
+  }
+  box.style.top=Math.max(8,Math.min(top,H-box.offsetHeight-8))+'px';
+}
+function coachNext(){
+  coachI++;
+  state.tutoStep=coachI; save();          /* on reprendra ici si l'app est fermée en route */
+  if(coachI>=coachTo) closeTour(coachTo>=TOUR.length);
+  else coachShow();
+}
+function coachPrev(){ if(coachI>0){ coachI--; coachShow(); } }
+function maybeTour(){
+  if(state.tutoSeen) return;
+  if(!dayReady()){
+    if(state.tutoStep>=PART1) return;     /* partie 1 déjà vue : on attend la validation du jour */
+    startTour(state.tutoStep, PART1);
+  }else{
+    startTour(Math.max(state.tutoStep,PART1), TOUR.length);
+  }
+}
+window.addEventListener('resize', function(){ if(coachOn) coachPlace(TOUR[coachI]); });
+
+/* ======================================================================= */
 /*                              DÉMARRAGE                                  */
 /* ======================================================================= */
 var lastDay=today();
@@ -1842,6 +2130,7 @@ function boot(){
   if(TABS.map(function(t){return t[0];}).indexOf(state.tab)<0) state.tab='jour';
   $('#banner').classList.add('hide');
   render();
+  maybeTour();
 
   /* rappels : toutes les 20 s tant que l'app est ouverte */
   setTimeout(checkReminders, 1500);
@@ -1850,7 +2139,7 @@ function boot(){
   /* changement de jour (les tâches « juste aujourd'hui » disparaissent) */
   setInterval(function(){
     var t=today();
-    if(t!==lastDay){ lastDay=t; statsMonth=null; render(); }
+    if(t!==lastDay){ lastDay=t; statsMonth=null; render(); }   /* planned devient caduc : retour au choix du jour */
   }, 30000);
 
   document.addEventListener('visibilitychange', function(){
