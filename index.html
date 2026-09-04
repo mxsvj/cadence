@@ -2282,12 +2282,12 @@ var TOUR=[
  /* ---------- partie 1 : poser sa journée ---------- */
  {tab:'jour', sel:null, t:'Bienvenue dans Cadence',
   x:"Ton carnet de discipline. Tes habitudes, tes notes et ton poids restent sur ton téléphone ; seuls tes points partent en ligne, pour le classement entre potes. Six étapes, et tu sais tout faire."},
- {tab:'jour', sel:'#planlist|#planhead', t:'Chaque jour commence ici',
+ {tab:'jour', sel:'#planlist|#planhead|.task|.dayhead', t:'Chaque jour commence ici',
   x:"Tu choisis d'abord ce que tu fais aujourd'hui. Touche une tâche pour la retirer de ta journée — repos, imprévu, blessure : elle ne comptera pas contre toi."},
  {tab:'jour', sel:'#fab', t:'Ajoute ce que tu veux',
   x:"Le + crée une tâche : nom, emoji, heure de rappel, étapes et couleur. « Juste aujourd'hui » disparaît demain, « récurrente » revient les jours que tu choisis."},
- {tab:'jour', sel:'[data-act="planok"]', t:'Valide ta journée',
-  x:"Ce bouton ouvre Stats, Habitudes et Journal, cadenassés tant que ta journée n'est pas posée. Appuie dessus : la visite reprend juste après."},
+ {tab:'jour', sel:'[data-act="planok"]|[data-act="replan"]', t:'Valide ta journée',
+  x:"Valider ouvre Stats, Habitudes et Journal, cadenassés tant que ta journée n'est pas posée. Et « Modifier ma journée » te ramène à ce choix quand tu veux."},
  /* ---------- partie 2 : l'app débloquée ---------- */
  {tab:'jour', sel:'.dayhead', t:'Ta journée',
   x:"L'anneau montre ton avancement, à côté tes points et ta meilleure série. Touche une tâche pour cocher ses étapes une par une, ou la coche pour la valider d'un coup : 10 points, +5 si tu es dans l'heure. Le bouton ⚡ lance le mode focus."},
@@ -2401,14 +2401,14 @@ function maybeTour(){
   }
   if(state.tutoStep<0 || state.tutoStep>TOUR.length) state.tutoStep=0;   /* valeur aberrante */
   if(state.tutoSeen) return;
-  /* le tutoriel commence par le rituel du matin : si la journée est déjà validée,
-     on remet l'écran de choix devant, sinon les premières étapes n'ont plus de sujet. */
-  if(state.tutoStep===0 && dayReady()){ state.planned=''; render(); save(); }
+  /* On ne touche JAMAIS à la journée validée pour faire de la place au tutoriel :
+     l'annuler reverrouillait Stats, Habitudes et Journal. Les étapes du choix du
+     jour ont des cibles de repli et restent lisibles depuis la journée en cours. */
   if(!dayReady()){
     if(state.tutoStep>=PART1) return;     /* partie 1 déjà vue : on attend la validation du jour */
-    startTour(state.tutoStep, PART1);
+    startTour(state.tutoStep, PART1);      /* coupé en deux : la validation reprend la suite */
   }else{
-    startTour(Math.max(state.tutoStep,PART1), TOUR.length);
+    startTour(state.tutoStep, TOUR.length); /* journée déjà posée : les 6 étapes d'affilée */
   }
 }
 window.addEventListener('resize', function(){ if(coachOn) coachPlace(TOUR[coachI]); });
