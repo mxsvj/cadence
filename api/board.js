@@ -135,12 +135,38 @@ function doUnlink(res, body){
     .then(function(){ send(res, 200, { ok: true }); });
 }
 
+/* Vérification de bout en bout : on écrit une clé, on la relit, on l'efface.
+   Répond franchement — présence des identifiants ET base réellement joignable. */
+function doCheck(res){
+  if(!RURL || !RTOKEN){
+    return send(res, 200, { ok:true, version:1, store:false, redis:'absente',
+      message:'Aucune base branchée. Vercel → Storage → Redis, puis redéployer.' });
+  }
+  var k = 'diag:' + Math.random().toString(36).slice(2, 10);
+  return redis([['SET', k, 'ok', 'EX', 30], ['GET', k], ['DEL', k], ['DBSIZE']])
+    .then(function(o){
+      var relu = o[1], ok = (relu === 'ok');
+      send(res, 200, { ok:true, version:1, store:true,
+        redis: ok ? 'ok' : 'reponse_inattendue',
+        cles: (typeof o[3] === 'number') ? o[3] : null,
+        message: ok ? 'Base joignable : ecriture, relecture et effacement reussis.'
+                    : 'La base repond mais pas ce qu on a ecrit.' });
+    })
+    .catch(function(e){
+      send(res, 200, { ok:true, version:1, store:true, redis:'injoignable',
+        detail: String(e && e.message || e).slice(0, 140),
+        message:'Identifiants presents mais la base ne repond pas.' });
+    });
+}
+
 /* ------------------------------------------------------------- entrée --- */
 module.exports = function(req, res){
   if(req.method === 'OPTIONS'){ res.statusCode = 204; return res.end(); }
 
-  /* sert aussi de vérification d'installation, à ouvrir dans un navigateur */
+  /* sert aussi de vérification d'installation, à ouvrir dans un navigateur.
+     ?check=1 va plus loin : il teste vraiment la base. */
   if(req.method === 'GET'){
+    if(/[?&]check=1/.test(req.url || '')) return doCheck(res);
     return send(res, 200, { ok: true, store: !!(RURL && RTOKEN), version: 1 });
   }
   if(req.method !== 'POST') return send(res, 405, { error: 'method' });

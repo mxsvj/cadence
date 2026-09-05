@@ -31,9 +31,15 @@ Pour activer le classement automatique :
 2. Vercel injecte les identifiants tout seul. La fonction accepte les deux
    nommages courants : `KV_REST_API_URL` / `KV_REST_API_TOKEN`, ou
    `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`.
-3. Redéployer, puis ouvrir `/api/board` dans un navigateur. La réponse doit être
-   `{"ok":true,"store":true,"version":1}`. Si `store` vaut `false`, les variables
-   ne sont pas arrivées jusqu'au déploiement.
+3. Redéployer, puis ouvrir **`/api/board?check=1`** dans un navigateur. Cette
+   adresse ne se contente pas de lire la configuration : elle écrit une clé dans
+   la base, la relit, l'efface, et rapporte le résultat.
+   - `"redis":"ok"` — tout est en place, le classement se synchronise seul.
+   - `"redis":"absente"` — les variables ne sont pas arrivées au déploiement.
+   - `"redis":"injoignable"` — les identifiants sont là mais la base ne répond pas.
+
+   Le champ `cles` indique le nombre d'entrées dans la base : il augmente dès que
+   quelqu'un ouvre l'application.
 
 Dès lors, un seul des deux amis a besoin de coller un code : le lien est posé dans
 les deux sens, et chacun voit l'autre apparaître dans son classement.
