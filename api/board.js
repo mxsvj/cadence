@@ -135,12 +135,29 @@ function doUnlink(res, body){
     .then(function(){ send(res, 200, { ok: true }); });
 }
 
+/* Quelles variables liées à Redis ce déploiement voit-il ?
+   On ne renvoie que les NOMS : une valeur est un secret, un nom ne l'est pas. */
+function envNames(){
+  return Object.keys(process.env)
+    .filter(function(k){ return /^(KV_|UPSTASH_|REDIS_)/.test(k); })
+    .filter(function(k){ return String(process.env[k] || '').length > 0; })   /* une variable vide n'est pas branchée */
+    .sort();
+}
+
 /* Vérification de bout en bout : on écrit une clé, on la relit, on l'efface.
    Répond franchement — présence des identifiants ET base réellement joignable. */
 function doCheck(res){
+  var vars = envNames();
   if(!RURL || !RTOKEN){
+    /* Une base branchée en TCP seulement (REDIS_URL) ne suffit pas : cette
+       fonction parle à Redis par HTTP, il lui faut une base à API REST. */
+    var tcpOnly = vars.length > 0;
     return send(res, 200, { ok:true, version:1, store:false, redis:'absente',
-      message:'Aucune base branchée. Vercel → Storage → Redis, puis redéployer.' });
+      cause: tcpOnly ? 'sans_api_rest' : 'aucune_variable',
+      variables: vars,
+      message: tcpOnly
+        ? 'Une base est branchée mais elle ne donne pas d\'accès REST. Il faut une base compatible : Upstash Redis dans le Marketplace Vercel.'
+        : 'Aucune variable Redis dans ce déploiement. Relie la base au projet, puis redéploie.' });
   }
   var k = 'diag:' + Math.random().toString(36).slice(2, 10);
   return redis([['SET', k, 'ok', 'EX', 30], ['GET', k], ['DEL', k], ['DBSIZE']])
@@ -148,12 +165,14 @@ function doCheck(res){
       var relu = o[1], ok = (relu === 'ok');
       send(res, 200, { ok:true, version:1, store:true,
         redis: ok ? 'ok' : 'reponse_inattendue',
+        variables: vars,
         cles: (typeof o[3] === 'number') ? o[3] : null,
         message: ok ? 'Base joignable : ecriture, relecture et effacement reussis.'
                     : 'La base repond mais pas ce qu on a ecrit.' });
     })
     .catch(function(e){
       send(res, 200, { ok:true, version:1, store:true, redis:'injoignable',
+        variables: vars,
         detail: String(e && e.message || e).slice(0, 140),
         message:'Identifiants presents mais la base ne repond pas.' });
     });

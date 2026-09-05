@@ -2265,8 +2265,10 @@ document.addEventListener('click', function(ev){
         var ok = o && o.redis==='ok';
         var nb = (o && o.cles) || 0;
         diagMsg = ok ? 'Base connectée — le classement se synchronise seul ('+nb+' entrée'+(nb>1?'s':'')+')'
-          : (o && o.redis==='absente')    ? 'Aucune base branchée : Vercel → Storage → Redis, puis redéploie'
-          : (o && o.redis==='injoignable')? 'Base branchée mais elle ne répond pas'
+          : (o && o.cause==='sans_api_rest') ? 'Base branchée sans accès REST — il faut Upstash Redis'
+          : (o && o.cause==='aucune_variable')? 'Base pas reliée au déploiement — relie-la puis redéploie'
+          : (o && o.redis==='absente')       ? 'Aucune base branchée'
+          : (o && o.redis==='injoignable')   ? 'Base branchée mais elle ne répond pas'
           : 'Réponse inattendue du serveur';
         if(ok) netOff=false;          /* le test réussit : on relance les synchros */
         toast(diagMsg, ok?'✅':'⚠️');
