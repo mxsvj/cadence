@@ -422,7 +422,12 @@ main{flex:1;padding:2px 16px 150px}
 .lbrow .nm{flex:1;min-width:0}
 .lbrow .nm b{display:block;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lbrow .nm small{font-size:10.5px;color:var(--mut);font-weight:700}
-.lbrow .pt{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:700}
+.lbrow .pt{display:flex;flex-direction:column;align-items:flex-end;line-height:1;min-width:44px}
+.lbrow .pt b{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;
+  font-variant-numeric:tabular-nums}
+.lbrow .pt small{font-size:10.5px;font-weight:700;color:var(--mut);margin-top:4px;
+  font-variant-numeric:tabular-nums}
+.lbrow.me .pt small{color:var(--acc)}
 details{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;
   margin-bottom:9px;box-shadow:var(--sh1)}
 details summary{font-weight:700;font-size:14px;cursor:pointer;list-style:none;
@@ -626,7 +631,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v3 · 2026-09-04';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v4 · 2026-09-05';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 3;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -662,13 +667,22 @@ var QUOTES = [
   "Le vrai adversaire, c'est le toi d'hier."
 ];
 
+/* Douze paliers au lieu de six, et une courbe qui tient sur des années.
+   Repère : une bonne journée pèse 50 à 60 points. Les premiers rangs tombent
+   en quelques jours pour lancer la machine, le dernier se mérite. */
 var RANKS = [
-  {xp:0,    n:'Recrue',      e:'🐣'},
-  {xp:150,  n:'Soldat',      e:'🪖'},
-  {xp:400,  n:'Guerrier',    e:'⚔️'},
-  {xp:900,  n:'Machine',     e:'🤖'},
-  {xp:2000, n:'Inarrêtable', e:'🔥'},
-  {xp:4500, n:'Légende',     e:'👑'}
+  {xp:0,     n:'Recrue',      e:'🐣'},
+  {xp:250,   n:'Apprenti',    e:'🐤'},
+  {xp:750,   n:'Soldat',      e:'🪖'},
+  {xp:1800,  n:'Vétéran',     e:'🎖️'},
+  {xp:3500,  n:'Guerrier',    e:'⚔️'},
+  {xp:6000,  n:'Gladiateur',  e:'🛡️'},
+  {xp:9500,  n:'Machine',     e:'🤖'},
+  {xp:14000, n:'Titan',       e:'🗿'},
+  {xp:20000, n:'Inarrêtable', e:'🔥'},
+  {xp:28000, n:'Fauve',       e:'🐅'},
+  {xp:38000, n:'Monstre',     e:'👹'},
+  {xp:50000, n:'Légende',     e:'👑'}
 ];
 
 var AVATARS = ['💪','🔥','🥊','🏋️','🏃','🐺','🦁','👑','😈','🤖'];
@@ -692,14 +706,26 @@ var BADGES = [
   {id:'b2',  e:'💯', n:'Journée parfaite', d:'100% des tâches sur une journée'},
   {id:'b3',  e:'🔥', n:'Série de 7',       d:'7 jours parfaits d’affilée'},
   {id:'b4',  e:'🏆', n:'Série de 30',      d:'30 jours parfaits d’affilée'},
-  {id:'b5',  e:'🥇', n:'Semaine à 100%',   d:'Une semaine complète sans rater'},
-  {id:'b6',  e:'💪', n:'100 tâches',       d:'100 tâches validées au total'},
-  {id:'b7',  e:'🦁', n:'500 tâches',       d:'500 tâches validées au total'},
-  {id:'b8',  e:'🌅', n:'10 avant 9h',      d:'10 tâches validées avant 9h'},
-  {id:'b9',  e:'🎧', n:'10 sessions focus',d:'Lancer 10 fois le mode focus'},
-  {id:'b10', e:'📓', n:'7 notes',          d:'7 notes de journal d’affilée'},
-  {id:'b11', e:'⚖️', n:'4 pesées',         d:'Noter son poids 4 fois'},
-  {id:'b12', e:'🤝', n:'1 ami',            d:'Ajouter un ami au classement'}
+  {id:'b5',  e:'🏔️', n:'Série de 100',     d:'100 jours parfaits d’affilée'},
+  {id:'b6',  e:'🥇', n:'Semaine à 100%',   d:'Une semaine complète sans rater'},
+  {id:'b7',  e:'🏅', n:'4 semaines pleines',d:'Quatre semaines à 100%'},
+  {id:'b8',  e:'🗓️', n:'30 jours parfaits',d:'Trente journées à 100%, en tout'},
+  {id:'b9',  e:'💪', n:'100 tâches',       d:'100 tâches validées au total'},
+  {id:'b10', e:'🦁', n:'500 tâches',       d:'500 tâches validées au total'},
+  {id:'b11', e:'🐉', n:'1000 tâches',      d:'1000 tâches validées au total'},
+  {id:'b12', e:'💎', n:'10 000 XP',        d:'Cumuler 10 000 points d’expérience'},
+  {id:'b13', e:'🌅', n:'10 avant 9h',      d:'10 tâches validées avant 9h'},
+  {id:'b14', e:'☀️', n:'50 avant 9h',      d:'50 tâches validées avant 9h'},
+  {id:'b15', e:'🌙', n:'20 après 22h',     d:'20 tâches validées après 22h'},
+  {id:'b16', e:'📆', n:'100 jours actifs', d:'100 jours avec au moins une tâche'},
+  {id:'b17', e:'🎧', n:'10 sessions focus',d:'Lancer 10 fois le mode focus'},
+  {id:'b18', e:'🎬', n:'50 sessions focus',d:'Lancer 50 fois le mode focus'},
+  {id:'b19', e:'📓', n:'7 notes',          d:'7 notes de journal d’affilée'},
+  {id:'b20', e:'✍️', n:'30 notes',         d:'Trente notes de journal en tout'},
+  {id:'b21', e:'⚖️', n:'4 pesées',         d:'Noter son poids 4 fois'},
+  {id:'b22', e:'📉', n:'30 pesées',        d:'Noter son poids trente fois'},
+  {id:'b23', e:'🤝', n:'1 ami',            d:'Ajouter un ami au classement'},
+  {id:'b24', e:'👥', n:'5 amis',           d:'Cinq amis dans ton classement'}
 ];
 
 /* ------------------------------------------------------------------ état */
@@ -940,6 +966,28 @@ function perfectDays(){
   return n;
 }
 function weekStat(monday){ return rangeStat(monday, addDays(monday,6)); }
+/* nombre de semaines bouclées à 100% */
+function weeks100(){
+  var n=0,d=mondayOf(fromKey(firstDay())),end=mondayOf(nowD());
+  while(d<=end){ var w=weekStat(d); if(w.total>0 && w.pct===100) n++; d=addDays(d,7); }
+  return n;
+}
+/* jours où au moins une tâche a été validée */
+function activeDays(){
+  var n=0;
+  for(var k in state.log){ var m=state.log[k];
+    for(var id in m){ if(m[id].done){ n++; break; } } }
+  return n;
+}
+function doneAfter22(){
+  var n=0;
+  for(var day in state.log){ var m=state.log[day];
+    for(var id in m){ var e=m[id]; if(e.done && e.doneAt && toMin(e.doneAt)>=1320) n++; } }
+  return n;
+}
+function notesCount(){
+  return Object.keys(state.notes).filter(function(k){ return String(state.notes[k]||'').trim(); }).length;
+}
 function bestWeek(){
   var best=0,d=mondayOf(fromKey(firstDay())),end=mondayOf(nowD());
   while(d<=end){ var w=weekStat(d); if(w.total>0 && w.pct>best) best=w.pct; d=addDays(d,7); }
@@ -966,11 +1014,15 @@ function badgeState(){
     if(run>notesRun) notesRun=run;
     prev=k;
   });
+  var pd=perfectDays(), b9h=doneBefore9(), fo=state.focus||0,
+      w=Object.keys(state.weight).length, fr=state.friends.length, nc=notesCount();
   var got={
-    b1: tot>=1, b2: perfectDays()>=1, b3: gb>=7, b4: gb>=30,
-    b5: bestWeek()>=100, b6: tot>=100, b7: tot>=500,
-    b8: doneBefore9()>=10, b9: (state.focus||0)>=10,
-    b10:notesRun>=7, b11:Object.keys(state.weight).length>=4, b12:state.friends.length>=1
+    b1: tot>=1,          b2: pd>=1,            b3: gb>=7,           b4: gb>=30,
+    b5: gb>=100,         b6: bestWeek()>=100,  b7: weeks100()>=4,   b8: pd>=30,
+    b9: tot>=100,        b10:tot>=500,         b11:tot>=1000,       b12:xp>=10000,
+    b13:b9h>=10,         b14:b9h>=50,          b15:doneAfter22()>=20, b16:activeDays()>=100,
+    b17:fo>=10,          b18:fo>=50,           b19:notesRun>=7,     b20:nc>=30,
+    b21:w>=4,            b22:w>=30,            b23:fr>=1,           b24:fr>=5
   };
   return {got:got, xp:xp};
 }
@@ -1446,12 +1498,14 @@ function bindJournal(){
 /* ------------------------------------------------------------- ONGLET PROFIL */
 function periodScores(){
   var t=today(), mon=mondayOf(nowD()), d=nowD();
+  var m0=new Date(d.getFullYear(),d.getMonth(),1), m1=new Date(d.getFullYear(),d.getMonth()+1,0);
+  var mEnd=m1>d?d:m1;                       /* le mois en cours s'arrête aujourd'hui */
   return {
-    day:   dayPoints(t),
+    day:   dayPoints(t),                      dayP:  dayStat(t).pct,
     dayK:  t,
-    week:  rangePoints(mon, addDays(mon,6)),
+    week:  rangePoints(mon, addDays(mon,6)),  weekP: weekStat(mon).pct,
     weekK: dk(mon),
-    month: rangePoints(new Date(d.getFullYear(),d.getMonth(),1), new Date(d.getFullYear(),d.getMonth()+1,0)),
+    month: rangePoints(m0, m1),               monthP:rangeStat(m0, mEnd).pct,
     monthK:d.getFullYear()+'-'+pad(d.getMonth()+1),
     xp:    totalXP()
   };
@@ -1479,8 +1533,10 @@ function api(payload){
 function wireMe(){
   var sc=periodScores(), p=state.profile;
   return {id:p.id, name:p.name, avatar:p.avatar,
-          day:sc.day, dayK:sc.dayK, week:sc.week, weekK:sc.weekK,
-          month:sc.month, monthK:sc.monthK, xp:sc.xp, at:today(), ts:Date.now()};
+          day:sc.day,   dayP:sc.dayP,   dayK:sc.dayK,
+          week:sc.week, weekP:sc.weekP, weekK:sc.weekK,
+          month:sc.month, monthP:sc.monthP, monthK:sc.monthK,
+          xp:sc.xp, at:today(), ts:Date.now()};
 }
 /* On complète, on n'écrase jamais : un ami connu localement reste si le serveur
    ne le renvoie pas (hors ligne, base vide), et un nouveau venu s'ajoute seul. */
@@ -1494,10 +1550,13 @@ function mergeFriends(list){
     if(found && (+f.ts||0) < (+found.ts||0)) return;  /* fiche du serveur plus vieille : on garde la nôtre */
     if(found){
       if(found.name!==f.name||found.avatar!==f.avatar||found.day!==f.day||
-         found.week!==f.week||found.month!==f.month||found.xp!==f.xp) changed=true;
+         found.week!==f.week||found.month!==f.month||found.xp!==f.xp||
+         found.dayP!==f.dayP||found.weekP!==f.weekP||found.monthP!==f.monthP) changed=true;
       found.name=f.name; found.avatar=f.avatar; found.at=f.at||found.at; found.ts=+f.ts||found.ts||0;
-      found.day=f.day; found.dayK=f.dayK; found.week=f.week; found.weekK=f.weekK;
-      found.month=f.month; found.monthK=f.monthK; found.xp=f.xp;
+      found.day=f.day; found.dayK=f.dayK; found.dayP=f.dayP;
+      found.week=f.week; found.weekK=f.weekK; found.weekP=f.weekP;
+      found.month=f.month; found.monthK=f.monthK; found.monthP=f.monthP;
+      found.xp=f.xp;
     }else{
       state.friends.push(f); changed=true;
     }
@@ -1530,7 +1589,7 @@ function myCode(){
   var s=periodScores(), p=state.profile;
   return b64e(JSON.stringify({
     i:p.id, n:p.name, a:p.avatar,
-    d:[s.day,s.dayK], w:[s.week,s.weekK], m:[s.month,s.monthK],
+    d:[s.day,s.dayK,s.dayP], w:[s.week,s.weekK,s.weekP], m:[s.month,s.monthK,s.monthP],
     x:s.xp, t:today(), s:Date.now()
   }));
 }
@@ -1542,9 +1601,9 @@ function addFriend(code){
   if(!o || !o.i || !o.n){ toast('Code invalide','❌'); return; }
   if(o.i===state.profile.id){ toast('C\'est ton propre code 😄','🙃'); return; }
   var f={ id:o.i, name:String(o.n).slice(0,20), avatar:o.a||'💪',
-          day:+(o.d&&o.d[0])||0,  dayK:(o.d&&o.d[1])||'',
-          week:+(o.w&&o.w[0])||0, weekK:(o.w&&o.w[1])||'',
-          month:+(o.m&&o.m[0])||0,monthK:(o.m&&o.m[1])||'',
+          day:+(o.d&&o.d[0])||0,  dayK:(o.d&&o.d[1])||'',  dayP:+(o.d&&o.d[2])||0,
+          week:+(o.w&&o.w[0])||0, weekK:(o.w&&o.w[1])||'', weekP:+(o.w&&o.w[2])||0,
+          month:+(o.m&&o.m[0])||0,monthK:(o.m&&o.m[1])||'',monthP:+(o.m&&o.m[2])||0,
           xp:+o.x||0, at:o.t||today(), ts:+o.s||Date.now() };
   var idx=-1;
   for(var i=0;i<state.friends.length;i++) if(state.friends[i].id===f.id) idx=i;
@@ -1567,12 +1626,16 @@ function ageTxt(k){
 function leaderboard(){
   var s=periodScores(), p=state.profile;
   var field = lbTab==='day'?'day' : lbTab==='week'?'week':'month';
+  var pctf  = lbTab==='day'?'dayP': lbTab==='week'?'weekP':'monthP';
   var keyf  = lbTab==='day'?'dayK': lbTab==='week'?'weekK':'monthK';
   var mine  = lbTab==='day'?s.dayK: lbTab==='week'?s.weekK:s.monthK;
-  var rows=[{id:p.id,name:p.name,avatar:p.avatar,pts:s[field],xp:s.xp,me:true,age:''}];
+  var rows=[{id:p.id,name:p.name,avatar:p.avatar,pts:s[field],pct:s[pctf],xp:s.xp,me:true,age:'',fresh:true}];
   state.friends.forEach(function(f){
+    var fresh = f[keyf]===mine;              /* ses chiffres portent-ils sur la même période ? */
     rows.push({ id:f.id, name:f.name, avatar:f.avatar,
-      pts: (f[keyf]===mine ? (f[field]||0) : 0), xp:f.xp||0, me:false, age:ageTxt(f.at) });
+      pts: fresh ? (f[field]||0) : 0,
+      pct: fresh ? (f[pctf]==null?null:+f[pctf]) : null,
+      xp:f.xp||0, me:false, age:ageTxt(f.at), fresh:fresh });
   });
   rows.sort(function(a,b){ return b.pts-a.pts || b.xp-a.xp || a.name.localeCompare(b.name); });
   var med=['🥇','🥈','🥉'];
@@ -1583,7 +1646,7 @@ function leaderboard(){
       '<div class="av">'+esc(r.avatar)+'</div>'+
       '<div class="nm"><b>'+esc(r.name)+(r.me?' (toi)':'')+'</b>'+
         '<small>'+rk.e+' '+esc(rk.n)+' · '+r.xp+' XP'+esc(r.age)+'</small></div>'+
-      '<div class="pt">'+r.pts+'</div>'+
+      '<div class="pt"><b>'+r.pts+'</b><small>'+(r.pct==null?'—':r.pct+' %')+'</small></div>'+
       (r.me?'':'<button class="del" data-act="unfriend" data-id="'+r.id+'" aria-label="Retirer">'+ic('trash')+'</button>')+
     '</div>';
   }).join('');

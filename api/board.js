@@ -47,9 +47,9 @@ function cleanPlayer(o){
     id: id,
     name:   cleanTxt(o.name, 20) || 'Anonyme',
     avatar: cleanTxt(o.avatar, 8) || '💪',
-    day:    cleanNum(o.day,   1000000), dayK:   cleanKey(o.dayK),
-    week:   cleanNum(o.week,  1000000), weekK:  cleanKey(o.weekK),
-    month:  cleanNum(o.month, 1000000), monthK: cleanKey(o.monthK),
+    day:    cleanNum(o.day,   1000000), dayK:   cleanKey(o.dayK),   dayP:   cleanNum(o.dayP,   100),
+    week:   cleanNum(o.week,  1000000), weekK:  cleanKey(o.weekK),  weekP:  cleanNum(o.weekP,  100),
+    month:  cleanNum(o.month, 1000000), monthK: cleanKey(o.monthK), monthP: cleanNum(o.monthP, 100),
     xp:     cleanNum(o.xp,   10000000),
     at:     cleanKey(o.at),
     ts:     cleanNum(o.ts, 4102444800000)   /* horodatage : départage deux fiches du même joueur */
