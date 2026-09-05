@@ -1,0 +1,9 @@
+{
+  "name": "cadence",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tracker d'habitudes en un seul fichier. La dépendance ne sert qu'au classement partagé.",
+  "dependencies": {
+    "ioredis": "^6.0.0"
+  }
+}

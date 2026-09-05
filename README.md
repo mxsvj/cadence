@@ -28,9 +28,18 @@ Pour activer le classement automatique :
 
 1. Sur Vercel, ouvrir le projet → **Storage** → ajouter une base **Redis**
    (l'offre gratuite suffit largement), puis la relier à ce projet.
-2. Vercel injecte les identifiants tout seul. La fonction accepte les deux
-   nommages courants : `KV_REST_API_URL` / `KV_REST_API_TOKEN`, ou
-   `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`.
+2. Vercel injecte les identifiants tout seul, quel que soit le produit choisi.
+   La fonction sait joindre Redis de deux façons et prend celle qui est
+   disponible :
+   - **en HTTP**, si la base expose une API REST — `KV_REST_API_URL` /
+     `KV_REST_API_TOKEN`, ou `UPSTASH_REDIS_REST_URL` /
+     `UPSTASH_REDIS_REST_TOKEN` (cas d'Upstash) ;
+   - **en TCP**, si elle ne fournit qu'une chaîne de connexion — `REDIS_URL`
+     ou `KV_URL` (cas du Redis natif de Vercel). Ce chemin utilise `ioredis`,
+     seule dépendance du projet, installée par Vercel à la construction.
+
+   Le champ `transport` de la vérification indique lequel des deux est en
+   service.
 3. Redéployer, puis ouvrir **`/api/board?check=1`** dans un navigateur. Cette
    adresse ne se contente pas de lire la configuration : elle écrit une clé dans
    la base, la relit, l'efface, et rapporte le résultat.

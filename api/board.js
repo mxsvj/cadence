@@ -11,14 +11,22 @@
    Les deux expirent au bout de 90 jours sans activité.
    ========================================================================== */
 
+/* Deux façons d'atteindre Redis, selon ce que l'hébergeur fournit :
+     - en HTTP, si la base expose une API REST (Upstash) ;
+     - en TCP, si elle ne donne qu'une chaîne de connexion (REDIS_URL).
+   Les commandes envoyées sont les mêmes, seul le transport change. */
 var RURL   = process.env.KV_REST_API_URL   || process.env.UPSTASH_REDIS_REST_URL   || '';
 var RTOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
+var TCPURL = process.env.REDIS_URL || process.env.KV_URL || '';
+
+function hasStore(){ return !!((RURL && RTOKEN) || TCPURL); }
+function transport(){ return (RURL && RTOKEN) ? 'rest' : (TCPURL ? 'tcp' : 'aucun'); }
 
 var TTL      = 60 * 60 * 24 * 90;   /* 90 jours */
 var MAXLINKS = 60;                  /* garde-fou : taille max d'un classement */
 
 /* ------------------------------------------------------------------ Redis */
-function redis(cmds){
+function redisRest(cmds){
   return fetch(RURL.replace(/\/+$/,'') + '/pipeline', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + RTOKEN, 'Content-Type': 'application/json' },
@@ -29,6 +37,40 @@ function redis(cmds){
   }).then(function(out){
     return (out || []).map(function(x){ return x && x.result; });
   });
+}
+
+/* Connexion TCP réutilisée entre deux appels de la fonction : ouvrir un socket
+   par requête coûterait un aller-retour TLS à chaque fois. */
+var _tcp = null;
+function tcpClient(){
+  if(_tcp) return _tcp;
+  var Redis = require('ioredis');
+  _tcp = new Redis(TCPURL, {
+    connectTimeout: 8000,
+    maxRetriesPerRequest: 2,
+    enableReadyCheck: true
+  });
+  _tcp.on('error', function(){});   /* sans écouteur, une coupure ferait tomber la fonction */
+  return _tcp;
+}
+function redisTcp(cmds){
+  /* le client TCP n'accepte que des noms de commande en minuscules,
+     alors que l'API REST tolère les deux : on normalise ici. */
+  var norm = (cmds || []).map(function(c){
+    var out = c.slice(); out[0] = String(out[0]).toLowerCase(); return out;
+  });
+  return Promise.resolve().then(function(){
+    return tcpClient().pipeline(norm).exec();
+  }).then(function(rows){
+    (rows || []).forEach(function(r){ if(r && r[0]) throw r[0]; });
+    return (rows || []).map(function(r){ return r && r[1]; });
+  });
+}
+
+function redis(cmds){
+  if(RURL && RTOKEN) return redisRest(cmds);
+  if(TCPURL)         return redisTcp(cmds);
+  return Promise.reject(new Error('aucune base'));
 }
 
 /* ------------------------------------------------------- nettoyage entrées */
@@ -148,16 +190,10 @@ function envNames(){
    Répond franchement — présence des identifiants ET base réellement joignable. */
 function doCheck(res){
   var vars = envNames();
-  if(!RURL || !RTOKEN){
-    /* Une base branchée en TCP seulement (REDIS_URL) ne suffit pas : cette
-       fonction parle à Redis par HTTP, il lui faut une base à API REST. */
-    var tcpOnly = vars.length > 0;
+  if(!hasStore()){
     return send(res, 200, { ok:true, version:1, store:false, redis:'absente',
-      cause: tcpOnly ? 'sans_api_rest' : 'aucune_variable',
-      variables: vars,
-      message: tcpOnly
-        ? 'Une base est branchée mais elle ne donne pas d\'accès REST. Il faut une base compatible : Upstash Redis dans le Marketplace Vercel.'
-        : 'Aucune variable Redis dans ce déploiement. Relie la base au projet, puis redéploie.' });
+      cause:'aucune_variable', variables: vars, transport:'aucun',
+      message:'Aucune variable Redis dans ce déploiement. Relie la base au projet, puis redéploie.' });
   }
   var k = 'diag:' + Math.random().toString(36).slice(2, 10);
   return redis([['SET', k, 'ok', 'EX', 30], ['GET', k], ['DEL', k], ['DBSIZE']])
@@ -165,14 +201,14 @@ function doCheck(res){
       var relu = o[1], ok = (relu === 'ok');
       send(res, 200, { ok:true, version:1, store:true,
         redis: ok ? 'ok' : 'reponse_inattendue',
-        variables: vars,
+        transport: transport(), variables: vars,
         cles: (typeof o[3] === 'number') ? o[3] : null,
         message: ok ? 'Base joignable : ecriture, relecture et effacement reussis.'
                     : 'La base repond mais pas ce qu on a ecrit.' });
     })
     .catch(function(e){
       send(res, 200, { ok:true, version:1, store:true, redis:'injoignable',
-        variables: vars,
+        transport: transport(), variables: vars,
         detail: String(e && e.message || e).slice(0, 140),
         message:'Identifiants presents mais la base ne repond pas.' });
     });
@@ -186,10 +222,10 @@ module.exports = function(req, res){
      ?check=1 va plus loin : il teste vraiment la base. */
   if(req.method === 'GET'){
     if(/[?&]check=1/.test(req.url || '')) return doCheck(res);
-    return send(res, 200, { ok: true, store: !!(RURL && RTOKEN), version: 1 });
+    return send(res, 200, { ok: true, store: hasStore(), version: 1 });
   }
   if(req.method !== 'POST') return send(res, 405, { error: 'method' });
-  if(!RURL || !RTOKEN)      return send(res, 501, { error: 'no_store' });
+  if(!hasStore())           return send(res, 501, { error: 'no_store' });
 
   return readBody(req).then(function(body){
     var a = body && body.action;
