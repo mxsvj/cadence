@@ -1517,6 +1517,7 @@ function periodScores(){
    Les habitudes, les notes, le poids et le journal ne quittent pas l'appareil. */
 var API='/api/board';
 var netOff=false;            /* pas de base branchée, ou fichier ouvert en local */
+var diagMsg='';              /* verdict du dernier test de connexion */
 var syncing=false, syncFail=0;
 
 function netReady(){ return !netOff && (location.protocol==='http:'||location.protocol==='https:'); }
@@ -1652,6 +1653,7 @@ function leaderboard(){
   }).join('');
 }
 function syncLabel(){
+  if(diagMsg) return diagMsg;
   if(location.protocol==='file:') return 'Fichier local : classement à la main';
   if(netOff)   return 'Classement partagé non branché';
   if(syncFail) return 'Serveur injoignable — réessai plus tard';
@@ -1701,7 +1703,8 @@ function viewProfil(){
       '<button class="'+(lbTab==='month'?'on':'')+'" data-act="lb" data-p="month">Mois</button>'+
     '</div>'+ leaderboard() +
     '<div class="row" style="margin-top:12px;justify-content:space-between">'+
-      '<span class="small muted">'+esc(syncLabel())+'</span>'+
+      '<span class="small muted" style="flex:1;min-width:0">'+esc(syncLabel())+'</span>'+
+      '<button class="lnk" data-act="diag">Tester</button>'+
       '<button class="lnk" data-act="resync">Rafraîchir</button>'+
     '</div>'+
   '</section>';
@@ -2253,9 +2256,32 @@ document.addEventListener('click', function(ev){
 
   /* --- profil --- */
   if(a==='lb'){ lbTab=el.getAttribute('data-p'); render(); return; }
+  if(a==='diag'){
+    if(location.protocol==='file:'){ toast('Ouvre l\'app par son adresse web pour ce test','📴'); return; }
+    diagMsg='Test en cours…'; render();
+    fetch(API+'?check=1',{cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(o){
+        var ok = o && o.redis==='ok';
+        var nb = (o && o.cles) || 0;
+        diagMsg = ok ? 'Base connectée — le classement se synchronise seul ('+nb+' entrée'+(nb>1?'s':'')+')'
+          : (o && o.redis==='absente')    ? 'Aucune base branchée : Vercel → Storage → Redis, puis redéploie'
+          : (o && o.redis==='injoignable')? 'Base branchée mais elle ne répond pas'
+          : 'Réponse inattendue du serveur';
+        if(ok) netOff=false;          /* le test réussit : on relance les synchros */
+        toast(diagMsg, ok?'✅':'⚠️');
+        render();
+        if(ok) syncNow(true);
+      })
+      .catch(function(){
+        diagMsg='Serveur injoignable — vérifie ta connexion';
+        toast(diagMsg,'⚠️'); render();
+      });
+    return;
+  }
   if(a==='resync'){
     if(!netReady()){ toast('Classement hors ligne — codes à la main','📴'); return; }
-    toast('Synchronisation…','🔄');
+    toast('Synchronisation…','🔄'); diagMsg='';
     syncNow(true).then(function(ch){
       render();
       toast(syncFail?'Serveur injoignable':(ch?'Classement à jour':'Rien de nouveau'), syncFail?'⚠️':'✅');
