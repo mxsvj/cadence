@@ -732,7 +732,7 @@ var BADGES = [
 function defaults(){
   return {
     v:1, theme:'dark', tab:'jour',
-    planned:'',   /* date de la dernière journée validée : verrouille le reste tant qu'elle diffère d'aujourd'hui */
+    plannedDays:{},  /* journées déjà posées : { 'YYYY-MM-DD': true } — on peut préparer la veille */
     off:{},       /* 'YYYY-MM-DD' -> [ids retirés de la journée]                                                 */
     tutoSeen:false, tutoStep:0, tutoV:0,
     habits:[],
@@ -764,7 +764,11 @@ function load(){
     if(!o.weight  || typeof o.weight!=='object')  o.weight={};
     if(!o.notified|| typeof o.notified!=='object')o.notified={};
     if(!o.off     || typeof o.off!=='object')     o.off={};
-    if(typeof o.planned!=='string') o.planned='';
+    if(!o.plannedDays || typeof o.plannedDays!=='object') o.plannedDays={};
+    if(typeof o.planned==='string' && o.planned){ o.plannedDays[o.planned]=true; }  /* ancien format */
+    delete o.planned;
+    var vieux=dk(addDays(nowD(),-60));
+    for(var pk in o.plannedDays){ if(pk<vieux) delete o.plannedDays[pk]; }          /* on ne garde pas tout */
     o.tutoStep=+o.tutoStep||0; o.tutoV=+o.tutoV||0;
     if(!o.profile || !o.profile.id) o.profile = d.profile;
     o.focus = +o.focus || 0;
@@ -803,7 +807,9 @@ function byTime(a,b){ return toMin(a.time)-toMin(b.time) || a.name.localeCompare
 function scheduledFor(key){ return state.habits.filter(function(h){ return scheduled(h,key); }).sort(byTime); }
 function habitsFor(key){ return state.habits.filter(function(h){ return planned(h,key); }).sort(byTime); }
 /* la journée du jour a-t-elle été validée ? */
-function dayReady(){ return state.planned===today(); }
+function dayReady(){ return !!state.plannedDays[today()]; }
+var planDate=null;   /* non nul quand on prépare un autre jour qu'aujourd'hui */
+function planKey(){ return planDate || today(); }
 /* tant qu'elle ne l'est pas : rien d'autre que Jour et Profil */
 function locked(tab){ return !dayReady() && tab!=='jour' && tab!=='profil'; }
 function habitById(id){
@@ -1094,7 +1100,7 @@ function render(){
   if(locked(state.tab)) state.tab='jour';
   renderTabs();
   var v=$('#view');
-  if(state.tab==='jour')           v.innerHTML= dayReady() ? viewJour() : viewPlan();
+  if(state.tab==='jour')           v.innerHTML= (planDate || !dayReady()) ? viewPlan() : viewJour();
   else if(state.tab==='stats')     v.innerHTML=viewStats();
   else if(state.tab==='habitudes') v.innerHTML=viewHabitudes();
   else if(state.tab==='journal'){  v.innerHTML=viewJournal(); bindJournal(); }
@@ -1132,21 +1138,26 @@ function taskCard(h,key,done){
 
 /* Écran d'ouverture de chaque journée : on choisit ce qu'on fait avant tout le reste. */
 function viewPlan(){
-  var key=today(), all=scheduledFor(key);
+  var key=planKey(), avance=(key!==today());
+  var all=scheduledFor(key);
   var kept=all.filter(function(x){ return !isOff(key,x.id); });
   var h='';
 
   h+='<section class="card pop" id="planhead" style="padding:16px 15px">'+
      '<div class="date" style="font-size:11.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--acc)">'+
-       esc(frDate(nowD()))+'</div>'+
-     '<h1 style="font-size:26px;margin:4px 0 7px">Ta journée</h1>'+
-     '<p class="muted small" style="margin:0">Choisis ce que tu fais aujourd\'hui, puis valide. '+
-     'Stats, Habitudes et Journal s\'ouvrent une fois ta journée posée.</p>'+
+       esc(frDate(fromKey(key)))+'</div>'+
+     '<h1 style="font-size:26px;margin:4px 0 7px">'+(avance?'Demain':'Ta journée')+'</h1>'+
+     '<p class="muted small" style="margin:0">'+
+       (avance ? 'Pose ta journée de demain ce soir. Au réveil elle sera prête, sans rien à valider.'
+               : 'Choisis ce que tu fais aujourd\'hui, puis valide. Stats, Habitudes et Journal s\'ouvrent une fois ta journée posée.')+
+     '</p>'+
+     (avance ? '<button class="btn ghost sm" data-act="planback" style="margin-top:12px">'+ic('left')+' Revenir à aujourd\'hui</button>' : '')+
      '</section>';
 
-  h+='<div class="sec"><h2>Prévu aujourd\'hui</h2><span>'+kept.length+'/'+all.length+' retenue'+(kept.length>1?'s':'')+'</span></div>';
+  h+='<div class="sec"><h2>'+(avance?'Prévu demain':'Prévu aujourd\'hui')+'</h2>'+
+     '<span>'+kept.length+'/'+all.length+' retenue'+(kept.length>1?'s':'')+'</span></div>';
   if(!all.length){
-    h+='<div class="card empty"><span class="e">🌱</span>Rien de prévu ce '+esc(DAYS[nowD().getDay()])+'.<br>'+
+    h+='<div class="card empty"><span class="e">🌱</span>Rien de prévu ce '+esc(DAYS[fromKey(key).getDay()])+'.<br>'+
        'Crée une tâche avec <b>+</b>, ou valide une journée de repos.</div>';
   }else{
     h+='<div id="planlist">'+all.map(function(x){
@@ -1162,9 +1173,9 @@ function viewPlan(){
   }
   h+='<button class="btn wide" data-act="new">'+ic('plus')+' Ajouter une tâche</button>';
   h+='<div class="planbar"><button class="btn pri wide" data-act="planok">'+
-     (kept.length ? 'Valider ma journée · '+kept.length+' tâche'+(kept.length>1?'s':'')
-                  : 'Valider une journée de repos')+'</button></div>';
-  h+='<div class="quote"><p>« '+esc(quoteOfDay())+' »</p><small>CADENCE · '+esc(frShort(nowD()))+'</small></div>';
+     (kept.length ? (avance?'Valider demain · ':'Valider ma journée · ')+kept.length+' tâche'+(kept.length>1?'s':'')
+                  : (avance?'Valider un jour de repos':'Valider une journée de repos'))+'</button></div>';
+  if(!avance) h+='<div class="quote"><p>« '+esc(quoteOfDay())+' »</p><small>CADENCE · '+esc(frShort(nowD()))+'</small></div>';
   return h;
 }
 
@@ -1196,7 +1207,11 @@ function viewJour(){
     h+=done.map(function(x){ return taskCard(x,key,true); }).join('');
   }
 
-  h+='<button class="btn ghost wide sm" data-act="replan" style="margin-top:16px">'+ic('edit')+' Modifier ma journée</button>';
+  var demain=dk(addDays(nowD(),1)), pret=!!state.plannedDays[demain];
+  h+='<div class="grid2" style="margin-top:16px">'+
+     '<button class="btn ghost sm" data-act="replan">'+ic('edit')+' Modifier</button>'+
+     '<button class="btn '+(pret?'ghost':'')+' sm" data-act="plannext">'+ic('moon')+' '+(pret?'Demain est prêt':'Préparer demain')+'</button>'+
+     '</div>';
   h+='<div class="quote"><p>« '+esc(quoteOfDay())+' »</p><small>CADENCE · '+esc(frShort(nowD()))+'</small></div>';
   return h;
 }
@@ -1776,7 +1791,7 @@ function openForm(h){
     ? {id:h.id, name:h.name, emoji:h.emoji||'⭐', time:h.time||'', type:h.type,
        days:(h.days||[]).slice(), steps:(h.steps||[]).join('\n'), color:h.color||COLORS[0]}
     : {id:null, name:'', emoji:'🔥', time:pad(nowD().getHours())+':00', type:'rec',
-       days:[1,2,3,4,5,6,0], steps:'', color:COLORS[0]};
+       days:[1,2,3,4,5,6,0], steps:'', color:COLORS[0], forDate:planKey()};
   renderForm();
 }
 function readForm(){
@@ -1815,7 +1830,10 @@ function renderForm(){
             return '<button class="dchip'+(f.days.indexOf(DIDX[i])>-1?' on':'')+'" data-act="fday" data-d="'+DIDX[i]+'">'+d+'</button>';
           }).join('')+
         '</div></div>'
-      : '<div class="field"><div class="small muted">Cette tâche n\'apparaît qu\'aujourd\'hui, et disparaît demain.</div></div>')+
+      : '<div class="field"><div class="small muted">'+
+        (f.forDate && f.forDate!==today()
+          ? 'Cette tâche n\'apparaîtra que demain, et disparaîtra ensuite.'
+          : 'Cette tâche n\'apparaît qu\'aujourd\'hui, et disparaît demain.')+'</div></div>')+
 
     '<div class="field"><label>Étapes (une par ligne)</label>'+
       '<textarea id="fsteps" rows="4" placeholder="Échauffement 5 min&#10;Séance du jour&#10;Étirements 5 min">'+esc(f.steps)+'</textarea>'+
@@ -1857,7 +1875,7 @@ function saveForm(){
   }else{
     state.habits.push({
       id:uid(), name:name, emoji:f.emoji, time:f.time,
-      type:f.type, days:f.type==='rec'?f.days.slice():[], date:f.type==='once'?t:null,
+      type:f.type, days:f.type==='rec'?f.days.slice():[], date:f.type==='once'?(f.forDate||t):null,
       color:f.color, steps:steps, createdAt:t
     });
     toast('Tâche créée','🔥');
@@ -2143,7 +2161,7 @@ document.addEventListener('click', function(ev){
     return;
   }
   if(a==='ptoggle'){
-    var pk=today();
+    var pk=planKey();
     if(!state.off[pk]) state.off[pk]=[];
     var pi=state.off[pk].indexOf(id);
     if(pi>-1){
@@ -2161,14 +2179,20 @@ document.addEventListener('click', function(ev){
     save(); buzz(18); render(); return;
   }
   if(a==='planok'){
-    state.planned=today(); save(); buzz([30,50,30]);
-    var kept=habitsFor(today()).length;
-    toast(kept? 'Journée validée · '+kept+' tâche'+(kept>1?'s':'') : 'Journée de repos validée','🔓');
+    var pk2=planKey(), avance2=(pk2!==today());
+    state.plannedDays[pk2]=true; save(); buzz([30,50,30]);
+    var kept=habitsFor(pk2).length;
+    toast(avance2 ? 'Demain est prêt · '+kept+' tâche'+(kept>1?'s':'')
+                  : (kept? 'Journée validée · '+kept+' tâche'+(kept>1?'s':'') : 'Journée de repos validée'),
+          avance2?'🌙':'🔓');
+    planDate=null;                       /* on revient toujours sur aujourd'hui */
     render(); toTop();
-    if(!state.tutoSeen) setTimeout(function(){ startTour(Math.max(state.tutoStep,PART1), TOUR.length); }, 480);
+    if(!avance2 && !state.tutoSeen) setTimeout(function(){ startTour(Math.max(state.tutoStep,PART1), TOUR.length); }, 480);
     return;
   }
-  if(a==='replan'){ state.planned=''; save(); render(); toTop(); return; }
+  if(a==='replan'){ planDate=null; delete state.plannedDays[today()]; save(); render(); toTop(); return; }
+  if(a==='plannext'){ planDate=dk(addDays(nowD(),1)); render(); toTop(); return; }
+  if(a==='planback'){ planDate=null; render(); toTop(); return; }
   if(a==='theme'){ state.theme = state.theme==='dark'?'light':'dark'; save(); render(); return; }
   if(a==='gofocus'){ focusOpen(); return; }
   if(a==='bclose'){ $('#banner').classList.add('hide'); return; }
@@ -2526,13 +2550,13 @@ function boot(){
   /* changement de jour (les tâches « juste aujourd'hui » disparaissent) */
   setInterval(function(){
     var t=today();
-    if(t!==lastDay){ lastDay=t; statsMonth=null; render(); }   /* planned devient caduc : retour au choix du jour */
+    if(t!==lastDay){ lastDay=t; statsMonth=null; planDate=null; render(); }   /* la journée préparée devient celle du jour */
   }, 30000);
 
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState==='visible'){
       var t=today();
-      if(t!==lastDay){ lastDay=t; statsMonth=null; }
+      if(t!==lastDay){ lastDay=t; statsMonth=null; planDate=null; }
       render(); checkReminders(); syncNow(false);
     }
   });
