@@ -13,7 +13,12 @@
 var S = require('./_store.js');
 var redis = S.redis, hasStore = S.hasStore, readBody = S.readBody, send = S.send;
 
-var CLIENT_ID  = process.env.GOOGLE_CLIENT_ID || '';
+/* L'identifiant client OAuth n'est pas un secret : il figure dans le code de
+   toute page qui propose « se connecter avec Google ». Ce qui protège le
+   compte, c'est la liste des origines autorisées côté Google. On l'inscrit
+   donc en clair, et une variable d'environnement peut le remplacer. */
+var CLIENT_ID  = process.env.GOOGLE_CLIENT_ID ||
+  '508672727903-20il4kf8h2ltobj5lpikh6s1hp4js0ik.apps.googleusercontent.com';
 var TTL_SESSION = 60 * 60 * 24 * 90;          /* 90 jours */
 var MAX_STATE   = 700 * 1024;                 /* un état déraisonnable est refusé */
 

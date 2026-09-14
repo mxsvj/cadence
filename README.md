@@ -33,13 +33,20 @@ configuré.
    client ID**, type **Web application**.
 2. Dans **Authorized JavaScript origins**, ajouter l'adresse du site
    (`https://…vercel.app`), sans barre oblique finale.
-3. Copier l'identifiant client obtenu et le déclarer sur Vercel comme variable
-   d'environnement `GOOGLE_CLIENT_ID`, puis redéployer.
+3. Reporter l'identifiant client obtenu dans `api/account.js`, ou le déclarer
+   sur Vercel comme variable d'environnement `GOOGLE_CLIENT_ID` — celle-ci
+   prend le pas sur la valeur inscrite dans le code.
 4. Ouvrir `/api/account` : la réponse doit contenir `"google":true`.
+5. Passer l'écran de consentement **en production**. Tant qu'il reste en
+   « test », seules les adresses inscrites comme utilisateurs de test peuvent
+   se connecter. Les autorisations demandées se limitent au nom, à la photo et
+   à l'adresse : aucune validation par Google n'est nécessaire.
 
-L'identifiant client n'est pas un secret, il est de toute façon visible dans la
-page. Le jeton d'identité rendu par Google est vérifié côté serveur auprès de
-Google, puis échangé contre un jeton de session propre à l'application.
+L'identifiant client n'est pas un secret : il figure dans le code de toute page
+qui propose une connexion Google. Ce qui protège le compte, c'est la liste des
+origines autorisées côté Google, et la vérification du jeton côté serveur — on
+refuse un jeton émis pour une autre application, expiré, ou que Google ne
+reconnaît pas.
 
 ## Mettre le classement en service
 
