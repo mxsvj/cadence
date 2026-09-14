@@ -631,7 +631,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v4 · 2026-09-05';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v5 · 2026-09-14';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 3;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -741,6 +741,8 @@ function defaults(){
     focus:0,
     profile:{ id:uid(), name:'Moi', avatar:'💪' },
     friends:[], pendingDrop:[], syncAt:0,
+    account:null,   /* {uid, name, picture, token} — local, ne part jamais sur le serveur */
+    cloudAt:0,      /* horodatage de la dernière sauvegarde acceptée */
     notified:{},
     seeded:false
   };
@@ -780,6 +782,7 @@ function load(){
 function save(){
   try{ localStorage.setItem(LS, JSON.stringify(state)); }
   catch(e){ toast('Sauvegarde impossible (stockage plein ou navigation privée)','⚠️'); }
+  if(typeof cloudSave==='function' && logged()) cloudSave(false);   /* différée */
 }
 function seed(){
   if(state.seeded || state.habits.length) return;
@@ -1104,7 +1107,7 @@ function render(){
   else if(state.tab==='stats')     v.innerHTML=viewStats();
   else if(state.tab==='habitudes') v.innerHTML=viewHabitudes();
   else if(state.tab==='journal'){  v.innerHTML=viewJournal(); bindJournal(); }
-  else                             v.innerHTML=viewProfil();
+  else                           { v.innerHTML=viewProfil(); bindAccount(); }
   justDone=null;   /* la pulsation ne se rejoue pas au rendu suivant */
   $('#fab').classList.toggle('hide', !(state.tab==='jour'||state.tab==='habitudes'));
   /* verrouillé = visible avec un cadenas, pas caché : on doit comprendre pourquoi */
@@ -1599,6 +1602,133 @@ function syncNow(force){
 var syncT=null;
 function syncLater(){ clearTimeout(syncT); syncT=setTimeout(function(){ syncNow(false); },4000); }
 
+/* ========================================================================= */
+/*                    COMPTE GOOGLE ET SAUVEGARDE EN LIGNE                   */
+/* ========================================================================= */
+var ACCT='/api/account';
+var acctCfg=null, gsiReady=false, gsiDrawn=false;
+
+function acctConfig(){
+  if(acctCfg) return Promise.resolve(acctCfg);
+  if(location.protocol==='file:') return Promise.reject(new Error('local'));
+  return fetch(ACCT,{cache:'no-store'}).then(function(r){ return r.json(); })
+    .then(function(o){ acctCfg=o; return o; });
+}
+function logged(){ return !!(state.account && state.account.token); }
+
+/* Ce qui part en sauvegarde : tout sauf le compte lui-même, qui contient le
+   jeton de session et n'a rien à faire dans une copie restaurable ailleurs. */
+function syncableState(){
+  var out={};
+  for(var k in state){
+    if(k==='account' || k==='syncAt' || k==='cloudAt') continue;
+    out[k]=state[k];
+  }
+  return out;
+}
+function acctCall(payload){
+  return fetch(ACCT,{method:'POST',headers:{'Content-Type':'application/json'},
+                     body:JSON.stringify(payload)})
+    .then(function(r){ return r.json().then(function(o){ o._status=r.status; return o; }); });
+}
+
+/* --------- sauvegarde, différée pour ne pas écrire à chaque geste --------- */
+var cloudT=null, cloudBusy=false;
+function cloudSave(now){
+  if(!logged()) return Promise.resolve(false);
+  clearTimeout(cloudT);
+  if(!now) return new Promise(function(r){ cloudT=setTimeout(function(){ cloudSave(true).then(r); },6000); });
+  if(cloudBusy) return Promise.resolve(false);
+  cloudBusy=true;
+  return acctCall({action:'push', token:state.account.token, state:syncableState()})
+    .then(function(o){
+      cloudBusy=false;
+      if(o._status===401){ acctDropSession(); return false; }
+      if(o.ok){ state.cloudAt=o.updatedAt||Date.now(); save(); return true; }
+      if(o.error==='etat_trop_gros') toast('Sauvegarde trop volumineuse','⚠️');
+      return false;
+    })
+    .catch(function(){ cloudBusy=false; return false; });
+}
+function acctDropSession(){
+  state.account=null; save(); render();
+  toast('Session expirée — reconnecte-toi','🔑');
+}
+
+/* --------- restauration --------- */
+function cloudRestore(){
+  if(!logged()) return Promise.resolve(false);
+  return acctCall({action:'pull', token:state.account.token}).then(function(o){
+    if(o._status===401){ acctDropSession(); return false; }
+    if(!o.ok || !o.state) return false;
+    var compte=state.account;                    /* on ne se déconnecte pas en restaurant */
+    var d=defaults();
+    for(var k in d){ if(!(k in o.state)) o.state[k]=d[k]; }
+    state=o.state; state.account=compte; state.cloudAt=o.updatedAt||0;
+    save(); render();
+    return true;
+  }).catch(function(){ return false; });
+}
+
+/* --------- connexion --------- */
+function localHasData(){ return Object.keys(state.log||{}).length>0; }
+
+function onGoogleCredential(resp){
+  if(!resp || !resp.credential) return;
+  toast('Connexion…','🔑');
+  acctCall({action:'login', idToken:resp.credential}).then(function(o){
+    if(!o.ok){
+      toast(o.cause==='non_configure' ? 'Connexion Google non configurée' : 'Connexion refusée','⚠️');
+      return;
+    }
+    state.account={uid:o.uid, name:o.name, picture:o.picture, token:o.token};
+    save();
+    if(o.remote && localHasData()){ render(); openMerge(o.remote.updatedAt); return; }
+    if(o.remote){ cloudRestore().then(function(){ toast('Données restaurées','☁️'); }); return; }
+    cloudSave(true).then(function(){ toast('Compte lié — tes données sont sauvegardées','✅'); render(); });
+  }).catch(function(){ toast('Connexion impossible','⚠️'); });
+}
+
+/* Les deux côtés ont des données : c'est à l'utilisateur de trancher, pas à
+   moi de fusionner au jugé deux historiques qui ne se recoupent pas. */
+function openMerge(remoteAt){
+  var quand = remoteAt ? frShort(new Date(remoteAt))+' à '+pad(new Date(remoteAt).getHours())+'h'+pad(new Date(remoteAt).getMinutes()) : 'date inconnue';
+  openSheet(
+    '<div class="shead"><span class="emo">☁️</span><div style="flex:1;min-width:0">'+
+      '<h2>Deux versions</h2><div class="muted small">Ce téléphone et ton compte ont chacun des données.</div></div></div>'+
+    '<p class="muted small" style="margin:14px 0 0">Sur ton compte : sauvegarde du <b>'+esc(quand)+'</b>.<br>'+
+    'Sur ce téléphone : '+Object.keys(state.log||{}).length+' journée(s) enregistrée(s).</p>'+
+    '<p class="muted small">Choisis laquelle garder. L\'autre sera remplacée.</p>'+
+    '<div class="sactions" style="flex-direction:column">'+
+      '<button class="btn pri wide" data-act="mergeRemote">Garder celles du compte</button>'+
+      '<button class="btn wide" data-act="mergeLocal">Garder celles de ce téléphone</button>'+
+    '</div>');
+}
+
+/* --------- le bouton Google, redessiné après chaque rendu --------- */
+function bindAccount(){
+  var box=$('#gbtn');
+  if(!box || logged()) return;
+  acctConfig().then(function(cfg){
+    if(!cfg.google){ box.innerHTML='<div class="small muted">Connexion Google non configurée sur ce déploiement.</div>'; return; }
+    var draw=function(){
+      try{
+        window.google.accounts.id.initialize({client_id:cfg.clientId, callback:onGoogleCredential});
+        window.google.accounts.id.renderButton(box,{theme:'filled_black',size:'large',shape:'pill',
+          text:'signin_with',locale:'fr',width:280});
+      }catch(e){ box.innerHTML='<div class="small muted">Bouton Google indisponible.</div>'; }
+    };
+    if(gsiReady && window.google && window.google.accounts) return draw();
+    var sc=document.createElement('script');
+    sc.src='https://accounts.google.com/gsi/client'; sc.async=true; sc.defer=true;
+    sc.onload=function(){ gsiReady=true; draw(); };
+    sc.onerror=function(){ box.innerHTML='<div class="small muted">Google injoignable.</div>'; };
+    document.head.appendChild(sc);
+  }).catch(function(){
+    box.innerHTML='<div class="small muted">Ouvre l\'app par son adresse web pour te connecter.</div>';
+  });
+}
+
 function b64e(s){ return btoa(unescape(encodeURIComponent(s))); }
 function b64d(s){ return decodeURIComponent(escape(atob(s))); }
 function myCode(){
@@ -1667,6 +1797,38 @@ function leaderboard(){
     '</div>';
   }).join('');
 }
+function cloudLabel(){
+  if(!state.cloudAt) return 'Pas encore sauvegardé';
+  var m=Math.round((Date.now()-state.cloudAt)/60000);
+  if(m<1) return 'Sauvegardé à l\'instant';
+  if(m<60) return 'Sauvegardé il y a '+m+' min';
+  var hh=Math.round(m/60);
+  return hh<24 ? 'Sauvegardé il y a '+hh+' h' : 'Sauvegardé le '+frShort(new Date(state.cloudAt));
+}
+function accountBox(){
+  if(logged()){
+    var a=state.account;
+    return '<div class="row" style="gap:13px">'+
+      (a.picture ? '<img src="'+esc(a.picture)+'" alt="" referrerpolicy="no-referrer" '+
+                   'style="width:46px;height:46px;border-radius:50%;flex:0 0 46px;object-fit:cover">'
+                 : '<span class="etile"><span class="emo">👤</span></span>')+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
+          esc(a.name||'Compte Google')+'</div>'+
+        '<div class="small muted">'+esc(cloudLabel())+'</div>'+
+      '</div></div>'+
+      '<div class="grid2" style="margin-top:13px">'+
+        '<button class="btn sm" data-act="cloudnow">'+ic('save')+' Sauvegarder</button>'+
+        '<button class="btn ghost sm" data-act="logout">Se déconnecter</button>'+
+      '</div>'+
+      '<div class="small muted" style="margin-top:10px">Tes habitudes, ton historique, tes notes et ton poids '+
+      'sont enregistrés sur ton compte. Connecte-toi sur un autre téléphone pour les y retrouver.</div>';
+  }
+  return '<div class="small muted" style="margin-bottom:12px">'+
+    'Sans compte, tes données vivent uniquement dans ce navigateur : les vider ou changer de téléphone les perd. '+
+    'Relie un compte Google et elles te suivent.</div>'+
+    '<div id="gbtn" style="display:flex;justify-content:center;min-height:44px"></div>';
+}
 function syncLabel(){
   if(diagMsg) return diagMsg;
   if(location.protocol==='file:') return 'Fichier local : classement à la main';
@@ -1699,7 +1861,8 @@ function viewProfil(){
       '<span class="be">'+x.e+'</span><small>'+esc(x.n)+'</small></div>';
   }).join('')+'</section>';
 
-  h+='<div class="sec"><h2>Mon compte</h2><span class="small">local</span></div>';
+  h+='<div class="sec"><h2>Mon compte</h2><span class="small">'+(logged()?'sauvegardé':'sur ce téléphone')+'</span></div>';
+  h+='<section class="card pop" style="margin-bottom:10px">'+ accountBox() +'</section>';
   h+='<section class="card pop">'+
     '<div class="field"><label>Blaze</label>'+
       '<input id="pname" maxlength="20" value="'+esc(p.name)+'" placeholder="Ton blaze"></div>'+
@@ -1743,7 +1906,8 @@ function viewProfil(){
     '<li>Appuie sur <b>Partager</b> (le carré avec la flèche).</li>'+
     '<li>Choisis <b>« Sur l\'écran d\'accueil »</b>.</li>'+
     '<li>Valide : Cadence s\'ouvre en plein écran, comme une vraie app.</li></ol>'+
-    'Tes données restent sur ton téléphone. Ne supprime pas l\'icône sans avoir fait une sauvegarde.</div></details>';
+    'Sans compte, tes données vivent dans ce navigateur : ne supprime pas l\'icône sans avoir '+
+    'lié un compte ou fait une sauvegarde.</div></details>';
   h+='<details>'+sum('bell','Les rappels, franchement')+'<div class="dc">'+
     '<b>Quand l\'app est ouverte :</b> Cadence vérifie l\'heure toutes les 20 s et affiche une bannière + vibration '+
     'dès qu\'une tâche non faite arrive à son horaire (une fois par tâche et par jour).<br><br>'+
@@ -1768,15 +1932,16 @@ function viewProfil(){
     '</div></details>';
   h+='</div>';
   h+='<button class="btn wide" data-act="retuto" style="margin-top:4px">'+ic('cap')+' Revoir le tutoriel</button>';
-  h+='<details>'+sum('profile','Ce qui sort de ton téléphone')+'<div class="dc">'+
-    'Une seule chose : le classement. Partent en ligne ton <b>blaze</b>, ton <b>avatar</b>, '+
-    'tes <b>points</b> du jour, de la semaine et du mois, et ton <b>XP</b>. C\'est tout.<br><br>'+
-    'Ne sortent jamais : tes habitudes et leurs étapes, tes notes de journal, ton poids, '+
-    'tes humeurs, ton historique. Ils restent dans le stockage de ce téléphone.<br><br>'+
-    'Il n\'y a ni compte ni mot de passe : ton identifiant est un tirage au hasard et fait '+
-    'office de clé. Ne publie pas ton code en public, donne-le à tes potes.'+
+  h+='<details>'+sum('profile','Où vont tes données')+'<div class="dc">'+
+    '<b>Sans compte.</b> Tout vit dans le navigateur de ce téléphone. Seul le classement '+
+    'sort : blaze, avatar, points du jour, de la semaine et du mois, XP. Vider Safari ou '+
+    'changer de téléphone efface le reste.<br><br>'+
+    '<b>Avec un compte Google.</b> Tes habitudes, ton historique, tes notes, tes humeurs et '+
+    'ton poids sont en plus enregistrés sur le serveur, pour que tu les retrouves ailleurs. '+
+    'Tu peux te déconnecter à tout moment : les données du téléphone ne sont pas effacées.<br><br>'+
+    'Ton code ami tient lieu de clé pour le classement : donne-le à tes potes, pas en public.'+
     '</div></details>';
-  h+='<div class="center" style="margin:20px 0 6px"><div class="small muted">Habitudes, notes et poids restent sur ton téléphone.</div>'+
+  h+='<div class="center" style="margin:20px 0 6px"><div class="small muted">'+(logged()?'Tes données sont sauvegardées sur ton compte.':'Tes données vivent dans ce navigateur.')+'</div>'+
      '<div class="ver" style="margin-top:5px">CADENCE · '+esc(BUILD)+'</div></div>';
   return h;
 }
@@ -2289,7 +2454,6 @@ document.addEventListener('click', function(ev){
         var ok = o && o.redis==='ok';
         var nb = (o && o.cles) || 0;
         diagMsg = ok ? 'Base connectée — le classement se synchronise seul ('+nb+' entrée'+(nb>1?'s':'')+')'
-          : (o && o.cause==='sans_api_rest') ? 'Base branchée sans accès REST — il faut Upstash Redis'
           : (o && o.cause==='aucune_variable')? 'Base pas reliée au déploiement — relie-la puis redéploie'
           : (o && o.redis==='absente')       ? 'Aucune base branchée'
           : (o && o.redis==='injoignable')   ? 'Base branchée mais elle ne répond pas'
@@ -2303,6 +2467,29 @@ document.addEventListener('click', function(ev){
         diagMsg='Serveur injoignable — vérifie ta connexion';
         toast(diagMsg,'⚠️'); render();
       });
+    return;
+  }
+  if(a==='logout'){
+    if(!window.confirm('Te déconnecter ? Tes données restent sur ce téléphone.')) return;
+    var tk=state.account&&state.account.token;
+    state.account=null; state.cloudAt=0; save(); render();
+    toast('Déconnecté','👋');
+    if(tk) acctCall({action:'logout',token:tk}).catch(function(){});
+    return;
+  }
+  if(a==='cloudnow'){
+    toast('Sauvegarde…','☁️');
+    cloudSave(true).then(function(ok){ render(); toast(ok?'Sauvegardé':'Sauvegarde impossible', ok?'✅':'⚠️'); });
+    return;
+  }
+  if(a==='mergeRemote'){
+    closeSheet();
+    cloudRestore().then(function(ok){ toast(ok?'Données du compte restaurées':'Restauration impossible', ok?'☁️':'⚠️'); });
+    return;
+  }
+  if(a==='mergeLocal'){
+    closeSheet(); render();
+    cloudSave(true).then(function(ok){ toast(ok?'Ce téléphone fait foi désormais':'Sauvegarde impossible', ok?'✅':'⚠️'); });
     return;
   }
   if(a==='resync'){
@@ -2396,7 +2583,7 @@ function toTop(){ try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ wi
 var TOUR=[
  /* ---------- partie 1 : poser sa journée ---------- */
  {tab:'jour', sel:null, t:'Bienvenue dans Cadence',
-  x:"Ton carnet de discipline. Tes habitudes, tes notes et ton poids restent sur ton téléphone ; seuls tes points partent en ligne, pour le classement entre potes. Six étapes, et tu sais tout faire."},
+  x:"Ton carnet de discipline. Sans compte, tout reste dans ce navigateur ; relie un compte Google et tes données te suivent d'un téléphone à l'autre. Six étapes, et tu sais tout faire."},
  {tab:'jour', sel:'#planlist|#planhead|.task|.dayhead', t:'Chaque jour commence ici',
   x:"Tu choisis d'abord ce que tu fais aujourd'hui. Touche une tâche pour la retirer de ta journée — repos, imprévu, blessure : elle ne comptera pas contre toi."},
  {tab:'jour', sel:'#fab', t:'Ajoute ce que tu veux',
@@ -2542,6 +2729,7 @@ function boot(){
   maybeTour();
 
   syncNow(true);   /* on récupère ceux qui t'ont ajouté depuis la dernière fois */
+  if(logged()) cloudRestore();   /* un autre téléphone a pu prendre la main */
 
   /* rappels : toutes les 20 s tant que l'app est ouverte */
   setTimeout(checkReminders, 1500);

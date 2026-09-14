@@ -4,7 +4,10 @@ Tracker d'habitudes en un seul fichier, pensé pour l'écran d'accueil d'un iPho
 
 - `index.html` — toute l'application : HTML, CSS et JavaScript. Aucune dépendance
   hors les polices Google *Barlow Condensed* et *Manrope*.
-- `api/board.js` — une fonction sans serveur, uniquement pour le classement entre amis.
+- `api/_store.js` — accès à Redis, partagé par les fonctions. Le préfixe `_`
+  empêche l'hébergeur d'en faire une route.
+- `api/board.js` — le classement entre amis.
+- `api/account.js` — le compte Google et la sauvegarde des données.
 
 ## Ce qui est stocké, et où
 
@@ -18,6 +21,25 @@ points du jour, de la semaine et du mois, XP. Ces enregistrements expirent aprè
 
 Il n'y a ni compte ni mot de passe. L'identifiant de chaque joueur est un tirage au
 hasard qui fait office de clé : le code ami se donne à ses potes, pas en public.
+
+## Mettre le compte Google en service
+
+Sans configuration, l'application fonctionne : elle propose simplement de tout
+garder dans le navigateur, et le bouton de connexion indique qu'il n'est pas
+configuré.
+
+1. Sur [console.cloud.google.com](https://console.cloud.google.com), créer un
+   projet, puis **APIs & Services → Credentials → Create credentials → OAuth
+   client ID**, type **Web application**.
+2. Dans **Authorized JavaScript origins**, ajouter l'adresse du site
+   (`https://…vercel.app`), sans barre oblique finale.
+3. Copier l'identifiant client obtenu et le déclarer sur Vercel comme variable
+   d'environnement `GOOGLE_CLIENT_ID`, puis redéployer.
+4. Ouvrir `/api/account` : la réponse doit contenir `"google":true`.
+
+L'identifiant client n'est pas un secret, il est de toute façon visible dans la
+page. Le jeton d'identité rendu par Google est vérifié côté serveur auprès de
+Google, puis échangé contre un jeton de session propre à l'application.
 
 ## Mettre le classement en service
 
