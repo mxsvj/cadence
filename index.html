@@ -10,6 +10,7 @@
 <meta name="theme-color" content="#14110F">
 <meta name="description" content="Cadence — tracker d'habitudes, discipline et régularité.">
 <title>Cadence</title>
+<link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -631,7 +632,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v5 · 2026-09-14';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v6 · 2026-09-15';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 3;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -1603,6 +1604,125 @@ var syncT=null;
 function syncLater(){ clearTimeout(syncT); syncT=setTimeout(function(){ syncNow(false); },4000); }
 
 /* ========================================================================= */
+/*                          NOTIFICATIONS PUSH                               */
+/* ========================================================================= */
+/* Sur iPhone, les vraies notifications n'existent que pour une app posée sur
+   l'écran d'accueil : dans un onglet Safari, PushManager n'existe même pas.
+   Et comme c'est le serveur qui décide de l'heure d'envoi, il lui faut les
+   habitudes — donc il faut être connecté. */
+var PUSH='/api/push';
+var pushOn=false, pushDevices=0, pushMsg='';
+
+function isStandalone(){
+  return window.navigator.standalone===true ||
+         !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+}
+function pushSupported(){
+  return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+}
+function b64ToU8(base64){
+  var s=(base64+'='.repeat((4-base64.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/');
+  var raw=atob(s), out=new Uint8Array(raw.length);
+  for(var i=0;i<raw.length;i++) out[i]=raw.charCodeAt(i);
+  return out;
+}
+function swReady(){
+  if(!('serviceWorker' in navigator)) return Promise.reject(new Error('sw'));
+  return navigator.serviceWorker.register('/sw.js').then(function(){
+    return navigator.serviceWorker.ready;
+  });
+}
+function pushCall(payload){
+  return fetch(PUSH,{method:'POST',headers:{'Content-Type':'application/json'},
+                     body:JSON.stringify(payload)})
+    .then(function(r){ return r.json().then(function(o){ o._status=r.status; return o; }); });
+}
+
+/* Ce qu'on affiche dépend d'où l'on bloque : chaque cas appelle un geste différent. */
+function pushLabel(){
+  if(pushMsg) return pushMsg;
+  if(location.protocol==='file:')   return 'Ouvre l\'app par son adresse web';
+  if(!logged())                     return 'Connecte-toi pour activer les rappels';
+  if(!pushSupported())              return isStandalone()
+      ? 'Ton navigateur ne gère pas les notifications'
+      : 'Ajoute l\'app à ton écran d\'accueil, puis reviens ici';
+  if(window.Notification && Notification.permission==='denied')
+                                    return 'Notifications refusées dans les réglages du téléphone';
+  return pushOn ? 'Rappels actifs sur '+pushDevices+' appareil'+(pushDevices>1?'s':'')
+                : 'Rappels éteints';
+}
+function pushReady(){
+  return logged() && pushSupported() && location.protocol!=='file:' &&
+         !(window.Notification && Notification.permission==='denied');
+}
+
+/* Vérifie l'abonnement réel plutôt que de se fier à un drapeau local. */
+function pushRefresh(){
+  if(!pushSupported() || !logged()) { pushOn=false; return Promise.resolve(); }
+  return swReady().then(function(reg){
+    return reg.pushManager.getSubscription();
+  }).then(function(sub){
+    pushOn=!!sub;
+    if(!sub) return;
+    return pushCall({action:'status', token:state.account.token}).then(function(o){
+      if(o && o.ok) pushDevices=o.appareils||1;
+    });
+  }).catch(function(){ pushOn=false; });
+}
+
+function pushEnable(){
+  if(location.protocol==='file:'){ toast('Ouvre l\'app par son adresse web','📴'); return; }
+  if(!logged()){ toast('Connecte-toi d\'abord','🔑'); return; }
+  if(!pushSupported()){
+    toast(isStandalone()?'Non géré par ce navigateur':'Ajoute d\'abord l\'app à ton écran d\'accueil','📲');
+    return;
+  }
+  pushMsg='Activation…'; render();
+  Notification.requestPermission().then(function(perm){
+    if(perm!=='granted'){ pushMsg=''; toast('Refusé — tu peux revenir sur ce choix dans les réglages','🙃'); render(); return; }
+    return fetch(PUSH,{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(cfg){
+      if(!cfg || !cfg.vapid) throw new Error('clé absente');
+      return swReady().then(function(reg){
+        return reg.pushManager.subscribe({userVisibleOnly:true,
+          applicationServerKey:b64ToU8(cfg.vapid)});
+      });
+    }).then(function(sub){
+      var j=sub.toJSON();
+      return pushCall({action:'subscribe', token:state.account.token,
+        subscription:{endpoint:j.endpoint, keys:j.keys},
+        tz:new Date().getTimezoneOffset()});
+    }).then(function(o){
+      pushMsg='';
+      if(o && o.ok){ pushOn=true; pushDevices=o.appareils||1; toast('Rappels activés','🔔'); }
+      else toast('Activation refusée par le serveur','⚠️');
+      render();
+    });
+  }).catch(function(e){
+    pushMsg=''; toast('Activation impossible','⚠️'); render();
+  });
+}
+function pushDisable(){
+  pushMsg='Extinction…'; render();
+  swReady().then(function(reg){ return reg.pushManager.getSubscription(); })
+    .then(function(sub){
+      if(!sub) return null;
+      var ep=sub.endpoint;
+      return sub.unsubscribe().then(function(){
+        return pushCall({action:'unsubscribe', token:state.account.token, endpoint:ep});
+      });
+    })
+    .then(function(){ pushMsg=''; pushOn=false; toast('Rappels éteints','🔕'); render(); })
+    .catch(function(){ pushMsg=''; render(); });
+}
+function pushTest(){
+  toast('Envoi en cours…','📨');
+  pushCall({action:'test', token:state.account.token}).then(function(o){
+    toast(o && o.ok ? 'Envoyée — elle doit arriver dans quelques secondes'
+                    : 'Aucun appareil joignable', o && o.ok ? '✅' : '⚠️');
+  }).catch(function(){ toast('Envoi impossible','⚠️'); });
+}
+
+/* ========================================================================= */
 /*                    COMPTE GOOGLE ET SAUVEGARDE EN LIGNE                   */
 /* ========================================================================= */
 var ACCT='/api/account';
@@ -1805,6 +1925,27 @@ function cloudLabel(){
   var hh=Math.round(m/60);
   return hh<24 ? 'Sauvegardé il y a '+hh+' h' : 'Sauvegardé le '+frShort(new Date(state.cloudAt));
 }
+function pushBox(){
+  var pret=pushReady();
+  var h='<div class="row" style="gap:13px;margin-bottom:12px">'+
+    '<span class="etile"'+(pushOn?' style="background:rgba(62,207,142,.16);border-color:rgba(62,207,142,.34)"':'')+
+      '>'+ic('bell')+'</span>'+
+    '<div style="flex:1;min-width:0"><div style="font-weight:800">'+
+      (pushOn?'Rappels actifs':'Rappels éteints')+'</div>'+
+      '<div class="small muted">'+esc(pushLabel())+'</div></div></div>';
+  if(pushOn){
+    h+='<div class="grid2">'+
+       '<button class="btn sm" data-act="pushtest">'+ic('bell')+' Tester</button>'+
+       '<button class="btn ghost sm" data-act="pushoff">Éteindre</button></div>';
+  }else{
+    h+='<button class="btn '+(pret?'pri':'')+' wide sm"'+(pret?'':' disabled')+' data-act="pushon">'+
+       ic('bell')+' Activer les rappels</button>';
+  }
+  h+='<div class="small muted" style="margin-top:11px">'+
+     'Une notification à l\'heure de chaque tâche non faite, même app fermée. '+
+     'Une seule par tâche et par jour.</div>';
+  return h;
+}
 function accountBox(){
   if(logged()){
     var a=state.account;
@@ -1873,6 +2014,9 @@ function viewProfil(){
     '<div class="small muted center" style="margin-top:9px">id : '+esc(p.id)+'</div>'+
   '</section>';
 
+  h+='<div class="sec"><h2>Rappels</h2><span class="small">'+(pushOn?'actifs':'éteints')+'</span></div>';
+  h+='<section class="card pop">'+ pushBox() +'</section>';
+
   h+='<div class="sec"><h2>Classement</h2><span>'+(state.friends.length+1)+' joueur'+(state.friends.length?'s':'')+'</span></div>';
   h+='<section class="card pop">'+
     '<div class="lbtabs">'+
@@ -1909,11 +2053,13 @@ function viewProfil(){
     'Sans compte, tes données vivent dans ce navigateur : ne supprime pas l\'icône sans avoir '+
     'lié un compte ou fait une sauvegarde.</div></details>';
   h+='<details>'+sum('bell','Les rappels, franchement')+'<div class="dc">'+
-    '<b>Quand l\'app est ouverte :</b> Cadence vérifie l\'heure toutes les 20 s et affiche une bannière + vibration '+
-    'dès qu\'une tâche non faite arrive à son horaire (une fois par tâche et par jour).<br><br>'+
-    '<b>Quand l\'app est fermée :</b> une page web sur iPhone ne peut pas te notifier de façon fiable. '+
-    'La solution honnête, c\'est le calendrier : génère un fichier <b>.ics</b>, ouvre-le, ajoute-le à ton agenda, '+
-    'et c\'est iOS qui te notifie à l\'heure prévue.'+
+    '<b>App ouverte :</b> Cadence vérifie l\'heure toutes les 20 s et affiche une bannière avec vibration '+
+    'dès qu\'une tâche non faite arrive à son horaire.<br><br>'+
+    '<b>App fermée :</b> de vraies notifications, à trois conditions — l\'app posée sur '+
+    'l\'écran d\'accueil (depuis iOS 16.4, une page web dans un onglet ne peut pas notifier), '+
+    'un compte relié, et les rappels activés plus haut. Le serveur regarde toutes les cinq minutes '+
+    'qui a une tâche dont l\'heure vient de passer, et n\'envoie qu\'une notification par tâche et par jour.<br><br>'+
+    '<b>Et si tu préfères ton agenda :</b> le fichier .ics reste là, iOS te prévient alors lui-même.'+
     '<div style="margin-top:10px" class="row">'+
       '<button class="btn sm" data-act="ics">'+ic('day')+' Fichier .ics</button>'+
       '<button class="btn sm" data-act="notifperm">'+ic('bell')+' Autoriser les notifs</button>'+
@@ -2322,7 +2468,7 @@ document.addEventListener('click', function(ev){
     var nt=el.getAttribute('data-tab');
     if(locked(nt)){ buzz([15,40,15]); toast('Valide d\'abord tes tâches du jour','🔒'); return; }
     state.tab=nt; pendingDel=null; save(); render(); toTop();
-    if(nt==='profil') syncNow(true);      /* on arrive sur le classement : on le rafraîchit */
+    if(nt==='profil'){ syncNow(true); pushRefresh().then(render); }
     return;
   }
   if(a==='ptoggle'){
@@ -2469,6 +2615,9 @@ document.addEventListener('click', function(ev){
       });
     return;
   }
+  if(a==='pushon'){  pushEnable();  return; }
+  if(a==='pushoff'){ pushDisable(); return; }
+  if(a==='pushtest'){ pushTest();   return; }
   if(a==='logout'){
     if(!window.confirm('Te déconnecter ? Tes données restent sur ce téléphone.')) return;
     var tk=state.account&&state.account.token;

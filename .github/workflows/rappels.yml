@@ -1,0 +1,42 @@
+# Réveille l'application toutes les cinq minutes pour qu'elle envoie les
+# notifications dues. Le plan gratuit de l'hébergeur ne permet pas une tâche
+# planifiée aussi fréquente ; une action programmée, elle, est gratuite sur un
+# dépôt public.
+#
+# L'appel est sans danger s'il est rejoué : une notification déjà envoyée dans
+# la journée ne repart pas, et le serveur ignore deux appels rapprochés. Il n'y
+# a donc aucun secret à protéger ici.
+#
+# GitHub désactive les tâches programmées d'un dépôt resté 60 jours sans
+# activité : un commit suffit à les relancer.
+
+name: Rappels
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:        # permet aussi de déclencher à la main depuis l'onglet Actions
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rappels
+  cancel-in-progress: false
+
+jobs:
+  sonner:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Demander l'envoi des notifications dues
+        run: |
+          reponse=$(curl -sS -m 30 -w '\n%{http_code}' \
+            -X POST "$CIBLE" \
+            -H 'Content-Type: application/json' \
+            -d '{"action":"tick"}') || { echo "appel impossible"; exit 1; }
+          corps=$(echo "$reponse" | head -n -1)
+          code=$(echo "$reponse" | tail -n 1)
+          echo "réponse ($code) : $corps"
+          [ "$code" = "200" ] || exit 1
+        env:
+          CIBLE: https://cadence-ten-theta.vercel.app/api/push
