@@ -8,6 +8,7 @@ Tracker d'habitudes en un seul fichier, pensé pour l'écran d'accueil d'un iPho
   empêche l'hébergeur d'en faire une route.
 - `api/board.js` — le classement entre amis.
 - `api/crew.js` — les groupes : code d'invitation, membres, défis.
+- `api/coach.js` — le coach. La seule fonction qui coûte de l'argent.
 - `api/account.js` — le compte Google et la sauvegarde des données.
 - `api/push.js` — les notifications : abonnements, minuteur, envoi.
 - `sw.js` — le service worker. Il n'a qu'un rôle, afficher les notifications
@@ -274,6 +275,76 @@ différentes :
 Les compléments, eux, sont là — c'est une case à cocher, Cadence ne dose rien et
 ne conseille rien là-dessus.
 
+## Le coach
+
+C'est la seule partie de l'application qui coûte de l'argent : chaque réponse
+est facturée au message par l'API Claude. Tout est donc écrit pour que ça coûte
+le moins possible, et pour que ce que ça coûte soit visible.
+
+### Le brancher
+
+1. Créer une clé sur [console.anthropic.com](https://console.anthropic.com) →
+   **API keys**, et y mettre du crédit (**Billing**). Sans crédit, la clé existe
+   mais chaque appel est refusé.
+2. Sur Vercel : le projet → **Settings** → **Environment Variables** → ajouter
+   `ANTHROPIC_API_KEY`, coller la clé, cocher les trois environnements, puis
+   **Save**.
+3. Redéployer (**Deployments** → le dernier → **Redeploy**), une variable
+   n'étant lue qu'au démarrage d'une fonction.
+4. Ouvrir `/api/coach` : la réponse doit contenir `"pret":true`.
+
+La clé ne quitte jamais le serveur : le téléphone parle à `/api/coach`, jamais
+à Anthropic.
+
+### Ce qui coûte, et ce qui le réduit
+
+Le modèle par défaut est le plus capable (`claude-opus-5`) ; deux autres sont
+proposés dans les réglages parce que c'est une dépense réelle et que le choix
+revient à celui qui paie. Ce qui est fait pour réduire la note :
+
+- **effort bas** (`output_config.effort: "low"`) — une réponse de coach tient en
+  cinq phrases, la profondeur de raisonnement n'y change rien et coûte des
+  jetons ;
+- **consigne mise en cache** (`cache_control`), donc payée plein tarif au plus
+  une fois par fenêtre de cache, tous utilisateurs confondus ;
+- **six tours d'historique au maximum**, pas toute la conversation ;
+- **quarante messages par compte et par jour**, comptés dans Redis avec une
+  expiration de deux jours ;
+- **le coût réel de chaque réponse est affiché sous elle**, calculé depuis les
+  jetons que l'API rapporte — cache et entrée/sortie distingués, pas une
+  estimation.
+
+Le plafond de sortie (`max_tokens`) est un filet, pas un budget : on ne paie que
+ce qui est réellement écrit, et il doit rester assez haut pour que la réflexion
+du modèle — qui se compte dedans — ne rogne pas la réponse. La brièveté se
+demande dans la consigne, pas avec des ciseaux.
+
+### Ce qui part, et ce qui ne part pas
+
+Le contexte est assemblé **par l'application, pas par le serveur**. C'est
+délibéré : cela permet de le montrer mot pour mot avant l'envoi (« Voir ce qui
+partirait »), ce qui serait impossible si le serveur allait le chercher
+lui-même dans la base. Il n'est joint que si le réglage est allumé ; éteint, le
+coach dit qu'il ne sait pas au lieu de deviner.
+
+Le serveur ne garde qu'un compteur de messages par compte et par jour. Aucune
+conversation n'y est conservée, et la conversation locale est exclue de la
+sauvegarde en ligne — elle n'a rien à y faire et la ferait grossir pour rien.
+
+Une erreur de l'API n'est jamais remontée telle quelle au téléphone : le détail
+brut peut contenir des bribes de la requête. Chaque cas connu (clé refusée,
+surcharge, requête invalide) a son message ; le reste tombe sur un message
+générique.
+
+### Ce qu'il refuse
+
+La consigne lui interdit tout diagnostic, tout avis médical et tout conseil sur
+des médicaments, lui demande de renvoyer vers un médecin, un kiné ou un
+diététicien devant une douleur qui dure, une blessure ou un trouble
+alimentaire, et lui interdit les régimes très restrictifs comme l'encouragement
+à s'entraîner malgré la douleur. Un refus du modèle lui-même est annoncé comme
+tel plutôt que déguisé en réponse.
+
 ## Développement
 
 Un serveur local sert l'application et la vraie fonction, branchée sur un Redis en
@@ -281,6 +352,12 @@ mémoire — pratique pour dérouler le scénario à deux téléphones sans rien
 Les suites de tests pilotent Chromium avec Playwright : parcours complet, tutoriel
 et verrouillage, états de démarrage, rendu clair et sombre, géométrie du
 projecteur, et synchronisation entre deux appareils.
+
+Le coach se teste sans dépenser un centime : le SDK d'Anthropic est le vrai,
+seule la destination change (`ANTHROPIC_BASE_URL`). Ce qui part réellement sur
+le réseau est donc vérifié — le modèle, l'effort, la mise en cache de la
+consigne, le contexte joint ou non, l'historique tronqué — au lieu d'être
+supposé.
 
 L'onglet Athlète a sa propre suite : couleur d'accent jusqu'au style calculé des
 boutons, grille de l'année, décompte de la saison, estimation de maximum et

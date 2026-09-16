@@ -2,9 +2,10 @@
   "name": "cadence",
   "version": "1.0.0",
   "private": true,
-  "description": "Tracker d'habitudes en un seul fichier. Les dépendances ne servent qu'au classement partagé et aux rappels.",
+  "description": "Tracker d'habitudes en un seul fichier. Les dépendances servent au classement partagé, aux rappels et au coach.",
   "dependencies": {
     "ioredis": "^6.0.0",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "@anthropic-ai/sdk": "^0.126.0"
   }
 }
