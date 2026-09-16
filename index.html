@@ -550,6 +550,57 @@ details .dc li{margin-bottom:6px}
 .lgd{font-size:11.5px;color:var(--mut);font-variant-numeric:tabular-nums}
 .lgs{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
 
+/* ============================ 14c. nutrition ============================ */
+.nring{display:flex;gap:10px}
+.nring>div{flex:1;text-align:center}
+.nrsvg{display:block;margin:0 auto 6px}
+.nrsvg .bg{fill:none;stroke:var(--line);stroke-width:9}
+.nrsvg .fg{fill:none;stroke-width:9;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;
+  transition:stroke-dashoffset .6s var(--ease)}
+.nrv{font-family:'Barlow Condensed',sans-serif;font-size:27px;font-weight:700;line-height:1;
+  font-variant-numeric:tabular-nums}
+.nrv small{font-size:13px;color:var(--mut);font-weight:600}
+.nrl{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--mut);text-transform:uppercase;margin-top:3px}
+.nrg{font-size:11.5px;color:var(--mut2);font-variant-numeric:tabular-nums}
+.nsplit{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px;padding-top:13px;
+  border-top:1px solid var(--line)}
+.nsplit div{text-align:center}
+.nsplit b{display:block;font-family:'Barlow Condensed',sans-serif;font-size:23px;font-weight:700;
+  font-variant-numeric:tabular-nums}
+.nsplit span{font-size:11px;color:var(--mut);font-weight:700;letter-spacing:.05em}
+.mealrow{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r);
+  background:var(--surf2);border:1px solid var(--line);margin-bottom:7px}
+.mealrow .mi{flex:1;min-width:0}
+.mealrow .mn2{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mealrow .mk{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.objchips{display:flex;gap:7px;margin-bottom:12px}
+.objchips button{flex:1;padding:9px;border-radius:999px;background:var(--surf2);border:1px solid var(--line);
+  font-size:12.5px;font-weight:700;color:var(--mut)}
+.objchips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+
+/* ============================ 14d. crew ============================ */
+.crewtabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:9px;margin-bottom:3px}
+.crewtabs button{flex:0 0 auto;padding:8px 14px;border-radius:999px;background:var(--surf2);
+  border:1px solid var(--line);font-size:13px;font-weight:700;color:var(--mut);white-space:nowrap}
+.crewtabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.crewcode{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:var(--r);
+  background:var(--surf2);border:1px dashed var(--line2);margin-bottom:11px}
+.crewcode b{font-family:'Barlow Condensed',sans-serif;font-size:25px;letter-spacing:.14em;font-weight:700}
+.defi{padding:12px 13px;border-radius:var(--r);background:var(--surf2);border:1px solid var(--line);
+  margin-bottom:9px}
+.defihead{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
+.defihead .dn{font-weight:800;font-size:14.5px;flex:1;min-width:0}
+.defihead .dc{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.defiline{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.defiline .av{font-size:17px;flex:0 0 auto}
+.defiline .nm{flex:0 0 74px;font-size:12.5px;font-weight:700;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.defiline .bar{flex:1;height:7px;border-radius:5px;background:var(--line);overflow:hidden}
+.defiline .bar i{display:block;height:100%;background:var(--acc);border-radius:5px;
+  transition:width .6s var(--ease)}
+.defiline .bar i.full{background:var(--ok)}
+.defiline .pc{flex:0 0 40px;text-align:right;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+
 /* ============================ 15. mode focus ============================ */
 #focus{position:fixed;inset:0;z-index:80;display:none;background:var(--bg);
   padding:calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 20px);overflow-y:auto}
@@ -751,7 +802,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v7 · 2026-09-16';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v8 · 2026-09-16';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 3;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -1209,7 +1260,7 @@ function setDone(key,h,val){
     /* une séance cochée sans avoir été déroulée compte quand même : on
        inscrit ce qui était prévu, sinon le carnet et la récupération
        resteraient vides alors que la séance a bien eu lieu. */
-    if(isSeance(h) && !e.sea && exosOf(h).length) e.sea = seanceParDefaut(h);
+    if(isSeance(h) && !e.sea) e.sea = seanceParDefaut(h);
   }else{
     e.done=false; e.doneAt=null; e.pts=0; delete e.sea;
   }
@@ -1562,6 +1613,92 @@ function fraisDabord(){
   });
 }
 
+/* ========================================================================= */
+/*                                NUTRITION                                  */
+/* ========================================================================= */
+/* Pas d'accès à Apple Santé depuis le web : le métabolisme de repos est donc
+   estimé (Mifflin-St Jeor, la formule la plus utilisée en diététique), et la
+   dépense du jour vient des séances réellement inscrites au carnet. C'est une
+   estimation, l'écran le dit. */
+var ACTIVITES = [
+  {id:'assis',  n:'Assis',       d:'Bureau, peu de marche',        k:1.15},
+  {id:'debout', n:'Debout',      d:'Métier actif, marche',         k:1.30},
+  {id:'dur',    n:'Physique',    d:'Chantier, manutention',        k:1.45}
+];
+var OBJECTIFS = [
+  {id:'seche', n:'Sèche',   k:-.20, prot:2.0},
+  {id:'maint', n:'Maintien', k:0,    prot:1.7},
+  {id:'prise', n:'Prise',   k:+.12, prot:1.9}
+];
+function objectif(){
+  var id=(state.body&&state.body.obj)||'maint';
+  for(var i=0;i<OBJECTIFS.length;i++) if(OBJECTIFS[i].id===id) return OBJECTIFS[i];
+  return OBJECTIFS[1];
+}
+function dernierPoids(){
+  var ks=Object.keys(state.weight||{}).sort();
+  return ks.length ? +state.weight[ks[ks.length-1]] : null;
+}
+function corpsPret(){
+  var b=state.body||{};
+  return !!(dernierPoids() && +b.taille && +b.age && b.sexe);
+}
+/* Mifflin-St Jeor : le repos, sans un gramme de sport dedans. */
+function metabolismeRepos(){
+  var b=state.body||{}, kg=dernierPoids();
+  if(!kg || !+b.taille || !+b.age || !b.sexe) return 0;
+  var base = 10*kg + 6.25*(+b.taille) - 5*(+b.age);
+  return Math.round(base + (b.sexe==='f' ? -161 : 5));
+}
+function coefActivite(){
+  var id=(state.body&&state.body.act)||'assis';
+  for(var i=0;i<ACTIVITES.length;i++) if(ACTIVITES[i].id===id) return ACTIVITES[i].k;
+  return 1.15;
+}
+/* La dépense des séances du jour. Une séance de force tourne autour de
+   8 kcal par minute, du cardio plutôt 10 ; à défaut de durée mesurée on
+   compte 45 secondes d'effort plus le repos prévu par série. */
+function depenseSeances(key){
+  var total=0;
+  carnet(key,key).forEach(function(sn){
+    var st=statSeance(sn.sea);
+    if(!st.series && !sn.sea.d) return;           /* rien à estimer */
+    var min = sn.sea.d ? sn.sea.d/60
+                       : (st.series*45 + st.secs)/60 + st.series*1.2;
+    var cardio = (sn.sea.x||[]).some(function(ex){ return exoOr(ex.i).u==='min'; });
+    total += min * (cardio?10:8);
+  });
+  return Math.round(total);
+}
+function besoinDuJour(key){
+  var repos=metabolismeRepos();
+  if(!repos) return null;
+  var vie=Math.round(repos*coefActivite()), sport=depenseSeances(key||today());
+  var o=objectif(), brut=vie+sport;
+  return {
+    repos:repos, vie:vie, sport:sport,
+    kcal: Math.round(brut*(1+o.k)),
+    prot: Math.round((dernierPoids()||0)*o.prot)
+  };
+}
+function repasDuJour(key){ return (state.meals[key]||[]).slice(); }
+function totalRepas(key){
+  return repasDuJour(key).reduce(function(a,r){
+    return {kcal:a.kcal+(+r.kcal||0), prot:a.prot+(+r.prot||0)};
+  }, {kcal:0, prot:0});
+}
+function ajouterRepas(key,r){
+  if(!state.meals[key]) state.meals[key]=[];
+  state.meals[key].push(r);
+  /* on retient l'aliment pour ne pas le retaper demain */
+  var deja=-1;
+  for(var i=0;i<state.foods.length;i++) if(state.foods[i].n.toLowerCase()===r.n.toLowerCase()) deja=i;
+  if(deja>-1) state.foods.splice(deja,1);
+  state.foods.unshift({n:r.n, kcal:+r.kcal||0, prot:+r.prot||0});
+  state.foods=state.foods.slice(0,40);
+  save();
+}
+
 /* ======================================================================= */
 /*                              INTERFACE                                  */
 /* ======================================================================= */
@@ -1782,12 +1919,15 @@ function bougeToday(){
         '<span class="ei"><span class="pn">'+esc(h.name)+'</span><br><span class="pm">'+
         (deja?'déjà notée aujourd\'hui':exosOf(h).length+' exercices · '+setsPrevus(h)+' séries')+'</span></span></button>';
     }).join('') : '';
-  out+='<button class="pickrow" data-act="bougeok" data-id="">'+
-    '<span class="etile">'+ic('bolt')+'</span>'+
-    '<span class="ei"><span class="pn">Autre chose</span><br>'+
-    '<span class="pm">Une sortie, un match, du vélo… ça compte</span></span></button>';
+  out+='<div class="field" style="margin:14px 0 8px"><label>Autre chose</label>'+
+    '<div class="small muted" style="margin-bottom:9px">Une sortie, un match, du vélo… ça compte. '+
+    'La durée sert à estimer la dépense, rien de plus.</div>'+
+    '<div class="setgrid" style="grid-template-columns:1fr;margin:0 0 9px">'+
+      nombre('Durée', dureeLibre, 'min', 'bougedur', 0)+'</div>'+
+    '<button class="btn wide" data-act="bougeok" data-id="">'+ic('bolt')+' Noter une séance libre</button></div>';
   openSheet(out);
 }
+var dureeLibre=45;
 function bougeOk(id){
   var key=today(), h=id?habitById(id):null;
   if(h){
@@ -1800,9 +1940,13 @@ function bougeOk(id){
     }
     setDone(key,h,true);
   }else{
-    state.habits.push({id:uid(), name:'Séance libre', emoji:'⚡', time:nowHM(), type:'once',
-      days:[], date:key, color:COLORS[0], steps:[], kind:'seance', exos:[], createdAt:key});
-    setDone(key,state.habits[state.habits.length-1],true);
+    var libre={id:uid(), name:'Séance libre', emoji:'⚡', time:nowHM(), type:'once',
+      days:[], date:key, color:COLORS[0], steps:[], kind:'seance', exos:[], createdAt:key};
+    state.habits.push(libre);
+    setDone(key,libre,true);
+    /* sans exercice il n'y aurait rien à inscrire : on pose la durée annoncée,
+       sinon la séance n'apparaîtrait ni au carnet ni dans les compteurs. */
+    ensure(key,libre.id).sea={ d:dureeLibre*60, plein:false, x:[] };
   }
   state.plannedDays[key]=true;      /* on a bougé : la journée est forcément posée */
   save(); buzz([25,50,25]); toast('Noté — respect','🔥'); syncLater();
@@ -2208,6 +2352,146 @@ function weightSpark(){
     '<text x="'+(W-P)+'" y="'+(H-5)+'" text-anchor="end">'+keys.length+' pesées · '+(diff>0?'+':'')+diff+' kg</text>'+
   '</svg>';
 }
+/* -------------------------------------------------------- vue nutrition */
+function anneau(pct,val,unite,lbl,but,couleur){
+  var r=34, c=2*Math.PI*r, off=c*(1-clamp(pct,0,100)/100);
+  return '<div><svg class="nrsvg" viewBox="0 0 80 80" width="80" height="80">'+
+    '<circle class="bg" cx="40" cy="40" r="'+r+'"></circle>'+
+    '<circle class="fg" cx="40" cy="40" r="'+r+'" stroke="'+couleur+'" stroke-dasharray="'+c.toFixed(1)+
+      '" stroke-dashoffset="'+off.toFixed(1)+'"></circle>'+
+    '</svg>'+
+    '<div class="nrv">'+val+'<small> '+unite+'</small></div>'+
+    '<div class="nrl">'+lbl+'</div>'+
+    '<div class="nrg">objectif '+but+' '+unite+'</div></div>';
+}
+function carteNutrition(){
+  var key=today(), h='';
+  var o=objectif();
+  h+='<div class="sec"><h2>Nutrition</h2><span class="small">'+esc(o.n.toLowerCase())+'</span></div>';
+
+  if(!corpsPret()){
+    return h+'<section class="card pop"><div class="empty" style="padding:8px 0 14px">'+
+      '<span class="e">🍽️</span><b>Il manque trois chiffres.</b><br>'+
+      'Ta taille, ton âge et ton poids suffisent à calculer tes objectifs.</div>'+
+      '<button class="btn pri wide" data-act="corps">'+ic('profile')+' Renseigner mon gabarit</button></section>';
+  }
+
+  var b=besoinDuJour(key), t=totalRepas(key);
+  var pk=b.kcal?Math.round(t.kcal*100/b.kcal):0, pp=b.prot?Math.round(t.prot*100/b.prot):0;
+  h+='<section class="card pop">'+
+    '<div class="objchips">'+OBJECTIFS.map(function(x){
+      return '<button class="'+(x.id===o.id?'on':'')+'" data-act="nobj" data-o="'+x.id+'">'+esc(x.n)+'</button>';
+    }).join('')+'</div>'+
+    '<div class="nring">'+
+      anneau(pk, t.kcal, 'kcal', 'Calories', b.kcal, pk>110?'#EF4444':'var(--acc)')+
+      anneau(pp, t.prot, 'g',    'Protéines', b.prot, 'var(--ok)')+
+    '</div>'+
+    '<div class="nsplit">'+
+      '<div><b>'+b.vie+'</b><span>AU REPOS</span></div>'+
+      '<div><b>'+b.sport+'</b><span>SÉANCES DU JOUR</span></div>'+
+    '</div>'+
+    '<div class="small muted" style="margin-top:11px">Repos estimé depuis ton gabarit, séances comptées '+
+    'depuis ton carnet. Pas de capteur derrière : c\'est un ordre de grandeur, pas une mesure.'+
+    ' <button class="acc" data-act="corps" style="font-weight:800">Ajuster</button></div>'+
+    '</section>';
+
+  var l=repasDuJour(key);
+  h+='<div class="sec"><h2>Ce que j\'ai mangé</h2><span class="small">'+l.length+
+     (l.length>1?' entrées':' entrée')+'</span></div>';
+  h+= l.length ? l.map(function(r,i){
+      return '<div class="mealrow"><div class="mi"><div class="mn2">'+esc(r.n)+'</div>'+
+        '<div class="mk">'+(+r.kcal||0)+' kcal · '+(+r.prot||0)+' g de protéines</div></div>'+
+        '<button class="del" data-act="mealdel" data-i="'+i+'" aria-label="Retirer">'+ic('trash')+'</button></div>';
+    }).join('')
+    : '<div class="card empty" style="margin-bottom:9px"><span class="e">🥗</span>Rien de noté aujourd\'hui.</div>';
+  h+='<button class="btn pri wide" data-act="mealadd">'+ic('plus')+' Ajouter un repas</button>';
+  return h;
+}
+
+/* Le gabarit : trois chiffres, une fois. */
+var corpsF=null;
+function openCorps(){
+  var b=state.body||{};
+  corpsF={taille:+b.taille||175, age:+b.age||25, sexe:b.sexe||'h',
+          act:b.act||'assis', poids:dernierPoids()||70};
+  renderCorps();
+}
+function renderCorps(){
+  var f=corpsF;
+  openSheet('<div class="shead"><span class="etile">'+ic('profile')+'</span>'+
+    '<div style="flex:1;min-width:0"><h2>Ton gabarit</h2>'+
+    '<div class="muted small">Sert uniquement à calculer tes objectifs</div></div>'+
+    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
+    '<div style="height:14px"></div>'+
+    '<div class="setgrid" style="margin-bottom:14px">'+
+      nombre('Poids', f.poids, 'kg', 'cpoids', 0)+
+      nombre('Taille', f.taille, 'cm', 'ctaille', 0)+
+      nombre('Âge', f.age, 'ans', 'cage', 0)+
+    '</div>'+
+    '<div class="field"><label>Sexe</label><div class="seg">'+
+      '<button class="'+(f.sexe==='h'?'on':'')+'" data-act="csexe" data-s="h">Homme</button>'+
+      '<button class="'+(f.sexe==='f'?'on':'')+'" data-act="csexe" data-s="f">Femme</button>'+
+    '</div><div class="small muted" style="margin-top:6px">La formule du métabolisme de repos en tient compte : '+
+    'c\'est la seule raison de la question.</div></div>'+
+    '<div class="field"><label>Ta journée, sport à part</label>'+
+      ACTIVITES.map(function(a){
+        return '<button class="pickrow" data-act="cact" data-a="'+a.id+'" style="border:1px solid '+
+          (f.act===a.id?'var(--acc)':'var(--line)')+';margin-bottom:7px;background:'+
+          (f.act===a.id?'var(--acc-soft)':'transparent')+'">'+
+          '<span class="ei"><span class="pn">'+esc(a.n)+'</span><br><span class="pm">'+esc(a.d)+'</span></span></button>';
+      }).join('')+
+    '</div>'+
+    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
+    '<button class="btn pri" data-act="csave">Enregistrer</button></div>');
+}
+function saveCorps(){
+  var f=corpsF, t=today();
+  state.body={taille:f.taille, age:f.age, sexe:f.sexe, act:f.act, obj:(state.body&&state.body.obj)||'maint'};
+  if(state.weight[t]==null) state.weight[t]=f.poids;
+  save(); closeSheet(); render();
+  toast('Objectifs calculés','🍽️');
+}
+
+/* Ajouter un repas, en repartant si possible de ce qu'on a déjà noté. */
+var repasF=null;
+function openRepas(){
+  repasF={n:'', kcal:0, prot:0};
+  renderRepas();
+}
+function renderRepas(){
+  var f=repasF;
+  var suggest=state.foods.slice(0,8);
+  openSheet('<div class="shead"><span class="etile">'+ic('apple')+'</span>'+
+    '<div style="flex:1;min-width:0"><h2>Un repas</h2>'+
+    '<div class="muted small">Approximatif suffit : c\'est la tendance qui compte</div></div>'+
+    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
+    '<div style="height:14px"></div>'+
+    '<div class="field"><label>Quoi</label>'+
+      '<input id="rn" maxlength="40" placeholder="ex. Poulet riz haricots" value="'+esc(f.n)+'"></div>'+
+    '<div class="setgrid" style="margin-bottom:14px">'+
+      nombre('Calories', f.kcal, 'kcal', 'rkcal', 0)+
+      nombre('Protéines', f.prot, 'g', 'rprot', 0)+
+    '</div>'+
+    (suggest.length
+      ? '<div class="field"><label>Déjà noté</label><div class="picklist" style="max-height:34vh">'+
+        suggest.map(function(x,i){
+          return '<button class="pickrow" data-act="rfood" data-i="'+i+'">'+
+            '<span class="ei"><span class="pn">'+esc(x.n)+'</span><br>'+
+            '<span class="pm">'+x.kcal+' kcal · '+x.prot+' g</span></span></button>';
+        }).join('')+'</div></div>'
+      : '')+
+    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
+    '<button class="btn pri" data-act="rsave">Ajouter</button></div>');
+}
+function saveRepas(){
+  var i=$('#rn'); if(i) repasF.n=i.value;
+  var n=String(repasF.n||'').trim();
+  if(!n){ toast('Il faut un nom','✏️'); return; }
+  if(!repasF.kcal && !repasF.prot){ toast('Mets au moins des calories','🔢'); return; }
+  ajouterRepas(today(), {n:n.slice(0,40), kcal:repasF.kcal, prot:repasF.prot});
+  buzz(25); closeSheet(); render(); toast('Noté','🍽️');
+}
+
 function viewJournal(){
   var t=today();
   var h='<div class="sec"><h2>Humeur du jour</h2><span>'+esc(frShort(nowD()))+'</span></div>';
@@ -2228,6 +2512,8 @@ function viewJournal(){
          (state.weight[t]!=null?state.weight[t]:'')+'">'+
        '<button class="btn pri" data-act="wsave" style="flex:0 0 auto">Noter</button>'+
      '</div>'+ weightSpark() +'</section>';
+
+  h+= carteNutrition();
 
   h+='<div class="sec"><h2>7 derniers jours</h2></div><section class="card pop" style="padding:2px 2px">';
   for(var i=0;i<7;i++){
@@ -2305,11 +2591,20 @@ function api(payload){
     });
 }
 function wireMe(){
-  var sc=periodScores(), p=state.profile;
+  var sc=periodScores(), p=state.profile, t=statSemaine(mondayOf(nowD()));
+  /* Seulement les exercices comptés en répétitions, et pas plus de vingt :
+     c'est ce dont les défis du Crew ont besoin, rien de plus. */
+  var exo={}, n=0;
+  Object.keys(t.parExo).forEach(function(k){
+    if(n>=20 || !/^[a-z0-9]{1,24}$/.test(k)) return;
+    if(exoOr(k).u!=='rep') return;
+    exo[k]=t.parExo[k]; n++;
+  });
   return {id:p.id, name:p.name, avatar:p.avatar,
           day:sc.day,   dayP:sc.dayP,   dayK:sc.dayK,
           week:sc.week, weekP:sc.weekP, weekK:sc.weekK,
           month:sc.month, monthP:sc.monthP, monthK:sc.monthK,
+          sea:t.seances, ser:t.series, rep:t.reps, exo:exo,
           xp:sc.xp, at:today(), ts:Date.now()};
 }
 /* On complète, on n'écrase jamais : un ami connu localement reste si le serveur
@@ -2605,6 +2900,271 @@ function bindAccount(){
 
 function b64e(s){ return btoa(unescape(encodeURIComponent(s))); }
 function b64d(s){ return decodeURIComponent(escape(atob(s))); }
+/* ========================================================================= */
+/*                                  LE CREW                                  */
+/* ========================================================================= */
+/* Le classement entre amis reste : chacun colle le code de l'autre. Un groupe
+   est autre chose — un endroit où tout le monde se voit d'un coup et où l'on
+   se lance un défi commun. D'où un code par groupe, et pas un code par
+   personne. La liste locale ne retient que les codes ; l'appartenance vit sur
+   le serveur, sinon quitter un groupe depuis un téléphone ne quitterait rien. */
+var CREW='/api/crew';
+var crewData=[], crewI=0, crewBusy=false, crewMsg='';
+
+function crewCall(payload){
+  return fetch(CREW,{method:'POST',headers:{'Content-Type':'application/json'},
+                     body:JSON.stringify(payload)})
+    .then(function(r){ return r.json().then(function(o){ o._status=r.status; return o; }); });
+}
+function crewRefresh(){
+  if(!netReady() || !state.crews.length){ crewData=[]; return Promise.resolve(); }
+  return crewCall({action:'read', me:state.profile.id,
+                   codes:state.crews.map(function(c){ return c.code; })})
+    .then(function(o){
+      if(o && o.ok){
+        crewData=o.crews||[];
+        /* un groupe effacé côté serveur ne doit pas rester dans la liste */
+        var vus={}; crewData.forEach(function(g){ vus[g.code]=g.nom; });
+        var avant=state.crews.length;
+        state.crews=state.crews.filter(function(c){ return vus[c.code]; })
+                               .map(function(c){ return {code:c.code, name:vus[c.code]}; });
+        if(state.crews.length!==avant) save();
+        if(crewI>=crewData.length) crewI=0;
+      }
+    })
+    .catch(function(){ /* hors ligne : on garde le dernier état connu */ });
+}
+function crewCree(nom){
+  crewBusy=true; crewMsg='Création…'; render();
+  crewCall({action:'create', me:state.profile.id, nom:nom}).then(function(o){
+    crewBusy=false; crewMsg='';
+    if(o && o.ok && o.crew){
+      state.crews.push({code:o.crew.code, name:o.crew.nom}); save();
+      crewData.push(o.crew); crewI=crewData.length-1;
+      toast('Groupe créé — partage le code','👥'); buzz(30);
+    }else toast(msgCrew(o),'⚠️');
+    closeSheet(); render();
+  }).catch(function(){ crewBusy=false; crewMsg=''; toast('Création impossible','⚠️'); render(); });
+}
+function crewRejoint(code){
+  code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+  if(code.length!==6){ toast('Un code fait six caractères','🔢'); return; }
+  if(state.crews.some(function(c){ return c.code===code; })){ toast('Tu es déjà dedans','👌'); closeSheet(); return; }
+  if(state.crews.length>=8){ toast('Huit groupes, c\'est déjà beaucoup','🙂'); return; }
+  crewBusy=true; crewMsg='Connexion…'; render();
+  crewCall({action:'join', me:state.profile.id, code:code}).then(function(o){
+    crewBusy=false; crewMsg='';
+    if(o && o.ok && o.crew){
+      state.crews.push({code:o.crew.code, name:o.crew.nom}); save();
+      crewData.push(o.crew); crewI=crewData.length-1;
+      toast('Bienvenue dans '+o.crew.nom,'🤝'); buzz(30); syncNow(true);
+    }else toast(msgCrew(o),'⚠️');
+    closeSheet(); render();
+  }).catch(function(){ crewBusy=false; crewMsg=''; toast('Connexion impossible','⚠️'); render(); });
+}
+function msgCrew(o){
+  var e=o&&o.error;
+  if(e==='introuvable') return 'Aucun groupe à ce code';
+  if(e==='complet')     return 'Ce groupe est plein';
+  if(e==='no_store')    return 'Les groupes ne sont pas branchés sur ce déploiement';
+  if(e==='pas_membre')  return 'Tu n\'es pas dans ce groupe';
+  return 'Ça n\'a pas marché';
+}
+function crewQuitte(code){
+  crewCall({action:'leave', me:state.profile.id, code:code}).catch(function(){});
+  state.crews=state.crews.filter(function(c){ return c.code!==code; });
+  crewData=crewData.filter(function(g){ return g.code!==code; });
+  crewI=0; save(); render(); toast('Groupe quitté','👋');
+}
+
+/* ------------------------------------------------------------- les défis */
+var METRIQUES=[
+  {id:'rep', n:'Répétitions d\'un exercice', u:'rép.'},
+  {id:'sea', n:'Séances',                    u:'séances'},
+  {id:'ser', n:'Séries',                     u:'séries'},
+  {id:'pts', n:'Points Cadence',             u:'pts'}
+];
+function metrique(id){
+  for(var i=0;i<METRIQUES.length;i++) if(METRIQUES[i].id===id) return METRIQUES[i];
+  return METRIQUES[0];
+}
+/* Ce qu'un membre a fait cette semaine, selon la métrique du défi. Les
+   compteurs voyagent déjà dans sa fiche : rien à recalculer ici. */
+function defiValeur(d,m){
+  if(!m) return 0;
+  var semaine=dk(mondayOf(nowD()));
+  if(d.s && d.s!==semaine) return 0;            /* défi d'une autre semaine */
+  if(m.weekK && m.weekK!==semaine) return 0;    /* fiche pas encore à jour */
+  if(d.m==='pts') return +m.week||0;
+  if(d.m==='sea') return +m.sea ||0;
+  if(d.m==='ser') return +m.ser ||0;
+  return (m.exo && +m.exo[d.x]) || 0;
+}
+function defiHTML(d,g){
+  var l=g.membres.slice().map(function(m){
+    return {m:m, v:defiValeur(d,m)};
+  }).sort(function(a,b){ return b.v-a.v; });
+  var cumul=l.reduce(function(a,b){ return a+b.v; },0);
+  var quoi = d.m==='rep' ? exoOr(d.x).n : metrique(d.m).n;
+  return '<div class="defi">'+
+    '<div class="defihead"><span class="dn">'+esc(d.n)+'</span>'+
+      '<span class="dc">'+d.c+' '+esc(metrique(d.m).u)+'</span>'+
+      '<button class="del" data-act="defidel" data-i="'+esc(d.i)+'" aria-label="Retirer">'+ic('trash')+'</button>'+
+    '</div>'+
+    l.map(function(x){
+      var pct=clamp(Math.round(x.v*100/Math.max(1,d.c)),0,100);
+      return '<div class="defiline"><span class="av">'+esc(x.m.avatar||'💪')+'</span>'+
+        '<span class="nm">'+esc(x.m.name||'—')+'</span>'+
+        '<span class="bar"><i class="'+(pct>=100?'full':'')+'" style="width:'+pct+'%"></i></span>'+
+        '<span class="pc">'+pct+'%</span></div>';
+    }).join('')+
+    '<div class="small muted" style="margin-top:7px">'+esc(quoi)+' · '+cumul+' au total cette semaine'+
+    (cumul>=d.c?' · <span class="grn">objectif atteint</span>':'')+'</div></div>';
+}
+
+/* ------------------------------------------------------------- la vue */
+function crewVide(){
+  return '<section class="card pop center" style="padding:26px 18px">'+
+    '<div style="font-size:44px;line-height:1;margin-bottom:10px">👥</div>'+
+    '<h2 style="font-size:24px;margin-bottom:6px">Pas encore de groupe</h2>'+
+    '<p class="muted small" style="margin:0 0 16px">Crée-en un et donne le code à tes potes, '+
+    'ou colle le leur. Tout le monde se voit d\'un coup, et vous pouvez vous lancer des défis.</p>'+
+    '<button class="btn pri wide" data-act="crewnew">'+ic('plus')+' Créer un groupe</button>'+
+    '<button class="btn wide sm" data-act="crewjoin" style="margin-top:9px">'+ic('users')+' Rejoindre avec un code</button>'+
+    (netReady()?'':'<div class="small muted" style="margin-top:12px">'+ic('lock')+
+      ' Ouvre l\'app par son adresse web pour que les groupes marchent.</div>')+
+    '</section>';
+}
+function viewCrew(){
+  var h='<div class="sec"><h2>Crew</h2><span class="small">'+
+    (crewMsg?esc(crewMsg):(state.crews.length?state.crews.length+' groupe'+(state.crews.length>1?'s':''):'à monter'))+
+    '</span></div>';
+  if(!state.crews.length) return h+crewVide();
+
+  if(state.crews.length>1){
+    h+='<div class="crewtabs">'+state.crews.map(function(c,i){
+      return '<button class="'+(i===crewI?'on':'')+'" data-act="crewtab" data-i="'+i+'">'+esc(c.name)+'</button>';
+    }).join('')+'</div>';
+  }
+  var g=crewData[crewI];
+  if(!g){
+    return h+'<section class="card pop"><div class="empty" style="padding:14px 0">'+
+      'Groupe pas encore chargé.<br>Tire vers le bas ou reviens dans un instant.</div>'+
+      '<button class="btn wide sm" data-act="crewsync">'+ic('undo')+' Réessayer</button></section>';
+  }
+
+  var semaine=dk(mondayOf(nowD()));
+  var l=g.membres.slice().sort(function(a,b){ return (+b.week||0)-(+a.week||0); });
+  h+='<section class="card pop">'+
+    '<div class="crewcode"><div style="flex:1;min-width:0">'+
+      '<div class="small muted">Code du groupe</div><b>'+esc(g.code)+'</b></div>'+
+      '<button class="btn sm" data-act="crewcopy" data-c="'+esc(g.code)+'">'+ic('copy')+' Copier</button></div>'+
+    '<div class="sec" style="margin:2px 0 8px"><h2 style="font-size:17px">La semaine</h2>'+
+      '<span class="small">'+g.membres.length+' membre'+(g.membres.length>1?'s':'')+'</span></div>';
+  h+= l.length ? l.map(function(m,i){
+      var moi=m.id===state.profile.id, frais=(m.weekK===semaine);
+      return '<div class="lbrow crewrow'+(moi?' me':'')+'">'+
+        '<span class="pos">'+(i+1)+'</span>'+
+        '<span class="av">'+esc(m.avatar||'💪')+'</span>'+
+        '<span class="nm"><b>'+esc(m.name||'—')+'</b><br>'+
+          '<span class="small muted">'+(frais?((+m.sea||0)+' séance'+((+m.sea||0)>1?'s':'')+' · '+
+            (+m.ser||0)+' séries · '+(+m.weekP||0)+'% de régularité'):'semaine pas encore remontée')+'</span></span>'+
+        '<span class="pt">'+(frais?(+m.week||0):0)+'</span></div>';
+    }).join('')
+    : '<div class="empty" style="padding:12px 0">Personne n\'a encore remonté sa semaine.</div>';
+  h+='</section>';
+
+  var actifs=(g.defis||[]).filter(function(d){ return !d.s || d.s===semaine; });
+  h+='<div class="sec"><h2>Défis</h2><span class="small">'+
+     (actifs.length?'cette semaine':'aucun')+'</span></div>';
+  h+='<section class="card pop">'+
+     (actifs.length ? actifs.map(function(d){ return defiHTML(d,g); }).join('')
+                    : '<div class="empty" style="padding:12px 0">Aucun défi en cours.<br>'+
+                      'Lancez-en un : ça se joue du lundi au dimanche.</div>')+
+     '<button class="btn wide sm" data-act="definew">'+ic('flag')+' Lancer un défi</button>'+
+     '</section>';
+
+  h+='<div class="grid2" style="margin-top:12px">'+
+     '<button class="btn ghost sm" data-act="crewjoin">'+ic('plus')+' Autre groupe</button>'+
+     '<button class="btn ghost sm" data-act="crewout" data-c="'+esc(g.code)+'">'+ic('close')+' Quitter</button>'+
+     '</div>';
+  return h;
+}
+
+/* ---------------------------------------------------- les feuilles du Crew */
+function openCrewNew(){
+  openSheet('<div class="shead"><span class="etile">'+ic('users')+'</span>'+
+    '<div style="flex:1;min-width:0"><h2>Un groupe</h2>'+
+    '<div class="muted small">Tu recevras un code à donner à tes potes</div></div>'+
+    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
+    '<div style="height:14px"></div>'+
+    '<div class="field"><label>Nom du groupe</label>'+
+      '<input id="cwn" maxlength="24" placeholder="ex. Les increvables"></div>'+
+    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
+    '<button class="btn pri" data-act="crewnewok">Créer</button></div>');
+  var i=$('#cwn'); if(i) i.focus();
+}
+function openCrewJoin(){
+  openSheet('<div class="shead"><span class="etile">'+ic('users')+'</span>'+
+    '<div style="flex:1;min-width:0"><h2>Rejoindre</h2>'+
+    '<div class="muted small">Six caractères, donnés par un membre</div></div>'+
+    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
+    '<div style="height:14px"></div>'+
+    '<div class="field"><label>Code du groupe</label>'+
+      '<input id="cwj" maxlength="7" autocapitalize="characters" autocomplete="off" '+
+      'placeholder="ex. K7RM2P" style="text-transform:uppercase;letter-spacing:.14em;font-weight:800"></div>'+
+    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
+    '<button class="btn pri" data-act="crewjoinok">Rejoindre</button></div>');
+  var i=$('#cwj'); if(i) i.focus();
+}
+var defiF=null;
+function openDefi(){
+  defiF={n:'', m:'rep', x:'tractions', c:100};
+  renderDefi();
+}
+function renderDefi(){
+  var f=defiF, m=metrique(f.m);
+  openSheet('<div class="shead"><span class="etile">'+ic('flag')+'</span>'+
+    '<div style="flex:1;min-width:0"><h2>Un défi</h2>'+
+    '<div class="muted small">Du lundi au dimanche, pour tout le groupe</div></div>'+
+    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
+    '<div style="height:14px"></div>'+
+    '<div class="field"><label>Nom</label>'+
+      '<input id="dn" maxlength="34" placeholder="ex. 500 pompes" value="'+esc(f.n)+'"></div>'+
+    '<div class="field"><label>On compte quoi</label>'+
+      METRIQUES.map(function(x){
+        return '<button class="pickrow" data-act="dmet" data-m="'+x.id+'" style="border:1px solid '+
+          (f.m===x.id?'var(--acc)':'var(--line)')+';margin-bottom:7px;background:'+
+          (f.m===x.id?'var(--acc-soft)':'transparent')+'">'+
+          '<span class="ei"><span class="pn">'+esc(x.n)+'</span></span></button>';
+      }).join('')+'</div>'+
+    (f.m==='rep'
+      ? '<div class="field"><label>Quel exercice</label><div class="pickbar">'+
+        allExos().filter(function(x){ return x.u==='rep'; }).slice(0,24).map(function(x){
+          return '<button class="'+(f.x===x.id?'on':'')+'" data-act="dexo" data-x="'+esc(x.id)+'">'+esc(x.n)+'</button>';
+        }).join('')+'</div></div>'
+      : '')+
+    '<div class="setgrid" style="margin-bottom:14px">'+
+      nombre('Objectif', f.c, esc(m.u), 'dcible', 0)+
+    '</div>'+
+    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
+    '<button class="btn pri" data-act="defiok">Lancer</button></div>');
+}
+function saveDefi(){
+  var g=crewData[crewI]; if(!g) return;
+  var i=$('#dn'); if(i) defiF.n=i.value;
+  var n=String(defiF.n||'').trim();
+  if(!n) n = defiF.c+' '+(defiF.m==='rep'?exoOr(defiF.x).n.toLowerCase():metrique(defiF.m).u);
+  var d={i:String(Date.now()).slice(-8), n:n.slice(0,34), m:defiF.m, c:defiF.c,
+         s:dk(mondayOf(nowD()))};
+  if(defiF.m==='rep') d.x=defiF.x;
+  crewCall({action:'defi', me:state.profile.id, code:g.code, defi:d}).then(function(o){
+    if(o && o.ok){ g.defis=o.defis||[]; toast('Défi lancé','🚩'); buzz(30); }
+    else toast(msgCrew(o),'⚠️');
+    closeSheet(); render();
+  }).catch(function(){ toast('Envoi impossible','⚠️'); closeSheet(); });
+}
+
 function myCode(){
   var s=periodScores(), p=state.profile;
   return b64e(JSON.stringify({
@@ -2771,6 +3331,8 @@ function viewProfil(){
   h+='<div class="sec"><h2>Rappels</h2><span class="small">'+(pushOn?'actifs':'éteints')+'</span></div>';
   h+='<section class="card pop">'+ pushBox() +'</section>';
 
+  h+= viewCrew();
+
   h+='<div class="sec"><h2>Classement</h2><span>'+(state.friends.length+1)+' joueur'+(state.friends.length?'s':'')+'</span></div>';
   h+='<section class="card pop">'+
     '<div class="lbtabs">'+
@@ -2818,6 +3380,46 @@ function viewProfil(){
       '<button class="btn sm" data-act="ics">'+ic('day')+' Fichier .ics</button>'+
       '<button class="btn sm" data-act="notifperm">'+ic('bell')+' Autoriser les notifs</button>'+
     '</div></div></details>';
+  h+='<details>'+sum('dumbbell','Les séances')+'<div class="dc">'+
+    'Une séance est une tâche du jour comme une autre : elle a une heure, des jours, '+
+    'et la valider rapporte les mêmes points. La différence, c\'est qu\'elle porte une liste '+
+    'd\'exercices avec leurs séries.<br><br>'+
+    '<b>La dérouler.</b> Appuie sur <b>Démarrer</b> : une série à la fois, le minuteur de repos '+
+    'part tout seul, et tu peux corriger les répétitions ou la charge en cours de route. '+
+    'À la fin, tout s\'inscrit au carnet sans rien retaper.<br><br>'+
+    '<b>Tu t\'es entraîné sans l\'app ?</b> Le bouton <b>J\'ai bougé aujourd\'hui</b> rattrape le coup, '+
+    'même pour une sortie qui n\'était pas prévue.<br><br>'+
+    '<b>Le catalogue</b> compte '+EXOS.length+' exercices, cherchables par nom ou par muscle. '+
+    'Si le tien n\'y est pas, crée-le : il te suffit de dire ce qu\'il travaille.'+
+    '</div></details>';
+  h+='<details>'+sum('body','La récupération')+'<div class="dc">'+
+    'La silhouette se colore avec ce qu\'il y a dans ton carnet : <span class="acc">rouge</span> '+
+    'pour un muscle qui vient de travailler, <span class="gld">jaune</span> pendant qu\'il revient, '+
+    '<span class="grn">vert</span> quand il est prêt.<br><br>'+
+    'Un muscle moteur prend la durée pleine, un muscle qui suit en prend 60 %. Les durées sont des '+
+    'ordres de grandeur admis — un gros groupe met deux à trois jours, un petit un jour et demi, '+
+    'les abdos reviennent vite. <b>Ce n\'est pas une mesure</b> : personne ne sait ce qui se passe '+
+    'dans ton corps, et une courbature qui traîne vaut mieux que ce que dit l\'écran.'+
+    '</div></details>';
+  h+='<details>'+sum('apple','La nutrition')+'<div class="dc">'+
+    'Ton objectif de calories vient d\'un calcul, pas d\'un capteur. On part de la formule de '+
+    'Mifflin-St Jeor (poids, taille, âge, sexe), on ajoute ta journée hors sport, puis les séances '+
+    'réellement inscrites au carnet. Sèche, maintien ou prise déplacent le total.<br><br>'+
+    '<b>Pourquoi pas Apple Santé ?</b> Une app web n\'y a aucun accès, même posée sur l\'écran '+
+    'd\'accueil : Apple ne l\'ouvre qu\'aux apps installées depuis l\'App Store. Donc estimation, '+
+    'et l\'écran le dit.<br><br>'+
+    'Les protéines suivent ton poids : 2 g par kilo en sèche, 1,7 en maintien, 1,9 en prise.'+
+    '</div></details>';
+  h+='<details>'+sum('users','Le Crew')+'<div class="dc">'+
+    'Un groupe a <b>un seul code</b>, à donner à tes potes. Tout le monde s\'y voit d\'un coup, '+
+    'sans avoir à s\'ajouter un par un — c\'est la différence avec le classement amis, qui reste '+
+    'là pour les liens à deux.<br><br>'+
+    '<b>Les défis</b> se jouent du lundi au dimanche : un nombre de répétitions sur un exercice, '+
+    'de séances, de séries ou de points. La progression de chacun se remplit toute seule avec ce '+
+    'qu\'il inscrit dans son carnet.<br><br>'+
+    'Ce qui part sur le serveur : ton blaze, ton avatar, tes points, ta régularité et tes '+
+    'compteurs de la semaine. Ni tes notes, ni tes habitudes, ni ce que tu manges.'+
+    '</div></details>';
   h+='<details>'+sum('save','Sauvegarde et restauration')+'<div class="dc">'+
     'Copie ce texte et garde-le au chaud (note, mail…). Pour restaurer : colle-le et appuie sur Restaurer.'+
     '<div style="margin-top:10px"><textarea id="backup" rows="4" placeholder="Colle ta sauvegarde ici…"></textarea></div>'+
@@ -2826,7 +3428,8 @@ function viewProfil(){
       '<button class="btn sm" data-act="import">'+ic('save')+' Restaurer</button>'+
     '</div></div></details>';
   h+='<details>'+sum('gear','Comment marchent les points')+'<div class="dc">'+
-    '<b>10 points</b> par tâche validée, <b>+5 bonus</b> si tu la valides dans l\'heure qui suit son horaire. '+
+    '<b>10 points</b> par tâche validée — séance comprise, une séance vaut une tâche — '+
+    '<b>+5 bonus</b> si tu la valides dans l\'heure qui suit son horaire. '+
     'La somme de tous tes points, c\'est ton <b>XP</b>, et l\'XP donne ton rang :<br>'+
     RANKS.map(function(x){ return x.e+' '+x.n+' — '+x.xp+' XP'; }).join('<br>')+
     '</div></details>';
@@ -3525,7 +4128,7 @@ document.addEventListener('click', function(ev){
     var nt=el.getAttribute('data-tab');
     if(locked(nt)){ buzz([15,40,15]); toast('Valide d\'abord tes tâches du jour','🔒'); return; }
     state.tab=nt; pendingDel=null; save(); render(); toTop();
-    if(nt==='profil'){ syncNow(true); pushRefresh().then(render); }
+    if(nt==='profil'){ syncNow(true); crewRefresh().then(render); pushRefresh().then(render); }
     return;
   }
   if(a==='ptoggle'){
@@ -3692,7 +4295,75 @@ document.addEventListener('click', function(ev){
     return;
   }
   if(a==='bouge'){ bougeToday(); return; }
+  /* --- nutrition --- */
+  if(a==='corps'){ openCorps(); return; }
+  if(a==='csexe'){ corpsF.sexe=el.getAttribute('data-s'); renderCorps(); return; }
+  if(a==='cact'){  corpsF.act =el.getAttribute('data-a'); renderCorps(); return; }
+  if(a==='cpoids'||a==='ctaille'||a==='cage'){
+    var dc=+el.getAttribute('data-d');
+    if(a==='cpoids')  corpsF.poids =clamp(corpsF.poids +dc,30,250);
+    if(a==='ctaille') corpsF.taille=clamp(corpsF.taille+dc,120,230);
+    if(a==='cage')    corpsF.age   =clamp(corpsF.age   +dc,12,100);
+    renderCorps(); return;
+  }
+  if(a==='csave'){ saveCorps(); return; }
+  if(a==='nobj'){
+    if(!state.body) state.body={};
+    state.body.obj=el.getAttribute('data-o'); save(); render(); return;
+  }
+  if(a==='mealadd'){ openRepas(); return; }
+  if(a==='rkcal'||a==='rprot'){
+    var ir=$('#rn'); if(ir) repasF.n=ir.value;
+    var dr=+el.getAttribute('data-d');
+    if(a==='rkcal') repasF.kcal=clamp(repasF.kcal+dr*(repasF.kcal>=200?50:10),0,5000);
+    else            repasF.prot=clamp(repasF.prot+dr*5,0,400);
+    renderRepas(); return;
+  }
+  if(a==='rfood'){
+    var f2=state.foods[+el.getAttribute('data-i')];
+    if(f2) repasF={n:f2.n, kcal:f2.kcal, prot:f2.prot};
+    renderRepas(); return;
+  }
+  if(a==='rsave'){ saveRepas(); return; }
+  /* --- crew --- */
+  if(a==='crewnew'){  openCrewNew();  return; }
+  if(a==='crewjoin'){ openCrewJoin(); return; }
+  if(a==='crewnewok'){ var cn=$('#cwn'); crewCree(String(cn?cn.value:'').trim().slice(0,24) || 'Mon groupe'); return; }
+  if(a==='crewjoinok'){ var cj=$('#cwj'); crewRejoint(cj?cj.value:''); return; }
+  if(a==='crewtab'){ crewI=+el.getAttribute('data-i'); render(); return; }
+  if(a==='crewcopy'){ copyText(el.getAttribute('data-c'),'Code copié — envoie-le à tes potes'); return; }
+  if(a==='crewsync'){ crewRefresh().then(render); return; }
+  if(a==='crewout'){
+    var cc=el.getAttribute('data-c');
+    if(confirm('Quitter ce groupe ? Tu pourras y revenir avec le code.')) crewQuitte(cc);
+    return;
+  }
+  if(a==='definew'){ openDefi(); return; }
+  if(a==='dmet'){ var dd=$('#dn'); if(dd) defiF.n=dd.value; defiF.m=el.getAttribute('data-m'); renderDefi(); return; }
+  if(a==='dexo'){ var de=$('#dn'); if(de) defiF.n=de.value; defiF.x=el.getAttribute('data-x'); renderDefi(); return; }
+  if(a==='dcible'){
+    var dn2=$('#dn'); if(dn2) defiF.n=dn2.value;
+    var dz=+el.getAttribute('data-d');
+    defiF.c=clamp(defiF.c+dz*(defiF.c>=100?25:(defiF.c>=20?10:1)),1,100000);
+    renderDefi(); return;
+  }
+  if(a==='defiok'){ saveDefi(); return; }
+  if(a==='defidel'){
+    var gg=crewData[crewI]; if(!gg) return;
+    var di=el.getAttribute('data-i');
+    crewCall({action:'undefi', me:state.profile.id, code:gg.code, id:di}).then(function(o){
+      if(o && o.ok){ gg.defis=o.defis||[]; render(); }
+    }).catch(function(){});
+    return;
+  }
+
+  if(a==='mealdel'){
+    var t3=today(), im=+el.getAttribute('data-i');
+    if(state.meals[t3]) state.meals[t3].splice(im,1);
+    save(); render(); return;
+  }
   if(a==='bougeok'){ bougeOk(el.getAttribute('data-id')); return; }
+  if(a==='bougedur'){ dureeLibre=clamp(dureeLibre+(+el.getAttribute('data-d'))*15,15,240); bougeToday(); return; }
   if(a==='editseance'){ var hs=habitById(el.getAttribute('data-id')); if(hs) openSeance(hs); return; }
   if(a==='gocarnet'||a==='gorecup'){ state.tab='stats'; statsVue='carnet'; save(); render(); toTop(); return; }
   if(a==='svue'){  statsVue=el.getAttribute('data-v'); render(); toTop(); return; }
@@ -4016,6 +4687,7 @@ function boot(){
   maybeTour();
 
   syncNow(true);   /* on récupère ceux qui t'ont ajouté depuis la dernière fois */
+  crewRefresh().then(function(){ if(state.tab==='profil') render(); });
   if(logged()) cloudRestore();   /* un autre téléphone a pu prendre la main */
 
   /* rappels : toutes les 20 s tant que l'app est ouverte */

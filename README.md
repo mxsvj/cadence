@@ -7,6 +7,7 @@ Tracker d'habitudes en un seul fichier, pensé pour l'écran d'accueil d'un iPho
 - `api/_store.js` — accès à Redis, partagé par les fonctions. Le préfixe `_`
   empêche l'hébergeur d'en faire une route.
 - `api/board.js` — le classement entre amis.
+- `api/crew.js` — les groupes : code d'invitation, membres, défis.
 - `api/account.js` — le compte Google et la sauvegarde des données.
 - `api/push.js` — les notifications : abonnements, minuteur, envoi.
 - `sw.js` — le service worker. Il n'a qu'un rôle, afficher les notifications
@@ -26,6 +27,11 @@ blaze, avatar, points du jour, de la semaine et du mois, XP. Ces enregistrements
 expirent après 90 jours sans activité. L'identifiant de chaque joueur est un
 tirage au hasard qui fait office de clé : le code ami se donne à ses potes, pas
 en public.
+
+Le Crew ajoute, pour chaque groupe : son nom, son code, la liste des identifiants
+de ses membres et ses défis en cours. Les fiches des membres sont celles du
+classement — le groupe ne duplique rien, il les rassemble. Tout expire après six
+mois sans activité.
 
 En ligne, avec un compte Google : en plus, la totalité des données ci-dessus,
 rangées telles quelles sous le compte, pour les retrouver sur un autre téléphone.
@@ -145,6 +151,78 @@ ne peut plus diagnostiquer à distance. Chaque ouverture va chercher la page sur
 le réseau. Le numéro de version affiché en bas du profil permet de vérifier d'un
 coup d'œil quelle version est ouverte.
 
+## L'entraînement
+
+Une séance n'est pas un objet à part : c'est une tâche du jour avec
+`kind:'seance'` et une liste d'exercices. Tout ce qui existait — le choix de la
+journée, les points, la série, le classement, les rappels — continue de marcher
+sans une ligne de plus, et une séance validée vaut exactement une tâche validée.
+
+Le catalogue compte une quarantaine d'exercices, chacun avec ses muscles
+moteurs, ses muscles secondaires, son matériel et ce qu'il compte (répétitions,
+secondes ou minutes). On peut en ajouter à la main ; ils rejoignent le catalogue
+sans distinction.
+
+Ce qui a été réellement fait est rangé dans le journal du jour, avec les
+identifiants d'exercice recopiés : le carnet survit à une séance modifiée ou
+supprimée. Une séance cochée sans avoir été déroulée inscrit ce qui était prévu —
+sinon le carnet et la récupération resteraient vides alors que la séance a bien
+eu lieu.
+
+### La silhouette
+
+Elle est construite, pas dessinée à la main : deux primitives — un fuseau pour
+les membres, une plaque pour les masses du tronc — et la moitié gauche
+seulement, la droite est son reflet. L'anatomie se corrige en changeant trois
+nombres plutôt qu'une courbe de Bézier. Le même dessin sert en grand pour la
+récupération et en tout petit sur chaque exercice.
+
+### La récupération
+
+Pour chaque muscle : quand il a travaillé pour la dernière fois, et à quel titre.
+Un muscle moteur prend la durée pleine, un muscle secondaire en prend 60 %. Les
+durées sont des ordres de grandeur admis, et l'écran le dit. Le code couleur est
+un feu tricolore et pas la palette de la marque : sur un muscle, le rouge veut
+dire « n'y touche pas » dans toutes les applis de sport, et c'est plus fort que
+la cohérence chromatique.
+
+## La nutrition
+
+Objectif calculé, pas mesuré : Mifflin-St Jeor pour le métabolisme de repos
+(poids, taille, âge, sexe), un coefficient pour la journée hors sport, puis la
+dépense des séances réellement inscrites au carnet. Sèche, maintien et prise
+déplacent le total ; les protéines suivent le poids.
+
+**Apple Santé est hors de portée.** Une app web n'a aucun accès à HealthKit, même
+installée sur l'écran d'accueil : Apple ne l'ouvre qu'aux apps natives. D'où
+l'estimation, annoncée comme telle à l'écran.
+
+Il n'y a pas non plus de base d'aliments ni de lecture de code-barres : cela
+suppose un abonnement à une base externe. L'app retient en revanche ce qui a déjà
+été saisi, pour ne pas le retaper.
+
+## Le Crew
+
+Le classement entre amis reste ce qu'il était : chacun colle le code de l'autre
+et les deux se voient. Un groupe est autre chose — un endroit où tout le monde se
+voit d'un coup, et où l'on se lance un défi commun. D'où un code par groupe, et
+pas un code par personne.
+
+L'appartenance vit sur le serveur, pas dans le téléphone : sinon quitter un
+groupe depuis un appareil ne quitterait rien. La liste locale ne retient que les
+codes.
+
+Les défis se jouent du lundi au dimanche et portent sur ce que les fiches des
+joueurs savent déjà dire : des répétitions d'un exercice, des séances, des séries
+ou des points. Rien à calculer côté serveur, donc rien à maintenir en double.
+N'importe quel membre peut en poser un : un groupe entre potes n'a pas de chef,
+et le seul dégât possible est une ligne en trop.
+
+Le code d'invitation est tiré dans un alphabet sans `0`/`O` ni `1`/`I`/`L` : il se
+lit à voix haute ou se recopie d'une capture d'écran, il ne doit pas prêter à
+confusion. Il n'est accepté que s'il était libre, donc deux créations simultanées
+ne peuvent pas tomber sur le même.
+
 ## Développement
 
 Un serveur local sert l'application et la vraie fonction, branchée sur un Redis en
@@ -152,6 +230,10 @@ mémoire — pratique pour dérouler le scénario à deux téléphones sans rien
 Les suites de tests pilotent Chromium avec Playwright : parcours complet, tutoriel
 et verrouillage, états de démarrage, rendu clair et sombre, géométrie du
 projecteur, et synchronisation entre deux appareils.
+
+Le Crew se déroule lui aussi à deux téléphones contre un vrai Redis : l'un crée
+le groupe, l'autre colle le code, les deux se voient, et un défi lancé d'un côté
+se remplit avec ce que l'autre inscrit vraiment dans son carnet.
 
 Les notifications se testent de bout en bout sans dépendre d'Apple ni de Google :
 un faux service de notification reçoit les envois, les déchiffre avec la clé de

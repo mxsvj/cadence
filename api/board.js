@@ -21,6 +21,20 @@ var readBody=S.readBody, send=S.send;
 var cleanId=S.cleanId, cleanTxt=S.cleanTxt, cleanNum=S.cleanNum, cleanKey=S.cleanKey;
 var TTL=S.TTL, MAXLINKS=S.MAXLINKS;
 
+/* Les répétitions de la semaine, exercice par exercice : au plus vingt
+   entrées, des identifiants sobres, des nombres bornés. */
+function cleanExo(o){
+  if(!o || typeof o !== 'object') return {};
+  var out = {}, n = 0;
+  for(var k in o){
+    if(n >= 20) break;
+    if(!/^[a-z0-9]{1,24}$/.test(k)) continue;
+    var v = cleanNum(o[k], 100000);
+    if(v > 0){ out[k] = v; n++; }
+  }
+  return out;
+}
+
 /* on ne fait jamais confiance à ce que le client envoie */
 function cleanPlayer(o){
   if(!o || typeof o !== 'object') return null;
@@ -34,6 +48,10 @@ function cleanPlayer(o){
     week:   cleanNum(o.week,  1000000), weekK:  cleanKey(o.weekK),  weekP:  cleanNum(o.weekP,  100),
     month:  cleanNum(o.month, 1000000), monthK: cleanKey(o.monthK), monthP: cleanNum(o.monthP, 100),
     xp:     cleanNum(o.xp,   10000000),
+    /* la semaine d'entraînement : elle sert au Crew (classement et défis).
+       Le détail par exercice est borné, on ne recopie pas un catalogue. */
+    sea:    cleanNum(o.sea, 200), ser: cleanNum(o.ser, 5000), rep: cleanNum(o.rep, 100000),
+    exo:    cleanExo(o.exo),
     at:     cleanKey(o.at),
     ts:     cleanNum(o.ts, 4102444800000)   /* horodatage : départage deux fiches du même joueur */
   };
