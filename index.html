@@ -683,57 +683,6 @@ details .dc li{margin-bottom:6px}
 .dispo{font-size:11.5px;color:var(--mut2);line-height:1.5;text-align:center;
   padding:16px 6px 4px;max-width:420px;margin:0 auto}
 
-/* ============================ 14f. le coach ============================ */
-.askbar{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:999px;
-  background:var(--surf);border:1px solid var(--line);box-shadow:var(--sh1);margin-bottom:14px;
-  transition:border-color .16s,transform .14s var(--ease)}
-.askbar:active{transform:scale(.99)}
-@media (hover:hover){.askbar:hover{border-color:var(--line2)}}
-.askbar .av{width:34px;height:34px;flex:0 0 34px;border-radius:50%;border:1.6px solid var(--acc);
-  display:flex;align-items:center;justify-content:center;color:var(--acc)}
-.askbar .tx{flex:1;text-align:left;color:var(--mut);font-size:14.5px;font-weight:600}
-.askbar .go{width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:var(--acc);color:#fff;
-  display:flex;align-items:center;justify-content:center}
-.askbar .go .ic{transform:rotate(-90deg)}
-
-#coa{position:fixed;inset:0;z-index:84;display:none;background:var(--bg);
-  padding:calc(env(safe-area-inset-top) + 14px) 0 0;overflow:hidden}
-#coa.open{display:flex;animation:fade .2s ease both}
-.coawrap{max-width:var(--maxw);margin:0 auto;width:100%;display:flex;flex-direction:column;height:100%}
-.coatop{display:flex;align-items:center;gap:11px;padding:0 16px 12px;border-bottom:1px solid var(--line)}
-.coatop .ti{flex:1;min-width:0}
-.coatop h2{font-size:20px}
-.coatop .sub{font-size:11.5px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.coalist{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}
-.msg{max-width:88%;padding:11px 13px;border-radius:16px;margin-bottom:10px;font-size:14.5px;
-  line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
-.msg.moi{margin-left:auto;background:var(--acc);color:#fff;border-bottom-right-radius:5px}
-.msg.lui{background:var(--surf);border:1px solid var(--line);border-bottom-left-radius:5px}
-.msg.err{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);color:var(--gold)}
-.msgcost{font-size:10.5px;color:var(--mut2);margin:-6px 0 12px 3px;font-variant-numeric:tabular-nums}
-.coabar{display:flex;gap:9px;padding:10px 16px calc(env(safe-area-inset-bottom) + 12px);
-  border-top:1px solid var(--line);background:var(--bg)}
-.coabar textarea{flex:1;resize:none;max-height:120px;border-radius:20px;padding:11px 14px}
-.coabar button{flex:0 0 46px;height:46px;border-radius:50%;background:var(--acc);color:#fff;
-  display:flex;align-items:center;justify-content:center;align-self:flex-end}
-.coabar button .ic{transform:rotate(-90deg)}
-.coabar button:disabled{opacity:.4}
-.coasug{display:flex;gap:7px;overflow-x:auto;padding:0 16px 10px}
-.coasug button{flex:0 0 auto;padding:8px 13px;border-radius:999px;background:var(--surf2);
-  border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--mut);white-space:nowrap}
-.pense{display:inline-flex;gap:4px;align-items:center}
-.pense i{width:6px;height:6px;border-radius:50%;background:var(--mut);animation:bat 1.1s infinite}
-.pense i:nth-child(2){animation-delay:.18s} .pense i:nth-child(3){animation-delay:.36s}
-@keyframes bat{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
-
-.tog{width:50px;height:29px;border-radius:999px;background:var(--line);border:0;flex:0 0 50px;
-  position:relative;transition:background .2s var(--ease)}
-.tog i{position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;background:var(--mut);
-  transition:transform .2s var(--ease),background .2s}
-.tog.on{background:var(--acc)} .tog.on i{transform:translateX(21px);background:#fff}
-.togrow{display:flex;align-items:flex-start;gap:13px}
-.togrow .tt{flex:1;min-width:0}
-
 /* ============================ 15. mode focus ============================ */
 #focus{position:fixed;inset:0;z-index:80;display:none;background:var(--bg);
   padding:calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 20px);overflow-y:auto}
@@ -879,7 +828,6 @@ html[data-theme="light"] #chole.none{box-shadow:0 0 0 9999px rgba(15,22,34,.8)}
 
 <div id="focus"></div>
 <div id="run"></div>
-<div id="coa"></div>
 <div id="coach" data-act="cnop"><div id="chole"></div><div id="cbox" data-act="cnop"></div></div>
 <div id="toast"></div>
 
@@ -940,7 +888,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v10 · 2026-09-16';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v11 · 2026-09-16';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 3;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -1388,8 +1336,6 @@ function defaults(){
     suppl:{},       /* 'YYYY-MM-DD' -> [ identifiants de compléments ]   */
     wtarget:0,      /* poids visé, 0 = pas d'objectif                    */
     suivis:[],      /* exercices suivis sur la courbe de charge          */
-    coach:{on:false, notes:'', model:'', cout:0},   /* le coach : réglages et dépense cumulée */
-    coachMsgs:[],   /* la conversation, sur ce téléphone seulement       */
     seeded:false
   };
 }
@@ -1429,9 +1375,9 @@ function load(){
     if(!Array.isArray(o.gene))   o.gene=[];
     if(!Array.isArray(o.suivis)) o.suivis=[];
     if(!o.suppl || typeof o.suppl!=='object') o.suppl={};
-    if(!o.coach || typeof o.coach!=='object') o.coach={on:false, notes:'', model:'', cout:0};
-    o.coach.cout=+o.coach.cout||0;
-    if(!Array.isArray(o.coachMsgs)) o.coachMsgs=[];
+    /* le coach a existé le temps d'une version : on efface ce qu'il avait
+       rangé, sinon ça traînerait indéfiniment dans la sauvegarde. */
+    delete o.coach; delete o.coachMsgs;
     o.wtarget=+o.wtarget||0;
     if(o.season && (!o.season.from || !o.season.to)) o.season=null;
     if(!o.meals   || typeof o.meals!=='object')   o.meals={};
@@ -2322,23 +2268,11 @@ function bougeOk(id){
   closeSheet(); render();
 }
 
-/* La porte d'entrée du coach : une barre, en haut, qu'on ne peut pas rater. */
-function barreCoach(){
-  if(!netReady()) return '';
-  if(coachCfg && !coachCfg.pret) return '';        /* pas branché : on n'en parle pas */
-  return '<button class="askbar" data-act="coaopen">'+
-    '<span class="av">'+ic('dumbbell')+'</span>'+
-    '<span class="tx">'+(logged()?'Demande à ton coach':'Ton coach, une fois connecté')+'</span>'+
-    '<span class="go">'+ic('arrow')+'</span></button>';
-}
-
 function viewJour(){
   var key=today(), hs=habitsFor(key), st=dayStat(key);
   var todo=hs.filter(function(h){ return !isDone(key,h.id); });
   var done=hs.filter(function(h){ return  isDone(key,h.id); });
   var h='';
-
-  h+= barreCoach();
 
   h+='<section class="card dayhead pop">'+ring(st.pct)+
      '<div class="dh"><div class="date">'+esc(frDate(nowD()))+'</div>'+
@@ -2955,21 +2889,7 @@ function viewJournal(){
 var noteT=null;
 /* La recherche d'exercice ne reconstruit que la liste : refaire toute la
    feuille ferait perdre le curseur à chaque lettre. */
-document.addEventListener('keydown', function(ev){
-  if(!ev.target || ev.target.id!=='coaq') return;
-  if(ev.key==='Enter' && !ev.shiftKey){
-    ev.preventDefault();
-    var v=ev.target.value; ev.target.value=''; ev.target.style.height='auto';
-    coachSend(v);
-  }
-});
-/* le champ grandit avec le texte, sans dépasser */
 document.addEventListener('input', function(ev){
-  if(ev.target && ev.target.id==='coaq'){
-    ev.target.style.height='auto';
-    ev.target.style.height=Math.min(120, ev.target.scrollHeight)+'px';
-    return;
-  }
   if(!ev.target || ev.target.id!=='pickq') return;
   pickQ=ev.target.value;
   var vieux=$('.picklist'), tmp=document.createElement('div');
@@ -3227,9 +3147,7 @@ function logged(){ return !!(state.account && state.account.token); }
 function syncableState(){
   var out={};
   for(var k in state){
-    /* coachMsgs reste sur le téléphone : une conversation n'a rien à faire
-       dans une sauvegarde, et elle grossirait pour rien. */
-    if(k==='account' || k==='syncAt' || k==='cloudAt' || k==='coachMsgs') continue;
+    if(k==='account' || k==='syncAt' || k==='cloudAt') continue;
     out[k]=state[k];
   }
   return out;
@@ -3733,242 +3651,6 @@ function syncLabel(){
   return m<1 ? 'Synchronisé à l\'instant' : 'Synchronisé il y a '+m+' min';
 }
 /* ========================================================================= */
-/*                                 LE COACH                                  */
-/* ========================================================================= */
-/* C'est la seule partie qui coûte de l'argent : chaque réponse est facturée au
-   message. D'où trois choix : on montre le prix de chaque réponse, on ne joint
-   les données que si on l'a explicitement autorisé, et on peut voir exactement
-   ce qui part avant que ça parte. */
-var COACH='/api/coach';
-var coachCfg=null, coachBusy=false, coachReste=null;
-
-function coachCall(payload){
-  return fetch(COACH,{method:'POST',headers:{'Content-Type':'application/json'},
-                      body:JSON.stringify(payload)})
-    .then(function(r){ return r.json().then(function(o){ o._status=r.status; return o; }); });
-}
-function coachConfig(){
-  if(coachCfg) return Promise.resolve(coachCfg);
-  if(!netReady()) return Promise.resolve(null);
-  return fetch(COACH,{cache:'no-store'}).then(function(r){ return r.json(); })
-    .then(function(o){ coachCfg=o; return o; }).catch(function(){ return null; });
-}
-function coachPret(){ return !!(coachCfg && coachCfg.pret) && logged() && netReady(); }
-function coachModele(){
-  var m=(state.coach&&state.coach.model)||'';
-  if(!coachCfg) return m;
-  var ok=(coachCfg.modeles||[]).some(function(x){ return x.id===m; });
-  return ok ? m : coachCfg.defaut;
-}
-function nomModele(id){
-  var l=(coachCfg&&coachCfg.modeles)||[];
-  for(var i=0;i<l.length;i++) if(l[i].id===id) return l[i].n;
-  return id||'—';
-}
-/* Un prix en dollars, lisible : au-dessus d'un centime on écrit des centimes. */
-function prixTxt(d){
-  if(!d) return '';
-  var c=d*100;
-  if(c<0.1) return 'moins d\'un dixième de centime';
-  return (c<1 ? c.toFixed(2) : c.toFixed(1))+' ¢';
-}
-
-/* ------------------------------------------------- ce qu'on joint, ou pas */
-/* Assemblé ici et nulle part ailleurs : c'est ce qui permet de le montrer
-   tel quel avant l'envoi. Le serveur n'ajoute rien. */
-function coachContexte(){
-  if(!state.coach.on) return null;
-  var key=today(), c={};
-  var b=state.body||{}, kg=dernierPoids();
-  if(corpsPret()) c.profil=(b.sexe==='f'?'femme':'homme')+', '+(+b.age)+' ans, '+(+b.taille)+' cm, '+kg+' kg';
-  c.objectif=objectif().n;
-  if(state.coach.notes) c.contraintes=state.coach.notes;
-  if(state.gene.length) c.zones=state.gene.map(function(m){ return MNAME[m]; }).join(', ');
-
-  var t=statSemaine(mondayOf(nowD()));
-  c.semaine=t.seances+' séance'+(t.seances>1?'s':'')+', '+t.series+' série'+(t.series>1?'s':'')+
-            ', '+t.reps+' répétition'+(t.reps>1?'s':'');
-
-  if(carnet().length){
-    c.recup=recuperation().filter(function(m){ return m.etat!=='pret'; })
-      .map(function(m){ return m.n+' ('+ETATS[m.etat].n.toLowerCase()+', encore '+heures(m.reste)+')'; })
-      .join(' ; ') || 'tous les groupes sont prêts';
-  }
-  var pr=prochaineSeance();
-  if(pr) c.seance=(pr.key===key?'aujourd\'hui':frShort(fromKey(pr.key)))+' — '+pr.h.name+' : '+
-    exosOf(pr.h).map(function(e){ return exoOr(e.x).n+' '+e.s+'×'+e.r; }).join(', ');
-
-  if(corpsPret()){
-    var bs=besoinDuJour(key), tt=totalRepas(key);
-    if(bs) c.nutrition=tt.kcal+'/'+bs.kcal+' kcal et '+tt.prot+'/'+bs.prot+' g de protéines aujourd\'hui';
-  }
-  var hs=habitsFor(key);
-  c.jour=hs.length ? hs.map(function(h){ return (isDone(key,h.id)?'✓ ':'· ')+h.name; }).join(', ')
-                   : 'rien de prévu aujourd\'hui';
-  return c;
-}
-function coachContexteTxt(){
-  var c=coachContexte();
-  if(!c) return 'Rien : les données ne sont pas jointes.';
-  var lbl={profil:'Profil',objectif:'Objectif',contraintes:'Contraintes',zones:'Zones sensibles',
-           semaine:'Cette semaine',recup:'Récupération',seance:'Prochaine séance',
-           nutrition:'Nutrition du jour',jour:'Habitudes du jour'};
-  return Object.keys(lbl).filter(function(k){ return c[k]; })
-    .map(function(k){ return lbl[k]+' : '+c[k]; }).join('\n');
-}
-
-/* -------------------------------------------------------------- l'écran */
-var SUGGEST=[
-  'Qu\'est-ce que je fais aujourd\'hui ?',
-  'Ma séance est trop longue, coupe-la',
-  'Comment je progresse aux tractions ?',
-  'Je mange assez de protéines ?',
-  'Je n\'ai pas le moral, dis-moi un truc'
-];
-function coachOpen(){
-  $('#coa').classList.add('open');
-  document.body.style.overflow='hidden';
-  coachConfig().then(coachRender);
-  coachRender();
-}
-function coachClose(){
-  $('#coa').classList.remove('open'); $('#coa').innerHTML='';
-  document.body.style.overflow=''; render();
-}
-function coachRender(){
-  var msgs=state.coachMsgs||[];
-  var out='<div class="coawrap"><div class="coatop">'+
-    '<span class="etile">'+ic('dumbbell')+'</span>'+
-    '<div class="ti"><h2>Ton coach</h2><div class="sub">'+
-      (coachPret()
-        ? nomModele(coachModele())+' · '+(state.coach.on?'données jointes':'sans tes données')+
-          (coachReste!==null?' · '+coachReste+' restants':'')
-        : 'indisponible')+
-    '</div></div>'+
-    '<button class="iconbtn" data-act="coareg" aria-label="Réglages">'+ic('gear')+'</button>'+
-    '<button class="iconbtn" data-act="coaclose" aria-label="Fermer">'+ic('close')+'</button></div>'+
-    '<div class="coalist" id="coalist">';
-
-  if(!msgs.length){
-    out+='<div class="empty" style="padding:26px 10px">'+
-      '<span class="e">💬</span><b>Demande-lui ce que tu veux.</b><br>'+
-      (state.coach.on
-        ? 'Il voit ta semaine, ta récupération et ta prochaine séance.'
-        : 'Il ne voit rien de toi pour l\'instant — tu peux lui donner accès dans les réglages.')+
-      '</div>';
-  }
-  msgs.forEach(function(m){
-    if(m.r==='u'){ out+='<div class="msg moi">'+esc(m.t)+'</div>'; return; }
-    out+='<div class="msg '+(m.e?'err':'lui')+'">'+esc(m.t)+'</div>';
-    if(m.c) out+='<div class="msgcost">'+esc(prixTxt(m.c))+'</div>';
-  });
-  if(coachBusy) out+='<div class="msg lui"><span class="pense"><i></i><i></i><i></i></span></div>';
-  out+='</div>';
-
-  if(!msgs.length){
-    out+='<div class="coasug">'+SUGGEST.map(function(q,i){
-      return '<button data-act="coasug" data-i="'+i+'">'+esc(q)+'</button>';
-    }).join('')+'</div>';
-  }
-  out+='<div class="coabar">'+
-    '<textarea id="coaq" rows="1" maxlength="600" placeholder="'+
-      (coachPret()?'Écris ta question…':'Connecte-toi pour parler au coach')+'"'+
-      (coachPret()?'':' disabled')+'></textarea>'+
-    '<button data-act="coasend" aria-label="Envoyer"'+(coachPret()&&!coachBusy?'':' disabled')+'>'+
-      ic('arrow')+'</button></div></div>';
-  $('#coa').innerHTML=out;
-  var l=$('#coalist'); if(l) l.scrollTop=l.scrollHeight;
-}
-function coachSend(q){
-  q=String(q||'').trim();
-  if(!q || coachBusy) return;
-  if(!coachPret()){ toast(logged()?'Coach non configuré':'Connecte-toi d\'abord','🔑'); return; }
-  state.coachMsgs.push({r:'u', t:q});
-  state.coachMsgs=state.coachMsgs.slice(-40);
-  coachBusy=true; save(); coachRender();
-
-  coachCall({action:'ask', token:state.account.token, q:q,
-    model:coachModele(), ctx:coachContexte(),
-    hist:state.coachMsgs.slice(0,-1).slice(-6).map(function(m){ return {r:m.r==='u'?'u':'a', t:m.t}; })
-  }).then(function(o){
-    coachBusy=false;
-    if(o && o.ok){
-      state.coachMsgs.push({r:'a', t:o.texte+(o.tronque?' […]':''), c:o.cout||0});
-      state.coach.cout=(+state.coach.cout||0)+(+o.cout||0);
-      if(typeof o.reste==='number') coachReste=o.reste;
-    }else{
-      state.coachMsgs.push({r:'a', e:1, t:(o&&o.message) || (o&&o.error==='session_invalide'
-        ? 'Ta session a expiré, reconnecte-toi.' : 'Le coach ne répond pas.')});
-    }
-    state.coachMsgs=state.coachMsgs.slice(-40);
-    save(); coachRender();
-  }).catch(function(){
-    coachBusy=false;
-    state.coachMsgs.push({r:'a', e:1, t:'Pas de réseau. Réessaie quand ça revient.'});
-    save(); coachRender();
-  });
-}
-
-/* ------------------------------------------------------------ réglages */
-function coachReglages(){
-  var l=(coachCfg&&coachCfg.modeles)||[], m=coachModele();
-  var out='<div class="shead"><span class="etile">'+ic('gear')+'</span>'+
-    '<div style="flex:1;min-width:0"><h2>Le coach</h2>'+
-    '<div class="muted small">Ce qu\'il sait de toi, et ce qu\'il coûte</div></div>'+
-    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
-    '<div style="height:14px"></div>';
-
-  out+='<div class="field"><label>Ce qu\'il doit savoir</label>'+
-    '<textarea id="conotes" rows="3" maxlength="400" placeholder="Pas de squat lourd, épaule droite fragile, '+
-    'je m\'entraîne le matin…">'+esc(state.coach.notes||'')+'</textarea>'+
-    '<div class="small muted" style="margin-top:5px">Tes contraintes, dans tes mots. Il les relit '+
-    'avant chaque réponse, si tu joins tes données ci-dessous.</div></div>';
-
-  out+='<div class="field"><div class="togrow">'+
-    '<div class="tt"><div style="font-weight:800;margin-bottom:3px">Joindre mes données</div>'+
-    '<div class="small muted">Il lit tes objectifs et ce que tu as mangé aujourd\'hui, ta récupération, '+
-    'ta prochaine séance, les zones que tu as déclarées et les contraintes ci-dessus. '+
-    'Tout part chiffré vers le service d\'IA le temps de la réponse, et rien n\'y est conservé. '+
-    'Éteint, il te dit qu\'il ne sait pas plutôt que de deviner.</div>'+
-    '<button class="btn ghost sm" data-act="coavoir" style="margin-top:10px">'+ic('search')+
-    ' Voir ce qui partirait</button></div>'+
-    '<button class="tog'+(state.coach.on?' on':'')+'" data-act="coaon" aria-label="Joindre mes données"><i></i></button>'+
-    '</div></div>';
-
-  if(l.length){
-    out+='<div class="field"><label>Modèle</label>'+l.map(function(x){
-      return '<button class="pickrow" data-act="coamod" data-m="'+esc(x.id)+'" style="border:1px solid '+
-        (m===x.id?'var(--acc)':'var(--line)')+';margin-bottom:7px;background:'+
-        (m===x.id?'var(--acc-soft)':'transparent')+'">'+
-        '<span class="ei"><span class="pn">'+esc(x.n)+(x.id===coachCfg.defaut?' <span class="muted small">(défaut)</span>':'')+'</span><br>'+
-        '<span class="pm">'+x.e.toFixed(2)+' $ le million de jetons en entrée, '+x.s.toFixed(2)+' $ en sortie</span></span></button>';
-    }).join('')+
-    '<div class="small muted">Une réponse de coach tourne autour de mille jetons en entrée et deux cents '+
-    'en sortie. Le plus capable est proposé par défaut ; c\'est toi qui paies, c\'est donc toi qui choisis.</div></div>';
-  }
-
-  out+='<div class="field"><label>Ce que tu as dépensé</label>'+
-    '<div class="wkstat" style="margin:0;padding:0;border:0;grid-template-columns:1fr 1fr">'+
-    '<div><b>'+((+state.coach.cout||0)*100).toFixed(1)+' ¢</b><span>DEPUIS LE DÉBUT</span></div>'+
-    '<div><b>'+(state.coachMsgs||[]).filter(function(x){ return x.r==='a'&&!x.e; }).length+
-      '</b><span>RÉPONSES</span></div>'+
-    '</div>'+
-    '<div class="small muted" style="margin-top:9px">Compté sur ce téléphone, d\'après ce que l\'API '+
-    'facture réellement pour chaque réponse. '+(coachCfg&&coachCfg.maxJour?coachCfg.maxJour+' messages par jour au maximum.':'')+
-    '</div></div>';
-
-  if(!coachPret()){
-    out+='<div class="card empty" style="margin-bottom:12px"><span class="e">🔌</span>'+
-      (!logged() ? 'Connecte-toi : le coach a besoin de savoir à qui il parle.'
-       : (coachCfg && !coachCfg.pret ? 'La clé ANTHROPIC_API_KEY n\'est pas posée sur l\'hébergeur.'
-                                     : 'Ouvre l\'app par son adresse web.'))+'</div>';
-  }
-  out+='<div class="sactions"><button class="btn ghost" data-act="coaclear">'+ic('trash')+' Effacer</button>'+
-    '<button class="btn pri" data-act="coasave">Enregistrer</button></div>';
-  openSheet(out);
-}
-
-/* ========================================================================= */
 /*                              L'ONGLET ATHLÈTE                             */
 /* ========================================================================= */
 var profVue='profil', anneeVue=null, loadExo=null;
@@ -4222,32 +3904,8 @@ function carteGabarit(){
   return h;
 }
 
-function carteCoach(){
-  var pret=coachPret();
-  var h='<div class="sec"><h2>Le coach</h2><span class="small">'+
-        (pret?(state.coach.on?'données jointes':'sans tes données'):'indisponible')+'</span></div>';
-  h+='<section class="card pop">'+
-    '<p class="muted small" style="margin:0 0 12px">La seule partie de Cadence qui coûte de l\'argent : '+
-    'chaque réponse est facturée au message, et le prix de chacune s\'affiche sous elle.</p>'+
-    (state.coach.notes
-      ? '<div class="exorow" style="margin-bottom:10px"><div class="ei">'+
-        '<div class="em" style="white-space:normal">'+esc(state.coach.notes)+'</div></div></div>'
-      : '')+
-    '<div class="wkstat" style="margin:0 0 12px;padding:0;border:0;grid-template-columns:1fr 1fr">'+
-      '<div><b>'+((+state.coach.cout||0)*100).toFixed(1)+' ¢</b><span>DÉPENSÉ</span></div>'+
-      '<div><b>'+esc(nomModele(coachModele()))+'</b><span>MODÈLE</span></div>'+
-    '</div>'+
-    '<div class="grid2">'+
-      '<button class="btn ghost sm" data-act="coareg">'+ic('gear')+' Réglages</button>'+
-      '<button class="btn '+(pret?'pri ':'')+'sm" data-act="coaopen"'+(pret?'':' disabled')+'>'+
-        ic('dumbbell')+' Lui parler</button>'+
-    '</div></section>';
-  return h;
-}
-
 function viewAthlete(){
   var h='';
-  h+= carteCoach();
   h+= carteGabarit();
   h+='<div class="sec"><h2>Tes années</h2><span class="small">jours actifs</span></div>'+carteAnnee();
   h+='<div class="sec"><h2>La saison</h2></div>'+carteSaison();
@@ -4383,22 +4041,6 @@ function viewProfil(){
     'd\'accueil : Apple ne l\'ouvre qu\'aux apps installées depuis l\'App Store. Donc estimation, '+
     'et l\'écran le dit.<br><br>'+
     'Les protéines suivent ton poids : 2 g par kilo en sèche, 1,7 en maintien, 1,9 en prise.'+
-    '</div></details>';
-  h+='<details>'+sum('dumbbell','Le coach')+'<div class="dc">'+
-    'C\'est <b>la seule partie de Cadence qui coûte de l\'argent</b>. Chaque réponse est facturée '+
-    'au message par le service d\'IA, et le prix de chacune s\'affiche juste en dessous. Autour de '+
-    'trois quarts de centime la réponse avec le modèle le plus capable, moins avec les autres.<br><br>'+
-    '<b>Ce qu\'il voit de toi.</b> Rien, tant que tu n\'as pas allumé « Joindre mes données ». '+
-    'Allumé, il reçoit ton gabarit, ton objectif, tes contraintes, tes zones sensibles, ta semaine '+
-    'd\'entraînement, ta récupération, ta prochaine séance, ta nutrition du jour et tes habitudes. '+
-    'Le bouton <b>Voir ce qui partirait</b> te le montre mot pour mot avant l\'envoi. Ni ton journal, '+
-    'ni ton poids passé, ni tes amis n\'y sont.<br><br>'+
-    '<b>Où ça va.</b> Chez Anthropic, chiffré, le temps de la réponse. Rien n\'y est conservé, et '+
-    'Cadence ne garde de son côté qu\'un compteur de messages du jour. La conversation reste sur ce '+
-    'téléphone : elle ne part même pas dans ta sauvegarde en ligne.<br><br>'+
-    '<b>Ce qu\'il ne fait pas.</b> Aucun diagnostic, aucun avis médical, aucun conseil sur des '+
-    'médicaments. Devant une douleur qui dure ou une blessure, il te renvoie vers un professionnel — '+
-    'et propose ensuite d\'adapter ta séance pour éviter la zone.'+
     '</div></details>';
   h+='<details>'+sum('body','L\'onglet Athlète')+'<div class="dc">'+
     '<b>Ton gabarit</b> — taille, âge, poids, sexe, journée type. Trois chiffres, une fois : '+
@@ -5340,42 +4982,6 @@ document.addEventListener('click', function(ev){
     renderRepas(); return;
   }
   if(a==='rsave'){ saveRepas(); return; }
-  /* --- le coach --- */
-  if(a==='coaopen'){
-    if(!logged()){ toast('Connecte-toi d\'abord','🔑'); return; }
-    coachOpen(); return;
-  }
-  if(a==='coaclose'){ coachClose(); return; }
-  if(a==='coasend'){ var cq=$('#coaq'); if(cq){ var v=cq.value; cq.value=''; coachSend(v); } return; }
-  if(a==='coasug'){ coachSend(SUGGEST[+el.getAttribute('data-i')]); return; }
-  if(a==='coareg'){ coachConfig().then(coachReglages); coachReglages(); return; }
-  if(a==='coaon'){
-    var cn=$('#conotes'); if(cn) state.coach.notes=cn.value;
-    state.coach.on=!state.coach.on; save(); coachReglages(); return;
-  }
-  if(a==='coamod'){
-    var cn2=$('#conotes'); if(cn2) state.coach.notes=cn2.value;
-    state.coach.model=el.getAttribute('data-m'); save(); coachReglages(); return;
-  }
-  if(a==='coavoir'){
-    var cn3=$('#conotes'); if(cn3){ state.coach.notes=cn3.value; save(); }
-    alert('Ce qui partirait avec ta prochaine question :\n\n'+coachContexteTxt());
-    return;
-  }
-  if(a==='coaclear'){
-    if(confirm('Effacer la conversation ? Le compteur de dépense reste.')){
-      state.coachMsgs=[]; save(); closeSheet();
-      if($('#coa').classList.contains('open')) coachRender(); else render();
-    }
-    return;
-  }
-  if(a==='coasave'){
-    var cn4=$('#conotes'); if(cn4) state.coach.notes=String(cn4.value||'').slice(0,400);
-    save(); closeSheet();
-    if($('#coa').classList.contains('open')) coachRender(); else render();
-    toast('Réglages enregistrés','✅'); return;
-  }
-
   /* --- athlète --- */
   if(a==='pvue'){ profVue=el.getAttribute('data-v'); render(); toTop(); return; }
   if(a==='accent'){
@@ -5781,7 +5387,6 @@ function boot(){
 
   syncNow(true);   /* on récupère ceux qui t'ont ajouté depuis la dernière fois */
   crewRefresh().then(function(){ if(state.tab==='profil') render(); });
-  coachConfig().then(function(o){ if(o) render(); });
   if(logged()) cloudRestore();   /* un autre téléphone a pu prendre la main */
 
   /* rappels : toutes les 20 s tant que l'app est ouverte */
