@@ -536,7 +536,8 @@ details .dc li{margin-bottom:6px}
 
 /* récupération */
 .bodywrap{display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 0 2px}
-.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;margin-top:12px}
+/* attention : .mgrid est déjà la grille du mois. Celle-ci s'appelle autrement. */
+.mrecup{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;margin-top:12px}
 .mrow{display:flex;align-items:flex-start;gap:8px}
 .mrow i{width:9px;height:9px;border-radius:50%;flex:0 0 auto;margin-top:5px}
 .mrow .mn{font-size:13.5px;font-weight:700;line-height:1.2}
@@ -888,7 +889,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v11 · 2026-09-16';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v12 · 2026-09-16';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 3;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -2432,7 +2433,34 @@ function weekTable(){
   return '<section class="card pop"><table class="wtable">'+head+body+'</table></section>';
 }
 /* ------------------------------------------------- récupération et carnet */
-var statsVue='disc', bodyFace='av';
+var statsVue='disc', bodyFace='av', anneeVue=null;
+
+/* ------------------------------------------------------ années de salle */
+function carteAnnee(){
+  var ans=anneesConnues(), an=anneeVue||+ans[0];
+  var g=grilleAnnee(an), i=ans.indexOf(String(an));
+  var h='<section class="card pop">'+
+    '<div class="sec" style="margin:0 0 4px"><h2 style="font-size:17px">'+an+'</h2>'+
+    '<span class="small">'+
+      (ans.length>1?'<button data-act="anprev" class="acc"'+(i>=ans.length-1?' disabled style="opacity:.3"':'')+'>'+ic('left')+'</button> ':'')+
+      '<b>'+g.total+' jours</b>'+
+      (ans.length>1?' <button data-act="annext" class="acc"'+(i<=0?' disabled style="opacity:.3"':'')+'>'+ic('right')+'</button>':'')+
+    '</span></div>'+
+    '<div class="annee">'+g.cols.map(function(col){
+      return '<div class="acol">'+col.map(function(c){
+        if(!c.dedans) return '<i class="acell hors"></i>';
+        if(c.futur)   return '<i class="acell fut"></i>';
+        /* l'intensité, c'est le nombre de choses validées ce jour-là */
+        var cl = !c.n ? 'miss' : (c.n>=4?'l4':(c.n>=3?'l3':(c.n>=2?'l2':'l1')));
+        return '<i class="acell '+cl+(c.key===today()?' now':'')+'"></i>';
+      }).join('')+'</div>';
+    }).join('')+'</div>'+
+    '<div class="small muted" style="margin-top:8px">'+g.total+' jour'+(g.total>1?'s':'')+
+      ' actif'+(g.total>1?'s':'')+' en '+an+
+      (an===+today().slice(0,4)?' · '+Math.round(g.total*100/Math.max(1,Math.round((nowD()-new Date(an,0,1))/86400000)+1))+'% des jours écoulés':'')+
+    '</div></section>';
+  return h;
+}
 
 function couleursRecup(){
   var c={};
@@ -2459,7 +2487,7 @@ function carteRecup(compacte){
       '<button class="'+(bodyFace==='ar'?'on':'')+'" data-act="bface" data-f="ar">Derrière</button>'+
     '</div>'+
     '<div class="bodywrap">'+silhouette(bodyFace,couleursRecup(),160)+'</div>'+
-    '<div class="mgrid">'+ r.map(function(m){
+    '<div class="mrecup">'+ r.map(function(m){
       var d = m.depuis===null ? 'Jamais travaillé'
             : (m.etat==='pret' ? 'Prêt · il y a '+heures(m.depuis)
                                : 'Encore '+heures(m.reste));
@@ -2548,6 +2576,8 @@ function viewStats(){
   }
 
   h+='<div class="sec"><h2>Le mois</h2><span>'+mg.done+' tâches</span></div>'+mg.html;
+
+  h+='<div class="sec"><h2>Tes années</h2><span class="small">jours actifs</span></div>'+carteAnnee();
 
   h+='<div class="sec"><h2>Régularité</h2><span>8 dernières semaines</span></div>'+weeksChart();
 
@@ -3653,34 +3683,7 @@ function syncLabel(){
 /* ========================================================================= */
 /*                              L'ONGLET ATHLÈTE                             */
 /* ========================================================================= */
-var profVue='profil', anneeVue=null, loadExo=null;
-
-/* ------------------------------------------------------ années de salle */
-function carteAnnee(){
-  var ans=anneesConnues(), an=anneeVue||+ans[0];
-  var g=grilleAnnee(an), i=ans.indexOf(String(an));
-  var h='<section class="card pop">'+
-    '<div class="sec" style="margin:0 0 4px"><h2 style="font-size:17px">'+an+'</h2>'+
-    '<span class="small">'+
-      (ans.length>1?'<button data-act="anprev" class="acc"'+(i>=ans.length-1?' disabled style="opacity:.3"':'')+'>'+ic('left')+'</button> ':'')+
-      '<b>'+g.total+' jours</b>'+
-      (ans.length>1?' <button data-act="annext" class="acc"'+(i<=0?' disabled style="opacity:.3"':'')+'>'+ic('right')+'</button>':'')+
-    '</span></div>'+
-    '<div class="annee">'+g.cols.map(function(col){
-      return '<div class="acol">'+col.map(function(c){
-        if(!c.dedans) return '<i class="acell hors"></i>';
-        if(c.futur)   return '<i class="acell fut"></i>';
-        /* l'intensité, c'est le nombre de choses validées ce jour-là */
-        var cl = !c.n ? 'miss' : (c.n>=4?'l4':(c.n>=3?'l3':(c.n>=2?'l2':'l1')));
-        return '<i class="acell '+cl+(c.key===today()?' now':'')+'"></i>';
-      }).join('')+'</div>';
-    }).join('')+'</div>'+
-    '<div class="small muted" style="margin-top:8px">'+g.total+' jour'+(g.total>1?'s':'')+
-      ' actif'+(g.total>1?'s':'')+' en '+an+
-      (an===+today().slice(0,4)?' · '+Math.round(g.total*100/Math.max(1,Math.round((nowD()-new Date(an,0,1))/86400000)+1))+'% des jours écoulés':'')+
-    '</div></section>';
-  return h;
-}
+var profVue='profil', loadExo=null;
 
 /* --------------------------------------------------------------- saison */
 /* Une montagne : le chemin en pointillés, la part parcourue en plein, et un
@@ -3907,7 +3910,6 @@ function carteGabarit(){
 function viewAthlete(){
   var h='';
   h+= carteGabarit();
-  h+='<div class="sec"><h2>Tes années</h2><span class="small">jours actifs</span></div>'+carteAnnee();
   h+='<div class="sec"><h2>La saison</h2></div>'+carteSaison();
   h+= carteForce();
   h+= carteCharge();
@@ -4046,8 +4048,6 @@ function viewProfil(){
     '<b>Ton gabarit</b> — taille, âge, poids, sexe, journée type. Trois chiffres, une fois : '+
     'ils servent aux objectifs de nutrition et au classement de force.<br><br>'+
     '<b>La couleur</b> — sept accents. Le fond ne bouge pas, seule la couleur qui souligne change.<br><br>'+
-    '<b>Tes années</b> — une case par jour de l\'année, d\'autant plus verte que tu as validé de choses '+
-    'ce jour-là. Un jour compte dès qu\'une seule tâche est cochée.<br><br>'+
     '<b>La saison</b> — une période avec un début et une fin, où tu tiens la cadence. Ni points ni badges '+
     'en plus : juste une ligne d\'arrivée, et une montagne pour voir où tu en es.<br><br>'+
     '<b>Zones sensibles</b> — déclare ce qui te fait mal et les exercices qui chargent ces zones portent '+
@@ -4081,6 +4081,12 @@ function viewProfil(){
       '<button class="btn sm" data-act="export">'+ic('copy')+' Copier mes données</button>'+
       '<button class="btn sm" data-act="import">'+ic('save')+' Restaurer</button>'+
     '</div></div></details>';
+  h+='<details>'+sum('stats','Tes années')+'<div class="dc">'+
+    'Dans l\'onglet Stats, sous le mois : une case par jour de l\'année, d\'autant plus verte que tu as '+
+    'validé de choses ce jour-là. Un jour compte dès qu\'une seule tâche est cochée.<br><br>'+
+    'Les flèches changent d\'année. Le mois te donne le détail, l\'année te donne la forme générale — '+
+    'les trous se voient mieux de loin.'+
+    '</div></details>';
   h+='<details>'+sum('gear','Comment marchent les points')+'<div class="dc">'+
     '<b>10 points</b> par tâche validée — séance comprise, une séance vaut une tâche — '+
     '<b>+5 bonus</b> si tu la valides dans l\'heure qui suit son horaire. '+

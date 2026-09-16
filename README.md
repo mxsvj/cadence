@@ -151,6 +151,24 @@ ne peut plus diagnostiquer à distance. Chaque ouverture va chercher la page sur
 le réseau. Le numéro de version affiché en bas du profil permet de vérifier d'un
 coup d'œil quelle version est ouverte.
 
+## Les années de salle
+
+Dans l'onglet Stats, sous le mois : une case par jour de l'année, d'autant plus
+verte que la journée a été remplie. Le mois donne le détail, l'année donne la
+forme générale — les trous se voient mieux de loin.
+
+Tout le style tient dans une seule feuille, ce qui rend les collisions de noms
+silencieuses : deux règles peuvent porter la même classe sans se gêner, jusqu'au
+jour où les deux décident de la mise en page. C'est arrivé — la liste des
+muscles s'appelait `.mgrid` comme la grille du mois et passait après dans la
+feuille, ce qui mettait le mois sur deux colonnes. Un contrôle vérifie
+désormais qu'aucune classe ne reçoit deux fois des règles de placement, et
+mesure le nombre de colonnes réellement obtenu.
+
+Un jour actif se lit dans le journal et non dans le calendrier : une habitude
+créée aujourd'hui n'était pas « prévue » le mois dernier, mais ce qui a été
+validé ce jour-là a bien eu lieu.
+
 ## L'entraînement
 
 Une séance n'est pas un objet à part : c'est une tâche du jour avec
@@ -235,11 +253,6 @@ journée type, objectif.
 pas ; seuls `--acc`, `--acc-hi`, `--acc-soft` et `--glow` sont surchargés sur la
 racine, et le code JavaScript relit le jeton pour en tirer ses demi-teintes. La
 feuille de style reste donc la référence, ce choix ne fait que la surcharger.
-
-**Les années de salle** : une case par jour, d'autant plus verte que la journée
-a été remplie. Un jour actif se lit dans le journal et non dans le calendrier —
-une habitude créée aujourd'hui n'était pas « prévue » le mois dernier, mais ce
-qui a été validé ce jour-là a bien eu lieu.
 
 **La saison** est une période avec un début, une durée et une ligne d'arrivée.
 Elle n'ajoute ni points ni badges. Les jours se comptent de minuit à minuit,
