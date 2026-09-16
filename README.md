@@ -223,6 +223,57 @@ lit à voix haute ou se recopie d'une capture d'écran, il ne doit pas prêter �
 confusion. Il n'est accepté que s'il était libre, donc deux créations simultanées
 ne peuvent pas tomber sur le même.
 
+## L'onglet Athlète
+
+L'onglet Profil se dédouble : le joueur d'un côté (rang, badges, Crew, compte),
+le corps de l'autre. Tout mettre à la suite faisait une page interminable.
+
+**Le gabarit** rassemble ce qui sert à calculer : taille, âge, poids, sexe,
+journée type, objectif.
+
+**La couleur d'accent** se choisit parmi sept teintes. Le socle froid ne bouge
+pas ; seuls `--acc`, `--acc-hi`, `--acc-soft` et `--glow` sont surchargés sur la
+racine, et le code JavaScript relit le jeton pour en tirer ses demi-teintes. La
+feuille de style reste donc la référence, ce choix ne fait que la surcharger.
+
+**Les années de salle** : une case par jour, d'autant plus verte que la journée
+a été remplie. Un jour actif se lit dans le journal et non dans le calendrier —
+une habitude créée aujourd'hui n'était pas « prévue » le mois dernier, mais ce
+qui a été validé ce jour-là a bien eu lieu.
+
+**La saison** est une période avec un début, une durée et une ligne d'arrivée.
+Elle n'ajoute ni points ni badges. Les jours se comptent de minuit à minuit,
+pas d'instant à instant : sinon l'heure qu'il est déciderait du numéro du jour.
+
+**Les zones sensibles** ne cachent rien et n'interdisent rien. Un exercice qui
+charge une zone déclarée porte un repère, franc si le muscle est moteur, discret
+s'il ne fait que suivre.
+
+### Le classement de force
+
+Cinq mouvements : squat barre, développé couché, soulevé de terre, développé
+militaire, tractions. Le maximum est estimé depuis les séries inscrites
+(formule d'Epley, bornée à dix répétitions au-delà desquelles elle dérive),
+rapporté au poids de corps, puis comparé à des paliers observés en salle :
+débutant, novice, intermédiaire, avancé, élite. Les rapports féminins sont plus
+bas, et l'écart est plus marqué sur le haut du corps.
+
+**Ce sont des repères, pas une note** — l'écran le dit, et le README le répète :
+ils ne disent rien de la technique ni de la santé.
+
+### Ce qui n'a pas été repris
+
+Deux fonctions de l'app de référence sont restées de côté, et pour des raisons
+différentes :
+
+- le **coach** qui répond en langage naturel suppose un fournisseur d'IA payé au
+  message ;
+- le **scan morphologique** est une fonction payante sans méthode publiée : il
+  n'y a rien à reproduire honnêtement.
+
+Les compléments, eux, sont là — c'est une case à cocher, Cadence ne dose rien et
+ne conseille rien là-dessus.
+
 ## Développement
 
 Un serveur local sert l'application et la vraie fonction, branchée sur un Redis en
@@ -230,6 +281,10 @@ mémoire — pratique pour dérouler le scénario à deux téléphones sans rien
 Les suites de tests pilotent Chromium avec Playwright : parcours complet, tutoriel
 et verrouillage, états de démarrage, rendu clair et sombre, géométrie du
 projecteur, et synchronisation entre deux appareils.
+
+L'onglet Athlète a sa propre suite : couleur d'accent jusqu'au style calculé des
+boutons, grille de l'année, décompte de la saison, estimation de maximum et
+paliers de force, repères de zone sensible, objectif de poids, compléments.
 
 Le Crew se déroule lui aussi à deux téléphones contre un vrai Redis : l'un crée
 le groupe, l'autre colle le code, les deux se voient, et un défi lancé d'un côté

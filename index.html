@@ -601,6 +601,88 @@ details .dc li{margin-bottom:6px}
 .defiline .bar i.full{background:var(--ok)}
 .defiline .pc{flex:0 0 40px;text-align:right;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
 
+/* ============================ 14e. athlète ============================ */
+/* les années de salle : 53 colonnes de 7 jours */
+.annee{display:flex;gap:2px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch}
+.acol{display:flex;flex-direction:column;gap:2px;flex:1 0 auto}
+.acell{width:100%;aspect-ratio:1;min-width:5px;min-height:5px;border-radius:2px;background:var(--surf2)}
+.acell.hors{background:transparent}
+.acell.fut{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.acell.l1{background:rgba(52,211,153,.24)} .acell.l2{background:rgba(52,211,153,.48)}
+.acell.l3{background:rgba(52,211,153,.72)} .acell.l4{background:var(--ok)}
+.acell.miss{background:var(--surf2)}
+.acell.now{box-shadow:0 0 0 1.5px var(--acc)}
+.amonths{display:flex;gap:2px;font-size:9.5px;color:var(--mut2);font-weight:700;margin-top:3px}
+.amonths span{flex:1 0 auto;text-align:left}
+
+/* la saison */
+.season{position:relative;padding:4px 0 0}
+.seasvg{display:block;width:100%;height:auto}
+.seasvg .mnt{fill:var(--surf2);stroke:var(--line2);stroke-width:1.2}
+.seasvg .path{fill:none;stroke:var(--line2);stroke-width:1.6;stroke-dasharray:2 3.4;stroke-linecap:round}
+.seasvg .done{fill:none;stroke:var(--acc);stroke-width:2.6;stroke-linecap:round}
+.seasvg .you{fill:var(--acc);stroke:var(--bg);stroke-width:2.4}
+.seasvg .flag{fill:none;stroke:var(--mut);stroke-width:1.6;stroke-linecap:round}
+.seasrow{display:flex;gap:10px;margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}
+.seasrow div{flex:1;text-align:center}
+.seasrow b{display:block;font-family:'Barlow Condensed',sans-serif;font-size:23px;font-weight:700;
+  font-variant-numeric:tabular-nums;line-height:1}
+.seasrow span{font-size:10.5px;color:var(--mut);font-weight:700;letter-spacing:.05em}
+
+/* classement de force */
+.frow{padding:12px 13px;border-radius:var(--r);background:var(--surf2);border:1px solid var(--line);
+  margin-bottom:9px}
+.fhead{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.fhead .fn{font-weight:800;font-size:14.5px;flex:1;min-width:0}
+.fhead .fv{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:700;
+  font-variant-numeric:tabular-nums}
+.fsteps{display:flex;gap:3px;margin-bottom:6px}
+.fsteps i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.fsteps i.on{background:var(--acc)}
+.fsteps i.top{background:var(--gold)}
+.flvl{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut)}
+.flvl b{color:var(--txt);font-weight:800}
+
+/* la charge sur l'année */
+.load{display:block;width:100%;height:auto}
+.load .bar{fill:var(--acc)}
+.load .bar.pale{fill:var(--line2)}
+.load text{fill:var(--mut2);font-size:8px;font-weight:700}
+
+/* la couleur d'accent */
+.accrow{display:flex;gap:9px;flex-wrap:wrap}
+.accdot{width:38px;height:38px;border-radius:50%;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;transition:transform .14s var(--ease)}
+.accdot:active{transform:scale(.88)}
+.accdot span{width:22px;height:22px;border-radius:50%;display:block}
+.accdot.on{border-color:var(--txt)}
+
+/* zones sensibles */
+.gene{color:var(--gold);display:inline-flex;align-items:center;margin-left:5px}
+.gene.faible{opacity:.45}
+.gene .ic{width:.95em;height:.95em}
+.zrow{display:flex;gap:7px;flex-wrap:wrap}
+.zchip{padding:8px 12px;border-radius:999px;background:var(--surf2);border:1px solid var(--line);
+  font-size:12.5px;font-weight:700;color:var(--mut)}
+.zchip.on{background:rgba(251,191,36,.16);border-color:rgba(251,191,36,.45);color:var(--gold)}
+
+/* compléments */
+.suprow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.supbtn{padding:10px 4px;border-radius:var(--r);background:var(--surf2);border:1px solid var(--line);
+  text-align:center;transition:transform .14s var(--ease)}
+.supbtn:active{transform:scale(.93)}
+.supbtn .se{font-size:20px;line-height:1.1;display:block}
+.supbtn .sn{font-size:10.5px;font-weight:700;color:var(--mut);margin-top:3px;display:block;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.supbtn.on{background:var(--ok-soft);border-color:rgba(52,211,153,.42)}
+.supbtn.on .sn{color:var(--txt)}
+
+/* l'avertissement */
+.spark .tg{stroke:var(--gold);stroke-width:1.4;stroke-dasharray:4 4}
+.spark .tgt{fill:var(--gold);font-size:9.5px;font-weight:700}
+.dispo{font-size:11.5px;color:var(--mut2);line-height:1.5;text-align:center;
+  padding:16px 6px 4px;max-width:420px;margin:0 auto}
+
 /* ============================ 15. mode focus ============================ */
 #focus{position:fixed;inset:0;z-index:80;display:none;background:var(--bg);
   padding:calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 20px);overflow-y:auto}
@@ -720,6 +802,10 @@ html[data-theme="light"] #chole.none{box-shadow:0 0 0 9999px rgba(15,22,34,.8)}
 <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
 <symbol id="i-fire" viewBox="0 0 24 24"><path d="M12 21c3.6 0 6-2.4 6-5.6 0-3.9-3.4-5.6-3.4-9.4-2 1-3 2.6-3 4.7-1-.7-1.4-1.8-1.4-3.2C8 8.4 6 10.9 6 15.4 6 18.6 8.4 21 12 21z"/></symbol>
 <symbol id="i-skip" viewBox="0 0 24 24"><path d="M6 5.2l9 6.8-9 6.8zM18 5v14"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.6L21.2 20H2.8z"/><path d="M12 9.6v4.6M12 17.2v.1"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="3.6"/><path d="M12 1.8v2.6M12 19.6v2.6M1.8 12h2.6M19.6 12h2.6"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3.2a8.8 8.8 0 1 0 0 17.6c1.5 0 2-1 1.4-2-.7-1.2.2-2.4 1.6-2.4h1.8a4 4 0 0 0 4-4c0-5-4-9.2-8.8-9.2z"/><circle cx="8" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="16" cy="10" r="1.1" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-mountain" viewBox="0 0 24 24"><path d="M2.5 19.5L9 7l4 7 2-3 6.5 8.5z"/><path d="M6.6 14.2h4.6"/></symbol>
 </defs></svg>
 <div id="app">
   <header id="topbar">
@@ -802,7 +888,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v8 · 2026-09-16';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v9 · 2026-09-16';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 3;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -950,6 +1036,7 @@ var MATOS = [
   {id:'barre',  n:'Barre de traction'},
   {id:'para',   n:'Barres parallèles'},
   {id:'halt',   n:'Haltères'},
+  {id:'barbell',n:'Barre de musculation'},
   {id:'banc',   n:'Banc'},
   {id:'elast',  n:'Élastique'},
   {id:'dehors', n:'Dehors'}
@@ -976,17 +1063,18 @@ var EXOS = [
   {id:'pompespike',  n:'Pompes piquées',         m:['epaules'],            s:['triceps'],              eq:'rien',  u:'rep', r:90},
   {id:'dips',        n:'Dips aux barres',        m:['pecs','triceps'],     s:['epaules'],              eq:'para',  u:'rep', r:120},
   {id:'dipsbanc',    n:'Dips sur banc',          m:['triceps'],            s:['epaules','pecs'],       eq:'banc',  u:'rep', r:75},
-  {id:'devcouche',   n:'Développé couché',       m:['pecs'],               s:['triceps','epaules'],    eq:'banc',  u:'rep', r:150},
-  {id:'devmil',      n:'Développé militaire',    m:['epaules'],            s:['triceps','trapezes'],   eq:'halt',  u:'rep', r:120},
+  {id:'devcouche',   n:'Développé couché',       m:['pecs'],               s:['triceps','epaules'],    eq:'barbell', u:'rep', r:150},
+  {id:'devmil',      n:'Développé militaire',    m:['epaules'],            s:['triceps','trapezes'],   eq:'barbell', u:'rep', r:120},
   {id:'ecarte',      n:'Écarté haltères',        m:['pecs'],               s:['epaules'],              eq:'halt',  u:'rep', r:90},
   {id:'elevlat',     n:'Élévations latérales',   m:['epaules'],            s:['trapezes'],             eq:'halt',  u:'rep', r:60},
   {id:'atr',         n:'Pompes en ATR',          m:['epaules','triceps'],  s:['abdos'],                eq:'rien',  u:'rep', r:150},
   /* -- jambes ----------------------------------------------------------- */
   {id:'squat',       n:'Squat',                  m:['quadris','fessiers'], s:['ischios','lombaires'],  eq:'rien',  u:'rep', r:120},
+  {id:'squatbarre',  n:'Squat barre',            m:['quadris','fessiers'], s:['ischios','lombaires'],  eq:'barbell', u:'rep', r:180},
   {id:'squatbulg',   n:'Squat bulgare',          m:['quadris','fessiers'], s:['ischios'],              eq:'banc',  u:'rep', r:120},
   {id:'pistol',      n:'Pistol squat',           m:['quadris','fessiers'], s:['ischios','abdos'],      eq:'rien',  u:'rep', r:150},
   {id:'fentes',      n:'Fentes',                 m:['quadris','fessiers'], s:['ischios'],              eq:'rien',  u:'rep', r:90},
-  {id:'sdt',         n:'Soulevé de terre',       m:['ischios','lombaires'],s:['fessiers','dos'],       eq:'halt',  u:'rep', r:180},
+  {id:'sdt',         n:'Soulevé de terre',       m:['ischios','lombaires'],s:['fessiers','dos'],       eq:'barbell', u:'rep', r:180},
   {id:'hipthrust',   n:'Hip thrust',             m:['fessiers'],           s:['ischios'],              eq:'banc',  u:'rep', r:120},
   {id:'mollets',     n:'Extensions mollets',     m:['mollets'],            s:[],                       eq:'rien',  u:'rep', r:60},
   {id:'chaise',      n:'Chaise au mur',          m:['quadris'],            s:['fessiers'],             eq:'rien',  u:'sec', r:90},
@@ -1020,6 +1108,117 @@ function exoOr(id){
   return exoById(id) || {id:id, n:'Exercice supprimé', m:[], s:[], eq:'rien', u:'rep', r:60};
 }
 var UNITE = { rep:'rép.', sec:'s', min:'min' };
+
+/* ------------------------------------------------------ couleur d'accent */
+/* Le socle reste froid ; seul l'accent change. Chaque entrée porte sa teinte
+   vive et sa version survolée — le reste (halo, fond doux) s'en déduit. */
+var ACCENTS = [
+  {id:'',       n:'Bleu',    c:'#3B82F6', h:'#5B9BFF'},
+  {id:'cyan',   n:'Cyan',    c:'#22D3EE', h:'#5BE2F5'},
+  {id:'violet', n:'Violet',  c:'#8B5CF6', h:'#A78BFA'},
+  {id:'vert',   n:'Vert',    c:'#34D399', h:'#5BE0AF'},
+  {id:'or',     n:'Or',      c:'#FBBF24', h:'#FCD34D'},
+  {id:'rose',   n:'Rose',    c:'#F472B6', h:'#F98FC8'},
+  {id:'blanc',  n:'Blanc',   c:'#E6EAF0', h:'#FFFFFF'}
+];
+function accentChoisi(){
+  var id=state.accent||'';
+  for(var i=0;i<ACCENTS.length;i++) if(ACCENTS[i].id===id) return ACCENTS[i];
+  return ACCENTS[0];
+}
+/* On pose les jetons sur la racine : la feuille de style reste la référence,
+   ce choix ne fait que la surcharger. */
+function poserAccent(){
+  var a=accentChoisi(), r=document.documentElement;
+  if(!a.id){ ['--acc','--acc-hi','--acc-soft','--glow'].forEach(function(k){ r.style.removeProperty(k); }); }
+  else{
+    r.style.setProperty('--acc', a.c);
+    r.style.setProperty('--acc-hi', a.h);
+    r.style.setProperty('--acc-soft', tint(a.c,.14));
+    r.style.setProperty('--glow', '0 6px 18px '+tint(a.c,.30));
+  }
+  relireAccent();
+  var mt=$('meta[name="theme-color"]');
+  if(mt) mt.setAttribute('content', state.theme==='dark'?'#0E1116':'#F6F8FB');
+}
+
+/* ------------------------------------------------------------ compléments */
+var SUPPL = [
+  {id:'whey',  n:'Whey',          e:'🥛'},
+  {id:'crea',  n:'Créatine',      e:'⚗️'},
+  {id:'multi', n:'Multivitamines',e:'💊'},
+  {id:'omega', n:'Oméga-3',       e:'🐟'},
+  {id:'magne', n:'Magnésium',     e:'🧂'},
+  {id:'vitd',  n:'Vitamine D',    e:'☀️'},
+  {id:'prew',  n:'Pré-workout',   e:'⚡'},
+  {id:'prot',  n:'Protéine végétale', e:'🌱'}
+];
+function supplDuJour(key){ return (state.suppl[key]||[]).slice(); }
+function toggleSuppl(key,id){
+  if(!state.suppl[key]) state.suppl[key]=[];
+  var a=state.suppl[key], i=a.indexOf(id);
+  if(i>-1) a.splice(i,1); else a.push(id);
+  if(!a.length) delete state.suppl[key];
+  save();
+}
+
+/* --------------------------------------------------------- repères de force */
+/* Des ordres de grandeur publiés, rapportés au poids de corps : ce qu'on
+   observe couramment en salle à chaque niveau. Ce ne sont pas des notes, et
+   l'écran le répète — un chiffre de force ne dit rien de ta santé ni de ta
+   technique. Les rapports féminins sont plus bas sur le haut du corps, où la
+   différence de masse musculaire est la plus marquée. */
+var FORCE = [
+  {x:'squatbarre', n:'Squat barre',         h:[0.75,1.25,1.75,2.25,2.75], f:0.80},
+  {x:'devcouche',  n:'Développé couché',    h:[0.60,1.00,1.40,1.80,2.20], f:0.65},
+  {x:'sdt',        n:'Soulevé de terre',    h:[1.00,1.50,2.00,2.50,3.00], f:0.85},
+  {x:'devmil',     n:'Développé militaire', h:[0.40,0.60,0.85,1.10,1.40], f:0.62},
+  {x:'tractions',  n:'Tractions',           reps:[1,5,12,20,30],          f:0.45}
+];
+var NIVEAUX = ['Débutant','Novice','Intermédiaire','Avancé','Élite'];
+
+/* Epley : l'estimation d'un maximum à partir d'une série. Au-delà de dix
+   répétitions elle dérive, on s'arrête donc là. */
+function unRM(poids,reps){
+  if(!poids || !reps) return 0;
+  return poids * (1 + Math.min(reps,10)/30);
+}
+/* Le meilleur effort jamais inscrit pour un mouvement. */
+function meilleurEffort(id){
+  var best=0, quand='';
+  carnet().forEach(function(sn){
+    (sn.sea.x||[]).forEach(function(ex){
+      if(ex.i!==id) return;
+      (ex.s||[]).forEach(function(t){
+        var v = (+t.w) ? unRM(+t.w,+t.r||1) : (+t.r||0);
+        if(v>best){ best=v; quand=sn.key; }
+      });
+    });
+  });
+  return best ? {v:best, key:quand} : null;
+}
+function niveauForce(f,valeur,kg,sexe){
+  var paliers = f.reps
+    ? f.reps.map(function(v){ return sexe==='f' ? Math.max(1,Math.round(v*f.f)) : v; })
+    : f.h.map(function(r){ return (sexe==='f' ? r*f.f : r) * kg; });
+  var i=-1;
+  for(var k=0;k<paliers.length;k++) if(valeur>=paliers[k]) i=k;
+  return {
+    i:i, nom: i<0 ? 'Pas encore classé' : NIVEAUX[i],
+    seuil: paliers[Math.min(i+1,paliers.length-1)],
+    dernier: i>=paliers.length-1,
+    paliers: paliers
+  };
+}
+function classementForce(){
+  var kg=dernierPoids(), sexe=(state.body&&state.body.sexe)||'h';
+  if(!kg) return [];
+  return FORCE.map(function(f){
+    var e=meilleurEffort(f.x);
+    if(!e) return null;
+    return { f:f, val:e.v, key:e.key, unite:f.reps?'rép.':'kg', niv:niveauForce(f,e.v,kg,sexe) };
+  }).filter(Boolean);
+}
 
 /* ------------------------------------------------------------ silhouette */
 /* Elle est construite, pas dessinée à la main : deux primitives suffisent —
@@ -1131,6 +1330,12 @@ function defaults(){
     foods:[],       /* aliments enregistrés pour ne pas les retaper      */
     body:{},        /* taille, âge, sexe, activité, objectif             */
     crews:[],       /* groupes rejoints : [ {code, name} ]               */
+    accent:'',      /* couleur d'accent choisie, vide = celle d'origine  */
+    season:null,    /* la saison en cours : { n, from, to }              */
+    gene:[],        /* zones sensibles : identifiants de muscles         */
+    suppl:{},       /* 'YYYY-MM-DD' -> [ identifiants de compléments ]   */
+    wtarget:0,      /* poids visé, 0 = pas d'objectif                    */
+    suivis:[],      /* exercices suivis sur la courbe de charge          */
     seeded:false
   };
 }
@@ -1167,6 +1372,11 @@ function load(){
     if(!Array.isArray(o.myexos)) o.myexos=[];
     if(!Array.isArray(o.foods))  o.foods=[];
     if(!Array.isArray(o.crews))  o.crews=[];
+    if(!Array.isArray(o.gene))   o.gene=[];
+    if(!Array.isArray(o.suivis)) o.suivis=[];
+    if(!o.suppl || typeof o.suppl!=='object') o.suppl={};
+    o.wtarget=+o.wtarget||0;
+    if(o.season && (!o.season.from || !o.season.to)) o.season=null;
     if(!o.meals   || typeof o.meals!=='object')   o.meals={};
     if(!o.body    || typeof o.body!=='object')    o.body={};
     if(!o.off     || typeof o.off!=='object')     o.off={};
@@ -1699,6 +1909,108 @@ function ajouterRepas(key,r){
   save();
 }
 
+/* ========================================================================= */
+/*                     SAISON, ANNÉES DE SALLE, ZONES SENSIBLES              */
+/* ========================================================================= */
+/* Un jour compte comme actif dès qu'une tâche y a été validée : c'est la
+   définition que l'app utilise partout ailleurs, autant s'y tenir. */
+function faitsDuJour(key){
+  var j=state.log[key], n=0;
+  if(!j) return 0;
+  for(var id in j) if(j[id].done) n++;
+  return n;
+}
+function joursActifsAnnee(an){
+  var out={};
+  for(var key in state.log){
+    if(key.slice(0,4)!==String(an)) continue;
+    var n=faitsDuJour(key);
+    if(n) out[key]=n;
+  }
+  return out;
+}
+function anneesConnues(){
+  var set={}, tk=today().slice(0,4);
+  Object.keys(state.log).forEach(function(k){
+    var j=state.log[k], a=false;
+    for(var id in j) if(j[id].done) a=true;
+    if(a) set[k.slice(0,4)]=true;
+  });
+  set[tk]=true;
+  return Object.keys(set).sort().reverse();
+}
+/* Les cases de l'année, alignées sur les semaines : la première colonne
+   commence au lundi qui précède le 1er janvier. */
+function grilleAnnee(an){
+  var debut=mondayOf(new Date(an,0,1)), fin=new Date(an,11,31);
+  var actifs=joursActifsAnnee(an), cols=[], d=new Date(debut.getTime());
+  while(d<=fin || d.getDay()!==1){
+    if(d>fin && d.getDay()===1) break;
+    var col=[];
+    for(var i=0;i<7;i++){
+      var key=dk(d), dedans=(d.getFullYear()===an);
+      col.push({ key:key, dedans:dedans, n:actifs[key]||0, futur: key>today() });
+      d=addDays(d,1);
+    }
+    cols.push(col);
+    if(cols.length>53) break;
+  }
+  return { cols:cols, total:Object.keys(actifs).length };
+}
+
+/* ------------------------------------------------------------- la saison */
+var SAISONS = [
+  {m:[11,0,1], n:'Winter Arc'},
+  {m:[2,3,4],  n:'Spring Cut'},
+  {m:[5,6,7],  n:'Summer Shred'},
+  {m:[8,9,10], n:'Autumn Build'}
+];
+function nomSaison(d){
+  var mo=d.getMonth();
+  for(var i=0;i<SAISONS.length;i++) if(SAISONS[i].m.indexOf(mo)>-1) return SAISONS[i].n;
+  return 'Ma saison';
+}
+function saisonEtat(){
+  var s=state.season;
+  if(!s) return null;
+  /* On compare des minuits, pas des instants : sinon l'heure qu'il est
+     déciderait du numéro du jour. */
+  var d0=fromKey(s.from), d1=fromKey(s.to), aujourdhui=fromKey(today());
+  var total=Math.max(1,Math.round((d1-d0)/86400000)+1);
+  var passe=clamp(Math.round((aujourdhui-d0)/86400000)+1,0,total);
+  /* on ne compte que les jours déjà écoulés : une saison à venir est à zéro */
+  var faits=0, parfaits=0;
+  for(var i=0;i<passe;i++){
+    var key=dk(addDays(d0,i));
+    if(key>today()) break;
+    if(faitsDuJour(key)) faits++;
+    var st=dayStat(key);
+    if(st.total && st.pct>=100) parfaits++;
+  }
+  return { n:s.n, from:s.from, to:s.to, total:total, passe:passe,
+           reste:Math.max(0,total-passe), faits:faits, parfaits:parfaits,
+           pct: Math.round(passe*100/total),
+           tenue: passe ? Math.round(faits*100/passe) : 0,
+           finie: today()>s.to, future: today()<s.from };
+}
+
+/* -------------------------------------------------------- zones sensibles */
+/* On ne cache rien et on n'interdit rien : on signale. Un exercice qui charge
+   une zone déclarée sensible porte un repère, et c'est à toi de décider. */
+function exoSensible(x){
+  if(!state.gene.length) return null;
+  var m=(x.m||[]).filter(function(y){ return state.gene.indexOf(y)>-1; });
+  var se=(x.s||[]).filter(function(y){ return state.gene.indexOf(y)>-1; });
+  if(!m.length && !se.length) return null;
+  return { fort:m.length>0, muscles:m.concat(se).map(function(y){ return MNAME[y]; }) };
+}
+function marqueSensible(x){
+  var g=exoSensible(x);
+  if(!g) return '';
+  return '<span class="gene'+(g.fort?'':' faible')+'" title="'+esc(g.muscles.join(', '))+
+         (g.fort?' — muscle moteur':' — muscle secondaire')+'">'+ic('alert')+'</span>';
+}
+
 /* ======================================================================= */
 /*                              INTERFACE                                  */
 /* ======================================================================= */
@@ -2227,6 +2539,8 @@ function viewStats(){
        '</div></section>';
     h+='<div class="sec"><h2>Carnet</h2><span class="small">'+carnet().length+' séance'+(carnet().length>1?'s':'')+'</span></div>'+
        carteCarnet(20);
+    h+='<div class="dispo">Cadence est une application d\'entraînement : elle ne donne pas d\'avis '+
+       'médical et ne remplace pas un professionnel de santé.</div>';
     return h;
   }
 
@@ -2330,7 +2644,9 @@ function weightSpark(){
                   : 'Aucune pesée. Note ton poids pour lancer la courbe.')+'</div>';
   }
   var vals=keys.map(function(k){ return state.weight[k]; });
+  var cible=+state.wtarget||0;
   var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
+  if(cible){ mn=Math.min(mn,cible); mx=Math.max(mx,cible); }
   if(mx-mn<1){ mn-=0.5; mx+=0.5; }
   var W=320,H=110,P=8,PT=14,PB=18;
   var x=function(i){ return P + i*(W-2*P)/(keys.length-1); };
@@ -2346,6 +2662,9 @@ function weightSpark(){
     '<line class="gl" x1="'+P+'" y1="'+(H-PB)+'" x2="'+(W-P)+'" y2="'+(H-PB)+'"/>'+
     '<path class="ar" d="'+area+'"/>'+
     '<polyline class="ln" points="'+pts+'"/>'+
+    (cible ? '<line class="tg" x1="'+P+'" y1="'+y(cible).toFixed(1)+'" x2="'+(W-P)+'" y2="'+y(cible).toFixed(1)+'"/>'+
+             '<text class="tgt" x="'+(W-P)+'" y="'+(y(cible)-5).toFixed(1)+'" text-anchor="end">objectif '+cible+' kg</text>'
+           : '')+
     '<circle class="dt" cx="'+x(keys.length-1).toFixed(1)+'" cy="'+y(last).toFixed(1)+'" r="3.5"/>'+
     '<text x="'+P+'" y="'+(PT-4)+'">'+mx.toFixed(1)+' kg</text>'+
     '<text x="'+P+'" y="'+(H-5)+'">'+mn.toFixed(1)+' kg</text>'+
@@ -2405,7 +2724,35 @@ function carteNutrition(){
     }).join('')
     : '<div class="card empty" style="margin-bottom:9px"><span class="e">🥗</span>Rien de noté aujourd\'hui.</div>';
   h+='<button class="btn pri wide" data-act="mealadd">'+ic('plus')+' Ajouter un repas</button>';
+
+  var sup=supplDuJour(key);
+  h+='<div class="sec"><h2>Compléments</h2><span class="small">'+
+     (sup.length?sup.length+' pris':'aucun')+'</span></div>';
+  h+='<section class="card pop"><div class="suprow">'+SUPPL.map(function(x){
+      return '<button class="supbtn'+(sup.indexOf(x.id)>-1?' on':'')+'" data-act="suppl" data-s="'+x.id+'">'+
+        '<span class="se">'+x.e+'</span><span class="sn">'+esc(x.n)+'</span></button>';
+    }).join('')+'</div>'+
+    '<div class="small muted" style="margin-top:10px">Une simple case cochée : Cadence ne dose rien '+
+    'et ne conseille rien là-dessus.</div></section>';
   return h;
+}
+
+/* Un poids visé, pour donner une fin à la courbe. */
+function openPoidsCible(){
+  var kg=dernierPoids();
+  openSheet('<div class="shead"><span class="etile">'+ic('target')+'</span>'+
+    '<div style="flex:1;min-width:0"><h2>Un poids visé</h2>'+
+    '<div class="muted small">Il apparaît comme une ligne sur ta courbe</div></div>'+
+    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
+    '<div style="height:14px"></div>'+
+    '<div class="field"><label>Objectif</label>'+
+      '<input id="wt" type="number" step="0.1" inputmode="decimal" placeholder="ex. 70" value="'+
+      (state.wtarget||'')+'"></div>'+
+    (kg ? '<div class="small muted" style="margin-top:-6px;margin-bottom:14px">Tu es à '+kg+' kg '+
+          'aujourd\'hui. Laisse vide pour retirer l\'objectif.</div>'
+        : '<div class="small muted" style="margin-top:-6px;margin-bottom:14px">Note d\'abord une pesée.</div>')+
+    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
+    '<button class="btn pri" data-act="wtok">Enregistrer</button></div>');
 }
 
 /* Le gabarit : trois chiffres, une fois. */
@@ -2511,7 +2858,13 @@ function viewJournal(){
        '<input id="wval" type="number" step="0.1" inputmode="decimal" placeholder="ex. 78.4" value="'+
          (state.weight[t]!=null?state.weight[t]:'')+'">'+
        '<button class="btn pri" data-act="wsave" style="flex:0 0 auto">Noter</button>'+
-     '</div>'+ weightSpark() +'</section>';
+     '</div>'+ weightSpark() +
+     '<button class="btn ghost wide sm" data-act="wtarget" style="margin-top:10px">'+ic('target')+' '+
+       (state.wtarget ? 'Objectif : '+state.wtarget+' kg'+(lastW!=null?' · '+
+          (Math.abs(lastW-state.wtarget)<.05 ? 'atteint'
+           : (Math.abs(+(lastW-state.wtarget).toFixed(1))+' kg '+(lastW>state.wtarget?'à perdre':'à prendre'))) : '')
+                      : 'Se donner un objectif')+
+     '</button></section>';
 
   h+= carteNutrition();
 
@@ -2538,7 +2891,8 @@ document.addEventListener('input', function(ev){
   pickQ=ev.target.value;
   var vieux=$('.picklist'), tmp=document.createElement('div');
   tmp.innerHTML=pickerHTML();
-  var neuf=tmp.querySelector('.picklist');
+  var neuf=tmp.querySelector('.picklist'), n=$('#pickn'), nn=tmp.querySelector('#pickn');
+  if(n && nn) n.textContent=nn.textContent;
   if(vieux && neuf) vieux.innerHTML=neuf.innerHTML;
   else if(vieux && !neuf) vieux.innerHTML='<div class="empty" style="padding:22px 0">Rien à ce nom.</div>';
 });
@@ -3293,9 +3647,284 @@ function syncLabel(){
   var m=Math.round((Date.now()-state.syncAt)/60000);
   return m<1 ? 'Synchronisé à l\'instant' : 'Synchronisé il y a '+m+' min';
 }
+/* ========================================================================= */
+/*                              L'ONGLET ATHLÈTE                             */
+/* ========================================================================= */
+var profVue='profil', anneeVue=null, loadExo=null;
+
+/* ------------------------------------------------------ années de salle */
+function carteAnnee(){
+  var ans=anneesConnues(), an=anneeVue||+ans[0];
+  var g=grilleAnnee(an), i=ans.indexOf(String(an));
+  var h='<section class="card pop">'+
+    '<div class="sec" style="margin:0 0 4px"><h2 style="font-size:17px">'+an+'</h2>'+
+    '<span class="small">'+
+      (ans.length>1?'<button data-act="anprev" class="acc"'+(i>=ans.length-1?' disabled style="opacity:.3"':'')+'>'+ic('left')+'</button> ':'')+
+      '<b>'+g.total+' jours</b>'+
+      (ans.length>1?' <button data-act="annext" class="acc"'+(i<=0?' disabled style="opacity:.3"':'')+'>'+ic('right')+'</button>':'')+
+    '</span></div>'+
+    '<div class="annee">'+g.cols.map(function(col){
+      return '<div class="acol">'+col.map(function(c){
+        if(!c.dedans) return '<i class="acell hors"></i>';
+        if(c.futur)   return '<i class="acell fut"></i>';
+        /* l'intensité, c'est le nombre de choses validées ce jour-là */
+        var cl = !c.n ? 'miss' : (c.n>=4?'l4':(c.n>=3?'l3':(c.n>=2?'l2':'l1')));
+        return '<i class="acell '+cl+(c.key===today()?' now':'')+'"></i>';
+      }).join('')+'</div>';
+    }).join('')+'</div>'+
+    '<div class="small muted" style="margin-top:8px">'+g.total+' jour'+(g.total>1?'s':'')+
+      ' actif'+(g.total>1?'s':'')+' en '+an+
+      (an===+today().slice(0,4)?' · '+Math.round(g.total*100/Math.max(1,Math.round((nowD()-new Date(an,0,1))/86400000)+1))+'% des jours écoulés':'')+
+    '</div></section>';
+  return h;
+}
+
+/* --------------------------------------------------------------- saison */
+/* Une montagne : le chemin en pointillés, la part parcourue en plein, et un
+   point où tu en es. Le dessin n'apporte rien d'autre qu'un repère, mais un
+   repère qu'on lit sans réfléchir. */
+function dessinSaison(pct){
+  var W=320, H=120, sol=H-14;
+  var pts=[[10,sol],[60,sol-26],[100,sol-20],[150,sol-52],[195,sol-44],[240,sol-78],[275,sol-96],[310,sol-96]];
+  var d='M'+pts.map(function(p){ return p[0]+' '+p[1]; }).join('L');
+  /* longueur parcourue : on avance le long de la polyligne */
+  var total=0, segs=[];
+  for(var i=1;i<pts.length;i++){
+    var dx=pts[i][0]-pts[i-1][0], dy=pts[i][1]-pts[i-1][1], l=Math.sqrt(dx*dx+dy*dy);
+    segs.push(l); total+=l;
+  }
+  var cible=total*clamp(pct,0,100)/100, cum=0, fait='M'+pts[0][0]+' '+pts[0][1], moi=pts[0];
+  for(var j=1;j<pts.length;j++){
+    var l2=segs[j-1];
+    if(cum+l2<=cible){ fait+='L'+pts[j][0]+' '+pts[j][1]; cum+=l2; moi=pts[j]; }
+    else{
+      var t=(cible-cum)/l2;
+      var x=pts[j-1][0]+(pts[j][0]-pts[j-1][0])*t, y=pts[j-1][1]+(pts[j][1]-pts[j-1][1])*t;
+      fait+='L'+x.toFixed(1)+' '+y.toFixed(1); moi=[x,y]; break;
+    }
+  }
+  return '<svg class="seasvg" viewBox="0 0 '+W+' '+H+'" aria-hidden="true">'+
+    '<path class="mnt" d="M0 '+H+'L96 '+(sol-34)+'L150 '+(sol-4)+'L212 '+(sol-62)+'L275 '+(sol-104)+'L'+W+' '+H+'Z"/>'+
+    '<path class="path" d="'+d+'"/>'+
+    '<path class="done" d="'+fait+'"/>'+
+    '<circle class="you" cx="'+moi[0].toFixed(1)+'" cy="'+moi[1].toFixed(1)+'" r="5"/>'+
+    '<path class="flag" d="M292 '+(sol-96)+'v-16M292 '+(sol-112)+'h13l-4 5 4 5h-13"/>'+
+  '</svg>';
+}
+function carteSaison(){
+  var e=saisonEtat();
+  if(!e){
+    return '<section class="card pop">'+
+      '<div class="sec" style="margin:0 0 4px"><h2 style="font-size:17px">La saison</h2></div>'+
+      '<p class="muted small" style="margin:0 0 13px">Une période avec un début et une fin, '+
+      'où tu tiens la cadence. Ni points ni badges en plus : juste une ligne d\'arrivée.</p>'+
+      '<button class="btn pri wide" data-act="seasnew">'+ic('mountain')+' Ouvrir une saison</button></section>';
+  }
+  var h='<section class="card pop">'+
+    '<div class="sec" style="margin:0 0 2px"><h2 style="font-size:17px">'+esc(e.n)+'</h2>'+
+      '<span class="small">'+(e.finie?'terminée':(e.future?'à venir':'jour '+e.passe+' sur '+e.total))+'</span></div>'+
+    '<div class="season">'+dessinSaison(e.pct)+'</div>'+
+    '<div class="seasrow">'+
+      '<div><b>'+e.faits+'</b><span>JOURS TENUS</span></div>'+
+      '<div><b>'+e.parfaits+'</b><span>PARFAITS</span></div>'+
+      '<div><b>'+(e.finie?0:e.reste)+'</b><span>RESTANTS</span></div>'+
+    '</div>'+
+    '<div class="small muted" style="margin-top:11px">Du '+esc(frShort(fromKey(e.from)))+
+      ' au '+esc(frShort(fromKey(e.to)))+
+      (e.passe?' · '+e.tenue+'% des jours écoulés tenus':'')+'</div>'+
+    '<div class="grid2" style="margin-top:11px">'+
+      '<button class="btn ghost sm" data-act="seasnew">'+ic('edit')+' Changer</button>'+
+      '<button class="btn ghost sm" data-act="seasend">'+ic('close')+' Clore</button>'+
+    '</div></section>';
+  return h;
+}
+var seasF=null;
+function openSaison(){
+  var s0=state.season;
+  seasF = s0 ? {n:s0.n, from:s0.from, jours:Math.round((fromKey(s0.to)-fromKey(s0.from))/86400000)+1}
+             : {n:nomSaison(nowD()), from:today(), jours:90};
+  renderSaison();
+}
+function renderSaison(){
+  var f=seasF, fin=dk(addDays(fromKey(f.from), f.jours-1));
+  openSheet('<div class="shead"><span class="etile">'+ic('mountain')+'</span>'+
+    '<div style="flex:1;min-width:0"><h2>Ta saison</h2>'+
+    '<div class="muted small">Un début, une fin, et rien d\'autre à gérer</div></div>'+
+    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
+    '<div style="height:14px"></div>'+
+    '<div class="field"><label>Nom</label>'+
+      '<input id="sn2" maxlength="24" value="'+esc(f.n)+'" placeholder="ex. Winter Arc"></div>'+
+    '<div class="field"><label>Premier jour</label>'+
+      '<input id="sf" type="date" value="'+esc(f.from)+'"></div>'+
+    '<div class="field"><label>Durée</label><div class="pickbar">'+
+      [30,60,90,120,180].map(function(j){
+        return '<button class="'+(f.jours===j?'on':'')+'" data-act="sjours" data-j="'+j+'">'+j+' jours</button>';
+      }).join('')+'</div>'+
+      '<div class="small muted" style="margin-top:7px">Fin le '+esc(frDate(fromKey(fin)))+'</div></div>'+
+    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
+    '<button class="btn pri" data-act="seasok">'+(state.season?'Enregistrer':'Ouvrir')+'</button></div>');
+}
+function saveSaison(){
+  var n=$('#sn2'), d=$('#sf');
+  if(n) seasF.n=String(n.value||'').trim().slice(0,24) || nomSaison(nowD());
+  if(d && /^\d{4}-\d{2}-\d{2}$/.test(d.value)) seasF.from=d.value;
+  state.season={ n:seasF.n, from:seasF.from, to:dk(addDays(fromKey(seasF.from), seasF.jours-1)) };
+  save(); closeSheet(); render(); toast('Saison ouverte','⛰️'); buzz(30);
+}
+
+/* ------------------------------------------------------ force et charge */
+function carteForce(){
+  var l=classementForce();
+  var h='<div class="sec"><h2>Force</h2><span class="small">'+
+        (l.length?l.length+' mouvement'+(l.length>1?'s':''):'rien à classer')+'</span></div>';
+  if(!dernierPoids()){
+    return h+'<section class="card pop"><div class="empty" style="padding:10px 0 14px">'+
+      '<span class="e">⚖️</span>Il faut ton poids pour rapporter les charges à quelque chose.</div>'+
+      '<button class="btn pri wide" data-act="corps">'+ic('profile')+' Renseigner mon gabarit</button></section>';
+  }
+  if(!l.length){
+    return h+'<section class="card pop"><div class="empty" style="padding:10px 0 14px">'+
+      '<span class="e">🏋️</span><b>Rien à classer pour l\'instant.</b><br>'+
+      'Le classement porte sur le squat barre, le développé couché, le soulevé de terre, '+
+      'le développé militaire et les tractions. Fais-en un dans une séance et ton niveau apparaît.</div></section>';
+  }
+  h+='<section class="card pop">'+l.map(function(r){
+      var niv=r.niv, prochain = niv.dernier ? null : niv.seuil;
+      return '<div class="frow">'+
+        '<div class="fhead"><span class="fn">'+esc(r.f.n)+'</span>'+
+          '<span class="fv">'+Math.round(r.val)+' '+r.unite+'</span></div>'+
+        '<div class="fsteps">'+niv.paliers.map(function(_,k){
+          return '<i class="'+(k<=niv.i ? (k===4?'top':'on') : '')+'"></i>';
+        }).join('')+'</div>'+
+        '<div class="flvl"><b>'+esc(niv.nom)+'</b>'+
+          '<span>'+(prochain ? Math.round(prochain)+' '+r.unite+' pour '+NIVEAUX[Math.min(niv.i+1,4)]
+                             : 'le dernier palier')+'</span></div>'+
+        '</div>';
+    }).join('')+
+    '<div class="small muted" style="margin-top:4px">Estimation d\'un maximum à partir de tes séries '+
+    '(formule d\'Epley), rapportée à ton poids de corps et à ton sexe. <b>Ce sont des repères '+
+    'observés en salle, pas une note</b> : ils ne disent rien de ta technique ni de ta santé.</div>'+
+    '</section>';
+  return h;
+}
+
+/* La charge sur l'année, mois par mois, pour l'exercice choisi. */
+function exosSuivis(){
+  var vus={};
+  carnet().forEach(function(sn){ (sn.sea.x||[]).forEach(function(ex){ vus[ex.i]=(vus[ex.i]||0)+1; }); });
+  return Object.keys(vus).sort(function(a,b){ return vus[b]-vus[a]; }).slice(0,12);
+}
+function carteCharge(){
+  var dispo=exosSuivis();
+  var h='<div class="sec"><h2>Ta charge sur l\'année</h2><span class="small">'+
+        (dispo.length?'par mois':'rien encore')+'</span></div>';
+  if(!dispo.length){
+    return h+'<div class="card empty"><span class="e">📈</span>Déroule quelques séances et la courbe '+
+      'se remplit toute seule.</div>';
+  }
+  var id=loadExo && dispo.indexOf(loadExo)>-1 ? loadExo : dispo[0];
+  var x=exoOr(id), an=+today().slice(0,4), mois=[];
+  for(var m=0;m<12;m++) mois.push(0);
+  carnet().forEach(function(sn){
+    if(sn.key.slice(0,4)!==String(an)) return;
+    var mo=+sn.key.slice(5,7)-1;
+    (sn.sea.x||[]).forEach(function(ex){
+      if(ex.i!==id) return;
+      (ex.s||[]).forEach(function(t){
+        var v=(+t.w) ? unRM(+t.w,+t.r||1) : (+t.r||0);
+        if(v>mois[mo]) mois[mo]=v;
+      });
+    });
+  });
+  var mx=Math.max.apply(null,mois)||1, W=320, H=110, P=6, BW=(W-2*P)/12;
+  h+='<section class="card pop">'+
+    '<div class="pickbar">'+dispo.map(function(k){
+      return '<button class="'+(k===id?'on':'')+'" data-act="loadexo" data-x="'+esc(k)+'">'+esc(exoOr(k).n)+'</button>';
+    }).join('')+'</div>'+
+    '<svg class="load" viewBox="0 0 '+W+' '+H+'">'+
+      mois.map(function(v,i){
+        var bh=v?Math.max(3,(v/mx)*(H-28)):2;
+        return '<rect class="bar'+(v?'':' pale')+'" x="'+(P+i*BW+2).toFixed(1)+'" y="'+(H-18-bh).toFixed(1)+
+               '" width="'+(BW-4).toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2.5"/>';
+      }).join('')+
+      mois.map(function(_,i){
+        return '<text x="'+(P+i*BW+BW/2).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+MSHORT[i][0].toUpperCase()+'</text>';
+      }).join('')+
+      '<text x="'+P+'" y="10">'+Math.round(mx)+(x.u==='rep'&&mx>0?'':'')+'</text>'+
+    '</svg>'+
+    '<div class="small muted">'+esc(x.n)+' · meilleur effort du mois'+
+      (x.u==='rep'?' (charge estimée, ou répétitions au poids du corps)':'')+'</div>'+
+    '</section>';
+  return h;
+}
+
+/* ------------------------------------------------- gabarit, couleur, zones */
+function carteGabarit(){
+  var b=state.body||{}, kg=dernierPoids(), a=accentChoisi();
+  var acts={assis:'Assis',debout:'Debout',dur:'Physique'};
+  var h='<div class="sec"><h2>Ton gabarit</h2><span class="small">'+
+        (corpsPret()?'complet':'à compléter')+'</span></div>';
+  h+='<section class="card pop">';
+  if(corpsPret()){
+    h+='<div class="wkstat" style="margin:0 0 4px;padding:0;border:0;grid-template-columns:repeat(4,1fr)">'+
+      '<div><b>'+(b.sexe==='f'?'F':'H')+'</b><span>SEXE</span></div>'+
+      '<div><b>'+(+b.age)+'</b><span>ANS</span></div>'+
+      '<div><b>'+(+b.taille)+'</b><span>CM</span></div>'+
+      '<div><b>'+kg+'</b><span>KG</span></div>'+
+      '</div>'+
+      '<div class="small muted" style="margin-top:10px">Journée '+esc((acts[b.act]||'assis').toLowerCase())+
+      ' · objectif '+esc(objectif().n.toLowerCase())+'</div>';
+  }else{
+    h+='<div class="empty" style="padding:6px 0 12px">Taille, âge et poids : trois chiffres, une fois. '+
+       'Ils servent aux objectifs de nutrition et au classement de force.</div>';
+  }
+  h+='<button class="btn '+(corpsPret()?'ghost ':'pri ')+'wide sm" data-act="corps" style="margin-top:11px">'+
+     ic('profile')+(corpsPret()?' Modifier':' Renseigner')+'</button></section>';
+
+  h+='<div class="sec"><h2>Couleur</h2><span class="small">'+esc(a.n.toLowerCase())+'</span></div>';
+  h+='<section class="card pop"><div class="accrow">'+ACCENTS.map(function(c){
+      return '<button class="accdot'+(c.id===(state.accent||'')?' on':'')+'" data-act="accent" data-a="'+c.id+
+             '" aria-label="'+esc(c.n)+'"><span style="background:'+c.c+'"></span></button>';
+    }).join('')+'</div>'+
+    '<div class="small muted" style="margin-top:10px">Le fond ne bouge pas : seule la couleur '+
+    'qui souligne change, partout d\'un coup.</div></section>';
+
+  h+='<div class="sec"><h2>Zones sensibles</h2><span class="small">'+
+     (state.gene.length?state.gene.length+' déclarée'+(state.gene.length>1?'s':''):'aucune')+'</span></div>';
+  h+='<section class="card pop">'+
+    '<p class="muted small" style="margin:0 0 11px">Déclare ce qui te fait mal. Les exercices qui '+
+    'chargent ces zones porteront un repère '+ic('alert')+' — rien n\'est caché ni interdit, c\'est toi qui décides.</p>'+
+    '<div class="zrow">'+MUSCLES.map(function(m){
+      return '<button class="zchip'+(state.gene.indexOf(m.id)>-1?' on':'')+'" data-act="zone" data-m="'+m.id+'">'+
+             esc(m.n)+'</button>';
+    }).join('')+'</div></section>';
+  return h;
+}
+
+function viewAthlete(){
+  var h='';
+  h+= carteGabarit();
+  h+='<div class="sec"><h2>Tes années</h2><span class="small">jours actifs</span></div>'+carteAnnee();
+  h+='<div class="sec"><h2>La saison</h2></div>'+carteSaison();
+  h+= carteForce();
+  h+= carteCharge();
+  h+='<div class="dispo">Cadence est une application d\'entraînement : elle ne donne pas d\'avis '+
+     'médical et ne remplace pas un professionnel de santé. En cas de douleur, de blessure ou de '+
+     'problème de santé, va voir quelqu\'un dont c\'est le métier.</div>';
+  return h;
+}
+
 function viewProfil(){
   var s=periodScores(), b=badgeState(), r=rankOf(b.xp), p=state.profile;
   var h='';
+
+  /* Deux écrans derrière un seul onglet : le joueur d'un côté, le corps de
+     l'autre. Tout mettre à la suite faisait une page interminable. */
+  h+='<div class="seg" style="margin-bottom:14px">'+
+     '<button class="'+(profVue==='profil'?'on':'')+'" data-act="pvue" data-v="profil">'+ic('profile')+' Profil</button>'+
+     '<button class="'+(profVue==='athlete'?'on':'')+'" data-act="pvue" data-v="athlete">'+ic('body')+' Athlète</button>'+
+     '</div>';
+  if(profVue==='athlete') return h+viewAthlete();
 
   h+='<section class="card rankcard pop"><span class="re">'+r.cur.e+'</span>'+
     '<div style="flex:1;min-width:0"><h2>'+esc(r.cur.n)+'</h2>'+
@@ -3410,6 +4039,28 @@ function viewProfil(){
     'et l\'écran le dit.<br><br>'+
     'Les protéines suivent ton poids : 2 g par kilo en sèche, 1,7 en maintien, 1,9 en prise.'+
     '</div></details>';
+  h+='<details>'+sum('body','L\'onglet Athlète')+'<div class="dc">'+
+    '<b>Ton gabarit</b> — taille, âge, poids, sexe, journée type. Trois chiffres, une fois : '+
+    'ils servent aux objectifs de nutrition et au classement de force.<br><br>'+
+    '<b>La couleur</b> — sept accents. Le fond ne bouge pas, seule la couleur qui souligne change.<br><br>'+
+    '<b>Tes années</b> — une case par jour de l\'année, d\'autant plus verte que tu as validé de choses '+
+    'ce jour-là. Un jour compte dès qu\'une seule tâche est cochée.<br><br>'+
+    '<b>La saison</b> — une période avec un début et une fin, où tu tiens la cadence. Ni points ni badges '+
+    'en plus : juste une ligne d\'arrivée, et une montagne pour voir où tu en es.<br><br>'+
+    '<b>Zones sensibles</b> — déclare ce qui te fait mal et les exercices qui chargent ces zones portent '+
+    'un repère. Rien n\'est caché ni interdit : tu décides.'+
+    '</div></details>';
+  h+='<details>'+sum('dumbbell','Le classement de force')+'<div class="dc">'+
+    'Il porte sur cinq mouvements : squat barre, développé couché, soulevé de terre, développé militaire '+
+    'et tractions. Fais-en un dans une séance et ton niveau apparaît.<br><br>'+
+    '<b>Comment c\'est calculé.</b> On estime ton maximum à partir de tes séries (formule d\'Epley : '+
+    'la charge multipliée par 1 + répétitions ÷ 30, au-delà de dix répétitions elle dérive et on '+
+    's\'arrête là). On rapporte ce maximum à ton poids de corps, et on le compare à des paliers '+
+    'observés en salle : débutant, novice, intermédiaire, avancé, élite. Les repères féminins sont '+
+    'plus bas, surtout sur le haut du corps.<br><br>'+
+    '<b>Ce que ça ne dit pas.</b> Rien sur ta technique, rien sur ta santé, rien sur ta valeur. '+
+    'Ce sont des ordres de grandeur, pas une note.'+
+    '</div></details>';
   h+='<details>'+sum('users','Le Crew')+'<div class="dc">'+
     'Un groupe a <b>un seul code</b>, à donner à tes potes. Tout le monde s\'y voit d\'un coup, '+
     'sans avoir à s\'ajouter un par un — c\'est la différence avec le classement amis, qui reste '+
@@ -3462,7 +4113,7 @@ function ligneExoForm(e,i,n){
       '<button data-act="exdown" data-i="'+i+'" aria-label="Descendre"'+(i===n-1?' disabled':'')+'>'+ic('down')+'</button>'+
     '</div>'+
     vignetteExo(x,30)+
-    '<div class="ei"><div class="en">'+esc(x.n)+'</div>'+
+    '<div class="ei"><div class="en">'+esc(x.n)+marqueSensible(x)+'</div>'+
       '<div class="em">'+e.s+' × '+e.r+' '+u+(e.w?' · '+e.w+' kg':'')+' · repos '+e.rest+' s</div></div>'+
     '<button class="del" data-act="exdel" data-i="'+i+'" aria-label="Retirer">'+ic('trash')+'</button>'+
     '</div>'+
@@ -3511,7 +4162,7 @@ function pickerHTML(){
   });
   var out='<div class="shead"><span class="etile">'+ic('dumbbell')+'</span>'+
     '<div style="flex:1;min-width:0"><h2>Un exercice</h2>'+
-    '<div class="muted small">'+l.length+' sur '+allExos().length+' · cherche aussi par muscle</div></div>'+
+    '<div class="muted small"><span id="pickn">'+l.length+'</span> sur '+allExos().length+' · cherche aussi par muscle</div></div>'+
     '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
     '<div style="height:12px"></div>'+
     '<div class="field" style="margin-bottom:9px"><input id="pickq" placeholder="Tractions, pectoraux, gainage…" value="'+esc(pickQ)+'"></div>'+
@@ -3526,7 +4177,7 @@ function pickerHTML(){
         var mus=(x.m||[]).map(function(m){ return MNAME[m]; }).join(' · ');
         return '<button class="pickrow" data-act="pickexo" data-x="'+esc(x.id)+'">'+
           vignetteExo(x,30)+
-          '<span class="ei"><span class="pn">'+esc(x.n)+'</span><br>'+
+          '<span class="ei"><span class="pn">'+esc(x.n)+marqueSensible(x)+'</span><br>'+
           '<span class="pm">'+esc(mus)+'</span></span></button>';
       }).join('')+'</div>'
     : '<div class="empty" style="padding:22px 0">Rien à ce nom.<br>Tu peux créer ton propre exercice.</div>';
@@ -3604,7 +4255,7 @@ function ficheSeance(h){
     : exosOf(h).map(function(e){
       var x=exoOr(e.x);
       return '<div class="exorow">'+vignetteExo(x,30)+
-        '<div class="ei"><div class="en">'+esc(x.n)+'</div>'+
+        '<div class="ei"><div class="en">'+esc(x.n)+marqueSensible(x)+'</div>'+
         '<div class="em">'+esc(ligneExo(e))+'</div></div></div>';
     }).join('');
   /* Le geste d'abord, la liste ensuite : sur une séance de six exercices, un
@@ -3704,9 +4355,12 @@ function runRender(){
       return '<i class="'+cl+'"></i>';
     }).join('')+'</div>';
 
+  var gene=exoSensible(exoOr(x.i));
   out+='<div class="rnbody">'+vignetteExo(exoOr(x.i),96)+
     '<div class="rnname">'+esc(x.n)+'</div>'+
-    '<div class="rnserie">Série '+(x.s.length+1)+' sur '+x.nb+'</div>';
+    '<div class="rnserie">Série '+(x.s.length+1)+' sur '+x.nb+'</div>'+
+    (gene ? '<div class="small" style="color:var(--gold);margin-top:7px">'+ic('alert')+' '+
+            esc(gene.muscles.join(', '))+' — zone que tu as déclarée sensible</div>' : '');
 
   if(run.repos>0){
     out+='<div class="rnrepos">'+mmss(run.repos)+'</div>'+
@@ -4325,6 +4979,48 @@ document.addEventListener('click', function(ev){
     renderRepas(); return;
   }
   if(a==='rsave'){ saveRepas(); return; }
+  /* --- athlète --- */
+  if(a==='pvue'){ profVue=el.getAttribute('data-v'); render(); toTop(); return; }
+  if(a==='accent'){
+    state.accent=el.getAttribute('data-a'); save(); poserAccent(); render();
+    toast('Couleur changée','🎨'); return;
+  }
+  if(a==='zone'){
+    var zm=el.getAttribute('data-m'), zi=state.gene.indexOf(zm);
+    if(zi>-1) state.gene.splice(zi,1); else state.gene.push(zm);
+    save(); render(); return;
+  }
+  if(a==='anprev'||a==='annext'){
+    var ans=anneesConnues(), cur=anneeVue||+ans[0], ia=ans.indexOf(String(cur));
+    var ja=ia+(a==='anprev'?1:-1);
+    if(ja<0||ja>=ans.length) return;
+    anneeVue=+ans[ja]; render(); return;
+  }
+  if(a==='loadexo'){ loadExo=el.getAttribute('data-x'); render(); return; }
+  if(a==='seasnew'){ openSaison(); return; }
+  if(a==='sjours'){
+    var sn3=$('#sn2'), sf=$('#sf');
+    if(sn3) seasF.n=sn3.value;
+    if(sf && /^\d{4}-\d{2}-\d{2}$/.test(sf.value)) seasF.from=sf.value;
+    seasF.jours=+el.getAttribute('data-j'); renderSaison(); return;
+  }
+  if(a==='seasok'){ saveSaison(); return; }
+  if(a==='seasend'){
+    if(confirm('Clore la saison ? Tes journées restent, seule la ligne d\'arrivée disparaît.')){
+      state.season=null; save(); render(); toast('Saison close','🏁');
+    }
+    return;
+  }
+  if(a==='suppl'){ toggleSuppl(today(), el.getAttribute('data-s')); buzz(15); render(); return; }
+  if(a==='wtarget'){ openPoidsCible(); return; }
+  if(a==='wtok'){
+    var wi=$('#wt');
+    state.wtarget=wi?clamp(num(wi.value,0),0,300):0;
+    save(); closeSheet(); render();
+    toast(state.wtarget?'Objectif posé':'Objectif retiré','⚖️');
+    return;
+  }
+
   /* --- crew --- */
   if(a==='crewnew'){  openCrewNew();  return; }
   if(a==='crewjoin'){ openCrewJoin(); return; }
@@ -4679,7 +5375,7 @@ var lastDay=today();
 
 function boot(){
   load();
-  relireAccent();
+  poserAccent();
   seed();
   if(TABS.map(function(t){return t[0];}).indexOf(state.tab)<0) state.tab='jour';
   $('#banner').classList.add('hide');
