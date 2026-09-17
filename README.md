@@ -256,11 +256,57 @@ englobante de chaque tracé rendu et échoue si l'un d'eux est plat.
 
 ### Comment elle est construite
 
-Elle est construite, pas dessinée à la main : deux primitives — un fuseau pour
-les membres, une plaque pour les masses du tronc — et la moitié gauche
-seulement, la droite est son reflet. L'anatomie se corrige en changeant trois
-nombres plutôt qu'une courbe de Bézier. Le même dessin sert en grand pour la
-récupération et en tout petit sur chaque exercice.
+Elle est construite, pas dessinée à la main. Un contour est une **liste de
+repères anatomiques** — sommet du crâne, tempe, mâchoire, trapèze, aisselle,
+taille, hanche, genou, cheville — que `lisse()` relie par une courbe de
+Catmull-Rom convertie en Bézier cubique. La courbe passe par les points :
+corriger une épaule, c'est corriger un nombre, pas une poignée de contrôle.
+Seule la moitié gauche est décrite, la droite est son reflet.
+
+Deux tracés continus par moitié : le tronc avec la tête et la jambe d'un côté,
+le bras de l'autre. Le bras est à part pour qu'il pende le long du corps avec un
+vrai jour entre les deux — fusionné au tronc, il ferait une moufle.
+
+Une masse qui touche l'axe du corps passe par `contreAxe()` : on lisse le profil
+externe, et on referme d'un trait droit. Fermer la courbe sur elle-même ferait
+gonfler le bord central — un pectoral en forme de cœur. Les membres, eux,
+restent construits avec `fuseau()` : un chef de muscle est un fuseau, et c'est
+le bon outil.
+
+### Le dessin d'un exercice
+
+La silhouette dit quels muscles travaillent. Elle ne dit pas **quel geste** on
+fait — et dans une liste de six exercices, c'est le geste qu'on cherche du
+regard. Chaque exercice du catalogue porte donc son propre dessin.
+
+Quarante-trois dessins à la main auraient dérivé les uns des autres. On décrit
+plutôt quarante-trois **positions** : un corps, sept articulations
+(tête, épaule, coude, main, bassin, genou, pied), et le même trait partout. La
+pose ne peut pas être incohérente avec l'exercice, puisqu'elle *est* l'exercice
+— et corriger un bras, c'est corriger deux nombres.
+
+Le matériel se place à partir de la pose, pas à côté d'elle : la barre fixe se
+pose au-dessus des mains, les haltères dans les mains, le banc sous le bassin,
+l'estrade sous les pieds, la corde part des mains et passe sous les pieds. Une
+pose peut en cumuler plusieurs (`banc+barbell`, `sol+estrade`). Une figure vue
+de face donne son axe de symétrie et les deux bras se dessinent ; vue de profil,
+le second membre n'apparaît que s'il se voit vraiment (course, fentes, pistol
+squat).
+
+Le trait est réglé pour peser pareil à l'œil à toutes les tailles : on vise une
+épaisseur **à l'écran** (environ 1,5 px en vignette, 2,8 px en grand) et on la
+reconvertit dans les unités du dessin. Une épaisseur fixe ferait un cheveu en
+grand ou un gros feutre en petit.
+
+Un exercice créé à la main n'a pas de pose ; la vignette retombe alors sur la
+silhouette teintée des muscles qu'on lui a déclarés, qui reste vraie.
+
+`dessins.js` vérifie les trois façons de se tromper : un exercice sans dessin
+(ou un dessin sans exercice), deux exercices qui partagent la même image donc
+une image qui ment, et un trait qui sort du cadre donc une image coupée — cette
+dernière est mesurée en demandant au navigateur la boîte englobante réelle de
+chaque tracé. C'est elle qui a trouvé la barre du développé couché qui
+dépassait à gauche.
 
 ### La récupération
 

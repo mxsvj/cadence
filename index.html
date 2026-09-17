@@ -451,6 +451,14 @@ details .dc li{margin-bottom:6px}
 .silh{display:block;flex:0 0 auto}
 .silh.mini{border-radius:9px;background:var(--surf2)}
 
+/* le dessin d'un exercice : même trait que les icônes, pas de remplissage */
+.exodraw{display:block;flex:0 0 auto;fill:none;stroke:currentColor;
+  stroke-linecap:round;stroke-linejoin:round;color:var(--mut);
+  border-radius:9px;background:var(--surf2)}
+.exorow .exodraw,.pickrow .exodraw{padding:1px}
+.exorow.now .exodraw{color:var(--acc)}
+.rnbody .exodraw{color:var(--txt);background:none;margin-bottom:4px}
+
 /* la bande des sept jours */
 .rythme{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
 .rday{text-align:center}
@@ -468,16 +476,6 @@ details .dc li{margin-bottom:6px}
 .wkstat b{display:block;font-family:'Barlow Condensed',sans-serif;font-size:27px;font-weight:700;line-height:1}
 .wkstat span{font-size:11px;color:var(--mut);font-weight:700;letter-spacing:.05em}
 
-/* la prochaine séance et ses exercices en vignettes */
-.exoscroll{display:flex;gap:9px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch}
-.exothumb{flex:0 0 108px;border-radius:var(--r);border:1px solid var(--line);background:var(--surf2);
-  padding:9px 9px 10px;display:flex;flex-direction:column;gap:7px}
-.exothumb .silh{margin:0 auto;background:none}
-.exothumb .tn{font-size:12.5px;font-weight:700;line-height:1.22;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.exothumb .tv{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
-.exomore{flex:0 0 58px;border-radius:var(--r);border:1.6px dashed var(--line2);
-  display:flex;align-items:center;justify-content:center;color:var(--mut);font-weight:800}
 
 /* une ligne d'exercice : dans la fiche et dans le formulaire */
 .exorow{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:var(--r);
@@ -1037,7 +1035,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v14 · 2026-09-17';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v15 · 2026-09-17';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 4;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -1370,13 +1368,28 @@ function classementForce(){
 }
 
 /* ------------------------------------------------------------ silhouette */
-/* Elle est construite, pas dessinée à la main : deux primitives suffisent —
-   un fuseau pour les membres, une plaque pour les masses du tronc. On ne
-   décrit que la moitié gauche, la droite est son reflet. L'anatomie se
-   corrige alors en changeant trois nombres plutôt qu'une courbe de Bézier.
-   Le même dessin sert en grand pour la récupération et en tout petit sur
-   chaque exercice, pour montrer d'un coup d'œil ce qui travaille. */
+/* Elle sert en grand pour la récupération, et en petit pour un exercice créé
+   à la main : elle dit ce qui travaille. Ce qu'on *fait*, c'est la pose de
+   l'exercice qui le montre — elle est juste en dessous. */
 function r2(n){ return Math.round(n*10)/10; }
+
+/* Une courbe lisse qui passe par tous les points donnés. Catmull-Rom : la
+   tangente en un point suit ses deux voisins, et se convertit en Bézier cubique
+   en divisant par six. Les extrémités se dupliquent pour n'avoir aucun cas
+   particulier. */
+function lisse(p, fermee){
+  var n = p.length, d = 'M' + r2(p[0][0]) + ' ' + r2(p[0][1]), i;
+  var at = function(k){ return p[fermee ? ((k % n) + n) % n : Math.max(0, Math.min(n - 1, k))]; };
+  var fin = fermee ? n : n - 1;
+  for(i = 0; i < fin; i++){
+    var p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+    d += 'C' + r2(p1[0] + (p2[0] - p0[0]) / 6) + ' ' + r2(p1[1] + (p2[1] - p0[1]) / 6)
+       + ' ' + r2(p2[0] - (p3[0] - p1[0]) / 6) + ' ' + r2(p2[1] - (p3[1] - p1[1]) / 6)
+       + ' ' + r2(p2[0]) + ' ' + r2(p2[1]);
+  }
+  return d + (fermee ? 'Z' : '');
+}
+/* Un fuseau reste le bon outil pour un chef de muscle dans un membre. */
 function fuseau(x1,y1,w1,x2,y2,w2){
   var k1=w1*1.25, k2=w2*1.25;
   return 'M'+r2(x1-w1)+' '+r2(y1)+
@@ -1384,124 +1397,334 @@ function fuseau(x1,y1,w1,x2,y2,w2){
     'L'+r2(x2+w2)+' '+r2(y2)+
     'C'+r2(x2+w2)+' '+r2(y2+k2)+' '+r2(x2-w2)+' '+r2(y2+k2)+' '+r2(x2-w2)+' '+r2(y2)+'Z';
 }
-function plaque(x1,y1,x2,y2,rd){
-  var r=(rd===undefined)?5:rd;
-  return 'M'+r2(x1+r)+' '+r2(y1)+'H'+r2(x2)+'V'+r2(y2)+
-    'H'+r2(x1+r)+'A'+r+' '+r+' 0 0 1 '+r2(x1)+' '+r2(y2-r)+
-    'V'+r2(y1+r)+'A'+r+' '+r+' 0 0 1 '+r2(x1+r)+' '+r2(y1)+'Z';
+var AXE = 59.2;
+
+/* Une masse du tronc touche l'axe du corps : son bord central doit rester
+   droit. Fermer la courbe lisse sur lui le ferait gonfler — un pectoral en
+   forme de cœur. On lisse donc le profil, et on referme d'un trait. */
+function contreAxe(pts){
+  return lisse(pts, false) + 'L' + AXE + ' ' + r2(pts[0][1]) + 'Z';
 }
-var AXE = 59.2;                    /* bord intérieur : laisse un fin sillon central */
-/* ------------------------------------------------- 1. le corps, en neutre */
-var SIL_NEUTRE = [
-  /* tête */
-  'M60 6.2c7.1 0 12.5 6.1 12.5 14.8S67.1 35.8 60 35.8 47.5 29.7 47.5 21 52.9 6.2 60 6.2z',
-  /* cou */
-  'M54.4 32.4h5.6v14.4h-5.6c.9-4.4 1-9.4 0-14.4z',
-  /* tronc : épaules larges, taille marquée, hanches */
-  'M59.2 44.6H45.2c-3.6 4.6-5.6 10.8-5.8 18-.2 6.8 1 13.8 2.6 20.4 1.4 5.6 2.2 11 2.2 16.4 0 6.6-1 13.2-2.8 19.6l-1 3.6 4.6 5.4h14.2V44.6z',
-  /* épaule, bras, avant-bras, main */
-  fuseau(37.2,47,10.8, 32.6,63,9),
-  fuseau(31.4,63,9, 25.4,102,7),
-  fuseau(24.6,102,7, 19.4,141,5.8),
-  'M19.4 137.6c3.6 0 6.4 2.8 6.4 6.6 0 4.8-2.6 9-6.4 9s-6.6-4.2-6.6-9c0-3.8 3-6.6 6.6-6.6z',
-  /* bassin */
-  'M43.4 124.8h15.8v26.4H47.4c-2-8.6-3.4-17.6-4-26.4z',
-  /* cuisse, genou, mollet, pied */
-  fuseau(52.4,149,11.4, 47,198,9),
-  'M50 195c4.8 0 8.4 3.6 8.4 8.4s-3.6 8.6-8.4 8.6-8.4-3.8-8.4-8.6 3.6-8.4 8.4-8.4z',
-  fuseau(48.8,210,8.4, 45.4,242,5.8),
-  'M46.2 239.6h7.4v7.4l-10 3.8c-2.6 1-4.6.2-4.6-1.8 0-1.8 1.4-2.8 3.2-3.8 2.4-1.4 3.8-3.2 4-5.6z'
+
+/* --------------------------------------------- 1. le corps, en neutre ---- */
+
+/* Le profil gauche, du sommet du crâne au pubis : on descend le dehors, on
+   contourne le pied, on remonte le dedans de la jambe. L'axe du corps referme
+   la moitié d'un trait droit. */
+var PROFIL = [
+  [60, 4],    [52.8, 6.2],  [48.6, 12.4], [47.8, 21],   [49.4, 28.4], /* crâne, tempe   */
+  [52.4, 33.4],[53.2, 37.6],[52.8, 43],                               /* mâchoire, cou  */
+  [50.2, 46.4],[45.2, 49],  [43.8, 53],                               /* trapèze        */
+  [42.8, 61],  [41, 70],                                              /* aisselle, poitrine */
+  [40.6, 80],  [41.6, 90],  [43.4, 100],  [44.6, 108],                /* côtes, taille  */
+  [43.6, 116], [41.4, 124], [40, 132],                                /* hanche         */
+  [39, 144],   [39.2, 158], [40, 172],                                /* cuisse         */
+  [40.6, 184], [41.6, 192],                                           /* genou          */
+  [41, 200],   [40.4, 210], [41.2, 220],  [43.4, 232],  [45, 242],    /* mollet, tibia  */
+  [44.8, 247], [41, 250],   [36.6, 252.4],[36.4, 254.6],[40, 255.4],  /* pied           */
+  [54, 255.4], [56.8, 254.6],[57, 252],                               /* plante, dedans */
+  [56.4, 246], [55.6, 240], [55.4, 230],  [55.6, 220],  [55.4, 210],  /* mollet dedans  */
+  [54.8, 200], [54.4, 192], [54.6, 184],                              /* genou dedans   */
+  [55.6, 172], [56.8, 158], [58, 144],    [59, 136],    [60, 129]     /* cuisse, pubis  */
 ];
 
-/* Les membres : chaque chef de muscle est un fuseau à lui, posé dans le membre
-   et en retrait de son bord. Les fins sillons entre eux sont ce qui fait lire
-   « deux jumeaux » plutôt que « un mollet ». */
+/* Le bras, en boucle fermée : on descend le dehors du deltoïde à la main, on
+   remonte le dedans jusqu'à l'aisselle, on referme sur le trapèze. */
+var BRAS = [
+  [46, 48],   [40, 50],   [34.5, 54],  [30.5, 59.5],[28.2, 66], [27.4, 73],  /* deltoïde   */
+  [27, 82],   [27.4, 92], [28.4, 101], [29, 108],                            /* bras, coude*/
+  [28.4, 116],[26.8, 124],[24.6, 134], [22.8, 143],                          /* avant-bras */
+  [21.8, 150],[21.8, 158],[23, 165],   [25.4, 169], [28, 169.6],             /* main       */
+  [30.4, 166],[31.2, 158],[31, 150],                                         /* main dedans*/
+  [31.8, 142],[33.4, 133],[35, 124],   [36.4, 116], [37, 108],               /* avant-bras */
+  [37.4, 100],[37.8, 90], [38.4, 80],  [39.6, 72],                           /* bras, aisselle */
+  [41.6, 64], [43.6, 56], [45.6, 50]                                         /* retour épaule */
+];
+
+var SIL_NEUTRE = [
+  lisse(PROFIL, false) + 'L60 4Z',
+  lisse(BRAS, true)
+];
+
+/* --------------------------------------------------------- 2. face avant */
 var SIL = {
   av:{ neutre:SIL_NEUTRE, m:{
   /* trapèze : la pente du cou vers la clavicule */
-  trapezes:
-    'M54.6 33.6c1 4.4 2.6 8.2 4.6 11v3.2H45.2c3.4-3.2 6.6-8 9.4-14.2z',
+  trapezes: lisse([[53,38.6],[52.6,43],[50,46.8],[45.6,49.2],[43,52.8],
+                   [44.6,48.4],[47.2,44.6],[50.6,41]], true),
 
-  /* pectoral : haut plat sous la clavicule, bord externe qui plonge, puis la
-     ligne du bas qui redescend vers le sternum — c'est celle qu'on reconnaît */
-  pecs:
-    'M59.2 48.6H46c-2.4 2.4-3.6 5.8-3.6 10.2 0 3.8.8 7.2 2.6 10 3.6 2.4 8.6 4 14.2 4.8V48.6z',
+  /* pectoral : le haut plat sous la clavicule, le bord externe qui plonge,
+     puis la ligne du bas qui remonte vers l'aisselle */
+  pecs: contreAxe([[59.2,53.2],[50.6,53.8],[45,56.4],[41.8,61.4],[41.6,67.6],
+                   [45,73],[50.6,76.4],[59.2,78.6]]),
 
-  /* grand droit : six faisceaux séparés par les intersections tendineuses.
-     C'est ce détail qui fait lire « abdos » et pas « ventre ». */
+  /* deltoïde antérieur : la coiffe qui arrondit l'épaule */
+  epaules: lisse([[45.6,49.6],[39.6,51.6],[34.4,55.4],[30.6,61],[29,67.6],[28.6,74],
+                  [32.6,73],[34,66.6],[36.2,60.6],[40.4,55.8],[44.4,52.6]], true),
+
+  /* grand droit : les six faisceaux, séparés par les intersections
+     tendineuses. C'est ce détail qui fait lire « abdos » et pas « ventre ». */
   abdos: [
-    'M50.2 82.8h9v11h-8.4c-.3-3.7-.5-7.4-.6-11z',
-    'M50.4 95.6h8.8v10.8h-8.6c-.1-3.6-.2-7.2-.2-10.8z',
-    'M50.2 108.2h9v10.4h-8.4c-.4-3.4-.6-6.9-.6-10.4z',
-    /* oblique : la bande étroite qui ferme le flanc */
-    'M48.4 83.4c-1.6 2.4-2.4 6.8-2.4 12.8 0 6.2.8 12.8 2.4 19.2l1 4 .8-1c-1-11.6-1.6-23.2-1.8-35z'
+    'M50.2 81.4h9v10.6h-8.5c-.3-3.6-.5-7.1-.5-10.6z',
+    'M50.4 93.6h8.8v10.4h-8.6c-.1-3.5-.2-6.9-.2-10.4z',
+    'M50.2 105.6h9v10h-8.4c-.4-3.3-.6-6.6-.6-10z',
+    /* l'oblique : la bande étroite qui ferme le flanc */
+    lisse([[48.6,81.8],[46.4,88.4],[46,97],[46.8,107.6],[48.4,117.6],[49.4,120],
+           [49.6,113.6],[49.2,100.4],[48.8,89.6]], true)
   ],
-
-  /* deltoïde antérieur : la coiffe, dessinée après le pectoral parce qu'elle
-     le recouvre à l'épaule, comme dans un vrai corps */
-  epaules:
-    'M46.4 46.6c-5.4.2-9.8 3.2-13 8.8-2.4 4.2-3.8 9.2-3.8 14.2l.2 3.8 4.6-1.4c1.6-4.2 3-9 4-14 1-4.8 3.4-8.8 7-11.8l1-.6z',
 
   biceps: [
-    fuseau(28.6,69,3.6, 26.2,96,2.6),
-    fuseau(35.6,69,3.4, 31.6,96,2.6)
+    fuseau(30.8,74,3, 31,100,2.4),
+    fuseau(36.2,74,2.8, 34.6,100,2.2)
   ],
   avantbras: [
-    fuseau(22.2,106,2.9, 19.6,134,2.2),
-    fuseau(28.2,106,2.7, 23.6,134,2.2)
+    fuseau(28,118,2.8, 24.8,142,2.2),
+    fuseau(33.4,117,2.6, 29,141,2.2)
   ],
   /* cuisse : vaste externe, droit fémoral, et le vaste interne en goutte
      juste au-dessus du genou */
   quadris: [
-    fuseau(44.6,152,4.2, 42.2,194,3.4),
-    fuseau(52,151,4, 49,193,3.2),
-    fuseau(58,172,2.4, 55.6,194,3.4)
+    fuseau(42.6,137,3.6, 43.8,181,3),
+    fuseau(50,135,4, 49.4,180,3.2),
+    fuseau(56.4,158,2.4, 54.4,181,3.2)
   ],
   /* mollet : le jumeau interne descend plus bas que l'externe */
   mollets: [
-    fuseau(44.6,213,3.4, 43.6,238,2.2),
-    fuseau(52.4,213,3.8, 49,236,2.4)
-  ] } },
+    fuseau(44.4,200,3, 44.6,228,2),
+    fuseau(51.6,200,3.4, 49.6,226,2.2)
+  ]
+} },
   ar:{ neutre:SIL_NEUTRE, m:{
   /* trapèze : le grand losange, du cou au milieu du dos */
-  trapezes:
-    'M54.8 33.6c1 4.6 2.6 8.4 4.4 11.2v31l-3.2-3.4c-4.4-4.8-8.2-11-11-18l-1.6-4 3-3.2c3.2-3.6 6-8.2 8.4-13.6z',
+  trapezes: contreAxe([[59.2,44.6],[55,41.4],[53,39.6],[49.6,46.6],[44.2,49.8],
+                       [40.6,53.4],[44,60.8],[48.4,68.4],[53.4,75],[59.2,80.4]]),
 
   /* dorsaux : le V — large sous l'aisselle, étroit sur les lombes */
-  dos:
-    'M43.4 57.6c-1.8 5.4-2.6 11.8-2.2 18.4.4 7 2.2 13.6 5 18.8l1.8 3.2 11.2-8.4V70.6l-3.6-1.6c-4.6-2-8.6-5.4-11.4-9.8l-.8-1.6z',
+  dos: contreAxe([[59.2,72],[52.6,68],[46.4,64],[42.4,61],[39.6,68.4],[39,77.4],
+                  [40.4,86.6],[43.2,95],[46.6,100.6],[52.4,97.4],[59.2,94]]),
 
   /* lombaires : les deux colonnes de l'érecteur du rachis, pas une plaque */
   lombaires: [
-    fuseau(52.6,103,2.6, 53.4,122,3),
-    fuseau(57.4,102,2.2, 57.8,122,2.6)
+    fuseau(52.6,104,2.4, 53.4,124,2.8),
+    fuseau(57,103,2.2, 57.6,124,2.6)
   ],
 
   /* fessier : la masse ronde, et le pli qui le sépare de la cuisse */
-  fessiers:
-    'M50.6 126.4c-4.4 1.4-7.4 6.6-7.8 13.6-.4 6.4 1.6 12.6 5.2 16.4l1.8 1.8 9.4-1.8v-30.6l-8.6.6z',
+  fessiers: contreAxe([[59.2,113.4],[51.4,114.4],[45.6,118.6],[43.2,126.4],
+                       [44.2,134.6],[47.6,141.4],[52.6,142.8],[59.2,140.4]]),
 
-  epaules:
-    'M46.4 46.6c-5.4.2-9.8 3.2-13 8.8-2.4 4.2-3.8 9.2-3.8 14.2l.2 3.8 4.6-1.4c1.6-4.2 3-9 4-14 1-4.8 3.4-8.8 7-11.8l1-.6z',
+  epaules: lisse([[45.6,49.6],[39.6,51.6],[34.4,55.4],[30.6,61],[29,67.6],[28.6,74],
+                  [32.6,73],[34,66.6],[36.2,60.6],[40.4,55.8],[44.4,52.6]], true),
 
-  /* triceps : le chef latéral et le long chef, séparés par le sillon */
+  /* triceps : le chef latéral et le long chef, séparés par leur sillon */
   triceps: [
-    fuseau(28.2,68,3.8, 25.8,98,2.8),
-    fuseau(35.4,68,3.4, 31.6,98,2.6)
+    fuseau(30.6,73,3.2, 30.6,102,2.6),
+    fuseau(36.4,73,3, 34.8,102,2.4)
   ],
   avantbras: [
-    fuseau(22.2,106,2.9, 19.6,134,2.2),
-    fuseau(28.2,106,2.7, 23.6,134,2.2)
+    fuseau(28,118,2.8, 24.8,142,2.2),
+    fuseau(33.4,117,2.6, 29,141,2.2)
   ],
   ischios: [
-    fuseau(45,158,4, 42.6,194,3.2),
-    fuseau(53,157,4, 49.6,193,3.4)
+    fuseau(43,147,3.6, 43.8,181,3),
+    fuseau(50.4,146,3.8, 49.6,180,3.2)
   ],
   mollets: [
-    fuseau(44.6,213,3.4, 43.6,238,2.2),
-    fuseau(52.4,213,3.8, 49,236,2.4)
-  ] } }
+    fuseau(44.4,200,3, 44.6,228,2),
+    fuseau(51.6,200,3.4, 49.6,226,2.2)
+  ]
+} }
 };
+
+/* Le dessin d'un exercice : un bonhomme dans la position du mouvement.
+
+   On ne dessine pas quarante-trois images à la main — on décrit quarante-trois
+   *positions*. Un corps, sept articulations, et le même trait partout : la
+   pose ne peut donc pas être incohérente avec l'exercice, puisqu'elle est
+   l'exercice. Corriger un bras, c'est corriger deux nombres.
+
+   Repère : une boîte de 40 × 40, y vers le bas.
+   Articulations, dans cet ordre :
+       t  tête (centre)     e  épaule    c  coude    m  main
+       b  bassin            g  genou     p  pied
+   Puis, en option :
+       eq   le matériel dessiné autour ('barre', 'barbell', 'halt', 'banc',
+            'para', 'sol', 'mur', 'corde', 'velo', 'rame')
+       ax   l'axe de symétrie ; absent, la figure est vue de profil et on ne
+            dessine qu'un bras et qu'une jambe
+*/
+
+var R_TETE = 3.3;
+
+function pt(a){ return a[0] + ' ' + a[1]; }
+function trait(){
+  var d = 'M' + pt(arguments[0]);
+  for(var i = 1; i < arguments.length; i++) d += 'L' + pt(arguments[i]);
+  return d;
+}
+function mir(a, ax){ return [Math.round((2 * ax - a[0]) * 10) / 10, a[1]]; }
+
+/* Le matériel, dessiné à partir de la pose : il se place sur les mains, sous
+   les pieds ou sous le dos, donc il suit la position au lieu d'être posé à
+   côté. */
+var MATOS_POSE = {
+  /* une barre fixe au-dessus des mains */
+  barre: function(P){ return '<path d="M3 ' + (P.m[1] - 1.2) + 'H37"/>'; },
+  /* une barre chargée, tenue dans les mains. De profil la main n'est pas au
+     milieu du cadre : la barre se raccourcit de ce qu'il faut pour que ses
+     disques restent dans la boîte plutôt que d'être coupés au bord. */
+  barbell: function(P){
+    var y = P.m[1], x = P.ax ? P.ax : P.m[0],
+        h = Math.max(6, Math.min(16, x - 3.5, 36.5 - x));
+    return '<path d="M' + (x - h) + ' ' + y + 'H' + (x + h) + '"/>'
+         + '<path d="M' + (x - h + 2.5) + ' ' + (y - 3.4) + 'v6.8M'
+         + (x + h - 2.5) + ' ' + (y - 3.4) + 'v6.8"/>';
+  },
+  /* deux haltères, un dans chaque main */
+  halt: function(P){
+    var h = function(m){ return '<path d="M' + (m[0] - 3.4) + ' ' + (m[1] - 2.6) + 'v5.2M'
+                       + (m[0] + 3.4) + ' ' + (m[1] - 2.6) + 'v5.2M' + (m[0] - 3.4) + ' ' + m[1]
+                       + 'H' + (m[0] + 3.4) + '"/>'; };
+    return h(P.m) + (P.ax ? h(mir(P.m, P.ax)) : '');
+  },
+  /* un banc sous le corps */
+  banc: function(P){
+    var y = P.b[1] + 3.4;
+    return '<path d="M6 ' + y + 'H34"/><path d="M12 ' + y + 'v' + Math.max(2, 37 - y) + '"/>';
+  },
+  /* une estrade sous les pieds, pour ce qui se fait pieds surélevés */
+  estrade: function(P){
+    var y = P.p[1] + 2;
+    return '<path d="M' + (P.p[0] - 7) + ' ' + y + 'H37v' + Math.max(2, 37.5 - y) + '"/>';
+  },
+  /* une marche, pour ce qui se fait sur la pointe des pieds */
+  marche: function(P){ return '<path d="M8 ' + P.p[1] + 'H32v6"/>'; },
+  /* deux barres parallèles : vues de face elles sont sous chaque main, en
+     raccourci, chacune sur son pied */
+  para: function(P){
+    var y = P.m[1], a = P.m[0], b = P.ax ? mir(P.m, P.ax)[0] : a + 14,
+        h = Math.max(3, Math.round((37 - y) * 10) / 10);
+    return '<path d="M' + (a - 5) + ' ' + y + 'h10M' + (b - 5) + ' ' + y + 'h10"/>'
+         + '<path d="M' + (a - 3.5) + ' ' + y + 'v' + h + 'M' + (b + 3.5) + ' ' + y + 'v' + h + '"/>';
+  },
+  /* le sol */
+  sol: function(){ return '<path d="M4 37.5H36"/>'; },
+  /* un mur dans le dos */
+  mur: function(){ return '<path d="M33 6v30"/>'; },
+  /* la corde à sauter : elle part des mains et passe juste sous les pieds */
+  corde: function(P){
+    var a = P.m[0] - 1, b = mir(P.m, P.ax)[0] + 1, y = P.m[1], f = P.p[1] + 4;
+    return '<path d="M' + a + ' ' + y
+      + 'C' + (a - 7) + ' ' + (y + 6) + ' ' + (a - 7) + ' ' + f + ' 20 ' + f
+      + 'C' + (b + 7) + ' ' + f + ' ' + (b + 7) + ' ' + (y + 6) + ' ' + b + ' ' + y + '"/>';
+  },
+  /* un vélo : deux roues et le cadre */
+  velo: function(){ return '<circle cx="11" cy="32" r="5"/><circle cx="29" cy="32" r="5"/>'
+    + '<path d="M11 32l7-9h7l4 9M18 23h8"/>'; },
+  /* un rameur : le rail et la poignée */
+  rame: function(P){
+    return '<path d="M5 ' + (P.p[1] + 4) + 'H36"/>'           /* le rail       */
+         + '<path d="M6 ' + (P.p[1] - 4) + 'v8"/>'            /* le cale-pieds */
+         + '<path d="M' + P.m[0] + ' ' + P.m[1] + 'H7"/>';    /* la chaîne     */
+  }
+};
+
+/* --------------------------------------------------------------- les poses
+   t              e              c              m              b              g              p            */
+var POSES = {
+  /* -- tirer ----------------------------------------------------------- */
+  tractions:  { t:[20,13.5], e:[15.5,18],  c:[11.5,12.5], m:[12,6.5],   b:[20,27],   g:[18.6,33], p:[18.2,38],   eq:'barre',  ax:20 },
+  tracsup:    { t:[20,13.5], e:[15.5,18],  c:[14.5,12.5], m:[15,6.5],   b:[20,27],   g:[18.6,33], p:[18.2,38],   eq:'barre',  ax:20 },
+  tracprise:  { t:[20,13.5], e:[15.5,18],  c:[8.5,13],    m:[8,6.5],    b:[20,27],   g:[18.6,33], p:[18.2,38],   eq:'barre',  ax:20 },
+  muscleup:   { t:[20,11],   e:[15.5,15.5],c:[13,9],      m:[14,5],     b:[20,25],   g:[16.5,30],  p:[18,36],   eq:'barre',  ax:20 },
+  suspension: { t:[20,15],   e:[15.5,19.5],c:[14,12.5],   m:[13.5,6.5], b:[20,28],   g:[18.6,33.5], p:[18.2,38.5], eq:'barre',  ax:20 },
+  rowinv:     { t:[12,22],   e:[16,23],    c:[19,19],     m:[21,15],    b:[26,26],   g:[31,28.5],  p:[36,31],   eq:'barre+sol' },
+  rowhalt:    { t:[9,17],    e:[14,19],    c:[13,25],     m:[12,30],    b:[27,23],   g:[30,30],    p:[32,37],   eq:'halt' },
+  curl:       { t:[20,9.5],  e:[15.5,15],  c:[13.5,23],   m:[11.8,18],  b:[20,27],   g:[18.6,33],  p:[18.2,38], eq:'halt',   ax:20 },
+  shrug:      { t:[20,9.5],  e:[14,14],    c:[10.5,22],   m:[9.5,29],   b:[20,27],   g:[18.6,33],  p:[18.2,38], eq:'halt',   ax:20 },
+
+  /* -- pousser --------------------------------------------------------- */
+  pompes:     { t:[11,18],   e:[15,21.5],  c:[12.5,28],   m:[11,35],    b:[26,26],   g:[31,31],    p:[36,35],   eq:'sol' },
+  pompesdia:  { t:[11,18],   e:[15,21.5],  c:[16,28],     m:[18,35],    b:[26,26],   g:[31,31],    p:[36,35],   eq:'sol' },
+  pompesdecl: { t:[8,26],    e:[12,27.5],  c:[9.5,31.5],  m:[7.5,35.5], b:[24,20],   g:[29,17],    p:[33,15],   eq:'sol+estrade' },
+  pompespike: { t:[13,29],   e:[16,25],    c:[12,30],     m:[10,35],    b:[24,10],   g:[30,22],    p:[34,34],   eq:'sol' },
+  atr:        { t:[20,30],   e:[20,25],    c:[16,30],     m:[14.5,35],  b:[20,17],   g:[19,11],    p:[19.4,5],  eq:'sol',    ax:20 },
+  dips:       { t:[20,12],   e:[15.5,17],  c:[12,23],     m:[13.5,19],  b:[20,27],   g:[18,32],    p:[17.6,36.5], eq:'para',   ax:20 },
+  dipsbanc:   { t:[15,13],   e:[18,17],    c:[22,22],     m:[24,18],    b:[16,27],   g:[24,30],    p:[33,31],   eq:'banc' },
+  devcouche:  { t:[9,23],    e:[13,25],    c:[12,19],     m:[14,13],    b:[27,26],   g:[32,30],    p:[33,36],   eq:'banc+barbell' },
+  devmil:     { t:[20,13],   e:[20,19],    c:[14,17],     m:[15,8],     b:[20,28],   g:[19,33],    p:[19,38],   eq:'barbell',ax:20 },
+  ecarte:     { t:[9,23],    e:[13,25],    c:[15,18],     m:[13,13],    b:[27,26],   g:[32,30],    p:[33,36],   eq:'banc+halt' },
+  elevlat:    { t:[20,10],   e:[16.5,16],  c:[11,18.5],   m:[6.5,15],   b:[20,27],   g:[19,33],    p:[19,38],   eq:'halt',   ax:20 },
+
+  /* -- jambes ---------------------------------------------------------- */
+  squat:      { t:[20,10],   e:[20,16],    c:[15,15],     m:[11,14],    b:[20,26],   g:[13.5,31],  p:[15,38],   eq:'sol',    ax:20 },
+  squatbarre: { t:[20,11.5], e:[16.5,18],  c:[13,20],     m:[10.5,18],  b:[20,27],   g:[13.5,32],  p:[15,38],   eq:'barbell',ax:20 },
+  squatbulg:  { t:[15,11],   e:[15,17],    c:[13,23],     m:[12,28],    b:[16,26],   g:[12,32],    p:[13,38],   g2:[27,29],  p2:[33,33], eq:'banc' },
+  pistol:     { t:[18,11],   e:[18,17],    c:[24,18],     m:[30,18],    b:[18,26],   g:[12,31],    p:[14,38],   g2:[28,26],  p2:[35,25], eq:'sol' },
+  fentes:     { t:[19,11],   e:[19,17],    c:[17,23],     m:[16,28],    b:[20,26],   g:[12,31],    p:[10,38],   g2:[28,31],  p2:[30,38], eq:'sol' },
+  sdt:        { t:[11,16],   e:[15,19],    c:[15,25],     m:[15,31],    b:[26,23],   g:[28,30],    p:[30,37],   eq:'barbell' },
+  hipthrust:  { t:[9,20],    e:[13,21],    c:[15,25],     m:[13,28],    b:[24,20],   g:[30,26],    p:[31,36],   eq:'sol' },
+  mollets:    { t:[20,7],    e:[20,13],    c:[16,19],     m:[15,25],    b:[20,22],   g:[18.8,28],  p:[18.4,32], eq:'marche', ax:20 },
+  chaise:     { t:[22,13],   e:[24,18],    c:[19,22],     m:[15,24],    b:[26,26],   g:[14,26],    p:[13,37],   eq:'mur' },
+
+  /* -- tronc ----------------------------------------------------------- */
+  gainage:    { t:[9,22],    e:[13,24],    c:[12,29],     m:[11,34.5],  b:[26,26],   g:[31,30],    p:[36,34],   eq:'sol' },
+  gainlat:    { t:[9,26],    e:[13,27],    c:[11,32],     m:[9,36],     b:[27,25],   g:[32,29],    p:[36,33],   eq:'sol' },
+  relevjambes:{ t:[20,12],   e:[17,17],    c:[15,11],     m:[14.5,6],   b:[20,26],   g:[27,25],    p:[33,23],   eq:'barre',  ax:20 },
+  crunch:     { t:[10,24],   e:[14,26],    c:[11,22],     m:[11,20],    b:[26,31],   g:[30,24],    p:[35,31],   eq:'sol' },
+  hollow:     { t:[10,26],   e:[14,27],    c:[11,22],     m:[9,19],     b:[26,27],   g:[30,23],    p:[34,19],   eq:'sol' },
+  lsit:       { t:[20,13],   e:[16,18],    c:[14,23],     m:[13,28],    b:[20,28],   g:[27,27],    p:[33,26],   eq:'para',   ax:20 },
+  dragonflag: { t:[10,29],   e:[14,29],    c:[11,25],     m:[10,22],    b:[24,23],   g:[30,18],    p:[35,14],   eq:'banc' },
+  superman:   { t:[9,25],    e:[13,27],    c:[11,23],     m:[9,20],     b:[26,29],   g:[31,27],    p:[35,24],   eq:'sol' },
+
+  /* -- souffle --------------------------------------------------------- */
+  course:     { t:[21,10],   e:[20,16],    c:[14,19],     m:[15,24],    b:[20,25],   g:[13,29],    p:[10,35],   c2:[27,18], m2:[28,13], g2:[27,30], p2:[31,35], eq:'sol' },
+  corde:      { t:[20,11],   e:[20,16],    c:[14,20],     m:[13,24],    b:[20,25],   g:[18,30],    p:[19,34],   eq:'corde',  ax:20 },
+  burpees:    { t:[20,9],    e:[20,15],    c:[15,10],     m:[13,5],     b:[20,25],   g:[14,30],    p:[15,36],   eq:'sol',    ax:20 },
+  velo:       { t:[14,12],   e:[17,16],    c:[21,19],     m:[26,21],    b:[15,22],   g:[21,26],    p:[24,30],   eq:'velo' },
+  rameur:     { t:[26,14],   e:[24,19],    c:[27,23],     m:[19,22],    b:[27,26],   g:[18,24],    p:[10,27],   eq:'rame' },
+  montclim:   { t:[20,8],    e:[20,14],    c:[13,17],     m:[14,22],    b:[20,24],   g:[27,21],    p:[25,28],   c2:[27,16], m2:[27,10], g2:[19,31], p2:[19,37], eq:'sol' }
+};
+
+/* Le rendu : la tête, le tronc, les membres, puis le matériel par-dessus. */
+function bonhomme(P){
+  var d = '', e = P.e, b = P.b;
+  d += trait(e, b);                                   /* tronc               */
+  d += trait(e, P.c, P.m);                            /* bras                */
+  d += trait(b, P.g, P.p);                            /* jambe               */
+  if(P.ax){
+    d += trait(mir(e, P.ax), b);
+    d += trait(mir(e, P.ax), mir(P.c, P.ax), mir(P.m, P.ax));
+    d += trait(b, mir(P.g, P.ax), mir(P.p, P.ax));
+  }else{
+    /* de profil : le second membre n'est donné que s'il se voit vraiment */
+    if(P.c2) d += trait(e, P.c2, P.m2);
+    if(P.g2) d += trait(b, P.g2, P.p2);
+  }
+  var eq = String(P.eq || '').split('+').map(function(k){
+    return MATOS_POSE[k] ? MATOS_POSE[k](P) : '';
+  }).join('');
+  return '<circle cx="' + P.t[0] + '" cy="' + P.t[1] + '" r="' + R_TETE + '"/>'
+       + '<path d="' + d + '"/>' + eq;
+}
+
+/* Le trait doit peser pareil à l'œil quelle que soit la taille : à 30 px on
+   veut un cheveu d'un peu plus d'un pixel et demi, à 96 px on n'en veut pas
+   trois fois plus. On vise donc une épaisseur à l'écran, et on la reconvertit
+   dans les unités du dessin. */
+function traitPose(w){
+  var px = 1.55 * Math.pow(Math.max(w,8) / 30, .42);
+  return Math.round(px * 40 / Math.max(w,8) * 100) / 100;
+}
+
+/* Le dessin d'un exercice, prêt à poser dans une ligne de liste. */
+function dessinExo(id,w){
+  var P=POSES[id];
+  if(!P) return '';
+  return '<svg class="exodraw" viewBox="0 0 40 40" width="'+w+'" height="'+w+'"'+
+         ' stroke-width="'+traitPose(w)+'" aria-hidden="true">'+bonhomme(P)+'</svg>';
+}
+
 function silhouette(face,couleurs,w,cls){
   var d=SIL[face]||SIL.av, out='';
   function paire(pth,c){
@@ -1535,11 +1758,17 @@ function couleursExo(x){
   (x.m||[]).forEach(function(m){ c[m]='var(--acc)'; });
   return c;
 }
-/* Une vignette : la face qui montre le plus de muscles travaillés. */
+/* La vignette d'un exercice : le geste, pas l'anatomie.
+
+   Un exercice du catalogue a sa pose — c'est ce qu'on montre, parce que
+   c'est ce qu'on cherche du regard dans une liste : « lequel c'est ? ».
+   Un exercice créé à la main n'en a pas ; on retombe alors sur la
+   silhouette teintée des muscles choisis, qui reste vraie. */
 function vignetteExo(x,w){
+  var t=w||34, d=dessinExo(x.id,t);
+  if(d) return d;
   var c=couleursExo(x), av=0, ar=0;
   Object.keys(c).forEach(function(m){ (SIL.av.m[m]?av++:0); (SIL.ar.m[m]?ar++:0); });
-  var t=w||34;
   return silhouette(ar>av?'ar':'av', c, t, t<=60?'mini':'');
 }
 
@@ -5078,7 +5307,7 @@ function runRender(){
     }).join('')+'</div>';
 
   var gene=exoSensible(exoOr(x.i));
-  out+='<div class="rnbody">'+vignetteExo(exoOr(x.i),96)+
+  out+='<div class="rnbody">'+vignetteExo(exoOr(x.i),124)+
     '<div class="rnname">'+esc(x.n)+'</div>'+
     '<div class="rnserie">Série '+(x.s.length+1)+' sur '+x.nb+'</div>'+
     (gene ? '<div class="small" style="color:var(--gold);margin-top:7px">'+ic('alert')+' '+
