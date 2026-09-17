@@ -287,6 +287,18 @@ suffisent ; et la base est tenue par des bénévoles, donc on met en cache
 n'est donnée qu'en kilojoules — c'est fréquent — elle est convertie. Une fiche
 sans nom ou sans calories est écartée plutôt qu'affichée à moitié.
 
+**Deux chemins pour chercher un mot.** Open Food Facts a d'abord eu
+`/cgi/search.pl`, qui interroge directement leur base ; c'est lent, et ils le
+rendent volontairement fragile parce qu'il les met à genoux. En production il
+rend régulièrement un 503 — c'est exactement ce qui a fait échouer la
+vérification du déploiement, et c'est le genre de défaut qu'aucun test local
+n'aurait montré. Ils poussent désormais `search.openfoodfacts.org`, un index
+séparé fait pour ça. Cadence demande l'index d'abord et garde l'ancien en
+second : si l'un tombe, chercher un yaourt continue de marcher. Les deux
+réponses n'ont pas la même enveloppe (`hits` contre `products`) mais les
+fiches qu'elles contiennent portent les mêmes noms de champs. La lecture d'un
+code-barres, elle, passe par l'API v2 des produits, qui n'a jamais bronché.
+
 Un mot est reclassé avant d'être rendu. Le moteur d'Open Food Facts cherche
 dans tous les champs d'une fiche : demander « skyr » lui remonte d'abord des
 fromages blancs dont la description cite le mot quelque part — c'est ce que

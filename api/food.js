@@ -125,17 +125,43 @@ function reclasser(l, q){
     .map(function(o){ return o.x; });
 }
 
+/* Deux chemins pour chercher un mot, et ce n'est pas du zèle.
+
+   Open Food Facts a d'abord eu /cgi/search.pl, qui interroge directement leur
+   base : c'est lent, et ils le rendent volontairement fragile parce qu'il les
+   met à genoux — en production il renvoie régulièrement un 503. Ils poussent
+   maintenant search.openfoodfacts.org, un index à part, fait pour ça.
+
+   On demande donc l'index d'abord et on garde l'ancien en second : si l'un
+   tombe, chercher un yaourt continue de marcher. La réponse n'a pas la même
+   enveloppe des deux côtés (« hits » contre « products »), mais les fiches
+   qu'elle contient portent les mêmes noms de champs. */
+function viaIndex(q){
+  var url = 'https://search.openfoodfacts.org/search?langs=fr,en'
+          + '&page_size=' + MAX_RES + '&fields=' + CHAMPS
+          + '&q=' + encodeURIComponent(q);
+  return fetchCourt(url).then(function(j){ return (j && j.hits) || []; });
+}
+function viaCgi(q){
+  var url = 'https://fr.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1'
+          + '&page_size=' + MAX_RES + '&fields=' + CHAMPS
+          + '&search_terms=' + encodeURIComponent(q);
+  return fetchCourt(url).then(function(j){ return (j && j.products) || []; });
+}
+function chercher(q){
+  return viaIndex(q).then(function(l){
+    /* un index vide n'est pas une panne, mais autant laisser sa chance à
+       l'autre chemin avant de dire « rien trouvé » */
+    return l.length ? l : viaCgi(q).catch(function(){ return l; });
+  }, function(){ return viaCgi(q); });
+}
+
 function parNom(res, q){
   var cle = 'off:q2:' + sansAccent(q);
   return duCache(cle).then(function(hit){
     if(hit) return send(res, 200, { ok: true, cache: true, produits: hit });
-    /* Le sous-domaine français fait remonter les produits d'ici en premier ;
-       c'est la même base, seul le classement change. */
-    var url = 'https://fr.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1'
-            + '&page_size=' + MAX_RES + '&fields=' + CHAMPS
-            + '&search_terms=' + encodeURIComponent(q);
-    return fetchCourt(url).then(function(j){
-      var l = reclasser(((j && j.products) || []).map(pourCent).filter(Boolean), q).slice(0, MAX_RES);
+    return chercher(q).then(function(brut){
+      var l = reclasser(brut.map(pourCent).filter(Boolean), q).slice(0, MAX_RES);
       return auCache(cle, l, TTL_Q).then(function(){
         send(res, 200, { ok: true, produits: l });
       });
