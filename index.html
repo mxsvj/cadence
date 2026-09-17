@@ -292,9 +292,10 @@ main{flex:1;padding:2px 16px 150px}
 .dchip.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .echips{display:flex;flex-wrap:wrap;gap:7px}
 .echip{width:44px;height:44px;border-radius:13px;background:var(--surf2);border:1px solid var(--line);
-  font-size:21px;transition:transform .14s var(--ease),background .16s,border-color .16s}
+  font-size:22px;color:var(--mut);display:flex;align-items:center;justify-content:center;
+  transition:transform .14s var(--ease),background .16s,border-color .16s,color .16s}
 .echip:active{transform:scale(.88)}
-.echip.on{border-color:var(--acc);background:var(--acc-soft)}
+.echip.on{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-hi)}
 .cchips{display:flex;gap:10px;flex-wrap:wrap}
 .cchip{width:38px;height:38px;border-radius:12px;border:2px solid transparent;
   transition:transform .16s var(--ease),box-shadow .16s}
@@ -565,6 +566,16 @@ details .dc li{margin-bottom:6px}
 .nrg{font-size:11.5px;color:var(--mut2);font-variant-numeric:tabular-nums}
 .nsplit{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px;padding-top:13px;
   border-top:1px solid var(--line)}
+.nsplit.trois{grid-template-columns:1fr 1fr 1fr}
+.calbox{margin-top:11px;padding:11px 12px;border-radius:var(--r);background:var(--surf2);
+  border:1px solid var(--line)}
+.calbox .ct{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13.5px}
+.calbox .cv{font-family:'Barlow Condensed',sans-serif;font-size:27px;font-weight:700;line-height:1;
+  font-variant-numeric:tabular-nums;margin:6px 0 2px}
+.calbox .cd{font-size:11.5px;color:var(--mut);line-height:1.45}
+.calbox .cb{display:flex;gap:8px;margin-top:10px}
+.jauge{height:5px;border-radius:99px;background:var(--line);overflow:hidden;margin:7px 0 3px}
+.jauge i{display:block;height:100%;background:var(--acc);border-radius:99px}
 .nsplit div{text-align:center}
 .nsplit b{display:block;font-family:'Barlow Condensed',sans-serif;font-size:23px;font-weight:700;
   font-variant-numeric:tabular-nums}
@@ -574,6 +585,20 @@ details .dc li{margin-bottom:6px}
 .mealrow .mi{flex:1;min-width:0}
 .mealrow .mn2{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mealrow .mk{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.rsearch{display:flex;gap:7px;align-items:center}
+.rsearch input{flex:1;min-width:0}
+.rsearch .iconbtn{flex:0 0 auto;width:46px;height:46px}
+.gramrow{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.gchip{padding:10px 4px;border-radius:12px;background:var(--surf2);
+  border:1px solid var(--line);color:var(--mut);font-weight:800;font-size:13px;
+  transition:transform .14s var(--ease),background .16s,border-color .16s,color .16s}
+.gchip:active{transform:scale(.94)}
+.gchip.on{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-hi)}
+.scanbox{position:relative;border-radius:var(--r);overflow:hidden;background:#000;aspect-ratio:4/3;
+  border:1px solid var(--line2)}
+.scanbox video{width:100%;height:100%;object-fit:cover;display:block}
+.scanmire{position:absolute;inset:18% 10%;border:2.5px solid rgba(255,255,255,.85);border-radius:12px;
+  box-shadow:0 0 0 2000px rgba(0,0,0,.35);pointer-events:none}
 .objchips{display:flex;gap:7px;margin-bottom:12px}
 .objchips button{flex:1;padding:9px;border-radius:999px;background:var(--surf2);border:1px solid var(--line);
   font-size:12.5px;font-weight:700;color:var(--mut)}
@@ -739,6 +764,7 @@ html[data-theme="light"] #chole.none{box-shadow:0 0 0 9999px rgba(15,22,34,.8)}
   opacity:0;pointer-events:none;transition:opacity .24s,transform .24s var(--ease);
   display:flex;gap:9px;align-items:center}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast .ti{display:flex;flex:0 0 auto;font-size:17px;color:var(--acc-hi)}
 
 
 /* ============================ 18. compléments ============================ */
@@ -789,10 +815,11 @@ html[data-theme="light"] #chole.none{box-shadow:0 0 0 9999px rgba(15,22,34,.8)}
 <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8l1.5 2.6 3-.5.5 3 2.6 1.5-1.7 2.6 1.7 2.6-2.6 1.5-.5 3-3-.5L12 21.2l-1.5-2.6-3 .5-.5-3L4.4 14.6 6.1 12 4.4 9.4l2.6-1.5.5-3 3 .5z"/></symbol>
 <symbol id="i-cap" viewBox="0 0 24 24"><path d="M12 4l9 4.5-9 4.5-9-4.5z"/><path d="M6.5 10.8v4.7c0 1.6 2.5 2.8 5.5 2.8s5.5-1.2 5.5-2.8v-4.7"/></symbol>
 <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="12" rx="2.4"/><path d="M15.5 9V6.4A2.4 2.4 0 0 0 13.1 4H6.4A2.4 2.4 0 0 0 4 6.4v6.7a2.4 2.4 0 0 0 2.4 2.4H9"/></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4.4 10.4a7.6 7.6 0 0 1 12.9-3.6l2.3 2.2"/><path d="M19.6 13.6a7.6 7.6 0 0 1-12.9 3.6l-2.3-2.2"/><path d="M19.9 4.9v4.3h-4.3M4.1 19.1v-4.3h4.3"/></symbol>
 <symbol id="i-undo" viewBox="0 0 24 24"><path d="M4 9h10.5a5 5 0 0 1 0 10H8M4 9l4-4M4 9l4 4"/></symbol>
 <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
 <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/></symbol>
-<symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="M3 10.5v3M6 8v8M18 8v8M21 10.5v3M6 12h12"/></symbol>
+<symbol id="i-dumbbell" viewBox="0 0 24 24"><rect x="5.2" y="8.2" width="3.8" height="7.6" rx="1.6"/><rect x="15" y="8.2" width="3.8" height="7.6" rx="1.6"/><path d="M9 12h6M3.2 10.4v3.2M20.8 10.4v3.2"/></symbol>
 <symbol id="i-play" viewBox="0 0 24 24"><path d="M7.5 5.2l11 6.8-11 6.8z"/></symbol>
 <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.3A1.8 1.8 0 0 1 5.8 3.5H20v17H5.8A1.8 1.8 0 0 1 4 18.7z"/><path d="M4 16.4h16M8 7.5h7M8 11h5"/></symbol>
 <symbol id="i-body" viewBox="0 0 24 24"><circle cx="12" cy="4.4" r="2.4"/><path d="M12 7.2v8.4M6.4 10.4L12 8.4l5.6 2M9.6 21.2l1.5-5.6M14.4 21.2l-1.5-5.6"/></symbol>
@@ -807,6 +834,74 @@ html[data-theme="light"] #chole.none{box-shadow:0 0 0 9999px rgba(15,22,34,.8)}
 <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="3.6"/><path d="M12 1.8v2.6M12 19.6v2.6M1.8 12h2.6M19.6 12h2.6"/></symbol>
 <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3.2a8.8 8.8 0 1 0 0 17.6c1.5 0 2-1 1.4-2-.7-1.2.2-2.4 1.6-2.4h1.8a4 4 0 0 0 4-4c0-5-4-9.2-8.8-9.2z"/><circle cx="8" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="16" cy="10" r="1.1" fill="currentColor" stroke="none"/></symbol>
 <symbol id="i-mountain" viewBox="0 0 24 24"><path d="M2.5 19.5L9 7l4 7 2-3 6.5 8.5z"/><path d="M6.6 14.2h4.6"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7.2 19h10.3a3.8 3.8 0 0 0 .4-7.6 5.6 5.6 0 0 0-10.7-1.3A3.9 3.9 0 0 0 7.2 19z"/></symbol>
+<symbol id="i-fist" viewBox="0 0 24 24"><path d="M4.5 11.5V9.2a1.7 1.7 0 0 1 3.4 0M7.9 9.2V8a1.7 1.7 0 0 1 3.4 0v1.2M11.3 8.4a1.7 1.7 0 0 1 3.4 0v1.3"/><path d="M14.7 9.7a1.7 1.7 0 0 1 3.4 0v4.1a6 6 0 0 1-6 6h-1.6a5.8 5.8 0 0 1-4.2-1.8L4 15.6a1.6 1.6 0 0 1 2.3-2.3l1.6 1.5V11.5"/></symbol>
+<symbol id="i-run" viewBox="0 0 24 24"><path d="M13.5 4.6a1.5 1.5 0 1 0 0-.1zM8 21l2.6-5.3 3-2.2-1-4.5-3.2 2.2L8 14"/><path d="M12.6 9l3.6-1.6 2.9 2.6M13.6 13.5l2.2 3 .6 4"/></symbol>
+<symbol id="i-meal" viewBox="0 0 24 24"><path d="M4.5 3v7.5a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2V3M6.7 3v6"/><path d="M6.7 12.5V21M17.3 21v-7.5c2-.4 2.9-2.3 2.9-5.2 0-3-.9-5-2.9-5.3-2 .3-2.9 2.3-2.9 5.3 0 2.9.9 4.8 2.9 5.2z"/></symbol>
+<symbol id="i-bottle" viewBox="0 0 24 24"><path d="M9.4 8.2h5.2a2.5 2.5 0 0 1 2.5 2.5v8.1a2.2 2.2 0 0 1-2.2 2.2H9.1a2.2 2.2 0 0 1-2.2-2.2v-8.1a2.5 2.5 0 0 1 2.5-2.5z"/><path d="M10.5 8.2V5.4h3v2.8M9.8 3h4.4v2.4H9.8z"/></symbol>
+<symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.4c3.2 4 5.6 6.8 5.6 9.7A5.6 5.6 0 0 1 12 18.7a5.6 5.6 0 0 1-5.6-5.6c0-2.9 2.4-5.7 5.6-9.7z"/></symbol>
+<symbol id="i-books" viewBox="0 0 24 24"><path d="M4.4 6.2h5.2a2 2 0 0 1 2 2v11a2.4 2.4 0 0 0-2.4-1.9H4.4z"/><path d="M19.6 6.2h-5.2a2 2 0 0 0-2 2v11a2.4 2.4 0 0 1 2.4-1.9h4.8z"/><path d="M11.6 8.2v11"/></symbol>
+<symbol id="i-lotus" viewBox="0 0 24 24"><circle cx="12" cy="5.2" r="2.4"/><path d="M12 8v5.4M6.6 20.4c0-2.2 2.4-3.6 5.4-3.6s5.4 1.4 5.4 3.6"/><path d="M12 13.4 6.9 15.8M12 13.4l5.1 2.4"/></symbol>
+<symbol id="i-bed" viewBox="0 0 24 24"><path d="M3.2 19.4v-9M3.2 14.4h17.6v5M20.8 14.4a3 3 0 0 0-3-3H9.4v3"/><circle cx="6.6" cy="10.2" r="1.9"/></symbol>
+<symbol id="i-shower" viewBox="0 0 24 24"><path d="M12 3.4v3.6M7.4 11.4a4.6 4.6 0 0 1 9.2 0z"/><path d="M6.2 11.4h11.6M8.6 14.6v1.8M12 14.6v1.8M15.4 14.6v1.8M8.6 19v1.6M12 19v1.6M15.4 19v1.6"/></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="M14.4 3.6a4.6 4.6 0 0 1 6.5 6.5l-6.8 6.8a4.6 4.6 0 0 1-6.5-6.5z"/><path d="M11 7l6.5 6.5"/><circle cx="6.6" cy="18.2" r="3.2"/></symbol>
+<symbol id="i-salad" viewBox="0 0 24 24"><path d="M3.4 11.6h17.2a8.6 8.6 0 0 1-8.6 8.4 8.6 8.6 0 0 1-8.6-8.4z"/><path d="M8.5 11.6c-.6-3 .8-5.4 3.5-6.2M14.4 11.6c1-2.2 3-3 5-2.6"/></symbol>
+<symbol id="i-nosmoke" viewBox="0 0 24 24"><rect x="3" y="12.8" width="14.4" height="4.2" rx="1.2"/><path d="M19.2 12.8v4.2M13.4 12.8v4.2M14.6 9.6c1.6-1 1.6-2.6.4-3.8"/><path d="M4 4.4 20 20.4"/></symbol>
+<symbol id="i-broom" viewBox="0 0 24 24"><path d="M14.2 3.6 8.8 12M6.2 13.2h7.6l2.6 7.4H3.6z"/><path d="M8.2 13.2 7 20.6M11.6 13.2l.6 7.4M15.6 20.6l-1.2-7.4"/></symbol>
+<symbol id="i-laptop" viewBox="0 0 24 24"><path d="M5.4 5.6h13.2v9.2H5.4z"/><path d="M2.6 18.4h18.8l-1.6-3.6H4.2z"/></symbol>
+<symbol id="i-guitar" viewBox="0 0 24 24"><circle cx="6.4" cy="17.6" r="3"/><circle cx="17.6" cy="15.4" r="3"/><path d="M9.4 17.6V6.2l11.2-2.6v11.8M9.4 9.6l11.2-2.6"/></symbol>
+<symbol id="i-paw" viewBox="0 0 24 24"><ellipse cx="7" cy="9.4" rx="1.9" ry="2.4"/><ellipse cx="17" cy="9.4" rx="1.9" ry="2.4"/><ellipse cx="10.4" cy="5.8" rx="1.7" ry="2.2"/><ellipse cx="14.4" cy="5.8" rx="1.7" ry="2.2"/><path d="M12 13.2c2.6 0 4.6 1.6 4.6 3.6s-2 3.6-4.6 3.6-4.6-1.6-4.6-3.6 2-3.6 4.6-3.6z"/></symbol>
+<symbol id="i-tooth" viewBox="0 0 24 24"><path d="M7.6 3.2c1.6 0 2.4.9 4.4.9s2.8-.9 4.4-.9c2.2 0 3.6 1.7 3.6 4.4 0 3.4-1.6 4.6-2.2 8-.4 2.2-.7 5.2-2.3 5.2-1.8 0-1.4-4.6-3.5-4.6s-1.7 4.6-3.5 4.6c-1.6 0-1.9-3-2.3-5.2-.6-3.4-2.2-4.6-2.2-8 0-2.7 1.4-4.4 3.6-4.4z"/></symbol>
+<symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 5.2v14.2M12 5.2a3 3 0 0 0-5.6-1.1A2.8 2.8 0 0 0 4 7.6a3 3 0 0 0 .6 4.2A3 3 0 0 0 6 16.6a3 3 0 0 0 6 2.8"/><path d="M12 5.2a3 3 0 0 1 5.6-1.1A2.8 2.8 0 0 1 20 7.6a3 3 0 0 1-.6 4.2 3 3 0 0 1-1.4 4.8 3 3 0 0 1-6 2.8"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3.4 7.6a2 2 0 0 1 2-2h11.8a2 2 0 0 1 2 2v1.8"/><path d="M3.4 7.6v9.6a2.4 2.4 0 0 0 2.4 2.4h12.8a2 2 0 0 0 2-2v-1.9M20.6 9.4h-4.2a3.1 3.1 0 0 0 0 6.2h4.2z"/></symbol>
+<symbol id="i-barbell" viewBox="0 0 24 24"><path d="M1.6 12h20.8M6.2 6.8v10.4M8.9 9.2v5.6M17.8 6.8v10.4M15.1 9.2v5.6"/></symbol>
+<symbol id="i-leg" viewBox="0 0 24 24"><path d="M7.6 3.4h8.8M8.4 3.4v5.4l-2.6 4.8 1.6 7M15.6 3.4v5.4l2.6 4.8-1.6 7"/><path d="M4.6 20.6h4.4M15 20.6h4.4"/></symbol>
+<symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.4" cy="16.6" r="3.9"/><circle cx="18.6" cy="16.6" r="3.9"/><path d="M5.4 16.6 10 8.4h4.4M10.4 16.6h4.6l-3-7M14.4 8.4h2.6M18.6 16.6 16 10"/></symbol>
+<symbol id="i-swim" viewBox="0 0 24 24"><circle cx="8.2" cy="8.6" r="2"/><path d="M10.6 10.6c2-2.4 4.2-3.4 6.6-3 1.6.2 2.6 1 3.2 2.2"/><path d="M2.6 17.4c1.9 0 1.9 1.6 3.8 1.6s1.9-1.6 3.8-1.6 1.9 1.6 3.8 1.6 1.9-1.6 3.8-1.6 1.9 1.6 3.8 1.6"/><path d="M4 13.6h8"/></symbol>
+<symbol id="i-climb" viewBox="0 0 24 24"><circle cx="14.6" cy="4.6" r="2"/><path d="M14 7.4 9.6 9.8l.8 4.4-2.6 6.4M10.4 14.2l3.6 1.6 1.2 4.8M14 7.4l4.4 2.4.6 4"/></symbol>
+<symbol id="i-glove" viewBox="0 0 24 24"><path d="M9 4.2h3.8a6 6 0 0 1 6 6v2.4a3.4 3.4 0 0 1-3.4 3.4H9.7a3.4 3.4 0 0 1-3.4-3.4V6.9"/><path d="M6.3 8.6a2.3 2.3 0 0 0-2.3 2.3v1.5a2.3 2.3 0 0 0 2.3 2.3"/><rect x="8.1" y="16" width="9" height="3.8" rx="1.5"/></symbol>
+<symbol id="i-stretch" viewBox="0 0 24 24"><circle cx="8.6" cy="4.6" r="2"/><path d="M8.6 7.4v5.2l-4 7.6M8.6 12.6h4.6l3.6-4.4M13.2 12.6l2.4 7.6"/></symbol>
+<symbol id="i-abs" viewBox="0 0 24 24"><path d="M8.6 3.4h6.8l-.6 12.4a2.8 2.8 0 0 1-2.8 2.8 2.8 2.8 0 0 1-2.8-2.8z"/><path d="M12 3.4v14.4M8.9 8h6.2M9.1 12.4h5.8"/></symbol>
+<symbol id="i-pullup" viewBox="0 0 24 24"><path d="M2.6 4.4h18.8M6.4 4.4v2.4M17.6 4.4v2.4"/><path d="M9 5.6v3.8M15 5.6v3.8"/><circle cx="12" cy="11.4" r="2"/><path d="M9 9.4h6M12 14v3.4M9.6 21.4 12 17.4l2.4 4"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.4S3.6 15.4 3.6 9.6a4.6 4.6 0 0 1 8.4-2.6 4.6 4.6 0 0 1 8.4 2.6c0 5.8-8.4 10.8-8.4 10.8z"/></symbol>
+<symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7.4 3.6h9.2v5.2a4.6 4.6 0 0 1-9.2 0z"/><path d="M7.4 5.2H4.6v1.4a3 3 0 0 0 2.8 3M16.6 5.2h2.8v1.4a3 3 0 0 1-2.8 3M12 13.4v3.4M8.6 20.4h6.8l-.8-3.6H9.4z"/></symbol>
+<symbol id="i-crown" viewBox="0 0 24 24"><path d="M3.4 7.4 6.8 12 12 5l5.2 7 3.4-4.6v10.2H3.4z"/><path d="M3.4 20.4h17.2"/></symbol>
+<symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 3c4.6 0 7.6 3.1 7.6 7.4 0 2.4-.9 4-2.2 5v2.6a1.6 1.6 0 0 1-1.6 1.6H8.2a1.6 1.6 0 0 1-1.6-1.6v-2.6c-1.3-1-2.2-2.6-2.2-5C4.4 6.1 7.4 3 12 3z"/><circle cx="9" cy="11" r="1.7"/><circle cx="15" cy="11" r="1.7"/><path d="M12 14.4v2"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.4 2.7 5.6 6.1.8-4.5 4.3 1.2 6.1L12 17.3l-5.5 2.9 1.2-6.1-4.5-4.3 6.1-.8z"/></symbol>
+<symbol id="i-wave" viewBox="0 0 24 24"><path d="M2.6 8.6c1.9 0 1.9 1.8 3.8 1.8s1.9-1.8 3.8-1.8 1.9 1.8 3.8 1.8 1.9-1.8 3.8-1.8 1.9 1.8 3.8 1.8M2.6 14c1.9 0 1.9 1.8 3.8 1.8S8.3 14 10.2 14s1.9 1.8 3.8 1.8S15.9 14 17.8 14s1.9 1.8 3.8 1.8"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.6 6v6c0 4.4 3.1 8.1 7.4 9.4 4.3-1.3 7.4-5 7.4-9.4V6z"/></symbol>
+<symbol id="i-anchor" viewBox="0 0 24 24"><circle cx="12" cy="5.4" r="2.4"/><path d="M12 7.8v12.8M7.4 10.6h9.2M4 14.4c0 3.6 3.6 6.2 8 6.2s8-2.6 8-6.2"/></symbol>
+<symbol id="i-rocket" viewBox="0 0 24 24"><path d="M12 2.6c3 2.4 4.6 5.8 4.6 9.6l-1.8 4.4H9.2l-1.8-4.4c0-3.8 1.6-7.2 4.6-9.6z"/><circle cx="12" cy="9.6" r="1.9"/><path d="M9.2 16.6l-2.6 2.2.8-5M14.8 16.6l2.6 2.2-.8-5M10.6 19.4 12 21.4l1.4-2"/></symbol>
+<symbol id="i-fauve" viewBox="0 0 24 24"><path d="M4.6 4.2 7 9.4 12 6.6l5 2.8 2.4-5.2.6 8.4c0 4.2-3.6 7.6-8 7.6s-8-3.4-8-7.6z"/><circle cx="9.4" cy="12.6" r="1.4"/><circle cx="14.6" cy="12.6" r="1.4"/><path d="M12 15.6v1.8"/></symbol>
+<symbol id="i-face1" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.6 16.4c.9-1.4 2-2.1 3.4-2.1s2.5.7 3.4 2.1"/><path d="M7.6 8.4 10.4 10 7.6 11.6M16.4 8.4 13.6 10l2.8 1.6"/></symbol>
+<symbol id="i-face2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.8 16c.8-.9 1.9-1.4 3.2-1.4s2.4.5 3.2 1.4"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-face3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.6 15.6h6.8"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-face4" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.2 14.4c1 1.4 2.3 2.1 3.8 2.1s2.8-.7 3.8-2.1"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-face5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M7.4 13.6h9.2a4.6 4.6 0 0 1-9.2 0z"/><path d="M7.4 9.6c.8-1 1.9-1 2.7 0M13.9 9.6c.8-1 1.9-1 2.7 0"/></symbol>
+<symbol id="i-hundred" viewBox="0 0 24 24"><path d="M4.4 8.6h1.8v6.8M9.6 8.6h1.6a1.4 1.4 0 0 1 1.4 1.4v4a1.4 1.4 0 0 1-1.4 1.4H9.6a1.4 1.4 0 0 1-1.4-1.4v-4a1.4 1.4 0 0 1 1.4-1.4zM16.4 8.6H18a1.4 1.4 0 0 1 1.4 1.4v4a1.4 1.4 0 0 1-1.4 1.4h-1.6a1.4 1.4 0 0 1-1.4-1.4v-4a1.4 1.4 0 0 1 1.4-1.4z"/><path d="M3.4 18.6h17.2"/></symbol>
+<symbol id="i-medal" viewBox="0 0 24 24"><circle cx="12" cy="15" r="5.4"/><path d="M8.4 10.2 6 3.4h4.2L12 7.6l1.8-4.2H18l-2.4 6.8"/><path d="M12 12.6v4.8M10.4 14.2 12 12.6l1.6 1.6"/></symbol>
+<symbol id="i-medals" viewBox="0 0 24 24"><circle cx="9" cy="15.4" r="4.6"/><path d="M6 11.6 4 4.4h3.6L9 8M12 11.6 15.4 4.4H19l-2.6 6M14.4 20a4.6 4.6 0 0 0 1.6-8.9"/></symbol>
+<symbol id="i-calcheck" viewBox="0 0 24 24"><rect x="3.4" y="5.4" width="17.2" height="15.2" rx="2.6"/><path d="M3.4 10h17.2M8 3.4v4M16 3.4v4M9 15.4l2.2 2.2 4-4.2"/></symbol>
+<symbol id="i-calstar" viewBox="0 0 24 24"><rect x="3.4" y="5.4" width="17.2" height="15.2" rx="2.6"/><path d="M3.4 10h17.2M8 3.4v4M16 3.4v4"/><path d="m12 12.6 1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z"/></symbol>
+<symbol id="i-gem" viewBox="0 0 24 24"><path d="M7.4 3.6h9.2l4 5.6L12 20.4 3.4 9.2z"/><path d="M3.4 9.2h17.2M7.4 3.6 9.6 9.2 12 20.4 14.4 9.2l2.2-5.6M9.6 9.2h4.8"/></symbol>
+<symbol id="i-sunrise" viewBox="0 0 24 24"><path d="M2.6 19.4h18.8M5.6 15.6h12.8M12 3.4v4M5.6 6.4 7.8 8.6M18.4 6.4 16.2 8.6"/><path d="M7.6 15.6a4.4 4.4 0 0 1 8.8 0"/></symbol>
+<symbol id="i-headphones" viewBox="0 0 24 24"><path d="M4.4 15.4v-3a7.6 7.6 0 0 1 15.2 0v3"/><path d="M4.4 14.4h2a1.6 1.6 0 0 1 1.6 1.6v2.6a1.6 1.6 0 0 1-1.6 1.6h-.8a2.4 2.4 0 0 1-2.4-2.4v-2a1.4 1.4 0 0 1 1.2-1.4zM19.6 14.4h-2a1.6 1.6 0 0 0-1.6 1.6v2.6a1.6 1.6 0 0 0 1.6 1.6h.8a2.4 2.4 0 0 0 2.4-2.4v-2a1.4 1.4 0 0 0-1.2-1.4z"/></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><rect x="3" y="4.6" width="18" height="14.8" rx="3"/><path d="M8.2 4.6v2.4h7.6V4.6"/><circle cx="12" cy="13.4" r="3.8"/><path d="m12 13.4 2.4-2.4"/></symbol>
+<symbol id="i-userplus" viewBox="0 0 24 24"><circle cx="9.4" cy="8" r="3.4"/><path d="M2.6 20a6.8 6.8 0 0 1 13.6 0"/><path d="M18.4 6.6v6M21.4 9.6h-6"/></symbol>
+<symbol id="i-claw" viewBox="0 0 24 24"><path d="M5.4 3.6c1.2 4.4 3.4 10.2 6.6 17M11 3c.4 4.6 1.4 10.6 3 17.6M16.6 4.4c-.4 4-.2 9.4.4 15.8"/></symbol>
+<symbol id="i-sword" viewBox="0 0 24 24"><path d="M13.4 2.6h3.4v3.4L9 13.8l-3.4-3.4z"/><path d="m7.4 12.2-2.8 2.8 4.4 4.4 2.8-2.8M3.4 16.4l4.2 4.2M6 13.6 2.6 17M17.6 6l2.8-2.8"/></symbol>
+<symbol id="i-chevron1" viewBox="0 0 24 24"><path d="M4.4 15.6 12 8.4l7.6 7.2"/></symbol>
+<symbol id="i-chevron2" viewBox="0 0 24 24"><path d="M4.4 12.6 12 5.4l7.6 7.2M4.4 18.6 12 11.4l7.6 7.2"/></symbol>
+<symbol id="i-chevron3" viewBox="0 0 24 24"><path d="M4.4 9.6 12 3.4l7.6 6.2M4.4 14.6 12 8.4l7.6 6.2M4.4 19.6 12 13.4l7.6 6.2"/></symbol>
+<symbol id="i-shaker" viewBox="0 0 24 24"><path d="M7 7.6h10l-.8 12.2a1.4 1.4 0 0 1-1.4 1.2H9.2a1.4 1.4 0 0 1-1.4-1.2z"/><path d="M6.4 4.4h11.2v3.2H6.4zM8 11.6h8M7.7 15.6h8.6"/></symbol>
+<symbol id="i-flask" viewBox="0 0 24 24"><path d="M9.6 3.4v6.2L4.8 18a2.2 2.2 0 0 0 1.9 3.4h10.6a2.2 2.2 0 0 0 1.9-3.4l-4.8-8.4V3.4"/><path d="M8.4 3.4h7.2M6.9 14.6h10.2"/></symbol>
+<symbol id="i-fish" viewBox="0 0 24 24"><path d="M2.6 12c3-4 6.4-6 10.2-6 3.4 0 6.2 1.6 8.6 4.8-2.4 3.2-5.2 4.8-8.6 4.8-3.8 0-7.2-2-10.2-3.6z"/><path d="m2.6 12 3.6 5.4.4-3.9M16.2 10.4v.1"/></symbol>
+<symbol id="i-crystal" viewBox="0 0 24 24"><path d="M12 2.6 19.4 8v8L12 21.4 4.6 16V8z"/><path d="M12 8.4 15.6 11v4L12 17.6 8.4 15v-4z"/></symbol>
+<symbol id="i-leaf" viewBox="0 0 24 24"><path d="M19.4 4.6c0 8.2-3.8 13-9.4 13a5.6 5.6 0 0 1-5.6-5.6c0-5.4 5-7.4 15-7.4z"/><path d="M4.6 20.4C7.4 13.6 11.8 9 17 6.6"/></symbol>
+<symbol id="i-sprout" viewBox="0 0 24 24"><path d="M12 20.6v-7.2M12 13.4C12 9.6 9 6.6 5.2 6.6c0 3.8 3 6.8 6.8 6.8z"/><path d="M12 13.4c0-3.4 2.8-6.2 6.2-6.2 0 3.4-2.8 6.2-6.2 6.2z"/><path d="M7.6 20.6h8.8"/></symbol>
+<symbol id="i-plug" viewBox="0 0 24 24"><path d="M8.6 2.6v5.2M15.4 2.6v5.2M5.8 7.8h12.4v3.4a6.2 6.2 0 0 1-6.2 6.2 6.2 6.2 0 0 1-6.2-6.2z"/><path d="M12 17.4v4"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><rect x="2.6" y="6.6" width="18.8" height="13.4" rx="2.6"/><circle cx="12" cy="13.2" r="4"/><path d="M8.4 6.6 9.8 4h4.4l1.4 2.6"/></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3.4 8.2V5.6a2.2 2.2 0 0 1 2.2-2.2h2.6M15.8 3.4h2.6a2.2 2.2 0 0 1 2.2 2.2v2.6M20.6 15.8v2.6a2.2 2.2 0 0 1-2.2 2.2h-2.6M8.2 20.6H5.6a2.2 2.2 0 0 1-2.2-2.2v-2.6"/><path d="M6.6 12h10.8"/></symbol>
 </defs></svg>
 <div id="app">
   <header id="topbar">
@@ -859,9 +954,59 @@ var tint = function(hex,a){
 /* style de la tuile d'emoji, teintée à la couleur de l'habitude */
 var tileStyle = function(color){
   var bg=tint(color,.16), bd=tint(color,.34);
-  return bg ? ' style="background:'+bg+';border-color:'+bd+'"' : '';
+  /* le dessin hérite de la couleur du texte : on la pose ici, et la tuile
+     devient une icône colorée sur un fond teinté de la même couleur. */
+  return bg ? ' style="background:'+bg+';border-color:'+bd+';color:'+color+'"' : '';
 };
 var ic = function(name,cls){ return '<svg class="ic'+(cls?' '+cls:'')+'" aria-hidden="true"><use href="#i-'+name+'"></use></svg>'; };
+
+/* ------------------------------------------------- des emojis aux dessins */
+/* Les icônes choisies avant le passage au dessin sont rangées telles quelles
+   dans les données, et peuvent revenir d'un autre téléphone par la sauvegarde.
+   Plutôt qu'une conversion définitive, on traduit à l'affichage : une table
+   unique, consultée partout, et un emoji inconnu retombe sur un dessin neutre
+   au lieu de disparaître. */
+var ICO_EMOJI = {
+  '🏋️':'dumbbell','🏃':'run','🍗':'meal','🧴':'bottle','💧':'drop','📚':'books','🧘':'lotus',
+  '🛏️':'bed','🚿':'shower','💊':'pill','🥗':'salad','🚭':'nosmoke','✍️':'edit','🧹':'broom',
+  '☎️':'phone','💻':'laptop','🎸':'guitar','🐕':'paw','🦷':'tooth','☀️':'sun','🧠':'brain','💰':'wallet',
+  '🦵':'leg','💪':'dumbbell','🤸':'stretch','🥊':'glove','🚴':'bike','🏊':'swim','🧗':'climb',
+  '⚡':'bolt','🔥':'fire','🦍':'shield','🐺':'fauve','🏆':'trophy','🤾':'heart','⛹️':'abs',
+  '🦁':'fauve','👑':'crown','😈':'skull','🤖':'gear','⭐':'star','🌟':'star',
+  '😫':'face1','😕':'face2','😐':'face3','🙂':'face4',
+  '🎯':'target','💯':'hundred','🏔️':'mountain','🥇':'medal','🏅':'medals','🗓️':'calstar',
+  '🐉':'claw','💎':'gem','🌅':'sunrise','🌙':'moon','📆':'calcheck','🎧':'headphones','🎬':'bolt',
+  '📓':'book','⚖️':'scale','📉':'stats','🤝':'userplus','👥':'users',
+  '🐣':'chevron1','🐤':'chevron2','🪖':'chevron3','🎖️':'medal','⚔️':'sword','🛡️':'shield',
+  '🗿':'mountain','🐅':'fauve','👹':'skull',
+  '🥛':'shaker','⚗️':'flask','🐟':'fish','🧂':'crystal','🌱':'sprout','🍽️':'meal','📲':'phone',
+  '✅':'check','⚠️':'alert','🔔':'bell','🔕':'bell','📨':'arrow','🙃':'face2','👌':'check',
+  '🔑':'lock','📴':'plug','🔌':'plug','🎨':'palette','⛰️':'mountain','🏁':'flag','🚩':'flag',
+  '👋':'close','🤷':'face3','📨':'arrow','💬':'book','📸':'camera','🥊':'glove','📋':'habits',
+  '🔒':'lock','📅':'day','🔢':'hundred','✏️':'edit','🍎':'apple',
+  '❌':'close','🗑️':'trash','🔄':'repeat','↩︎':'undo','🔗':'copy',
+  '📥':'save','👍':'check','ℹ️':'alert','⏱':'timer','☁️':'cloud',
+  '👤':'profile','👊':'fist','💯':'hundred','🔓':'lock','🔁':'repeat',
+  '🥇':'medal','🥈':'medal','🥉':'medal','👇':'down','😄':'face4'
+};
+var SPRITE_IDS = null;
+function connuIcone(n){
+  if(SPRITE_IDS === null){
+    var m = {}, vu = 0;
+    try{ $$('#sprite symbol').forEach(function(y){ m[y.id.slice(2)] = true; vu++; }); }catch(e){}
+    if(!vu) return false;              /* planche pas encore lue : on ne fige rien */
+    SPRITE_IDS = m;
+  }
+  return !!SPRITE_IDS[n];
+}
+function icoDe(v, defaut){
+  v = String(v || '');
+  if(ICO_EMOJI[v]) return ICO_EMOJI[v];
+  if(v && connuIcone(v)) return v;
+  return defaut || 'star';
+}
+/* Un dessin à la place d'un emoji, à la taille que lui donne son conteneur. */
+function ico(v, defaut){ return ic(icoDe(v, defaut)); }
 var uid = function(){ return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); };
 var clamp = function(v,a,b){ return v<a?a:(v>b?b:v); };
 
@@ -889,7 +1034,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v12 · 2026-09-16';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v13 · 2026-09-17';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 3;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -929,28 +1074,28 @@ var QUOTES = [
    Repère : une bonne journée pèse 50 à 60 points. Les premiers rangs tombent
    en quelques jours pour lancer la machine, le dernier se mérite. */
 var RANKS = [
-  {xp:0,     n:'Recrue',      e:'🐣'},
-  {xp:250,   n:'Apprenti',    e:'🐤'},
-  {xp:750,   n:'Soldat',      e:'🪖'},
-  {xp:1800,  n:'Vétéran',     e:'🎖️'},
-  {xp:3500,  n:'Guerrier',    e:'⚔️'},
-  {xp:6000,  n:'Gladiateur',  e:'🛡️'},
-  {xp:9500,  n:'Machine',     e:'🤖'},
-  {xp:14000, n:'Titan',       e:'🗿'},
-  {xp:20000, n:'Inarrêtable', e:'🔥'},
-  {xp:28000, n:'Fauve',       e:'🐅'},
-  {xp:38000, n:'Monstre',     e:'👹'},
-  {xp:50000, n:'Légende',     e:'👑'}
+  {xp:0,     n:'Recrue',      e:'chevron1'},
+  {xp:250,   n:'Apprenti',    e:'chevron2'},
+  {xp:750,   n:'Soldat',      e:'chevron3'},
+  {xp:1800,  n:'Vétéran',     e:'medal'},
+  {xp:3500,  n:'Guerrier',    e:'sword'},
+  {xp:6000,  n:'Gladiateur',  e:'shield'},
+  {xp:9500,  n:'Machine',     e:'gear'},
+  {xp:14000, n:'Titan',       e:'mountain'},
+  {xp:20000, n:'Inarrêtable', e:'fire'},
+  {xp:28000, n:'Fauve',       e:'fauve'},
+  {xp:38000, n:'Monstre',     e:'claw'},
+  {xp:50000, n:'Légende',     e:'crown'}
 ];
 
-var AVATARS = ['💪','🔥','🥊','🏋️','🏃','🐺','🦁','👑','😈','🤖'];
+var AVATARS = ['dumbbell','fire','glove','barbell','run','fauve','claw','crown','skull','gear'];
 var COLORS  = ['#3B82F6','#34D399','#FBBF24','#A78BFA','#F472B6','#22D3EE'];
-var EMOJIS  = ['🏋️','🏃','🍗','🧴','💧','📚','🧘','🛏️','🚿','💊','🥗','🚭','✍️','🧹','☎️','💻','🎸','🐕','🦷','☀️','🧠','💰'];
-var EMOSPORT= ['🏋️','🦵','💪','🏃','🤸','🥊','🚴','🏊','🧗','⚡','🔥','🦍','🐺','🏆','🤾','⛹️'];
-var MOODS   = ['😫','😕','😐','🙂','🔥'];
+var EMOJIS  = ['dumbbell','run','meal','bottle','drop','books','lotus','bed','shower','pill','salad','nosmoke','edit','broom','phone','laptop','guitar','paw','tooth','sun','brain','wallet'];
+var EMOSPORT= ['dumbbell','leg','barbell','run','stretch','glove','bike','swim','climb','bolt','fire','pullup','fauve','trophy','abs','heart'];
+var MOODS   = ['face1','face2','face3','face4','face5'];
 
 var DEFAULTS = [
-  {name:'Haut du corps',     emoji:'🏋️', time:'18:00', type:'rec', days:[1,3,5],           color:'#3B82F6',
+  {name:'Haut du corps',     emoji:'barbell', time:'18:00', type:'rec', days:[1,3,5],           color:'#3B82F6',
    steps:[], kind:'seance', exos:[
      {x:'tractions',  s:3, r:8,  w:0, rest:120},
      {x:'pompes',     s:3, r:15, w:0, rest:75},
@@ -958,48 +1103,48 @@ var DEFAULTS = [
      {x:'rowinv',     s:3, r:12, w:0, rest:90},
      {x:'gainage',    s:3, r:45, w:0, rest:60},
      {x:'relevjambes',s:3, r:12, w:0, rest:90}]},
-  {name:'Bas du corps',      emoji:'🦵', time:'18:00', type:'rec', days:[2,5],             color:'#A78BFA',
+  {name:'Bas du corps',      emoji:'leg', time:'18:00', type:'rec', days:[2,5],             color:'#A78BFA',
    steps:[], kind:'seance', exos:[
      {x:'squat',      s:4, r:15, w:0, rest:120},
      {x:'fentes',     s:3, r:12, w:0, rest:90},
      {x:'squatbulg',  s:3, r:10, w:0, rest:120},
      {x:'mollets',    s:3, r:20, w:0, rest:60},
      {x:'chaise',     s:2, r:45, w:0, rest:90}]},
-  {name:'Cardio',            emoji:'🏃', time:'08:00', type:'rec', days:[4],               color:'#22D3EE',
+  {name:'Cardio',            emoji:'run', time:'08:00', type:'rec', days:[4],               color:'#22D3EE',
    steps:[], kind:'seance', exos:[
      {x:'course',     s:1, r:25, w:0, rest:0},
      {x:'corde',      s:3, r:3,  w:0, rest:60}]},
-  {name:'Préparer à manger', emoji:'🍗', time:'12:00', type:'rec', days:[0,1,2,3,4,5,6],   color:'#A78BFA',
+  {name:'Préparer à manger', emoji:'meal', time:'12:00', type:'rec', days:[0,1,2,3,4,5,6],   color:'#A78BFA',
    steps:['Choisir protéine + féculent + légumes','Cuisiner','Prévoir la portion suivante']},
-  {name:'Skincare',          emoji:'🧴', time:'22:00', type:'rec', days:[0,1,2,3,4,5,6],   color:'#34D399',
+  {name:'Skincare',          emoji:'bottle', time:'22:00', type:'rec', days:[0,1,2,3,4,5,6],   color:'#34D399',
    steps:['Nettoyant doux','Sérum','Crème hydratante']}
 ];
 
 var BADGES = [
-  {id:'b1',  e:'🎯', n:'Première tâche',   d:'Valider une première tâche'},
-  {id:'b2',  e:'💯', n:'Journée parfaite', d:'100% des tâches sur une journée'},
-  {id:'b3',  e:'🔥', n:'Série de 7',       d:'7 jours parfaits d’affilée'},
-  {id:'b4',  e:'🏆', n:'Série de 30',      d:'30 jours parfaits d’affilée'},
-  {id:'b5',  e:'🏔️', n:'Série de 100',     d:'100 jours parfaits d’affilée'},
-  {id:'b6',  e:'🥇', n:'Semaine à 100%',   d:'Une semaine complète sans rater'},
-  {id:'b7',  e:'🏅', n:'4 semaines pleines',d:'Quatre semaines à 100%'},
-  {id:'b8',  e:'🗓️', n:'30 jours parfaits',d:'Trente journées à 100%, en tout'},
-  {id:'b9',  e:'💪', n:'100 tâches',       d:'100 tâches validées au total'},
-  {id:'b10', e:'🦁', n:'500 tâches',       d:'500 tâches validées au total'},
-  {id:'b11', e:'🐉', n:'1000 tâches',      d:'1000 tâches validées au total'},
-  {id:'b12', e:'💎', n:'10 000 XP',        d:'Cumuler 10 000 points d’expérience'},
-  {id:'b13', e:'🌅', n:'10 avant 9h',      d:'10 tâches validées avant 9h'},
-  {id:'b14', e:'☀️', n:'50 avant 9h',      d:'50 tâches validées avant 9h'},
-  {id:'b15', e:'🌙', n:'20 après 22h',     d:'20 tâches validées après 22h'},
-  {id:'b16', e:'📆', n:'100 jours actifs', d:'100 jours avec au moins une tâche'},
-  {id:'b17', e:'🎧', n:'10 sessions focus',d:'Lancer 10 fois le mode focus'},
-  {id:'b18', e:'🎬', n:'50 sessions focus',d:'Lancer 50 fois le mode focus'},
-  {id:'b19', e:'📓', n:'7 notes',          d:'7 notes de journal d’affilée'},
-  {id:'b20', e:'✍️', n:'30 notes',         d:'Trente notes de journal en tout'},
-  {id:'b21', e:'⚖️', n:'4 pesées',         d:'Noter son poids 4 fois'},
-  {id:'b22', e:'📉', n:'30 pesées',        d:'Noter son poids trente fois'},
-  {id:'b23', e:'🤝', n:'1 ami',            d:'Ajouter un ami au classement'},
-  {id:'b24', e:'👥', n:'5 amis',           d:'Cinq amis dans ton classement'}
+  {id:'b1',  e:'target', n:'Première tâche',   d:'Valider une première tâche'},
+  {id:'b2',  e:'hundred', n:'Journée parfaite', d:'100% des tâches sur une journée'},
+  {id:'b3',  e:'fire', n:'Série de 7',       d:'7 jours parfaits d’affilée'},
+  {id:'b4',  e:'trophy', n:'Série de 30',      d:'30 jours parfaits d’affilée'},
+  {id:'b5',  e:'mountain', n:'Série de 100',     d:'100 jours parfaits d’affilée'},
+  {id:'b6',  e:'medal', n:'Semaine à 100%',   d:'Une semaine complète sans rater'},
+  {id:'b7',  e:'medals', n:'4 semaines pleines',d:'Quatre semaines à 100%'},
+  {id:'b8',  e:'calstar', n:'30 jours parfaits',d:'Trente journées à 100%, en tout'},
+  {id:'b9',  e:'dumbbell', n:'100 tâches',       d:'100 tâches validées au total'},
+  {id:'b10', e:'fauve', n:'500 tâches',       d:'500 tâches validées au total'},
+  {id:'b11', e:'claw', n:'1000 tâches',      d:'1000 tâches validées au total'},
+  {id:'b12', e:'gem', n:'10 000 XP',        d:'Cumuler 10 000 points d’expérience'},
+  {id:'b13', e:'sunrise', n:'10 avant 9h',      d:'10 tâches validées avant 9h'},
+  {id:'b14', e:'sun', n:'50 avant 9h',      d:'50 tâches validées avant 9h'},
+  {id:'b15', e:'moon', n:'20 après 22h',     d:'20 tâches validées après 22h'},
+  {id:'b16', e:'calcheck', n:'100 jours actifs', d:'100 jours avec au moins une tâche'},
+  {id:'b17', e:'headphones', n:'10 sessions focus',d:'Lancer 10 fois le mode focus'},
+  {id:'b18', e:'play', n:'50 sessions focus',d:'Lancer 50 fois le mode focus'},
+  {id:'b19', e:'book', n:'7 notes',          d:'7 notes de journal d’affilée'},
+  {id:'b20', e:'edit', n:'30 notes',         d:'Trente notes de journal en tout'},
+  {id:'b21', e:'scale', n:'4 pesées',         d:'Noter son poids 4 fois'},
+  {id:'b22', e:'stats', n:'30 pesées',        d:'Noter son poids trente fois'},
+  {id:'b23', e:'userplus', n:'1 ami',            d:'Ajouter un ami au classement'},
+  {id:'b24', e:'users', n:'5 amis',           d:'Cinq amis dans ton classement'}
 ];
 
 /* ========================================================================= */
@@ -1145,14 +1290,14 @@ function poserAccent(){
 
 /* ------------------------------------------------------------ compléments */
 var SUPPL = [
-  {id:'whey',  n:'Whey',          e:'🥛'},
-  {id:'crea',  n:'Créatine',      e:'⚗️'},
-  {id:'multi', n:'Multivitamines',e:'💊'},
-  {id:'omega', n:'Oméga-3',       e:'🐟'},
-  {id:'magne', n:'Magnésium',     e:'🧂'},
-  {id:'vitd',  n:'Vitamine D',    e:'☀️'},
-  {id:'prew',  n:'Pré-workout',   e:'⚡'},
-  {id:'prot',  n:'Protéine végétale', e:'🌱'}
+  {id:'whey',  n:'Whey',          e:'shaker'},
+  {id:'crea',  n:'Créatine',      e:'flask'},
+  {id:'multi', n:'Multivitamines',e:'pill'},
+  {id:'omega', n:'Oméga-3',       e:'fish'},
+  {id:'magne', n:'Magnésium',     e:'crystal'},
+  {id:'vitd',  n:'Vitamine D',    e:'sun'},
+  {id:'prew',  n:'Pré-workout',   e:'bolt'},
+  {id:'prot',  n:'Protéine végétale', e:'sprout'}
 ];
 function supplDuJour(key){ return (state.suppl[key]||[]).slice(); }
 function toggleSuppl(key,id){
@@ -1321,7 +1466,7 @@ function defaults(){
     log:{},      /* 'YYYY-MM-DD' -> { habitId:{done,steps[],pts,doneAt} }  */
     mood:{}, notes:{}, weight:{},
     focus:0,
-    profile:{ id:uid(), name:'Moi', avatar:'💪' },
+    profile:{ id:uid(), name:'Moi', avatar:'dumbbell' },
     friends:[], pendingDrop:[], syncAt:0,
     account:null,   /* {uid, name, picture, token} — local, ne part jamais sur le serveur */
     cloudAt:0,      /* horodatage de la dernière sauvegarde acceptée */
@@ -1400,6 +1545,7 @@ function load(){
   }
 }
 function save(){
+  calCache = null;                    /* les données ont bougé : la mesure est à refaire */
   try{ localStorage.setItem(LS, JSON.stringify(state)); }
   catch(e){ toast('Sauvegarde impossible (stockage plein ou navigation privée)','⚠️'); }
   if(typeof cloudSave==='function' && logged()) cloudSave(false);   /* différée */
@@ -1737,7 +1883,7 @@ function carnet(from, to){
       if(!jour[id].done || !jour[id].sea) continue;
       var h = habitById(id);
       out.push({ key: key, id: id, sea: jour[id].sea, at: jour[id].doneAt || '',
-                 nom: (h && h.name) || 'Séance', emoji: (h && h.emoji) || '🏋️',
+                 nom: (h && h.name) || 'Séance', emoji: (h && h.emoji) || 'dumbbell',
                  color: (h && h.color) || COLORS[0] });
     }
   }
@@ -1835,14 +1981,14 @@ function fraisDabord(){
    dépense du jour vient des séances réellement inscrites au carnet. C'est une
    estimation, l'écran le dit. */
 var ACTIVITES = [
-  {id:'assis',  n:'Assis',       d:'Bureau, peu de marche',        k:1.15},
-  {id:'debout', n:'Debout',      d:'Métier actif, marche',         k:1.30},
-  {id:'dur',    n:'Physique',    d:'Chantier, manutention',        k:1.45}
+  {id:'assis',  n:'Assis',       d:'Bureau, voiture, peu de marche',   k:1.25},
+  {id:'debout', n:'Debout',      d:'Serveur, vendeur, beaucoup de marche', k:1.45},
+  {id:'dur',    n:'Physique',    d:'Chantier, manutention, déménagement',  k:1.65}
 ];
 var OBJECTIFS = [
-  {id:'seche', n:'Sèche',   k:-.20, prot:2.0},
+  {id:'seche', n:'Sèche',    k:-.18, prot:2.0},
   {id:'maint', n:'Maintien', k:0,    prot:1.7},
-  {id:'prise', n:'Prise',   k:+.12, prot:1.9}
+  {id:'prise', n:'Prise',    k:+.12, prot:1.9}
 ];
 function objectif(){
   var id=(state.body&&state.body.obj)||'maint';
@@ -1867,31 +2013,165 @@ function metabolismeRepos(){
 function coefActivite(){
   var id=(state.body&&state.body.act)||'assis';
   for(var i=0;i<ACTIVITES.length;i++) if(ACTIVITES[i].id===id) return ACTIVITES[i].k;
-  return 1.15;
+  return ACTIVITES[0].k;
 }
-/* La dépense des séances du jour. Une séance de force tourne autour de
-   8 kcal par minute, du cardio plutôt 10 ; à défaut de durée mesurée on
-   compte 45 secondes d'effort plus le repos prévu par série. */
-function depenseSeances(key){
-  var total=0;
-  carnet(key,key).forEach(function(sn){
-    var st=statSeance(sn.sea);
-    if(!st.series && !sn.sea.d) return;           /* rien à estimer */
-    var min = sn.sea.d ? sn.sea.d/60
-                       : (st.series*45 + st.secs)/60 + st.series*1.2;
-    var cardio = (sn.sea.x||[]).some(function(ex){ return exoOr(ex.i).u==='min'; });
-    total += min * (cardio?10:8);
+
+/* ------------------------------------------------- ce que coûte une séance
+   Un MET, c'est la dépense au repos ; six MET, c'est six fois plus. Les
+   valeurs viennent du Compendium of Physical Activities (Ainsworth 2011), la
+   table que tout le monde utilise pour ça. On s'arrête à la famille : prétendre
+   distinguer un curl d'un rowing donnerait une fausse précision, personne ne
+   pousse deux séries de la même manière.
+
+   Deux corrections par rapport à la version précédente, qui comptait 8 à
+   10 kcal par minute pour tout le monde :
+     · le poids de corps entre dans le calcul — à effort égal, 95 kg dépense
+       bien plus que 60 kg, et une constante ne peut pas le savoir ;
+     · on retire un MET. Ces minutes-là sont déjà comptées dans le métabolisme
+       de la journée ; les compter deux fois gonflait une grosse séance de
+       200 à 300 kcal, et c'est précisément ce genre d'erreur qui fait qu'on
+       « mange ce qu'on a brûlé » sans jamais bouger sur la balance. */
+var MET_EXO      = { course:9.0, corde:11.8, velo:7.5, rameur:7.0, burpees:8.0,
+                     montclim:8.0, muscleup:8.0, suspension:3.0 };
+var MET_CHARGE   = 5.0;   /* fonte : développé, squat, curl…                  */
+var MET_CORPS    = 6.0;   /* traction, pompe, dip : tout le corps se déplace  */
+var MET_ISO      = 4.0;   /* gainage, hollow : on tient, on ne bouge pas      */
+var MET_CARDIO   = 7.5;   /* une minute de souffle, à défaut de mieux         */
+var MET_LIBRE    = 5.0;   /* « autre chose » : une séance moyenne, sans plus */
+var SEC_PAR_REP  = 3;     /* une répétition propre, descente comprise         */
+var REPOS_MAX    = 180;   /* au-delà de trois minutes, on discute, on ne s'entraîne plus */
+function metDe(x){
+  if(MET_EXO[x.id]) return MET_EXO[x.id];
+  if(x.u === 'min') return MET_CARDIO;
+  if(x.u === 'sec') return MET_ISO;
+  return (x.eq==='halt' || x.eq==='barbell' || x.eq==='elast') ? MET_CHARGE : MET_CORPS;
+}
+function kcalMin(met, kg){ return Math.max(0, met-1) * 3.5 * kg / 200; }
+
+/* Un point qui se trompe facilement : les valeurs du Compendium se rapportent
+   à la séance entière, repos entre les séries compris — pas aux seules secondes
+   sous la barre. Ne compter que le temps sous tension donnerait quarante
+   calories pour une séance d'une heure, ce qui n'a aucun sens : entre deux
+   séries le cœur reste haut, et c'est déjà dans le chiffre.
+   On déduit donc le mélange d'exercices du temps d'effort, puis on applique ce
+   mélange à toute la durée de la séance. */
+function depenseSeance(sea){
+  var kg = dernierPoids();
+  if(!kg || !sea) return 0;
+  var minEffort = 0, minRepos = 0, metPondere = 0;
+  (sea.x || []).forEach(function(ex){
+    var x = exoOr(ex.i), met = metDe(x), min = 0;
+    (ex.s || []).forEach(function(st){
+      var v = +st.r || 0;
+      if(x.u === 'min')      min += v;
+      else if(x.u === 'sec') min += v / 60;
+      else                   min += v * SEC_PAR_REP / 60;
+      minRepos += Math.min(ex.rest != null ? +ex.rest : (x.r || 60), REPOS_MAX) / 60;
+    });
+    minEffort += min; metPondere += min * met;
   });
+  var met = minEffort ? metPondere / minEffort : MET_LIBRE;
+  /* Une durée mesurée vaut mieux qu'une durée devinée. */
+  var minutes = (+sea.d > 0) ? +sea.d / 60 : minEffort + minRepos;
+  return Math.round(minutes * kcalMin(met, kg));
+}
+function depenseSeances(key){
+  var total = 0;
+  carnet(key, key).forEach(function(sn){ total += depenseSeance(sn.sea); });
   return Math.round(total);
 }
+
+/* ------------------------------------------------------- calibrage réel
+   Mifflin-St Jeor est une moyenne : à poids, taille et âge identiques, deux
+   personnes peuvent avoir trois cents calories d'écart, et aucune formule ne
+   le voit. La seule mesure honnête est la tienne — ce que tu manges, et ce que
+   la balance en fait.
+
+   Un kilo de corps vaut environ 7 700 kcal. Si sur trois semaines tu manges
+   2 600 kcal par jour et que tu prends 400 g, ton vrai besoin est de
+   2 600 − (0,4 × 7 700 / 21) ≈ 2 453.
+
+   On ne compare pas la première pesée à la dernière : l'eau d'une seule
+   journée suffirait à tout renverser. On prend la pente de toutes les pesées
+   de la fenêtre, au moindre carré. */
+var KCAL_PAR_KG   = 7700;
+var CAL_FENETRE   = 28;     /* on regarde quatre semaines en arrière          */
+var CAL_JOURS_MIN = 14;     /* moins de deux semaines, c'est du bruit         */
+var CAL_PESEES_MIN= 4;
+var CAL_MAX       = 600;    /* garde-fou : au-delà, c'est le carnet qui ment  */
+
+function penteKgJour(pts){
+  var n=pts.length, sx=0, sy=0, sxy=0, sxx=0, i;
+  if(n < 2) return null;
+  for(i=0;i<n;i++){ sx+=pts[i].j; sy+=pts[i].kg; sxy+=pts[i].j*pts[i].kg; sxx+=pts[i].j*pts[i].j; }
+  var d = n*sxx - sx*sx;
+  return d ? (n*sxy - sx*sy)/d : 0;
+}
+/* Quatre semaines à parcourir, et chaque journée relit tout le carnet : c'est
+   trop cher pour le refaire à chaque rendu. On garde le résultat jusqu'au
+   prochain save(), qui est le seul moment où il peut changer. */
+var calCache = null;
+function calibrage(fin){
+  var repos = metabolismeRepos();
+  if(!repos) return null;
+  fin = fin || today();
+  if(calCache && calCache.k === fin) return calCache.v;
+  var d0 = addDays(fromKey(fin), -(CAL_FENETRE-1));
+  var pesees=[], apports=[], sport=0, i, k, r;
+  for(i=0;i<CAL_FENETRE;i++){
+    k = dk(addDays(d0, i));
+    if(state.weight[k] != null) pesees.push({ j:i, kg:+state.weight[k] });
+    /* Une journée à moitié notée ressemble à une journée légère, et rien ne
+       permet de les distinguer. On écarte celles qui tombent sous 60 % du
+       repos : personne ne vit à ce régime, c'est un carnet incomplet. */
+    r = totalRepas(k).kcal;
+    if(r >= repos*0.6) apports.push(r);
+    sport += depenseSeances(k);
+  }
+  var garde = function(v){ calCache = { k:fin, v:v }; return v; };
+  if(pesees.length < CAL_PESEES_MIN || apports.length < CAL_JOURS_MIN) {
+    return garde({ ok:false, pesees:pesees.length, notes:apports.length });
+  }
+  var etendue = pesees[pesees.length-1].j - pesees[0].j;
+  if(etendue < CAL_JOURS_MIN) return garde({ ok:false, pesees:pesees.length, notes:apports.length });
+
+  var moyen = apports.reduce(function(a,b){ return a+b; }, 0) / apports.length;
+  var mesure = moyen - penteKgJour(pesees) * KCAL_PAR_KG;
+  /* La mesure englobe les séances de la fenêtre : on la compare donc à ce que
+     la formule prévoyait sur la même fenêtre, séances comprises, et on ne
+     garde que l'écart. Le besoin du jour reste ainsi sensible à la séance
+     d'aujourd'hui, tout en étant recalé sur ton métabolisme à toi. */
+  var prevu  = Math.round(repos*coefActivite()) + sport/CAL_FENETRE;
+  var ecart  = clamp(Math.round(mesure - prevu), -CAL_MAX, CAL_MAX);
+  return garde({ ok:true, kcal:Math.round(mesure), ecart:ecart, prevu:Math.round(prevu),
+                 pesees:pesees.length, notes:apports.length, jours:etendue+1 });
+}
+/* L'écart appliqué au besoin du jour : mesuré si on l'a et si tu l'acceptes. */
+function ecartPerso(){
+  var b = state.body || {};
+  if(b.cal === false) return 0;
+  var c = calibrage();
+  return (c && c.ok) ? c.ecart : 0;
+}
+
 function besoinDuJour(key){
   var repos=metabolismeRepos();
   if(!repos) return null;
-  var vie=Math.round(repos*coefActivite()), sport=depenseSeances(key||today());
-  var o=objectif(), brut=vie+sport;
+  var o=objectif(), sport=depenseSeances(key||today());
+  /* Un maintien tapé à la main court-circuite tout le calcul : on ne recale
+     pas un chiffre que quelqu'un a mesuré mieux que nous. */
+  var main=+(state.body&&state.body.kcal)||0;
+  var vie  = main>0 ? main : Math.round(repos*coefActivite());
+  var perso= main>0 ? 0    : ecartPerso();
+  var brut = vie + sport + perso;
+  var vise = Math.round(brut*(1+o.k));
+  /* Un objectif de sèche ne descend jamais sous le métabolisme de repos :
+     en dessous, ce n'est plus un déficit, c'est une carence. */
+  var plancher = o.k < 0 && vise < repos;
   return {
-    repos:repos, vie:vie, sport:sport,
-    kcal: Math.round(brut*(1+o.k)),
+    repos:repos, vie:vie, sport:sport, perso:perso, manuel:main>0,
+    brut:brut, plancher:plancher,
+    kcal: plancher ? repos : vise,
     prot: Math.round((dernierPoids()||0)*o.prot)
   };
 }
@@ -2019,9 +2299,14 @@ function marqueSensible(x){
 /*                              INTERFACE                                  */
 /* ======================================================================= */
 var toastT=null;
+/* Les appels à toast() passent encore un emoji : c'est la façon la plus courte
+   d'écrire « ça a marché » ou « attention » au fil du code. On le traduit ici, une
+   fois pour toutes, plutôt que de retoucher la centaine d'appels. */
+var TEINTE_ICO = { alert:'var(--gold)', check:'var(--ok)', fire:'var(--gold)' };
 function toast(msg,emoji){
-  var el=$('#toast');
-  el.innerHTML=(emoji?'<span>'+esc(emoji)+'</span>':'')+'<span>'+esc(msg)+'</span>';
+  var el=$('#toast'), nom=emoji?icoDe(emoji,'check'):'';
+  el.innerHTML=(nom?'<span class="ti"'+(TEINTE_ICO[nom]?' style="color:'+TEINTE_ICO[nom]+'"':'')+'>'+ic(nom)+'</span>':'')+
+               '<span>'+esc(msg)+'</span>';
   el.classList.add('on');
   clearTimeout(toastT);
   toastT=setTimeout(function(){ el.classList.remove('on'); },2400);
@@ -2108,13 +2393,13 @@ function taskCard(h,key,done){
     meta.push('<span class="num">'+(sx ? sx.series+' séries · '+(sx.reps||Math.round(sx.secs/60)+' min')
                                        : exosOf(h).length+' exercices')+'</span>');
   }
-  if(st>1)   meta.push('<span>🔥 '+st+' j</span>');
+  if(st>1)   meta.push('<span>'+ic('fire')+' '+st+' j</span>');
   if(done && e.doneAt) meta.push('<span class="grn num">'+esc(e.doneAt)+' · +'+(e.pts||10)+' pts</span>');
-  if(h.type==='once' && !done) meta.push('<span>⚡ aujourd\'hui</span>');
+  if(h.type==='once' && !done) meta.push('<span>'+ic('bolt')+' aujourd\'hui</span>');
   var sure = pendingDel===h.id;
   var pulse = (justDone===h.id) ? ' pulse' : '';
   return '<article class="card lift task'+(done?' done':'')+pulse+'" data-act="open" data-id="'+h.id+'">'+
-    '<span class="etile"'+tileStyle(h.color)+'><span class="emo">'+esc(h.emoji||'⭐')+'</span></span>'+
+    '<span class="etile"'+tileStyle(h.color)+'><span class="emo">'+ico(h.emoji,'star')+'</span></span>'+
     '<div class="tmain"><div class="tname">'+esc(h.name)+'</div>'+
       (meta.length?'<div class="tmeta">'+meta.join('')+'</div>':'')+'</div>'+
     '<div class="tright">'+
@@ -2144,14 +2429,14 @@ function viewPlan(){
   h+='<div class="sec"><h2>'+(avance?'Prévu demain':'Prévu aujourd\'hui')+'</h2>'+
      '<span>'+kept.length+'/'+all.length+' retenue'+(kept.length>1?'s':'')+'</span></div>';
   if(!all.length){
-    h+='<div class="card empty"><span class="e">🌱</span>Rien de prévu ce '+esc(DAYS[fromKey(key).getDay()])+'.<br>'+
+    h+='<div class="card empty"><span class="e">'+ic('sprout')+'</span>Rien de prévu ce '+esc(DAYS[fromKey(key).getDay()])+'.<br>'+
        'Crée une tâche avec <b>+</b>, ou valide une journée de repos.</div>';
   }else{
     h+='<div id="planlist">'+all.map(function(x){
       var on=!isOff(key,x.id);
       return '<article class="card lift pcard'+(on?' on':' off')+'" data-act="ptoggle" data-id="'+x.id+'">'+
         '<span class="pchk">'+ic('check')+'</span>'+
-        '<span class="etile"'+tileStyle(x.color)+'><span class="emo">'+esc(x.emoji||'⭐')+'</span></span>'+
+        '<span class="etile"'+tileStyle(x.color)+'><span class="emo">'+ico(x.emoji,'star')+'</span></span>'+
         '<div class="tmain"><div class="tname">'+esc(x.name)+'</div><div class="tmeta">'+
           '<span>'+(x.time?esc(x.time)+' · ':'')+esc(schedLabel(x))+'</span>'+
           ((x.steps||[]).length?'<span>'+x.steps.length+' étapes</span>':'')+
@@ -2198,7 +2483,7 @@ function carteSeance(){
   var out='<div class="sec"><h2>Prochaine séance</h2><span class="small">'+esc(quand)+'</span></div>'+
     '<section class="card pop">'+
     '<div class="row" style="gap:12px;align-items:flex-start">'+
-      '<span class="etile"'+tileStyle(h.color)+'><span class="emo">'+esc(h.emoji||'🏋️')+'</span></span>'+
+      '<span class="etile"'+tileStyle(h.color)+'><span class="emo">'+ico(h.emoji,'dumbbell')+'</span></span>'+
       '<div style="flex:1;min-width:0">'+
         '<h2 style="font-size:23px">'+esc(h.name)+'</h2>'+
         '<div class="small muted">'+(h.time?esc(h.time)+' · ':'')+l.length+' exercices · '+
@@ -2231,7 +2516,7 @@ function bougeToday(){
   out+= l.length ? l.map(function(h){
       var deja=isDone(key,h.id);
       return '<button class="pickrow" data-act="bougeok" data-id="'+h.id+'"'+(deja?' disabled style="opacity:.4"':'')+'>'+
-        '<span class="etile"'+tileStyle(h.color)+'><span class="emo">'+esc(h.emoji||'🏋️')+'</span></span>'+
+        '<span class="etile"'+tileStyle(h.color)+'><span class="emo">'+ico(h.emoji,'dumbbell')+'</span></span>'+
         '<span class="ei"><span class="pn">'+esc(h.name)+'</span><br><span class="pm">'+
         (deja?'déjà notée aujourd\'hui':exosOf(h).length+' exercices · '+setsPrevus(h)+' séries')+'</span></span></button>';
     }).join('') : '';
@@ -2256,7 +2541,7 @@ function bougeOk(id){
     }
     setDone(key,h,true);
   }else{
-    var libre={id:uid(), name:'Séance libre', emoji:'⚡', time:nowHM(), type:'once',
+    var libre={id:uid(), name:'Séance libre', emoji:'bolt', time:nowHM(), type:'once',
       days:[], date:key, color:COLORS[0], steps:[], kind:'seance', exos:[], createdAt:key};
     state.habits.push(libre);
     setDone(key,libre,true);
@@ -2280,7 +2565,7 @@ function viewJour(){
      '<h1>'+st.done+'/'+st.total+' tâche'+(st.total>1?'s':'')+'</h1>'+
      '<div class="chips">'+
        '<span class="chip"><b>+'+dayPoints(key)+'</b> pts du jour</span>'+
-       '<span class="chip">🔥 <b>'+globalBestStreak()+' j</b> meilleure série</span>'+
+       '<span class="chip">'+ic('fire')+' <b>'+globalBestStreak()+' j</b> meilleure série</span>'+
      '</div>'+
      '<button class="btn pri sm" data-act="gofocus">'+ic('bolt')+' Mode focus</button>'+
      '</div></section>';
@@ -2288,8 +2573,8 @@ function viewJour(){
   h+='<div class="sec"><h2>À faire</h2><span>'+todo.length+' restante'+(todo.length>1?'s':'')+'</span></div>';
   if(!todo.length){
     h+= hs.length
-      ? '<div class="card empty"><span class="e">🏆</span><b>Journée bouclée.</b><br>Tout est validé, respect.</div>'
-      : '<div class="card empty"><span class="e">🌱</span>Rien de prévu aujourd\'hui.<br>Appuie sur <b>+</b> pour créer une tâche.</div>';
+      ? '<div class="card empty"><span class="e">'+ic('trophy')+'</span><b>Journée bouclée.</b><br>Tout est validé, respect.</div>'
+      : '<div class="card empty"><span class="e">'+ic('sprout')+'</span>Rien de prévu aujourd\'hui.<br>Appuie sur <b>+</b> pour créer une tâche.</div>';
   } else h+=todo.map(function(x){ return taskCard(x,key,false); }).join('');
 
   if(done.length){
@@ -2318,15 +2603,18 @@ function stepSecs(txt){
   return m ? (+m[1])*60 : 0;
 }
 function openSheet(html){ $('#sheet').innerHTML='<div class="grab"></div>'+html; $('#modal').classList.add('open'); }
-function closeSheet(){ $('#modal').classList.remove('open'); openHabit=null; formData=null; }
+function closeSheet(){
+  if(typeof scanStop==='function') scanStop();
+  $('#modal').classList.remove('open'); openHabit=null; formData=null;
+}
 
 function renderSheet(){
   var h=openHabit; if(!h) return;
   var key=today(), e=ensure(key,h.id), steps=h.steps||[];
   var out='<div class="shead"><span class="etile"'+tileStyle(h.color)+
-    '><span class="emo">'+esc(h.emoji||'⭐')+'</span></span>'+
+    '><span class="emo">'+ico(h.emoji,'star')+'</span></span>'+
     '<div style="flex:1;min-width:0"><h2>'+esc(h.name)+'</h2><div class="muted small">'+
-      (h.time?esc(h.time)+' · ':'')+esc(schedLabel(h))+' · 🔥 '+streakOf(h)+' j'+
+      (h.time?esc(h.time)+' · ':'')+esc(schedLabel(h))+' · '+ic('fire')+' '+streakOf(h)+' j'+
       (bestStreakOf(h)>streakOf(h)?' (record '+bestStreakOf(h)+')':'')+'</div></div>'+
     '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>';
 
@@ -2346,7 +2634,7 @@ function renderSheet(){
     out+='<div class="muted small center" style="margin-bottom:4px">'+n+' / '+steps.length+' étapes'+
          (e.done?' · <span class="grn">validée à '+esc(e.doneAt||'')+' (+'+(e.pts||10)+' pts)</span>':'')+'</div>';
   }else{
-    out+='<div class="empty" style="padding:16px 0">Pas d\'étapes sur cette tâche.<br>Valide-la d\'un coup 👇</div>';
+    out+='<div class="empty" style="padding:16px 0">Pas d\'étapes sur cette tâche.<br>Valide-la d\'un coup '+ic('down')+'</div>';
   }
 
   out+='<div class="sactions">'+
@@ -2428,7 +2716,7 @@ function weekTable(){
       else if(key>=t)              tds+='<td class="na">'+ic('dot')+'</td>';
       else                         tds+='<td class="no">'+ic('close')+'</td>';
     }
-    return '<tr><td class="n">'+esc(h.emoji||'')+' '+esc(h.name)+'</td>'+tds+'</tr>';
+    return '<tr><td class="n">'+ico(h.emoji,'star')+' '+esc(h.name)+'</td>'+tds+'</tr>';
   }).join('');
   return '<section class="card pop"><table class="wtable">'+head+body+'</table></section>';
 }
@@ -2510,13 +2798,13 @@ function heures(n){
 }
 function carteCarnet(n){
   var l=carnet().slice(0,n||12);
-  if(!l.length) return '<div class="card empty"><span class="e">📓</span>Le carnet est vide.<br>'+
+  if(!l.length) return '<div class="card empty"><span class="e">'+ic('book')+'</span>Le carnet est vide.<br>'+
     'Déroule une séance et tout s\'inscrit tout seul.</div>';
   return l.map(function(sn){
     var st=statSeance(sn.sea);
     var det=(sn.sea.x||[]).map(function(ex){ return exoOr(ex.i).n; }).slice(0,3).join(' · ');
     return '<article class="card lift lgrow" data-act="opencarnet" data-k="'+sn.key+'" data-id="'+sn.id+'">'+
-      '<span class="etile"'+tileStyle(sn.color)+'><span class="emo">'+esc(sn.emoji)+'</span></span>'+
+      '<span class="etile"'+tileStyle(sn.color)+'><span class="emo">'+ico(sn.emoji,'dumbbell')+'</span></span>'+
       '<div class="tmain"><div class="tname">'+esc(sn.nom)+'</div>'+
         '<div class="lgd">'+esc(frShort(fromKey(sn.key)))+(sn.at?' · '+esc(sn.at):'')+'</div>'+
         '<div class="lgs">'+st.series+' séries'+(st.reps?' · '+st.reps+' rép.':'')+
@@ -2529,7 +2817,7 @@ function ficheCarnet(key,id){
   var sea=seanceLog(key,id); if(!sea) return;
   var h=habitById(id), st=statSeance(sea);
   openSheet('<div class="shead"><span class="etile"'+tileStyle(h&&h.color)+
-    '><span class="emo">'+esc((h&&h.emoji)||'🏋️')+'</span></span>'+
+    '><span class="emo">'+ico(h&&h.emoji,'dumbbell')+'</span></span>'+
     '<div style="flex:1;min-width:0"><h2>'+esc((h&&h.name)||'Séance')+'</h2>'+
     '<div class="muted small">'+esc(frDate(fromKey(key)))+' · '+st.series+' séries'+
       (sea.d?' · '+hhmmss(sea.d):'')+'</div></div>'+
@@ -2584,7 +2872,7 @@ function viewStats(){
   h+='<div class="sec"><h2>Cette semaine</h2><span>'+wk.pct+'%</span></div>'+weekTable();
 
   h+='<div class="sec"><h2>Records</h2></div><section class="recs">'+
-    '<div class="rec hero"><span class="emo" style="font-size:32px">🔥</span>'+
+    '<div class="rec hero"><span class="emo" style="font-size:32px">'+ic('fire')+'</span>'+
       '<div class="rt"><b>'+globalBestStreak()+' j</b><small>Meilleure série</small></div></div>'+
     '<div class="rec"><b>'+perfectDays()+'</b><small>Jours parfaits</small></div>'+
     '<div class="rec"><b>'+bestWeek()+'%</b><small>Meilleure semaine</small></div>'+
@@ -2595,14 +2883,14 @@ function viewStats(){
   '</section>';
 
   /* --- bilans automatiques --- */
-  var mood = state.mood[t]!=null ? MOODS[state.mood[t]] : null;
+  var mood = state.mood[t]!=null ? ic(MOODS[state.mood[t]]) : null;
   h+='<div class="sec"><h2>Bilans</h2></div>';
   var gs=globalStreak();
   h+='<section class="card bilan pop"><h3>Aujourd\'hui</h3><p>'+
       '<b>'+st.done+'/'+st.total+'</b> tâche'+(st.total>1?'s':'')+' · <b>'+dayPoints(t)+' pts</b>'+
       (mood?' · humeur '+mood:'')+(gs>1?' · série en cours <b>'+gs+' j</b>':'')+'. '+
       (st.total===0 ? 'Aucune tâche prévue — profites-en pour en ajouter une.'
-        : st.done===st.total ? 'Journée parfaite, rien à redire. 💯'
+        : st.done===st.total ? 'Journée parfaite, rien à redire.'
         : st.pct>=50 ? 'Bien engagé, finis le travail.'
         : 'La journée n\'est pas finie.')+
     '</p></section>';
@@ -2642,7 +2930,7 @@ function viewHabitudes(){
   var h='<div class="sec"><h2>Mes habitudes</h2><span>'+list.length+
         (nbs?' · '+nbs+' séance'+(nbs>1?'s':''):'')+'</span></div>';
   if(!list.length){
-    return h+'<div class="card empty"><span class="e">📋</span>Aucune habitude.<br>Appuie sur <b>+</b> pour en créer une.</div>';
+    return h+'<div class="card empty"><span class="e">'+ic('habits')+'</span>Aucune habitude.<br>Appuie sur <b>+</b> pour en créer une.</div>';
   }
   h+=list.map(function(x,i){
     var sure=pendingDel===x.id;
@@ -2651,7 +2939,7 @@ function viewHabitudes(){
         '<button data-act="up" data-id="'+x.id+'"'+(i===0?' disabled':'')+' aria-label="Monter">'+ic('up')+'</button>'+
         '<button data-act="down" data-id="'+x.id+'"'+(i===list.length-1?' disabled':'')+' aria-label="Descendre">'+ic('down')+'</button>'+
       '</div>'+
-      '<span class="etile"'+tileStyle(x.color)+'><span class="emo">'+esc(x.emoji||'⭐')+'</span></span>'+
+      '<span class="etile"'+tileStyle(x.color)+'><span class="emo">'+ico(x.emoji,'star')+'</span></span>'+
       '<div class="tmain"><div class="tname">'+esc(x.name)+'</div>'+
         '<div class="tmeta"><span class="num">'+(x.time?esc(x.time)+' · ':'')+esc(schedLabel(x))+'</span>'+
         (isSeance(x)?'<span class="acc">'+ic('dumbbell')+' '+exosOf(x).length+' exercices</span>'
@@ -2716,6 +3004,46 @@ function anneau(pct,val,unite,lbl,but,couleur){
     '<div class="nrl">'+lbl+'</div>'+
     '<div class="nrg">objectif '+but+' '+unite+'</div></div>';
 }
+/* Le calibrage, tel qu'il se montre. Tant qu'il n'y a pas de quoi mesurer,
+   on dit exactement ce qui manque plutôt que de rester muet : c'est la seule
+   partie de l'app où l'utilisateur peut rendre le chiffre juste, et il faut
+   qu'il sache combien de jours il lui reste à tenir. */
+function carteCalibrage(){
+  var b = state.body || {};
+  if(+b.kcal > 0){
+    return '<div class="calbox"><div class="ct">'+ic('edit')+' Maintien saisi à la main</div>'+
+      '<div class="cv">'+(+b.kcal)+'<small style="font-size:14px;color:var(--mut)"> kcal</small></div>'+
+      '<div class="cd">Cadence ne recalcule rien tant que ce chiffre est là. '+
+      'La formule proposait '+Math.round(metabolismeRepos()*coefActivite())+' kcal hors sport.</div>'+
+      '<div class="cb"><button class="btn ghost" data-act="calclear" style="flex:1;padding:8px">Revenir au calcul</button></div></div>';
+  }
+  var c = calibrage();
+  if(!c) return '';
+  if(!c.ok){
+    var manquePes = Math.max(0, CAL_PESEES_MIN - c.pesees), manqueJ = Math.max(0, CAL_JOURS_MIN - c.notes);
+    var fait = Math.min(c.pesees, CAL_PESEES_MIN)/CAL_PESEES_MIN*.5 + Math.min(c.notes, CAL_JOURS_MIN)/CAL_JOURS_MIN*.5;
+    return '<div class="calbox"><div class="ct">'+ic('scale')+' Mesurer ton vrai besoin</div>'+
+      '<div class="jauge"><i style="width:'+Math.round(fait*100)+'%"></i></div>'+
+      '<div class="cd">Aucune formule ne connaît ton métabolisme : deux personnes du même gabarit '+
+      'peuvent avoir trois cents calories d\'écart. En croisant tes pesées et tes repas sur quatre '+
+      'semaines, Cadence le mesure pour de vrai.<br>'+
+      'Il manque '+(manquePes? '<b>'+manquePes+' pesée'+(manquePes>1?'s':'')+'</b>':'')+
+      (manquePes&&manqueJ?' et ':'')+
+      (manqueJ? '<b>'+manqueJ+' jour'+(manqueJ>1?'s':'')+'</b> de repas notés':'')+
+      (manquePes||manqueJ?'.':' encore un peu de recul entre la première et la dernière pesée.')+
+      '</div></div>';
+  }
+  var off = b.cal === false;
+  var signe = c.ecart>0?'+':'';
+  return '<div class="calbox"><div class="ct">'+ic('target')+' Ton maintien, mesuré</div>'+
+    '<div class="cv">'+c.kcal+'<small style="font-size:14px;color:var(--mut)"> kcal par jour</small></div>'+
+    '<div class="cd">Sur '+c.jours+' jours : '+c.pesees+' pesées, '+c.notes+' journées de repas notées. '+
+    'La formule seule annonçait '+c.prevu+' — soit <b>'+signe+c.ecart+' kcal</b> d\'écart, '+
+    'et c\'est cet écart qui est ajouté à ton besoin du jour.<br>'+
+    'Ça ne vaut que si tu notes vraiment tout ce que tu manges.</div>'+
+    '<div class="cb"><button class="btn'+(off?'':' pri')+'" data-act="caltoggle" style="flex:1;padding:8px">'+
+      (off?'Utiliser cette mesure':ic('check')+' Mesure utilisée')+'</button></div></div>';
+}
 function carteNutrition(){
   var key=today(), h='';
   var o=objectif();
@@ -2723,7 +3051,7 @@ function carteNutrition(){
 
   if(!corpsPret()){
     return h+'<section class="card pop"><div class="empty" style="padding:8px 0 14px">'+
-      '<span class="e">🍽️</span><b>Il manque trois chiffres.</b><br>'+
+      '<span class="e">'+ic('meal')+'</span><b>Il manque trois chiffres.</b><br>'+
       'Ta taille, ton âge et ton poids suffisent à calculer tes objectifs.</div>'+
       '<button class="btn pri wide" data-act="corps">'+ic('profile')+' Renseigner mon gabarit</button></section>';
   }
@@ -2738,13 +3066,21 @@ function carteNutrition(){
       anneau(pk, t.kcal, 'kcal', 'Calories', b.kcal, pk>110?'#EF4444':'var(--acc)')+
       anneau(pp, t.prot, 'g',    'Protéines', b.prot, 'var(--ok)')+
     '</div>'+
-    '<div class="nsplit">'+
-      '<div><b>'+b.vie+'</b><span>AU REPOS</span></div>'+
-      '<div><b>'+b.sport+'</b><span>SÉANCES DU JOUR</span></div>'+
+    '<div class="nsplit'+(b.perso?' trois':'')+'">'+
+      '<div><b>'+b.vie+'</b><span>'+(b.manuel?'TON MAINTIEN':'HORS SPORT')+'</span></div>'+
+      '<div><b>'+b.sport+'</b><span>'+(b.perso?'SÉANCES':'SÉANCES DU JOUR')+'</span></div>'+
+      (b.perso ? '<div><b style="color:var(--acc-hi)">'+(b.perso>0?'+':'')+b.perso+'</b><span>TON ÉCART</span></div>' : '')+
     '</div>'+
-    '<div class="small muted" style="margin-top:11px">Repos estimé depuis ton gabarit, séances comptées '+
-    'depuis ton carnet. Pas de capteur derrière : c\'est un ordre de grandeur, pas une mesure.'+
+    (b.plancher ? '<div class="small" style="margin-top:9px;color:var(--gold)">'+ic('alert')+
+      ' Le déficit s\'arrête à ton métabolisme de repos ('+b.repos+' kcal). En dessous, ce n\'est plus '+
+      'une sèche.</div>' : '')+
+    '<div class="small muted" style="margin-top:11px">'+
+      (b.manuel ? 'Maintien saisi à la main, séances ajoutées depuis ton carnet.'
+       : b.perso ? 'Formule recalée sur tes propres pesées : c\'est ton métabolisme, pas une moyenne.'
+       : 'Repos estimé depuis ton gabarit (Mifflin-St Jeor), séances comptées en MET depuis ton carnet. '+
+         'Pas de capteur derrière : un ordre de grandeur, pas une mesure.')+
     ' <button class="acc" data-act="corps" style="font-weight:800">Ajuster</button></div>'+
+    carteCalibrage()+
     '</section>';
 
   var l=repasDuJour(key);
@@ -2755,7 +3091,7 @@ function carteNutrition(){
         '<div class="mk">'+(+r.kcal||0)+' kcal · '+(+r.prot||0)+' g de protéines</div></div>'+
         '<button class="del" data-act="mealdel" data-i="'+i+'" aria-label="Retirer">'+ic('trash')+'</button></div>';
     }).join('')
-    : '<div class="card empty" style="margin-bottom:9px"><span class="e">🥗</span>Rien de noté aujourd\'hui.</div>';
+    : '<div class="card empty" style="margin-bottom:9px"><span class="e">'+ic('salad')+'</span>Rien de noté aujourd\'hui.</div>';
   h+='<button class="btn pri wide" data-act="mealadd">'+ic('plus')+' Ajouter un repas</button>';
 
   var sup=supplDuJour(key);
@@ -2763,7 +3099,7 @@ function carteNutrition(){
      (sup.length?sup.length+' pris':'aucun')+'</span></div>';
   h+='<section class="card pop"><div class="suprow">'+SUPPL.map(function(x){
       return '<button class="supbtn'+(sup.indexOf(x.id)>-1?' on':'')+'" data-act="suppl" data-s="'+x.id+'">'+
-        '<span class="se">'+x.e+'</span><span class="sn">'+esc(x.n)+'</span></button>';
+        '<span class="se">'+ic(x.e)+'</span><span class="sn">'+esc(x.n)+'</span></button>';
     }).join('')+'</div>'+
     '<div class="small muted" style="margin-top:10px">Une simple case cochée : Cadence ne dose rien '+
     'et ne conseille rien là-dessus.</div></section>';
@@ -2793,7 +3129,7 @@ var corpsF=null;
 function openCorps(){
   var b=state.body||{};
   corpsF={taille:+b.taille||175, age:+b.age||25, sexe:b.sexe||'h',
-          act:b.act||'assis', poids:dernierPoids()||70};
+          act:b.act||'assis', poids:dernierPoids()||70, kcal:+b.kcal||0};
   renderCorps();
 }
 function renderCorps(){
@@ -2813,47 +3149,236 @@ function renderCorps(){
       '<button class="'+(f.sexe==='f'?'on':'')+'" data-act="csexe" data-s="f">Femme</button>'+
     '</div><div class="small muted" style="margin-top:6px">La formule du métabolisme de repos en tient compte : '+
     'c\'est la seule raison de la question.</div></div>'+
-    '<div class="field"><label>Ta journée, sport à part</label>'+
+    '<div class="field"><label>Ta journée, <b>sport à part</b></label>'+
       ACTIVITES.map(function(a){
         return '<button class="pickrow" data-act="cact" data-a="'+a.id+'" style="border:1px solid '+
           (f.act===a.id?'var(--acc)':'var(--line)')+';margin-bottom:7px;background:'+
           (f.act===a.id?'var(--acc-soft)':'transparent')+'">'+
           '<span class="ei"><span class="pn">'+esc(a.n)+'</span><br><span class="pm">'+esc(a.d)+'</span></span></button>';
       }).join('')+
+      '<div class="small muted" style="margin-top:2px">Les séances du carnet s\'ajoutent par-dessus : '+
+      'ne les compte pas ici, sinon elles compteront deux fois.</div>'+
     '</div>'+
+    '<div class="field"><label>Ton maintien, si tu le connais</label>'+
+      '<input id="ckcal" type="number" inputmode="numeric" placeholder="laisse vide pour le calcul" value="'+
+      (f.kcal||'')+'">'+
+      '<div class="small muted" style="margin-top:6px">Un chiffre venu d\'un diététicien ou d\'un suivi '+
+      'sérieux vaut mieux que n\'importe quelle formule. Il remplace alors tout le calcul, hors séances.</div></div>'+
     '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
     '<button class="btn pri" data-act="csave">Enregistrer</button></div>');
 }
+/* Ce qui a été tapé au clavier dans la feuille, avant qu'elle ne se redessine. */
+function lireCorps(){
+  var e=$('#ckcal');
+  if(e) corpsF.kcal = clamp(Math.round(+e.value||0), 0, 9000);
+}
 function saveCorps(){
   var f=corpsF, t=today();
-  state.body={taille:f.taille, age:f.age, sexe:f.sexe, act:f.act, obj:(state.body&&state.body.obj)||'maint'};
+  var av=state.body||{};
+  state.body={taille:f.taille, age:f.age, sexe:f.sexe, act:f.act, obj:av.obj||'maint',
+              kcal:+f.kcal||0, cal:av.cal};
   if(state.weight[t]==null) state.weight[t]=f.poids;
   save(); closeSheet(); render();
   toast('Objectifs calculés','🍽️');
 }
 
+/* ========================================================================= */
+/*                    LES ALIMENTS : OPEN FOOD FACTS                         */
+/* ========================================================================= */
+/* Deviner « une assiette de pâtes, disons 600 kcal » est ce qui fausse le plus
+   un suivi : l'erreur se répète à chaque repas. Une base d'aliments donne le
+   chiffre imprimé sur le paquet, et le code-barres évite même de le chercher.
+
+   Open Food Facts est tenue par des bénévoles, ouverte, gratuite, sans clé
+   d'API. Trois millions de produits, et on peut la lire sans rien devoir à
+   personne — c'est exactement ce qu'il fallait pour une app qui doit rester
+   gratuite. On passe par /api/food, qui met en cache et allège les réponses.
+
+   Et la photo du plat ? Voir le mot du même nom dans l'aide : un modèle qui
+   reconnaît l'image coûte de l'argent à chaque appel, et de toute façon le
+   gros de l'erreur n'est pas « qu'est-ce que c'est » mais « combien il y en
+   a » — ce qu'aucune photo ne dit. Le code-barres, lui, ne se trompe pas. */
+var FOOD='/api/food';
+var offEtat='';              /* '' | 'cherche' | 'vide' | 'ko' */
+var offRes=[];               /* derniers résultats */
+var offQ='';
+
+function food(payload){
+  if(!netReady()) return Promise.reject(new Error('off'));
+  return fetch(FOOD,{method:'POST',headers:{'Content-Type':'application/json'},
+                     body:JSON.stringify(payload)})
+    .then(function(r){
+      if(r.status===404) return {ok:false, error:'inconnu'};
+      if(!r.ok) throw new Error('http '+r.status);
+      return r.json();
+    });
+}
+function chercherAliment(q){
+  q=String(q||'').trim();
+  if(q.length<2){ offEtat=''; offRes=[]; renderRepas(); return; }
+  offQ=q; offEtat='cherche'; renderRepas();
+  food({action:'search', q:q}).then(function(o){
+    if(offQ!==q) return;                      /* une frappe plus récente a pris la main */
+    offRes=(o&&o.produits)||[];
+    offEtat=offRes.length?'':'vide';
+    renderRepas();
+  }).catch(function(){
+    if(offQ!==q) return;
+    offEtat='ko'; offRes=[]; renderRepas();
+  });
+}
+/* Un code-barres ne désigne qu'un produit : le faire choisir dans une liste
+   d'un seul élément serait un clic pour rien. On le prend directement. */
+function alimentParCode(code){
+  offEtat='cherche'; renderRepas();
+  return food({action:'code', code:code}).then(function(o){
+    if(o && o.ok && o.produit){ offEtat=''; prendreProduit(o.produit); buzz(20); }
+    else { offRes=[]; offEtat='vide'; renderRepas(); }
+    return o && o.produit;
+  }).catch(function(){ offEtat='ko'; offRes=[]; renderRepas(); });
+}
+
+/* Le lecteur de code-barres du navigateur. Chrome sur Android l'a, Safari sur
+   iPhone ne l'a pas encore : plutôt qu'embarquer une bibliothèque de plus, on
+   propose alors de taper les chiffres sous les barres. C'est deux secondes,
+   et ça marche partout. */
+function scanPossible(){ return typeof window.BarcodeDetector === 'function'; }
+var scanStop=null;
+function ouvrirScanManuel(sousTitre){
+  openSheet('<div class="shead"><span class="etile">'+ic('scan')+'</span>'+
+    '<div style="flex:1;min-width:0"><h2>Le code à la main</h2>'+
+    '<div class="muted small">'+esc(sousTitre||'Les chiffres sous les barres, c\'est tout')+'</div></div>'+
+    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
+    '<div style="height:14px"></div>'+
+    '<div class="field"><label>Code-barres</label>'+
+      '<input id="bcode" type="text" inputmode="numeric" maxlength="14" placeholder="ex. 3017620422003"></div>'+
+    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
+    '<button class="btn pri" data-act="bcodeok">Chercher</button></div>');
+}
+function ouvrirScan(){
+  if(!netReady()){ toast('Ouvre l\'app par son adresse web pour chercher un produit','📴'); return; }
+  if(!scanPossible()){ ouvrirScanManuel('Ce navigateur ne sait pas lire un code-barres'); return; }
+  openSheet('<div class="shead"><span class="etile">'+ic('scan')+'</span>'+
+    '<div style="flex:1;min-width:0"><h2>Vise le code-barres</h2>'+
+    '<div class="muted small">Le paquet, pas l\'assiette</div></div>'+
+    '<button class="iconbtn" data-act="scanclose" aria-label="Fermer">'+ic('close')+'</button></div>'+
+    '<div class="scanbox"><video id="scanv" playsinline muted></video><div class="scanmire"></div></div>'+
+    '<div class="small muted center" id="scanmsg" style="margin-top:10px">Autorise la caméra…</div>'+
+    '<div class="sactions" style="margin-top:12px">'+
+      '<button class="btn ghost wide" data-act="scanmanuel">Taper le code à la main</button></div>');
+  demarrerScan();
+}
+function demarrerScan(){
+  var v=$('#scanv'), msg=$('#scanmsg'), flux=null, det=null, vivant=true;
+  scanStop=function(){
+    vivant=false;
+    try{ if(flux) flux.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+    scanStop=null;
+  };
+  try{ det=new window.BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']}); }
+  catch(e){ if(msg) msg.textContent='Ce téléphone ne lit pas ce type de code.'; return; }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+    .then(function(st){
+      if(!vivant){ st.getTracks().forEach(function(t){ t.stop(); }); return; }
+      flux=st; v.srcObject=st; v.play();
+      if(msg) msg.textContent='Approche jusqu\'à ce que le code remplisse le cadre.';
+      var boucle=function(){
+        if(!vivant) return;
+        det.detect(v).then(function(codes){
+          if(!vivant) return;
+          var c=codes && codes[0] && String(codes[0].rawValue||'').replace(/[^0-9]/g,'');
+          if(c && c.length>=6){
+            buzz(30); scanStop();
+            closeSheet(); openRepas(); alimentParCode(c);
+            return;
+          }
+          setTimeout(boucle, 260);
+        }).catch(function(){ if(vivant) setTimeout(boucle, 400); });
+      };
+      setTimeout(boucle, 400);
+    })
+    .catch(function(){
+      if(msg) msg.textContent='Caméra refusée. Tu peux taper le code à la main.';
+    });
+}
+
 /* Ajouter un repas, en repartant si possible de ce qu'on a déjà noté. */
 var repasF=null;
 function openRepas(){
-  repasF={n:'', kcal:0, prot:0};
+  repasF={n:'', kcal:0, prot:0, p100:null, g:100};
+  offRes=[]; offEtat=''; offQ='';
   renderRepas();
+}
+/* Un produit choisi dans la base est retenu « pour cent grammes » : c'est la
+   seule manière d'être juste, puisque le paquet ne dit rien de ce qu'on a mis
+   dans l'assiette. La quantité, elle, reste à la main — c'est la seule chose
+   que le téléphone ne peut pas savoir, et prétendre la deviner serait pire
+   que de la demander. */
+function prendreProduit(x){
+  repasF.n = x.m ? (x.n+' · '+x.m) : x.n;
+  repasF.p100 = {kcal:x.kcal, prot:x.prot};
+  repasF.g = repasF.g || 100;
+  majDepuis100();
+  offRes=[]; offEtat=''; offQ='';
+  renderRepas();
+}
+function majDepuis100(){
+  if(!repasF.p100) return;
+  var g=clamp(+repasF.g||0, 0, 3000);
+  repasF.kcal = Math.round(repasF.p100.kcal*g/100);
+  repasF.prot = Math.round(repasF.p100.prot*g/100);
 }
 function renderRepas(){
   var f=repasF;
   var suggest=state.foods.slice(0,8);
+  var res = offRes.map(function(x,i){
+    return '<button class="pickrow" data-act="roff" data-i="'+i+'">'+
+      '<span class="ei"><span class="pn">'+esc(x.n)+(x.m?' <span class="muted">· '+esc(x.m)+'</span>':'')+'</span><br>'+
+      '<span class="pm">'+x.kcal+' kcal · '+x.prot+' g de protéines <span class="muted">pour 100 g</span></span></span></button>';
+  }).join('');
   openSheet('<div class="shead"><span class="etile">'+ic('apple')+'</span>'+
     '<div style="flex:1;min-width:0"><h2>Un repas</h2>'+
-    '<div class="muted small">Approximatif suffit : c\'est la tendance qui compte</div></div>'+
+    '<div class="muted small">Cherche le produit, ou tape les chiffres toi-même</div></div>'+
     '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
     '<div style="height:14px"></div>'+
     '<div class="field"><label>Quoi</label>'+
-      '<input id="rn" maxlength="40" placeholder="ex. Poulet riz haricots" value="'+esc(f.n)+'"></div>'+
+      '<div class="rsearch">'+
+        '<input id="rn" maxlength="60" placeholder="ex. Skyr nature, ou poulet riz" value="'+esc(f.n)+'">'+
+        '<button class="iconbtn" data-act="rfind" aria-label="Chercher dans la base">'+ic('search')+'</button>'+
+        '<button class="iconbtn" data-act="rscan" aria-label="Scanner un code-barres">'+ic('scan')+'</button>'+
+      '</div>'+
+      (netReady()
+        ? '<div class="small muted" style="margin-top:6px">'+ic('search')+' cherche dans Open Food Facts, '+
+          ic('scan')+' lit le code-barres du paquet.</div>'
+        : '<div class="small muted" style="margin-top:6px">'+ic('lock')+' Ouvre l\'app par son adresse web '+
+          'pour chercher un produit.</div>')+
+    '</div>'+
+    (offEtat==='cherche' ? '<div class="small muted center" style="margin:-4px 0 14px">Recherche…</div>' : '')+
+    (offEtat==='vide' ? '<div class="small muted center" style="margin:-4px 0 14px">Rien trouvé. '+
+       'Tape les chiffres à la main, ils sont sur le paquet.</div>' : '')+
+    (offEtat==='ko' ? '<div class="small center" style="margin:-4px 0 14px;color:var(--gold)">'+ic('alert')+
+       ' Base d\'aliments injoignable. Les chiffres à la main marchent toujours.</div>' : '')+
+    (res ? '<div class="field"><label>Résultats</label><div class="picklist" style="max-height:30vh">'+res+
+           '</div></div>' : '')+
+    (f.p100
+      ? '<div class="field"><label>Quantité</label>'+
+          '<div class="gramrow">'+
+            [50,100,150,200,250,300].map(function(g){
+              return '<button class="gchip'+(+f.g===g?' on':'')+'" data-act="rgram" data-g="'+g+'">'+g+' g</button>';
+            }).join('')+
+          '</div>'+
+          '<input id="rg" type="number" inputmode="numeric" placeholder="une autre quantité, en grammes" '+
+          'value="'+(+f.g||'')+'" style="margin-top:8px">'+
+          '<div class="small muted" style="margin-top:6px">'+f.p100.kcal+' kcal et '+f.p100.prot+
+          ' g de protéines pour 100 g. Le paquet ne sait pas combien tu en as pris : ça, c\'est à toi.</div>'+
+        '</div>'
+      : '')+
     '<div class="setgrid" style="margin-bottom:14px">'+
       nombre('Calories', f.kcal, 'kcal', 'rkcal', 0)+
       nombre('Protéines', f.prot, 'g', 'rprot', 0)+
     '</div>'+
-    (suggest.length
-      ? '<div class="field"><label>Déjà noté</label><div class="picklist" style="max-height:34vh">'+
+    (suggest.length && !res
+      ? '<div class="field"><label>Déjà noté</label><div class="picklist" style="max-height:30vh">'+
         suggest.map(function(x,i){
           return '<button class="pickrow" data-act="rfood" data-i="'+i+'">'+
             '<span class="ei"><span class="pn">'+esc(x.n)+'</span><br>'+
@@ -2863,12 +3388,17 @@ function renderRepas(){
     '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
     '<button class="btn pri" data-act="rsave">Ajouter</button></div>');
 }
-function saveRepas(){
+/* Tout ce qui a été tapé au clavier, relu avant que la feuille se redessine. */
+function lireRepas(){
   var i=$('#rn'); if(i) repasF.n=i.value;
+  var g=$('#rg'); if(g && g.value!==''){ repasF.g=clamp(Math.round(+g.value||0),0,3000); majDepuis100(); }
+}
+function saveRepas(){
+  lireRepas();
   var n=String(repasF.n||'').trim();
   if(!n){ toast('Il faut un nom','✏️'); return; }
   if(!repasF.kcal && !repasF.prot){ toast('Mets au moins des calories','🔢'); return; }
-  ajouterRepas(today(), {n:n.slice(0,40), kcal:repasF.kcal, prot:repasF.prot});
+  ajouterRepas(today(), {n:n.slice(0,60), kcal:repasF.kcal, prot:repasF.prot});
   buzz(25); closeSheet(); render(); toast('Noté','🍽️');
 }
 
@@ -2876,7 +3406,7 @@ function viewJournal(){
   var t=today();
   var h='<div class="sec"><h2>Humeur du jour</h2><span>'+esc(frShort(nowD()))+'</span></div>';
   h+='<section class="card pop"><div class="moods">'+MOODS.map(function(m,i){
-    return '<button class="mood'+(state.mood[t]===i?' on':'')+'" data-act="mood" data-i="'+i+'">'+m+'</button>';
+    return '<button class="mood'+(state.mood[t]===i?' on':'')+'" data-act="mood" data-i="'+i+'">'+ic(m)+'</button>';
   }).join('')+'</div></section>';
 
   h+='<div class="sec"><h2>Note du jour</h2><span class="saveflag" id="noteflag">'+ic('check')+' Enregistré</span></div>';
@@ -2909,7 +3439,7 @@ function viewJournal(){
     if(state.weight[k]!=null) bits.push(state.weight[k]+' kg');
     if(state.notes[k] && state.notes[k].trim()) bits.push('« '+state.notes[k].trim().slice(0,44)+(state.notes[k].trim().length>44?'…':'')+' »');
     h+='<div class="hist"><div class="hd">'+esc(i===0?"auj.":frShort(d))+'</div>'+
-       '<div style="font-size:19px;width:24px">'+(state.mood[k]!=null?MOODS[state.mood[k]]:'<span class="muted" style="font-size:13px">–</span>')+'</div>'+
+       '<div style="font-size:19px;width:24px">'+(state.mood[k]!=null?ic(MOODS[state.mood[k]]):'<span class="muted" style="font-size:13px">–</span>')+'</div>'+
        '<div class="hn">'+esc(bits.join(' · '))+'</div>'+
        '<div class="small '+(st.total&&st.done===st.total?'grn':'muted')+'" style="font-weight:800">'+(st.total?st.pct+'%':'')+'</div></div>';
   }
@@ -3250,7 +3780,7 @@ function onGoogleCredential(resp){
 function openMerge(remoteAt){
   var quand = remoteAt ? frShort(new Date(remoteAt))+' à '+pad(new Date(remoteAt).getHours())+'h'+pad(new Date(remoteAt).getMinutes()) : 'date inconnue';
   openSheet(
-    '<div class="shead"><span class="emo">☁️</span><div style="flex:1;min-width:0">'+
+    '<div class="shead"><span class="emo">'+ic('cloud')+'</span><div style="flex:1;min-width:0">'+
       '<h2>Deux versions</h2><div class="muted small">Ce téléphone et ton compte ont chacun des données.</div></div></div>'+
     '<p class="muted small" style="margin:14px 0 0">Sur ton compte : sauvegarde du <b>'+esc(quand)+'</b>.<br>'+
     'Sur ce téléphone : '+Object.keys(state.log||{}).length+' journée(s) enregistrée(s).</p>'+
@@ -3400,7 +3930,7 @@ function defiHTML(d,g){
     '</div>'+
     l.map(function(x){
       var pct=clamp(Math.round(x.v*100/Math.max(1,d.c)),0,100);
-      return '<div class="defiline"><span class="av">'+esc(x.m.avatar||'💪')+'</span>'+
+      return '<div class="defiline"><span class="av">'+ico(x.m.avatar,'dumbbell')+'</span>'+
         '<span class="nm">'+esc(x.m.name||'—')+'</span>'+
         '<span class="bar"><i class="'+(pct>=100?'full':'')+'" style="width:'+pct+'%"></i></span>'+
         '<span class="pc">'+pct+'%</span></div>';
@@ -3412,7 +3942,7 @@ function defiHTML(d,g){
 /* ------------------------------------------------------------- la vue */
 function crewVide(){
   return '<section class="card pop center" style="padding:26px 18px">'+
-    '<div style="font-size:44px;line-height:1;margin-bottom:10px">👥</div>'+
+    '<div style="font-size:44px;line-height:1;margin-bottom:10px">'+ic('users')+'</div>'+
     '<h2 style="font-size:24px;margin-bottom:6px">Pas encore de groupe</h2>'+
     '<p class="muted small" style="margin:0 0 16px">Crée-en un et donne le code à tes potes, '+
     'ou colle le leur. Tout le monde se voit d\'un coup, et vous pouvez vous lancer des défis.</p>'+
@@ -3452,7 +3982,7 @@ function viewCrew(){
       var moi=m.id===state.profile.id, frais=(m.weekK===semaine);
       return '<div class="lbrow crewrow'+(moi?' me':'')+'">'+
         '<span class="pos">'+(i+1)+'</span>'+
-        '<span class="av">'+esc(m.avatar||'💪')+'</span>'+
+        '<span class="av">'+ico(m.avatar,'dumbbell')+'</span>'+
         '<span class="nm"><b>'+esc(m.name||'—')+'</b><br>'+
           '<span class="small muted">'+(frais?((+m.sea||0)+' séance'+((+m.sea||0)>1?'s':'')+' · '+
             (+m.ser||0)+' séries · '+(+m.weekP||0)+'% de régularité'):'semaine pas encore remontée')+'</span></span>'+
@@ -3566,8 +4096,8 @@ function addFriend(code){
   var o;
   try{ o=JSON.parse(b64d(raw)); }catch(e){ toast('Code invalide','❌'); return; }
   if(!o || !o.i || !o.n){ toast('Code invalide','❌'); return; }
-  if(o.i===state.profile.id){ toast('C\'est ton propre code 😄','🙃'); return; }
-  var f={ id:o.i, name:String(o.n).slice(0,20), avatar:o.a||'💪',
+  if(o.i===state.profile.id){ toast('C\'est ton propre code','🙃'); return; }
+  var f={ id:o.i, name:String(o.n).slice(0,20), avatar:o.a||'dumbbell',
           day:+(o.d&&o.d[0])||0,  dayK:(o.d&&o.d[1])||'',  dayP:+(o.d&&o.d[2])||0,
           week:+(o.w&&o.w[0])||0, weekK:(o.w&&o.w[1])||'', weekP:+(o.w&&o.w[2])||0,
           month:+(o.m&&o.m[0])||0,monthK:(o.m&&o.m[1])||'',monthP:+(o.m&&o.m[2])||0,
@@ -3605,14 +4135,16 @@ function leaderboard(){
       xp:f.xp||0, me:false, age:ageTxt(f.at), fresh:fresh });
   });
   rows.sort(function(a,b){ return b.pts-a.pts || b.xp-a.xp || a.name.localeCompare(b.name); });
-  var med=['🥇','🥈','🥉'];
+  /* Une seule médaille dessinée, trois métaux : le dessin dit le podium, la
+     couleur dit la place. Au-delà du troisième, un chiffre suffit. */
+  var med=['var(--gold)','#C6CFDC','#C2864F'];
   return rows.map(function(r,i){
     var rk=rankOf(r.xp).cur;
     return '<div class="lbrow'+(r.me?' me':'')+'">'+
-      '<div class="pos">'+(med[i]||(i+1))+'</div>'+
-      '<div class="av">'+esc(r.avatar)+'</div>'+
+      '<div class="pos"'+(med[i]?' style="color:'+med[i]+'"':'')+'>'+(med[i]?ic('medal'):(i+1))+'</div>'+
+      '<div class="av">'+ico(r.avatar,'dumbbell')+'</div>'+
       '<div class="nm"><b>'+esc(r.name)+(r.me?' (toi)':'')+'</b>'+
-        '<small>'+rk.e+' '+esc(rk.n)+' · '+r.xp+' XP'+esc(r.age)+'</small></div>'+
+        '<small>'+ic(rk.e)+' '+esc(rk.n)+' · '+r.xp+' XP'+esc(r.age)+'</small></div>'+
       '<div class="pt"><b>'+r.pts+'</b><small>'+(r.pct==null?'—':r.pct+' %')+'</small></div>'+
       (r.me?'':'<button class="del" data-act="unfriend" data-id="'+r.id+'" aria-label="Retirer">'+ic('trash')+'</button>')+
     '</div>';
@@ -3653,7 +4185,7 @@ function accountBox(){
     return '<div class="row" style="gap:13px">'+
       (a.picture ? '<img src="'+esc(a.picture)+'" alt="" referrerpolicy="no-referrer" '+
                    'style="width:46px;height:46px;border-radius:50%;flex:0 0 46px;object-fit:cover">'
-                 : '<span class="etile"><span class="emo">👤</span></span>')+
+                 : '<span class="etile"><span class="emo">'+ic('profile')+'</span></span>')+
       '<div style="flex:1;min-width:0">'+
         '<div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
           esc(a.name||'Compte Google')+'</div>'+
@@ -3785,12 +4317,12 @@ function carteForce(){
         (l.length?l.length+' mouvement'+(l.length>1?'s':''):'rien à classer')+'</span></div>';
   if(!dernierPoids()){
     return h+'<section class="card pop"><div class="empty" style="padding:10px 0 14px">'+
-      '<span class="e">⚖️</span>Il faut ton poids pour rapporter les charges à quelque chose.</div>'+
+      '<span class="e">'+ic('scale')+'</span>Il faut ton poids pour rapporter les charges à quelque chose.</div>'+
       '<button class="btn pri wide" data-act="corps">'+ic('profile')+' Renseigner mon gabarit</button></section>';
   }
   if(!l.length){
     return h+'<section class="card pop"><div class="empty" style="padding:10px 0 14px">'+
-      '<span class="e">🏋️</span><b>Rien à classer pour l\'instant.</b><br>'+
+      '<span class="e">'+ic('dumbbell')+'</span><b>Rien à classer pour l\'instant.</b><br>'+
       'Le classement porte sur le squat barre, le développé couché, le soulevé de terre, '+
       'le développé militaire et les tractions. Fais-en un dans une séance et ton niveau apparaît.</div></section>';
   }
@@ -3825,7 +4357,7 @@ function carteCharge(){
   var h='<div class="sec"><h2>Ta charge sur l\'année</h2><span class="small">'+
         (dispo.length?'par mois':'rien encore')+'</span></div>';
   if(!dispo.length){
-    return h+'<div class="card empty"><span class="e">📈</span>Déroule quelques séances et la courbe '+
+    return h+'<div class="card empty"><span class="e">'+ic('stats')+'</span>Déroule quelques séances et la courbe '+
       'se remplit toute seule.</div>';
   }
   var id=loadExo && dispo.indexOf(loadExo)>-1 ? loadExo : dispo[0];
@@ -3931,10 +4463,10 @@ function viewProfil(){
      '</div>';
   if(profVue==='athlete') return h+viewAthlete();
 
-  h+='<section class="card rankcard pop"><span class="re">'+r.cur.e+'</span>'+
+  h+='<section class="card rankcard pop"><span class="re">'+ic(r.cur.e)+'</span>'+
     '<div style="flex:1;min-width:0"><h2>'+esc(r.cur.n)+'</h2>'+
       '<div class="small muted"><b class="gld">'+b.xp+' XP</b>'+
-        (r.next? ' · encore <b>'+r.need+'</b> pour '+r.next.e+' '+esc(r.next.n) : ' · rang maximal 👑')+'</div>'+
+        (r.next? ' · encore <b>'+r.need+'</b> pour '+ic(r.next.e)+' '+esc(r.next.n) : ' · rang maximal '+ic('crown'))+'</div>'+
       '<div class="prog"><i style="width:'+r.pct+'%"></i></div>'+
     '</div></section>';
 
@@ -3947,7 +4479,7 @@ function viewProfil(){
   h+='<div class="sec"><h2>Badges</h2><span>'+n+'/'+BADGES.length+'</span></div>';
   h+='<section class="badges">'+BADGES.map(function(x){
     return '<div class="badge '+(b.got[x.id]?'on':'off')+'" data-act="badge" data-b="'+x.id+'">'+
-      '<span class="be">'+x.e+'</span><small>'+esc(x.n)+'</small></div>';
+      '<span class="be">'+ic(x.e)+'</span><small>'+esc(x.n)+'</small></div>';
   }).join('')+'</section>';
 
   h+='<div class="sec"><h2>Mon compte</h2><span class="small">'+(logged()?'sauvegardé':'sur ce téléphone')+'</span></div>';
@@ -3956,7 +4488,7 @@ function viewProfil(){
     '<div class="field"><label>Blaze</label>'+
       '<input id="pname" maxlength="20" value="'+esc(p.name)+'" placeholder="Ton blaze"></div>'+
     '<div class="field"><label>Avatar</label><div class="avarow">'+AVATARS.map(function(a){
-      return '<button class="echip'+(p.avatar===a?' on':'')+'" data-act="avatar" data-a="'+a+'">'+a+'</button>';
+      return '<button class="echip'+(p.avatar===a?' on':'')+'" data-act="avatar" data-a="'+a+'">'+ic(a)+'</button>';
     }).join('')+'</div></div>'+
     '<button class="btn pri wide" data-act="psave">Enregistrer</button>'+
     '<div class="small muted center" style="margin-top:9px">id : '+esc(p.id)+'</div>'+
@@ -4035,14 +4567,55 @@ function viewProfil(){
     'les abdos reviennent vite. <b>Ce n\'est pas une mesure</b> : personne ne sait ce qui se passe '+
     'dans ton corps, et une courbature qui traîne vaut mieux que ce que dit l\'écran.'+
     '</div></details>';
-  h+='<details>'+sum('apple','La nutrition')+'<div class="dc">'+
-    'Ton objectif de calories vient d\'un calcul, pas d\'un capteur. On part de la formule de '+
-    'Mifflin-St Jeor (poids, taille, âge, sexe), on ajoute ta journée hors sport, puis les séances '+
-    'réellement inscrites au carnet. Sèche, maintien ou prise déplacent le total.<br><br>'+
+  h+='<details>'+sum('apple','La nutrition, en détail')+'<div class="dc">'+
+    'Le calcul se fait en trois morceaux, et chacun est affiché :<br><br>'+
+    '<b>1. Le repos.</b> Mifflin-St Jeor — poids, taille, âge, sexe. C\'est ce que tu brûlerais '+
+    'allongé toute la journée.<br><br>'+
+    '<b>2. Ta journée hors sport.</b> Le repos multiplié par 1,25 si tu es assis, 1,45 debout, '+
+    '1,65 si ton métier est physique. <b>Ne compte pas tes séances ici</b> : elles arrivent juste après, '+
+    'et les compter deux fois est l\'erreur la plus courante.<br><br>'+
+    '<b>3. Les séances du carnet.</b> Plus en 8 kcal la minute pour tout le monde, comme avant : '+
+    'chaque famille d\'exercice a sa valeur en MET (Compendium of Physical Activities), multipliée '+
+    'par ton poids de corps — à effort égal, 95 kg dépense bien plus que 60. Et on retire un MET, '+
+    'parce que ces minutes-là sont déjà comptées au point 2. Une heure de muscu à 80 kg tombe '+
+    'ainsi autour de 390 kcal, pas 480.<br><br>'+
+    '<b>Le vrai chiffre, c\'est la balance.</b> Aucune formule ne connaît ton métabolisme : deux '+
+    'personnes du même gabarit peuvent avoir trois cents calories d\'écart. Note tes pesées et tes '+
+    'repas pendant quatre semaines et Cadence le mesure : ton apport moyen, moins la pente de ton '+
+    'poids (un kilo de corps ≈ 7 700 kcal). L\'écart avec la formule est alors ajouté à ton besoin '+
+    'du jour, et tu peux le couper d\'un bouton. Tu peux aussi <b>taper ton maintien à la main</b> '+
+    'dans Ton gabarit, si tu le tiens d\'un diététicien : il remplace tout le calcul.<br><br>'+
     '<b>Pourquoi pas Apple Santé ?</b> Une app web n\'y a aucun accès, même posée sur l\'écran '+
-    'd\'accueil : Apple ne l\'ouvre qu\'aux apps installées depuis l\'App Store. Donc estimation, '+
-    'et l\'écran le dit.<br><br>'+
-    'Les protéines suivent ton poids : 2 g par kilo en sèche, 1,7 en maintien, 1,9 en prise.'+
+    'd\'accueil : Apple ne l\'ouvre qu\'aux apps installées depuis l\'App Store.<br><br>'+
+    'Les protéines suivent ton poids : 2 g par kilo en sèche, 1,7 en maintien, 1,9 en prise. '+
+    'Et un objectif de sèche ne descend jamais sous ton métabolisme de repos.'+
+    '</div></details>';
+  h+='<details>'+sum('scan','Chercher un aliment, scanner un paquet')+'<div class="dc">'+
+    'Dans <b>Ajouter un repas</b>, deux boutons à côté du nom : la loupe cherche dans '+
+    '<b>Open Food Facts</b>, le cadre lit le <b>code-barres</b> du paquet. Les chiffres viennent '+
+    'de l\'étiquette, pas d\'une estimation.<br><br>'+
+    'Open Food Facts est une base ouverte, tenue par des bénévoles, sans compte ni clé payante : '+
+    'trois millions de produits. Cadence n\'envoie qu\'un mot ou un code-barres, rien d\'autre.<br><br>'+
+    '<b>Le scan marche où ?</b> Sur Chrome et Android, oui. Sur iPhone, Safari ne sait pas encore '+
+    'lire un code-barres : Cadence propose alors de taper les chiffres sous les barres, c\'est deux '+
+    'secondes et ça donne exactement le même résultat.<br><br>'+
+    '<b>Toujours pour 100 g.</b> Un paquet ne sait pas combien tu en as mis dans l\'assiette : '+
+    'choisis la quantité, Cadence fait la règle de trois. Si tu corriges les calories à la main, '+
+    'elle s\'arrête et te laisse la main.'+
+    '</div></details>';
+  h+='<details>'+sum('camera','Et photographier son assiette ?')+'<div class="dc">'+
+    'C\'est la question qui revient le plus, et la réponse honnête est <b>non, pas gratuitement, '+
+    'et pas sans mentir</b>.<br><br>'+
+    'Reconnaître un plat sur une photo demande un modèle d\'image. Les bons sont facturés à chaque '+
+    'appel — c\'est pour ça que le coach IA a été retiré de Cadence. Un modèle qui tournerait dans '+
+    'le téléphone serait gratuit, mais pesant plusieurs mégaoctets à télécharger, et surtout : '+
+    '<b>il ne résoudrait pas le vrai problème</b>.<br><br>'+
+    'Le gros de l\'erreur n\'est pas « qu\'est-ce que c\'est » mais « combien il y en a ». '+
+    'Des pâtes, c\'est 300 ou 900 kcal selon l\'assiette, et aucune photo ne donne un poids. '+
+    'Les travaux publiés sur l\'estimation par image tournent autour de 30 à 50 % d\'erreur — '+
+    'bien pire que le code-barres, et bien pire que toi qui regardes ton assiette.<br><br>'+
+    'Ajouter un bouton photo ferait joli et rendrait tes chiffres <b>moins</b> justes. '+
+    'Le code-barres, lui, ne se trompe pas : c\'est celui qui est là.'+
     '</div></details>';
   h+='<details>'+sum('body','L\'onglet Athlète')+'<div class="dc">'+
     '<b>Ton gabarit</b> — taille, âge, poids, sexe, journée type. Trois chiffres, une fois : '+
@@ -4091,7 +4664,7 @@ function viewProfil(){
     '<b>10 points</b> par tâche validée — séance comprise, une séance vaut une tâche — '+
     '<b>+5 bonus</b> si tu la valides dans l\'heure qui suit son horaire. '+
     'La somme de tous tes points, c\'est ton <b>XP</b>, et l\'XP donne ton rang :<br>'+
-    RANKS.map(function(x){ return x.e+' '+x.n+' — '+x.xp+' XP'; }).join('<br>')+
+    RANKS.map(function(x){ return ic(x.e)+' '+x.n+' — '+x.xp+' XP'; }).join('<br>')+
     '</div></details>';
   h+='</div>';
   h+='<button class="btn wide" data-act="retuto" style="margin-top:4px">'+ic('cap')+' Revoir le tutoriel</button>';
@@ -4247,7 +4820,7 @@ function ajouterExo(id){
 function ficheSeance(h){
   var key=today(), e=ensure(key,h.id), fait=!!e.done, sea=e.sea;
   var out='<div class="shead"><span class="etile"'+tileStyle(h.color)+
-    '><span class="emo">'+esc(h.emoji||'🏋️')+'</span></span>'+
+    '><span class="emo">'+ico(h.emoji,'dumbbell')+'</span></span>'+
     '<div style="flex:1;min-width:0"><h2>'+esc(h.name)+'</h2><div class="muted small">'+
       (h.time?esc(h.time)+' · ':'')+exosOf(h).length+' exercices · '+setsPrevus(h)+' séries'+
       '</div></div>'+
@@ -4402,10 +4975,10 @@ var formData=null;
 
 function openForm(h){
   formData = h
-    ? {id:h.id, name:h.name, emoji:h.emoji||'⭐', time:h.time||'', type:h.type,
+    ? {id:h.id, name:h.name, emoji:h.emoji||'star', time:h.time||'', type:h.type,
        days:(h.days||[]).slice(), steps:(h.steps||[]).join('\n'), color:h.color||COLORS[0],
        kind:h.kind||'', exos:exosOf(h).map(function(e){ return {x:e.x,s:+e.s||3,r:+e.r||10,w:+e.w||0,rest:+e.rest||90}; })}
-    : {id:null, name:'', emoji:'🔥', time:pad(nowD().getHours())+':00', type:'rec',
+    : {id:null, name:'', emoji:'fire', time:pad(nowD().getHours())+':00', type:'rec',
        days:[1,2,3,4,5,6,0], steps:'', color:COLORS[0], forDate:planKey(), kind:'', exos:[]};
   renderForm();
 }
@@ -4413,7 +4986,7 @@ function openForm(h){
 function openSeance(h){
   openForm(h);
   if(!h){
-    formData.kind='seance'; formData.emoji='🏋️'; formData.color=COLORS[0];
+    formData.kind='seance'; formData.emoji='dumbbell'; formData.color=COLORS[0];
     formData.time=pad(clamp(nowD().getHours()+1,6,21))+':00';
     formData.days=[1,3,5];            /* s'entraîner tous les jours n'est pas un défaut raisonnable */
   }
@@ -4428,7 +5001,7 @@ function readForm(){
 }
 function renderForm(){
   var f=formData;
-  var out='<div class="shead"><span class="etile"'+tileStyle(f.color)+'><span class="emo">'+esc(f.emoji)+'</span></span>'+
+  var out='<div class="shead"><span class="etile"'+tileStyle(f.color)+'><span class="emo">'+ico(f.emoji,'star')+'</span></span>'+
     '<div style="flex:1;min-width:0"><h2>'+(f.id?'Modifier':(f.kind==='seance'?'Nouvelle séance':'Nouvelle tâche'))+'</h2>'+
     '<div class="muted small">'+(f.kind==='seance'?'Une séance vaut une tâche du jour'
                                                   :'Une routine claire = une routine faite')+'</div></div>'+
@@ -4438,16 +5011,18 @@ function renderForm(){
     '<div class="field"><label>Nom</label>'+
       '<input id="fname" maxlength="40" placeholder="'+(f.kind==='seance'?'ex. Haut du corps':'ex. Séance muscu')+'" value="'+esc(f.name)+'"></div>'+
 
-    '<div class="field"><label>Emoji</label><div class="echips">'+
-      (f.kind==='seance'?EMOSPORT:EMOJIS).map(function(e){ return '<button class="echip'+(f.emoji===e?' on':'')+'" data-act="femoji" data-e="'+e+'">'+e+'</button>'; }).join('')+
+    '<div class="field"><label>Icône</label><div class="echips">'+
+      (f.kind==='seance'?EMOSPORT:EMOJIS).map(function(e){
+        return '<button class="echip'+(f.emoji===e?' on':'')+'" data-act="femoji" data-e="'+e+'">'+ic(e)+'</button>';
+      }).join('')+
     '</div></div>'+
 
     '<div class="field"><label>Heure de rappel</label>'+
       '<input id="ftime" type="time" value="'+esc(f.time||'')+'"></div>'+
 
     '<div class="field"><label>Répétition</label><div class="seg">'+
-      '<button class="'+(f.type==='once'?'on':'')+'" data-act="ftype" data-t="once">⚡ Juste aujourd\'hui</button>'+
-      '<button class="'+(f.type==='rec'?'on':'')+'" data-act="ftype" data-t="rec">🔁 Récurrente</button>'+
+      '<button class="'+(f.type==='once'?'on':'')+'" data-act="ftype" data-t="once">'+ic('bolt')+' Juste aujourd\'hui</button>'+
+      '<button class="'+(f.type==='rec'?'on':'')+'" data-act="ftype" data-t="rec">'+ic('repeat')+' Récurrente</button>'+
     '</div></div>'+
 
     (f.type==='rec'
@@ -4611,7 +5186,7 @@ function focusRender(){
     var st=dayStat(key);
     $('#focus').innerHTML='<div class="fxwrap"><div class="fxtop">'+
       '<span class="cnt">Mode focus</span><button class="iconbtn" data-act="fxclose" aria-label="Fermer">'+ic('close')+'</button></div>'+
-      '<div class="fxbody"><div class="fxemo">'+(st.done===st.total&&st.total?'🏆':'👊')+'</div>'+
+      '<div class="fxbody"><div class="fxemo">'+ic(st.done===st.total&&st.total?'trophy':'fist')+'</div>'+
       '<div class="fxname">'+(st.done===st.total&&st.total?'Tout est fait':'Plus rien en file')+'</div>'+
       '<p class="muted">'+st.done+'/'+st.total+' tâches · '+dayPoints(key)+' pts aujourd\'hui</p>'+
       '<button class="btn pri wide" data-act="fxclose" style="margin-top:14px">Terminer</button></div></div>';
@@ -4622,10 +5197,10 @@ function focusRender(){
     '<div class="fxtop"><span class="cnt">'+list.length+' tâche'+(list.length>1?'s':'')+' restante'+(list.length>1?'s':'')+'</span>'+
       '<button class="iconbtn" data-act="fxclose" aria-label="Fermer">'+ic('close')+'</button></div>'+
     '<div class="fxbody">'+
-      '<div class="fxemo">'+esc(h.emoji||'⭐')+'</div>'+
+      '<div class="fxemo">'+ico(h.emoji,'star')+'</div>'+
       '<div class="fxname">'+esc(h.name)+'</div>'+
       '<div class="fxtime" id="fxtime">'+hhmmss((Date.now()-fxStart)/1000)+'</div>'+
-      '<div class="muted small">'+(h.time?'prévu à '+esc(h.time)+' · ':'')+'🔥 '+streakOf(h)+' j de série</div>'+
+      '<div class="muted small">'+(h.time?'prévu à '+esc(h.time)+' · ':'')+ic('fire')+' '+streakOf(h)+' j de série</div>'+
       (steps.length? '<div class="fxsteps">'+steps.map(function(s,i){
           return '<button class="step'+(e.steps[i]?' on':'')+'" data-act="fxstep" data-i="'+i+'">'+
                  '<span class="box">'+ic('check')+'</span><span class="lbl">'+esc(s)+'</span></button>';
@@ -4643,7 +5218,7 @@ function focusRender(){
 function showBanner(h){
   var b=$('#banner');
   b.className='';
-  b.innerHTML='<span style="font-size:24px">'+esc(h.emoji||'⏰')+'</span>'+
+  b.innerHTML='<span style="font-size:24px">'+ico(h.emoji,'timer')+'</span>'+
     '<div><div class="bn">'+esc(h.name)+'</div><div class="bs">C\'est l\'heure — '+esc(h.time||'')+'</div></div>'+
     '<button class="x" data-act="bclose" aria-label="Fermer">'+ic('close')+'</button>';
   clearTimeout(showBanner.t);
@@ -4667,7 +5242,7 @@ function checkReminders(){
     buzz([120,60,120]);
     try{
       if(window.Notification && Notification.permission==='granted'){
-        new Notification('Cadence — '+h.name, {body:"C'est l'heure ("+h.time+") 💪", tag:'cadence_'+h.id+'_'+key});
+        new Notification('Cadence — '+h.name, {body:"C'est l'heure ("+h.time+")", tag:'cadence_'+h.id+'_'+key});
       }
     }catch(e){}
     break;
@@ -4715,7 +5290,7 @@ function makeICS(){
     L.push('DTSTART:'+start);
     L.push('DURATION:PT30M');
     if(h.type!=='once') L.push('RRULE:FREQ=WEEKLY;BYDAY='+h.days.slice().sort().map(function(x){return BY[x];}).join(','));
-    L.push('SUMMARY:'+icsEsc((h.emoji||'')+' '+h.name));
+    L.push('SUMMARY:'+icsEsc(h.name));
     L.push('DESCRIPTION:'+icsEsc('Cadence — '+((h.steps||[]).join(' · ')||'À faire')));
     L.push('BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(h.name),'END:VALARM');
     L.push('END:VEVENT');
@@ -4960,32 +5535,62 @@ document.addEventListener('click', function(ev){
   if(a==='bouge'){ bougeToday(); return; }
   /* --- nutrition --- */
   if(a==='corps'){ openCorps(); return; }
-  if(a==='csexe'){ corpsF.sexe=el.getAttribute('data-s'); renderCorps(); return; }
-  if(a==='cact'){  corpsF.act =el.getAttribute('data-a'); renderCorps(); return; }
+  if(a==='csexe'){ lireCorps(); corpsF.sexe=el.getAttribute('data-s'); renderCorps(); return; }
+  if(a==='cact'){  lireCorps(); corpsF.act =el.getAttribute('data-a'); renderCorps(); return; }
   if(a==='cpoids'||a==='ctaille'||a==='cage'){
+    lireCorps();
     var dc=+el.getAttribute('data-d');
     if(a==='cpoids')  corpsF.poids =clamp(corpsF.poids +dc,30,250);
     if(a==='ctaille') corpsF.taille=clamp(corpsF.taille+dc,120,230);
     if(a==='cage')    corpsF.age   =clamp(corpsF.age   +dc,12,100);
     renderCorps(); return;
   }
-  if(a==='csave'){ saveCorps(); return; }
+  if(a==='csave'){ lireCorps(); saveCorps(); return; }
+  if(a==='caltoggle'){
+    if(!state.body) state.body={};
+    state.body.cal = state.body.cal===false ? true : false;
+    save(); render();
+    toast(state.body.cal===false?'Retour à la formule':'Mesure prise en compte','⚖️'); return;
+  }
+  if(a==='calclear'){
+    if(state.body) state.body.kcal=0;
+    save(); render(); toast('Maintien recalculé','⚖️'); return;
+  }
   if(a==='nobj'){
     if(!state.body) state.body={};
     state.body.obj=el.getAttribute('data-o'); save(); render(); return;
   }
   if(a==='mealadd'){ openRepas(); return; }
   if(a==='rkcal'||a==='rprot'){
-    var ir=$('#rn'); if(ir) repasF.n=ir.value;
+    lireRepas();
     var dr=+el.getAttribute('data-d');
     if(a==='rkcal') repasF.kcal=clamp(repasF.kcal+dr*(repasF.kcal>=200?50:10),0,5000);
     else            repasF.prot=clamp(repasF.prot+dr*5,0,400);
+    repasF.p100=null;              /* corrigé à la main : la règle de trois ne s'applique plus */
     renderRepas(); return;
   }
   if(a==='rfood'){
     var f2=state.foods[+el.getAttribute('data-i')];
-    if(f2) repasF={n:f2.n, kcal:f2.kcal, prot:f2.prot};
+    if(f2) repasF={n:f2.n, kcal:f2.kcal, prot:f2.prot, p100:null, g:100};
     renderRepas(); return;
+  }
+  if(a==='roff'){
+    var px=offRes[+el.getAttribute('data-i')];
+    if(px) prendreProduit(px);
+    return;
+  }
+  if(a==='rgram'){
+    lireRepas();
+    repasF.g=+el.getAttribute('data-g'); majDepuis100(); renderRepas(); return;
+  }
+  if(a==='rfind'){ lireRepas(); chercherAliment(repasF.n); return; }
+  if(a==='rscan'){ lireRepas(); ouvrirScan(); return; }
+  if(a==='scanclose'){ if(scanStop) scanStop(); closeSheet(); openRepas(); return; }
+  if(a==='scanmanuel'){ if(scanStop) scanStop(); ouvrirScanManuel(); return; }
+  if(a==='bcodeok'){
+    var bc=$('#bcode'), code=bc?String(bc.value||'').replace(/[^0-9]/g,''):'';
+    if(code.length<6){ toast('Un code-barres fait au moins six chiffres','\u26a0\ufe0f'); return; }
+    closeSheet(); openRepas(); alimentParCode(code); return;
   }
   if(a==='rsave'){ saveRepas(); return; }
   /* --- athlète --- */
@@ -5214,7 +5819,7 @@ document.addEventListener('click', function(ev){
     var l=focusList(); if(!l.length) return;
     var r2=toggleStep(key,l[0],+el.getAttribute('data-i'));
     buzz(r2==='done'?[30,50,30]:15);
-    if(r2==='done'){ fxStart=Date.now(); toast('Validée 🔥','✅'); }
+    if(r2==='done'){ fxStart=Date.now(); toast('Validée','✅'); }
     focusRender(); return;
   }
   if(a==='fxdone'){
@@ -5254,7 +5859,7 @@ var TOUR=[
   x:"Valider ouvre Stats, Habitudes et Journal, cadenassés tant que ta journée n'est pas posée. Et « Modifier ma journée » te ramène à ce choix quand tu veux."},
  /* ---------- partie 2 : l'app débloquée ---------- */
  {tab:'jour', sel:'.dayhead', t:'Ta journée',
-  x:"L'anneau montre ton avancement, à côté tes points et ta meilleure série. Touche une tâche pour cocher ses étapes une par une, ou la coche pour la valider d'un coup : 10 points, +5 si tu es dans l'heure. Le bouton ⚡ lance le mode focus."},
+  x:"L'anneau montre ton avancement, à côté tes points et ta meilleure série. Touche une tâche pour cocher ses étapes une par une, ou la coche pour la valider d'un coup : 10 points, +5 si tu es dans l'heure. Le bouton éclair lance le mode focus."},
  {tab:'jour', sel:'.tabs', t:'Le reste de l\'app',
   x:"Stats : ta régularité mois par mois et tes records. Habitudes : réorganiser et modifier. Journal : humeur, note, poids. Profil : ton rang, tes badges, et le classement — envoie ton code à un pote, dès qu'il l'ajoute vous apparaissez chacun chez l'autre."}
 ];
@@ -5330,7 +5935,7 @@ function coachPlace(st){
       '<button class="skip lnk" data-act="cskip">Passer le tuto</button>'+
       (coachI>0 ? '<button class="btn sm" data-act="cprev" aria-label="Précédent">'+ic('left')+'</button>' : '')+
       '<button class="btn pri sm" data-act="cnext">'+
-        (partEnd ? "J'ai compris" : last ? "C'est parti 🔥" : 'Suivant '+ic('right'))+'</button>'+
+        (partEnd ? "J'ai compris" : last ? "C'est parti" : 'Suivant '+ic('right'))+'</button>'+
     '</div>'+
     '<div class="cdots">'+TOUR.map(function(_,i){ return '<i class="'+(i===coachI?'on':'')+'"></i>'; }).join('')+'</div>';
 

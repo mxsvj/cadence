@@ -10,6 +10,7 @@ Tracker d'habitudes en un seul fichier, pensé pour l'écran d'accueil d'un iPho
 - `api/crew.js` — les groupes : code d'invitation, membres, défis.
 - `api/account.js` — le compte Google et la sauvegarde des données.
 - `api/push.js` — les notifications : abonnements, minuteur, envoi.
+- `api/food.js` — les aliments : recherche et code-barres, via Open Food Facts.
 - `sw.js` — le service worker. Il n'a qu'un rôle, afficher les notifications
   reçues ; il ne met **rien** en cache, exprès (voir plus bas).
 - `manifest.json`, `icon-192.png`, `icon-512.png` — ce qu'il faut pour que
@@ -206,18 +207,138 @@ la cohérence chromatique.
 
 ## La nutrition
 
-Objectif calculé, pas mesuré : Mifflin-St Jeor pour le métabolisme de repos
-(poids, taille, âge, sexe), un coefficient pour la journée hors sport, puis la
-dépense des séances réellement inscrites au carnet. Sèche, maintien et prise
-déplacent le total ; les protéines suivent le poids.
+Le besoin du jour se calcule en trois morceaux, tous affichés à l'écran :
 
-**Apple Santé est hors de portée.** Une app web n'a aucun accès à HealthKit, même
-installée sur l'écran d'accueil : Apple ne l'ouvre qu'aux apps natives. D'où
-l'estimation, annoncée comme telle à l'écran.
+1. **le repos** — Mifflin-St Jeor (poids, taille, âge, sexe) ;
+2. **la journée hors sport** — le repos multiplié par 1,25 (assis), 1,45 (debout)
+   ou 1,65 (métier physique). Ces coefficients ne couvrent que le NEAT : les
+   séances arrivent au point suivant, et les compter deux fois est l'erreur la
+   plus fréquente de ce genre de calcul ;
+3. **les séances du carnet** — en MET (Compendium of Physical Activities), pas
+   en kcal par minute.
 
-Il n'y a pas non plus de base d'aliments ni de lecture de code-barres : cela
-suppose un abonnement à une base externe. L'app retient en revanche ce qui a déjà
-été saisi, pour ne pas le retaper.
+### Pourquoi les chiffres ont changé en v13
+
+La première version sous-estimait le maintien, et de beaucoup. Deux corrections :
+
+- **les coefficients d'activité** valaient 1,15 / 1,30 / 1,45, c'est-à-dire moins
+  que le plancher sédentaire admis (1,2 chez Harris-Benedict comme dans les
+  tables FAO/OMS). Ils valent maintenant 1,25 / 1,45 / 1,65 ;
+- **la dépense d'une séance** était forfaitaire : 8 kcal la minute en force,
+  10 en cardio, quel que soit le corps. Elle passe au MET : `kcal/min =
+  (MET − 1) × 3,5 × poids / 200`. Le poids de corps compte enfin — à effort
+  égal, 95 kg dépense bien plus que 60 — et on retire un MET parce que ces
+  minutes-là sont déjà comptées au point 2.
+
+Deux pièges évités au passage. D'abord, les valeurs du Compendium se rapportent
+à la **séance entière**, repos entre les séries compris, pas aux seules secondes
+sous la barre : n'appliquer le MET qu'au temps sous tension donnerait quarante
+calories pour une heure de muscu. On déduit donc le mélange d'exercices du temps
+d'effort, puis on l'applique à toute la durée. Ensuite, un repos déclaré est
+plafonné à trois minutes par série pour l'estimation : au-delà, on discute.
+
+Résultat pour 80 kg / 180 cm / 30 ans, assis : le maintien passe de 2 047 à
+2 225 kcal, et une heure de muscu de 480 à 390 kcal.
+
+### Le calibrage sur la balance
+
+C'est la partie qui rend le chiffre vraiment juste. Aucune formule ne connaît un
+métabolisme : deux personnes du même gabarit peuvent avoir trois cents calories
+d'écart. Mais l'app a déjà les deux mesures qu'il faut — ce qui est mangé et ce
+que la balance en fait :
+
+```
+maintien réel = apport moyen − pente du poids × 7 700 kcal/kg
+```
+
+Conditions : quatre semaines de fenêtre, au moins quatre pesées espacées de
+deux semaines, et au moins quatorze journées de repas notées. La pente vient
+d'une régression par moindres carrés sur toutes les pesées, pas d'une différence
+entre la première et la dernière : l'eau d'une seule journée suffirait à tout
+renverser. Les journées où le carnet tombe sous 60 % du métabolisme de repos
+sont écartées — personne ne vit à ce régime, c'est un carnet incomplet.
+
+La mesure englobe les séances de la fenêtre : on la compare donc à ce que la
+formule prévoyait sur la même fenêtre, séances comprises, et on ne garde que
+l'**écart**, borné à ±600 kcal. Le besoin du jour reste ainsi sensible à la
+séance d'aujourd'hui tout en étant recalé sur le bon métabolisme. L'écart se
+coupe d'un bouton, et un maintien saisi à la main court-circuite tout le calcul.
+
+Un objectif de sèche ne descend jamais sous le métabolisme de repos : en
+dessous, ce n'est plus un déficit.
+
+### La base d'aliments
+
+`api/food.js` interroge **Open Food Facts** : base ouverte, tenue par des
+bénévoles, sous licence ODbL, sans compte ni clé d'API. Trois millions de
+produits, et rien à payer — c'est ce qui la rend compatible avec une app qui
+doit rester gratuite.
+
+Le détour par le serveur n'est pas gratuit non plus en lignes de code ; il se
+justifie par trois choses : Open Food Facts demande un en-tête `User-Agent` qui
+identifie l'application et un navigateur ne laisse pas le choisir ; une fiche
+brute pèse parfois plusieurs centaines de kilo-octets alors que cinq champs
+suffisent ; et la base est tenue par des bénévoles, donc on met en cache
+(trente jours pour un code-barres, sept pour une recherche). Quand l'énergie
+n'est donnée qu'en kilojoules — c'est fréquent — elle est convertie. Une fiche
+sans nom ou sans calories est écartée plutôt qu'affichée à moitié.
+
+Le code-barres se lit avec `BarcodeDetector`, natif dans Chrome. Safari sur
+iPhone ne l'a pas encore : l'app propose alors de taper les chiffres sous les
+barres, ce qui donne exactement le même résultat sans embarquer une
+bibliothèque de plus. La caméra est coupée par `closeSheet()`, quelle que soit
+la manière dont la feuille se ferme.
+
+Les valeurs sont toujours **pour 100 g** : un paquet ne sait pas combien on en a
+mis dans l'assiette. La quantité reste à la main, et corriger les calories à la
+main coupe la règle de trois.
+
+### Pourquoi pas la photo du plat
+
+C'est la demande la plus fréquente, et la réponse est non — pas gratuitement,
+et pas honnêtement.
+
+Reconnaître un plat demande un modèle d'image. Les bons sont facturés à l'appel,
+ce qui est exactement la raison pour laquelle le coach a été retiré. Un modèle
+embarqué (MobileNet sur Food-101, une dizaine de mégaoctets) serait gratuit,
+mais ne résoudrait pas le vrai problème : **le gros de l'erreur n'est pas
+l'identification, c'est la portion.** Des pâtes, c'est 300 ou 900 kcal selon
+l'assiette, et une photo monoculaire ne donne pas un poids. La littérature sur
+l'estimation par image tourne autour de 30 à 50 % d'erreur moyenne.
+
+Ajouter ce bouton ferait joli et rendrait les chiffres *moins* justes — alors
+que la demande de départ était justement plus de précision. Le code-barres, lui,
+ne se trompe pas. L'aide de l'app dit la même chose, dans les mêmes termes.
+
+**Apple Santé reste hors de portée.** Une app web n'a aucun accès à HealthKit,
+même installée sur l'écran d'accueil : Apple ne l'ouvre qu'aux apps natives.
+
+## Les icônes
+
+Il n'y a plus un seul emoji à l'écran. Cent treize dessins vivent dans une
+planche `<symbol>` en haut du fichier, tous sur la même grille : `viewBox`
+24×24, `fill:none`, `stroke:currentColor`, épaisseur 1,9, bouts arrondis.
+`ic(nom)` rend un `<svg class="ic"><use href="#i-nom">`, dimensionné à `1em` :
+un dessin prend donc la taille et la couleur de ce qui l'entoure, et aucune
+règle de style n'a eu à bouger pour le rendre à la place d'un emoji.
+
+La traduction se fait **à l'affichage**, pas une fois pour toutes dans les
+données. Un emoji choisi avant ce changement est rangé tel quel dans le
+`localStorage` et peut revenir d'un autre téléphone par la sauvegarde ou du
+serveur par le classement : `icoDe()` le traduit au moment du rendu, et un emoji
+inconnu retombe sur un dessin neutre plutôt que de disparaître. Les cent appels
+à `toast()` passent encore un emoji — c'est la façon la plus courte d'écrire
+« ça a marché » au fil du code — et `toast()` le traduit en un seul endroit.
+
+Le fichier `.ics` et les notifications système, eux, ne reçoivent plus rien :
+un nom d'icône dans un titre d'événement n'aurait aucun sens, et un SVG ne
+rentre pas dans une notification de l'OS.
+
+La suite `visual.js` garde la porte : elle balaie le texte rendu des cinq
+onglets et de quatre feuilles et échoue si un seul caractère emoji en sort,
+vérifie que chaque nom d'icône cité dans les données existe dans la planche, et
+qu'aucun `<use>` ne pointe dans le vide — un `<use>` orphelin ne dessine rien
+du tout, et ça ne se voit qu'à l'œil.
 
 ## Le Crew
 
@@ -285,7 +406,10 @@ différentes :
   « Le coach : l'API Claude » et son annulation. Le reprendre, c'est un
   `git revert` et une clé `ANTHROPIC_API_KEY` chez l'hébergeur ;
 - le **scan morphologique** est une fonction payante sans méthode publiée : il
-  n'y a rien à reproduire honnêtement.
+  n'y a rien à reproduire honnêtement ;
+- la **photo du plat** ne peut pas être à la fois gratuite et honnête — voir
+  *Pourquoi pas la photo du plat* plus haut. Le code-barres la remplace, et il
+  donne un chiffre juste au lieu d'un chiffre plausible.
 
 Les compléments, eux, sont là — c'est une case à cocher, Cadence ne dose rien et
 ne conseille rien là-dessus.
@@ -297,6 +421,13 @@ mémoire — pratique pour dérouler le scénario à deux téléphones sans rien
 Les suites de tests pilotent Chromium avec Playwright : parcours complet, tutoriel
 et verrouillage, états de démarrage, rendu clair et sombre, géométrie du
 projecteur, et synchronisation entre deux appareils.
+
+Les services extérieurs sont doublés, jamais appelés pour de vrai : un faux
+service de notification qui déchiffre ce qu'il reçoit, et un faux Open Food
+Facts qui répond comme le vrai — mêmes chemins, mêmes noms de champs, mêmes
+pièges (l'énergie en kilojoules, une fiche sans nom, une fiche sans calories) et
+trois modes : normal, vide, en panne. Une suite ne doit jamais dépendre d'un
+serveur qu'on ne contrôle pas.
 
 L'onglet Athlète a sa propre suite : couleur d'accent jusqu'au style calculé des
 boutons, grille de l'année, décompte de la saison, estimation de maximum et
