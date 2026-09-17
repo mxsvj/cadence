@@ -280,33 +280,103 @@ fait — et dans une liste de six exercices, c'est le geste qu'on cherche du
 regard. Chaque exercice du catalogue porte donc son propre dessin.
 
 Quarante-trois dessins à la main auraient dérivé les uns des autres. On décrit
-plutôt quarante-trois **positions** : un corps, sept articulations
-(tête, épaule, coude, main, bassin, genou, pied), et le même trait partout. La
-pose ne peut pas être incohérente avec l'exercice, puisqu'elle *est* l'exercice
-— et corriger un bras, c'est corriger deux nombres.
+plutôt quarante-trois **positions** : sept articulations (tête, épaule, coude,
+main, bassin, genou, pied) et, par-dessus, un corps. La pose ne peut pas être
+incohérente avec l'exercice, puisqu'elle *est* l'exercice — et corriger un
+bras, c'est corriger deux nombres.
 
-Le matériel se place à partir de la pose, pas à côté d'elle : la barre fixe se
-pose au-dessus des mains, les haltères dans les mains, le banc sous le bassin,
-l'estrade sous les pieds, la corde part des mains et passe sous les pieds. Une
-pose peut en cumuler plusieurs (`banc+barbell`, `sol+estrade`). Une figure vue
-de face donne son axe de symétrie et les deux bras se dessinent ; vue de profil,
-le second membre n'apparaît que s'il se voit vraiment (course, fentes, pistol
-squat).
+#### Un corps, pas un bonhomme en bâtons
 
-Le trait est réglé pour peser pareil à l'œil à toutes les tailles : on vise une
-épaisseur **à l'écran** (environ 1,5 px en vignette, 2,8 px en grand) et on la
-reconvertit dans les unités du dessin. Une épaisseur fixe ferait un cheveu en
-grand ou un gros feutre en petit.
+La première version reliait les articulations par des traits. Ça dit où sont
+les articulations et rien d'autre : aucune épaule, aucune taille, un mollet
+aussi épais qu'un poignet. Ça ne ressemblait pas à quelqu'un.
+
+Chaque segment est maintenant une **masse** : un fuseau plein, plus épais à la
+racine qu'au bout, avec un ventre réglable au milieu — c'est lui qui donne le
+galbe du mollet et du biceps. Les deux bouts sont ronds, et **le bout rond est
+l'articulation** : deux segments qui se rejoignent au coude se fondent l'un
+dans l'autre, il ne reste aucune jointure à voir.
+
+Le tronc, lui, n'est pas un fuseau. Construit ainsi, son bout rond posait un
+dôme au-dessus des épaules, la tête s'y enfonçait et le bonhomme avait l'air
+voûté, sans cou. Il est décrit par ses repères — base du cou, pointe d'épaule,
+aisselle, taille, hanche, bas du bassin — en coordonnées « le long de l'axe du
+tronc » et « en travers », de sorte que la moitié droite est la même liste au
+signe près. `lisse()`, déjà écrit pour la silhouette, fait passer une courbe
+par tous les points.
+
+Deux détails qui font la différence entre un corps et un pantin :
+
+- **le poing est centré sur la main**, pas planté au bout du bras. C'est lui
+  qui doit envelopper la barre ; posé au-delà, il la traversait. La barre fixe
+  est donc dessinée *dans* les mains et non au-dessus ;
+- **le pied part vers l'avant et vers le bas** quand la jambe est debout, et
+  prolonge le tibia quand elle est allongée. À l'horizontale pure, une figure
+  vue de face avait deux palmes ; sur une pompe, les orteils s'appuient dans le
+  sol, ce qui est bien ce qu'ils font.
+
+Chaque masse est son propre tracé. Deux tracés distincts se recouvrent en
+s'additionnant, là où deux sous-chemins d'un même tracé peuvent se trouer s'ils
+ne tournent pas dans le même sens — un bug invisible à l'écriture et évident à
+l'écran.
+
+#### Le matériel
+
+Il se place à partir de la pose, pas à côté d'elle : la barre fixe dans les
+mains, les haltères dans les mains, le banc sous le bassin, l'estrade sous les
+pieds, la corde qui part des mains et passe sous les pieds. Une pose peut en
+cumuler plusieurs (`banc+barbell`, `sol+estrade`). Il reste tracé au trait,
+quand le corps est un aplat : le contraste entre les deux suffit à les
+distinguer sans une seule couleur.
+
+Une figure vue de face donne son axe de symétrie et les deux bras se
+dessinent ; vue de profil, le second membre n'apparaît que s'il se voit
+vraiment (course, fentes, pistol squat).
 
 Un exercice créé à la main n'a pas de pose ; la vignette retombe alors sur la
 silhouette teintée des muscles qu'on lui a déclarés, qui reste vraie.
 
-`dessins.js` vérifie les trois façons de se tromper : un exercice sans dessin
-(ou un dessin sans exercice), deux exercices qui partagent la même image donc
-une image qui ment, et un trait qui sort du cadre donc une image coupée — cette
-dernière est mesurée en demandant au navigateur la boîte englobante réelle de
-chaque tracé. C'est elle qui a trouvé la barre du développé couché qui
-dépassait à gauche.
+#### Ce que les tests attrapent
+
+`dessins.js` couvre les façons de se tromper : un exercice sans dessin (ou un
+dessin sans exercice), deux exercices qui partagent la même image donc une
+image qui ment, et un dessin qui sort du cadre.
+
+Ce dernier se mesure **calque par calque**, en demandant au navigateur la boîte
+englobante réelle : le corps est un aplat, son contour est son étendue et il
+peut aller jusqu'au bord ; le matériel est tracé, il déborde de la moitié de
+son épaisseur et il faut la lui laisser. C'est cette mesure qui a trouvé la
+barre du développé couché qui sortait à gauche, puis les deux squats dont le
+pied touchait le bord du cadre.
+
+### Pourquoi pas de vraies photos
+
+La question s'est posée, et la réponse tient à trois vérifications.
+
+**Les bases de photos « libres » ne le sont pas vraiment.**
+[free-exercise-db](https://github.com/yuhonas/free-exercise-db) affiche 876
+exercices avec deux photos chacun et se présente comme domaine public — mais le
+dépôt **n'a aucun fichier de licence**, seulement un badge. Son amont,
+[wrkout/exercises.json](https://github.com/wrkout/exercises.json), n'en a pas
+davantage et vend par ailleurs un jeu de données commercial. Les photos sont
+visiblement celles d'un studio de musculation. « Domaine public » y est une
+affirmation d'un tiers, pas une cession du titulaire des droits : ce n'est pas
+une base sur laquelle publier.
+
+**Les bases proprement licenciées sont payantes.** Les GIF d'ExerciseDB
+coûtent entre 299 et 599 $ en licence unique. L'application doit rester
+gratuite ; c'est exclu d'office.
+
+**Et même gratuites, elles iraient mal ici.** Sept des quarante-trois
+exercices n'y figurent pas (corde à sauter, burpees, vélo, L-sit, dragon flag,
+hollow body, squat bulgare). La première image d'un exercice est sa position de
+*départ*, qui souvent ne montre pas le mouvement — celle de la planche montre
+un homme à genoux. Enfin une photo de salle, murs rouges et parquet orange,
+n'est pas lisible dans une vignette de 30 px sur fond sombre, alors qu'une
+silhouette pleine l'est.
+
+Un dessin construit ne coûte rien, fonctionne hors ligne, couvre les
+quarante-trois exercices et ne peut pas montrer autre chose que le mouvement.
 
 ### La récupération
 

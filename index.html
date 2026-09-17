@@ -451,10 +451,12 @@ details .dc li{margin-bottom:6px}
 .silh{display:block;flex:0 0 auto}
 .silh.mini{border-radius:9px;background:var(--surf2)}
 
-/* le dessin d'un exercice : même trait que les icônes, pas de remplissage */
-.exodraw{display:block;flex:0 0 auto;fill:none;stroke:currentColor;
-  stroke-linecap:round;stroke-linejoin:round;color:var(--mut);
-  border-radius:9px;background:var(--surf2)}
+/* le dessin d'un exercice : le corps est une masse pleine, le matériel reste
+   un trait. Le contraste entre les deux suffit à les distinguer sans couleur */
+.exodraw{display:block;flex:0 0 auto;stroke-linecap:round;stroke-linejoin:round;
+  color:var(--mut);border-radius:9px;background:var(--surf2)}
+.exodraw .co{fill:currentColor;stroke:none}
+.exodraw .mt{fill:none;stroke:currentColor}
 .exorow .exodraw,.pickrow .exodraw{padding:1px}
 .exorow.now .exodraw{color:var(--acc)}
 .rnbody .exodraw{color:var(--txt);background:none;margin-bottom:4px}
@@ -1035,7 +1037,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v15 · 2026-09-17';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v16 · 2026-09-17';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 4;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -1536,40 +1538,37 @@ var SIL = {
 } }
 };
 
-/* Le dessin d'un exercice : un bonhomme dans la position du mouvement.
+/* Le corps dans une position : une vraie masse, pas un trait.
 
-   On ne dessine pas quarante-trois images à la main — on décrit quarante-trois
-   *positions*. Un corps, sept articulations, et le même trait partout : la
-   pose ne peut donc pas être incohérente avec l'exercice, puisqu'elle est
-   l'exercice. Corriger un bras, c'est corriger deux nombres.
+   Un bonhomme en bâtons dit où sont les articulations et rien d'autre. Un
+   corps, lui, a des épaules larges, une taille, des cuisses plus épaisses que
+   les mollets, et il se reconnaît d'un coup d'œil.
 
-   Repère : une boîte de 40 × 40, y vers le bas.
-   Articulations, dans cet ordre :
-       t  tête (centre)     e  épaule    c  coude    m  main
-       b  bassin            g  genou     p  pied
-   Puis, en option :
-       eq   le matériel dessiné autour ('barre', 'barbell', 'halt', 'banc',
-            'para', 'sol', 'mur', 'corde', 'velo', 'rame')
-       ax   l'axe de symétrie ; absent, la figure est vue de profil et on ne
-            dessine qu'un bras et qu'une jambe
+   Chaque segment est un fuseau à bouts ronds : le bout rond EST l'articulation.
+   Deux segments qui se rejoignent au coude se fondent l'un dans l'autre, et il
+   ne reste aucune jointure à voir — c'est exactement ce qui manquait à la
+   première silhouette, qui posait une pastille sur chaque articulation.
+
+   Tout est rempli d'une seule couleur, donc les recouvrements disparaissent :
+   on obtient un corps d'un seul tenant à partir d'une dizaine de morceaux.
 */
+function r1(n){ return Math.round(n * 10) / 10; }
+function xy(x, y){ return r1(x) + ' ' + r1(y); }
+function vec(a, b){ return [b[0] - a[0], b[1] - a[1]]; }
+function uni(d){ var l = Math.sqrt(d[0]*d[0] + d[1]*d[1]) || 1; return [d[0]/l, d[1]/l]; }
+function pp(d){ return [-d[1], d[0]]; }
+function pas(a, d, k){ return [a[0] + d[0]*k, a[1] + d[1]*k]; }
+function mil(a, b){ return [(a[0]+b[0])/2, (a[1]+b[1])/2]; }
 
-var R_TETE = 3.3;
-
-function pt(a){ return a[0] + ' ' + a[1]; }
-function trait(){
-  var d = 'M' + pt(arguments[0]);
-  for(var i = 1; i < arguments.length; i++) d += 'L' + pt(arguments[i]);
-  return d;
-}
 function mir(a, ax){ return [Math.round((2 * ax - a[0]) * 10) / 10, a[1]]; }
 
 /* Le matériel, dessiné à partir de la pose : il se place sur les mains, sous
    les pieds ou sous le dos, donc il suit la position au lieu d'être posé à
    côté. */
 var MATOS_POSE = {
-  /* une barre fixe au-dessus des mains */
-  barre: function(P){ return '<path d="M3 ' + (P.m[1] - 1.2) + 'H37"/>'; },
+  /* une barre fixe : elle passe dans les mains. Dessinée au-dessus, le poing
+     la traversait au lieu de la tenir. */
+  barre: function(P){ return '<path d="M3 ' + P.m[1] + 'H37"/>'; },
   /* une barre chargée, tenue dans les mains. De profil la main n'est pas au
      milieu du cadre : la barre se raccourcit de ce qu'il faut pour que ses
      disques restent dans la boîte plutôt que d'être coupés au bord. */
@@ -1633,15 +1632,15 @@ var MATOS_POSE = {
    t              e              c              m              b              g              p            */
 var POSES = {
   /* -- tirer ----------------------------------------------------------- */
-  tractions:  { t:[20,13.5], e:[15.5,18],  c:[11.5,12.5], m:[12,6.5],   b:[20,27],   g:[18.6,33], p:[18.2,38],   eq:'barre',  ax:20 },
-  tracsup:    { t:[20,13.5], e:[15.5,18],  c:[14.5,12.5], m:[15,6.5],   b:[20,27],   g:[18.6,33], p:[18.2,38],   eq:'barre',  ax:20 },
-  tracprise:  { t:[20,13.5], e:[15.5,18],  c:[8.5,13],    m:[8,6.5],    b:[20,27],   g:[18.6,33], p:[18.2,38],   eq:'barre',  ax:20 },
-  muscleup:   { t:[20,11],   e:[15.5,15.5],c:[13,9],      m:[14,5],     b:[20,25],   g:[16.5,30],  p:[18,36],   eq:'barre',  ax:20 },
-  suspension: { t:[20,15],   e:[15.5,19.5],c:[14,12.5],   m:[13.5,6.5], b:[20,28],   g:[18.6,33.5], p:[18.2,38.5], eq:'barre',  ax:20 },
+  tractions:  { t:[20,13.5], e:[15.5,18],  c:[11.5,12.5], m:[12,6.5],   b:[20,27],   g:[17.9,33], p:[17.3,38],   eq:'barre',  ax:20 },
+  tracsup:    { t:[20,13.5], e:[15.5,18],  c:[14.5,12.5], m:[15,6.5],   b:[20,27],   g:[17.9,33], p:[17.3,38],   eq:'barre',  ax:20 },
+  tracprise:  { t:[20,13.5], e:[15.5,18],  c:[8.5,13],    m:[8,6.5],    b:[20,27],   g:[17.9,33], p:[17.3,38],   eq:'barre',  ax:20 },
+  muscleup:   { t:[20,11],   e:[15.5,15.5],c:[13,9],      m:[14,5],     b:[20,25],   g:[16.3,30],  p:[17.3,36], eq:'barre',  ax:20 },
+  suspension: { t:[20,15],   e:[15.5,19.5],c:[14,12.5],   m:[13.5,6.5], b:[20,28],   g:[17.9,33.5], p:[17.3,38.2], eq:'barre',  ax:20 },
   rowinv:     { t:[12,22],   e:[16,23],    c:[19,19],     m:[21,15],    b:[26,26],   g:[31,28.5],  p:[36,31],   eq:'barre+sol' },
   rowhalt:    { t:[9,17],    e:[14,19],    c:[13,25],     m:[12,30],    b:[27,23],   g:[30,30],    p:[32,37],   eq:'halt' },
-  curl:       { t:[20,9.5],  e:[15.5,15],  c:[13.5,23],   m:[11.8,18],  b:[20,27],   g:[18.6,33],  p:[18.2,38], eq:'halt',   ax:20 },
-  shrug:      { t:[20,9.5],  e:[14,14],    c:[10.5,22],   m:[9.5,29],   b:[20,27],   g:[18.6,33],  p:[18.2,38], eq:'halt',   ax:20 },
+  curl:       { t:[20,9.5],  e:[15.5,15],  c:[13.5,23],   m:[11.8,18],  b:[20,27],   g:[17.9,33],  p:[17.3,38], eq:'halt',   ax:20 },
+  shrug:      { t:[20,9.5],  e:[14,14],    c:[10.5,22],   m:[9.5,29],   b:[20,27],   g:[17.9,33],  p:[17.3,38], eq:'halt',   ax:20 },
 
   /* -- pousser --------------------------------------------------------- */
   pompes:     { t:[11,18],   e:[15,21.5],  c:[12.5,28],   m:[11,35],    b:[26,26],   g:[31,31],    p:[36,35],   eq:'sol' },
@@ -1649,22 +1648,22 @@ var POSES = {
   pompesdecl: { t:[8,26],    e:[12,27.5],  c:[9.5,31.5],  m:[7.5,35.5], b:[24,20],   g:[29,17],    p:[33,15],   eq:'sol+estrade' },
   pompespike: { t:[13,29],   e:[16,25],    c:[12,30],     m:[10,35],    b:[24,10],   g:[30,22],    p:[34,34],   eq:'sol' },
   atr:        { t:[20,30],   e:[20,25],    c:[16,30],     m:[14.5,35],  b:[20,17],   g:[19,11],    p:[19.4,5],  eq:'sol',    ax:20 },
-  dips:       { t:[20,12],   e:[15.5,17],  c:[12,23],     m:[13.5,19],  b:[20,27],   g:[18,32],    p:[17.6,36.5], eq:'para',   ax:20 },
+  dips:       { t:[20,12],   e:[15.5,17],  c:[12,23],     m:[13.5,19],  b:[20,27],   g:[17.5,32],  p:[17,36.5], eq:'para',   ax:20 },
   dipsbanc:   { t:[15,13],   e:[18,17],    c:[22,22],     m:[24,18],    b:[16,27],   g:[24,30],    p:[33,31],   eq:'banc' },
   devcouche:  { t:[9,23],    e:[13,25],    c:[12,19],     m:[14,13],    b:[27,26],   g:[32,30],    p:[33,36],   eq:'banc+barbell' },
-  devmil:     { t:[20,13],   e:[20,19],    c:[14,17],     m:[15,8],     b:[20,28],   g:[19,33],    p:[19,38],   eq:'barbell',ax:20 },
+  devmil:     { t:[20,13],   e:[20,19],    c:[14,17],     m:[15,8],     b:[20,28],   g:[17.9,33],  p:[17.4,38], eq:'barbell',ax:20 },
   ecarte:     { t:[9,23],    e:[13,25],    c:[15,18],     m:[13,13],    b:[27,26],   g:[32,30],    p:[33,36],   eq:'banc+halt' },
-  elevlat:    { t:[20,10],   e:[16.5,16],  c:[11,18.5],   m:[6.5,15],   b:[20,27],   g:[19,33],    p:[19,38],   eq:'halt',   ax:20 },
+  elevlat:    { t:[20,10],   e:[16.5,16],  c:[11,18.5],   m:[6.5,15],   b:[20,27],   g:[17.9,33],  p:[17.4,38], eq:'halt',   ax:20 },
 
   /* -- jambes ---------------------------------------------------------- */
-  squat:      { t:[20,10],   e:[20,16],    c:[15,15],     m:[11,14],    b:[20,26],   g:[13.5,31],  p:[15,38],   eq:'sol',    ax:20 },
-  squatbarre: { t:[20,11.5], e:[16.5,18],  c:[13,20],     m:[10.5,18],  b:[20,27],   g:[13.5,32],  p:[15,38],   eq:'barbell',ax:20 },
+  squat:      { t:[20,9.6],  e:[20,15.6],  c:[15,14.6],   m:[11,13.6],  b:[20,25.6], g:[13.5,30.6],p:[15,37.3], eq:'sol',    ax:20 },
+  squatbarre: { t:[20,11.2], e:[16.5,17.6],c:[13,19.6],   m:[10.5,17.6],b:[20,26.6], g:[13.5,31.4],p:[15,37.3], eq:'barbell',ax:20 },
   squatbulg:  { t:[15,11],   e:[15,17],    c:[13,23],     m:[12,28],    b:[16,26],   g:[12,32],    p:[13,38],   g2:[27,29],  p2:[33,33], eq:'banc' },
-  pistol:     { t:[18,11],   e:[18,17],    c:[24,18],     m:[30,18],    b:[18,26],   g:[12,31],    p:[14,38],   g2:[28,26],  p2:[35,25], eq:'sol' },
+  pistol:     { t:[18,10.4], e:[18,16.4],  c:[24,17.4],   m:[30,17.4],  b:[18,25.4], g:[12,30.4],  p:[14,37.2], g2:[28,25.4], p2:[35,24.4], eq:'sol' },
   fentes:     { t:[19,11],   e:[19,17],    c:[17,23],     m:[16,28],    b:[20,26],   g:[12,31],    p:[10,38],   g2:[28,31],  p2:[30,38], eq:'sol' },
   sdt:        { t:[11,16],   e:[15,19],    c:[15,25],     m:[15,31],    b:[26,23],   g:[28,30],    p:[30,37],   eq:'barbell' },
   hipthrust:  { t:[9,20],    e:[13,21],    c:[15,25],     m:[13,28],    b:[24,20],   g:[30,26],    p:[31,36],   eq:'sol' },
-  mollets:    { t:[20,7],    e:[20,13],    c:[16,19],     m:[15,25],    b:[20,22],   g:[18.8,28],  p:[18.4,32], eq:'marche', ax:20 },
+  mollets:    { t:[20,7],    e:[20,13],    c:[16,19],     m:[15,25],    b:[20,22],   g:[18.1,28],  p:[17.8,32], eq:'marche', ax:20 },
   chaise:     { t:[22,13],   e:[24,18],    c:[19,22],     m:[15,24],    b:[26,26],   g:[14,26],    p:[13,37],   eq:'mur' },
 
   /* -- tronc ----------------------------------------------------------- */
@@ -1679,33 +1678,124 @@ var POSES = {
 
   /* -- souffle --------------------------------------------------------- */
   course:     { t:[21,10],   e:[20,16],    c:[14,19],     m:[15,24],    b:[20,25],   g:[13,29],    p:[10,35],   c2:[27,18], m2:[28,13], g2:[27,30], p2:[31,35], eq:'sol' },
-  corde:      { t:[20,11],   e:[20,16],    c:[14,20],     m:[13,24],    b:[20,25],   g:[18,30],    p:[19,34],   eq:'corde',  ax:20 },
+  corde:      { t:[20,11],   e:[20,16],    c:[14,20],     m:[13,24],    b:[20,25],   g:[17.6,30],  p:[17.9,34], eq:'corde',  ax:20 },
   burpees:    { t:[20,9],    e:[20,15],    c:[15,10],     m:[13,5],     b:[20,25],   g:[14,30],    p:[15,36],   eq:'sol',    ax:20 },
   velo:       { t:[14,12],   e:[17,16],    c:[21,19],     m:[26,21],    b:[15,22],   g:[21,26],    p:[24,30],   eq:'velo' },
   rameur:     { t:[26,14],   e:[24,19],    c:[27,23],     m:[19,22],    b:[27,26],   g:[18,24],    p:[10,27],   eq:'rame' },
   montclim:   { t:[20,8],    e:[20,14],    c:[13,17],     m:[14,22],    b:[20,24],   g:[27,21],    p:[25,28],   c2:[27,16], m2:[27,10], g2:[19,31], p2:[19,37], eq:'sol' }
 };
 
-/* Le rendu : la tête, le tronc, les membres, puis le matériel par-dessus. */
+/* Un morceau de chair : épais à la racine, plus fin au bout, avec un ventre
+   réglable au milieu — c'est lui qui donne le galbe du mollet et de la cuisse.
+   Les deux bouts sont ronds, et tracés en Bézier plutôt qu'en arc pour que le
+   sens de parcours soit le même partout : deux formes qui se recouvrent
+   s'additionnent au lieu de se trouer. */
+function chair(a, b, wa, wb, wm){
+  var d = uni(vec(a, b)), n = pp(d), m = mil(a, b), k = 4/3;
+  if(wm === undefined) wm = (wa + wb) / 2;
+  var e = 2*wm - (wa + wb)/2;
+  return 'M' + xy(a[0] + n[0]*wa, a[1] + n[1]*wa) +
+    'Q' + xy(m[0] + n[0]*e, m[1] + n[1]*e) + ' ' + xy(b[0] + n[0]*wb, b[1] + n[1]*wb) +
+    'C' + xy(b[0] + n[0]*wb + d[0]*wb*k, b[1] + n[1]*wb + d[1]*wb*k) + ' ' +
+          xy(b[0] - n[0]*wb + d[0]*wb*k, b[1] - n[1]*wb + d[1]*wb*k) + ' ' +
+          xy(b[0] - n[0]*wb, b[1] - n[1]*wb) +
+    'Q' + xy(m[0] - n[0]*e, m[1] - n[1]*e) + ' ' + xy(a[0] - n[0]*wa, a[1] - n[1]*wa) +
+    'C' + xy(a[0] - n[0]*wa - d[0]*wa*k, a[1] - n[1]*wa - d[1]*wa*k) + ' ' +
+          xy(a[0] + n[0]*wa - d[0]*wa*k, a[1] + n[1]*wa - d[1]*wa*k) + ' ' +
+          xy(a[0] + n[0]*wa, a[1] + n[1]*wa) + 'Z';
+}
+
+/* Les épaisseurs, dans la boîte de 40. Un corps d'athlète : les épaules
+   larges, la taille prise, la cuisse deux fois le bras. */
+var R_TETE = 2.42;
+var CH = {
+  bras:[1.62, 1.14], biceps:1.5,      /* le bras est le plus gros sous l'épaule */
+  avant:[1.24, 0.8], avantV:1.08,     /* l'avant-bras, juste sous le coude      */
+  main:1.02,
+  cuisse:[2.15, 1.38], cuisseV:1.82,
+  tibia:[1.42, 0.78], mollet:1.62,    /* le mollet a son ventre                 */
+  pied:[0.95, 0.6],
+  cou:1.2, taille:1.95, hanche:2.05, epMin:3.1, epMax:4.6, epProfil:2.55
+};
+
+/* Le tronc n'est pas un tube. Il a une ligne d'épaules presque plate, des
+   trapèzes qui montent vers le cou, une taille prise et un bassin. Construit
+   en fuseau, son bout rond posait un dôme au-dessus des épaules : la tête s'y
+   enfonçait et le bonhomme avait l'air voûté, sans cou.
+
+   On le décrit donc par ses repères, en coordonnées « le long de l'axe du
+   tronc » et « en travers » : la moitié droite est la même liste au signe
+   près, et lisse() fait passer une courbe par tous les points. */
+function tronc(ep, b, wEp, wH, wT){
+  var d = uni(vec(ep, b)), n = pp(d);
+  var L = Math.sqrt((b[0]-ep[0])*(b[0]-ep[0]) + (b[1]-ep[1])*(b[1]-ep[1])) || 1;
+  var rep = [
+    [-0.9,      1.0],        /* base du cou     */
+    [ 0.15,     wEp * 0.94], /* pointe d'épaule */
+    [ L * 0.30, wEp * 0.78], /* aisselle        */
+    [ L * 0.56, wT],         /* taille          */
+    [ L * 0.88, wH],         /* hanche          */
+    [ L * 1.07, wH * 0.6]    /* bas du bassin   */
+  ];
+  var pt = function(q){ return [ep[0] + d[0]*q[0] + n[0]*q[1], ep[1] + d[1]*q[0] + n[1]*q[1]]; };
+  return lisse(rep.map(pt).concat(rep.slice().reverse().map(function(q){
+    return pt([q[0], -q[1]]);
+  })), true);
+}
+
+/* Le poing est centré sur la main, pas planté au bout : c'est lui qui doit
+   envelopper la barre ou l'haltère, et non les dépasser. */
+function brasDe(ep, c, m){
+  var h = uni(vec(c, m));
+  return [ chair(ep, c, CH.bras[0], CH.bras[1], CH.biceps),
+           chair(c, m, CH.avant[0], CH.avant[1], CH.avantV),
+           chair(pas(m, h, -0.55), pas(m, h, 0.25), CH.main, CH.main * 0.94) ];
+}
+/* Le pied prolonge le tibia quand la jambe est allongée — sur une pompe les
+   orteils s'appuient dans le sol. Quand elle est debout, il part vers l'avant
+   *et* vers le bas : à l'horizontale pure, de face, on obtenait deux palmes. */
+function jambeDe(ha, g, p, cx){
+  var t = uni(vec(g, p)), pd;
+  if(Math.abs(t[1]) > Math.abs(t[0])){
+    var q = pp(t), vers = (p[0] - cx) || -1;
+    if(q[0] * vers < 0) q = [-q[0], -q[1]];
+    pd = uni([q[0] * 0.8 + t[0] * 0.6, q[1] * 0.8 + t[1] * 0.6]);
+  }else pd = t;
+  return [ chair(ha, g, CH.cuisse[0], CH.cuisse[1], CH.cuisseV),
+           chair(g, p, CH.tibia[0], CH.tibia[1], CH.mollet),
+           chair(p, pas(p, pd, 1.6), CH.pied[0], CH.pied[1]) ];
+}
+
 function bonhomme(P){
-  var d = '', e = P.e, b = P.b;
-  d += trait(e, b);                                   /* tronc               */
-  d += trait(e, P.c, P.m);                            /* bras                */
-  d += trait(b, P.g, P.p);                            /* jambe               */
-  if(P.ax){
-    d += trait(mir(e, P.ax), b);
-    d += trait(mir(e, P.ax), mir(P.c, P.ax), mir(P.m, P.ax));
-    d += trait(b, mir(P.g, P.ax), mir(P.p, P.ax));
+  var ax = P.ax, e = P.e, b = P.b, t = P.t, d = [];
+  var wEp = ax ? Math.min(CH.epMax, Math.max(CH.epMin, Math.abs(e[0] - ax))) : CH.epProfil;
+  var epMid = ax ? [ax, e[1]] : e;
+  var epG = ax ? [ax - wEp, e[1]] : e, epD = ax ? [ax + wEp, e[1]] : e;
+  var haG = ax ? [b[0] - CH.hanche, b[1]] : b, haD = ax ? [b[0] + CH.hanche, b[1]] : b;
+  var cx = ax ? ax : b[0], u = uni(vec(epMid, t));
+
+  d.push(chair(epMid, t, CH.cou, CH.cou * 0.92));            /* le cou   */
+  d.push(tronc(epMid, b, wEp, CH.hanche, CH.taille));        /* le tronc */
+  d.push(chair(pas(t, u, R_TETE * 0.25), pas(t, u, -R_TETE * 0.25),
+               R_TETE * 0.98, R_TETE * 0.84));               /* la tête  */
+
+  d = d.concat(brasDe(epG, P.c, P.m)).concat(jambeDe(haG, P.g, P.p, cx));
+  if(ax){
+    d = d.concat(brasDe(epD, mir(P.c, ax), mir(P.m, ax)))
+         .concat(jambeDe(haD, mir(P.g, ax), mir(P.p, ax), cx));
   }else{
-    /* de profil : le second membre n'est donné que s'il se voit vraiment */
-    if(P.c2) d += trait(e, P.c2, P.m2);
-    if(P.g2) d += trait(b, P.g2, P.p2);
+    if(P.c2) d = d.concat(brasDe(e, P.c2, P.m2));
+    if(P.g2) d = d.concat(jambeDe(b, P.g2, P.p2, cx));
   }
+
   var eq = String(P.eq || '').split('+').map(function(k){
     return MATOS_POSE[k] ? MATOS_POSE[k](P) : '';
   }).join('');
-  return '<circle cx="' + P.t[0] + '" cy="' + P.t[1] + '" r="' + R_TETE + '"/>'
-       + '<path d="' + d + '"/>' + eq;
+  /* Chaque masse est son propre tracé : deux tracés distincts se recouvrent en
+     s'additionnant, là où deux sous-chemins d'un même tracé peuvent se trouer
+     s'ils ne tournent pas dans le même sens. */
+  return '<g class="co">' + d.map(function(x){ return '<path d="' + x + '"/>'; }).join('') +
+         '</g>' + (eq ? '<g class="mt">' + eq + '</g>' : '');
 }
 
 /* Le trait doit peser pareil à l'œil quelle que soit la taille : à 30 px on
