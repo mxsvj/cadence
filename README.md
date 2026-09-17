@@ -176,6 +176,39 @@ validé ce jour-là a bien eu lieu.
 
 ## L'entraînement
 
+Le sport a son onglet, et **une séance n'est plus une tâche du jour**. C'est le
+changement de la v14, et il répare une confusion : une heure de salle n'est pas
+une case à cocher. Elle ne se coche pas, elle se compose, se déroule série par
+série et laisse des charges derrière elle.
+
+Concrètement, les séances quittent trois endroits et en gagnent un :
+
+- `habitsFor()` les écarte, donc elles n'occupent plus de créneau dans le
+  « 3 tâches sur 5 » ni dans le dénominateur des statistiques ;
+- `scheduledFor()` les écarte aussi, sinon l'écran de choix proposerait de
+  « planifier » une séance qu'on ne retrouverait ensuite nulle part ;
+- `visibleHabits()` les écarte : elles se gèrent dans Sport, avec leurs
+  exercices sous la main, pas dans la liste des habitudes ;
+- `seancesFor()` et `seancesVisibles()` les rassemblent pour le nouvel onglet.
+
+En revanche `dayPoints()` lit le journal brut, donc **les points restent** : l'XP,
+le rang, le classement entre amis et les défis du Crew continuent de voir les
+séances. Ce sont deux comptes distincts, pas deux mondes.
+
+Deux détails qui découlent du même principe. Le Sport n'est **pas verrouillé**
+par la validation de la journée : le verrou existe pour qu'on pose sa journée
+avant d'aller consulter des chiffres, et s'entraîner n'est pas consulter. Et les
+jours d'une séance sont devenus **facultatifs** : sans jour elle reste dans la
+bibliothèque et se lance quand on veut, alors qu'une habitude récurrente sans
+jour ne reviendrait jamais — là, c'est toujours une erreur.
+
+Six onglets tiennent dans 390 px en retirant la gouttière, en resserrant le
+bourrage latéral et en descendant le libellé d'un point. La suite `sport.js`
+mesure la barre plutôt que de la croire : aucun onglet ne déborde de l'écran,
+aucun libellé n'est tronqué.
+
+### Ce qu'il y a dans l'onglet
+
 Une séance n'est pas un objet à part : c'est une tâche du jour avec
 `kind:'seance'` et une liste d'exercices. Tout ce qui existait — le choix de la
 journée, les points, la série, le classement, les rappels — continue de marcher
@@ -193,6 +226,35 @@ sinon le carnet et la récupération resteraient vides alors que la séance a bi
 eu lieu.
 
 ### La silhouette
+
+Elle est refaite en **deux couches**, et c'est ce qui la rend lisible :
+
+1. un corps complet en teinte neutre — tête, cou, tronc, bras, jambes. Il est
+   toujours là, donc la silhouette se lit comme un corps même quand aucun
+   muscle n'est coloré ;
+2. les muscles par-dessus, en retrait d'environ un point du bord. Ce lisieré
+   neutre qui dépasse **est** le trait de séparation : on obtient la définition
+   sans dessiner un seul contour.
+
+La première version posait un fuseau par membre et une plaque par masse du
+tronc. C'était commode à régler, mais un pectoral rectangulaire ne ressemble à
+rien. Désormais chaque muscle porte sa forme, et surtout **ses chefs sont
+séparés** : les six faisceaux du grand droit, les trois masses de la cuisse
+(vaste externe, droit fémoral, et le vaste interne en goutte au-dessus du
+genou), les deux jumeaux du mollet dont l'interne descend plus bas, les deux
+colonnes de l'érecteur du rachis. Seize formes sur la face, quatorze sur le
+dos, là où il y en avait huit et neuf.
+
+Le tronc garde des tracés écrits à la main, où la forme compte (le pectoral et
+sa ligne du bas qui redescend vers le sternum, le V des dorsaux, le losange du
+trapèze). Les membres, eux, restent construits avec `fuseau()` — un chef de
+muscle est un fuseau, et c'est le bon outil.
+
+Un `<use>` qui pointe dans le vide ou un `d` mal fermé ne dessine rien du tout,
+et ça ne se voit qu'à l'œil : `sport.js` demande donc au navigateur la boîte
+englobante de chaque tracé rendu et échoue si l'un d'eux est plat.
+
+### Comment elle est construite
 
 Elle est construite, pas dessinée à la main : deux primitives — un fuseau pour
 les membres, une plaque pour les masses du tronc — et la moitié gauche

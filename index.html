@@ -153,13 +153,16 @@ main{flex:1;padding:2px 16px 150px}
 /* ============================ 5. barre d'onglets ============================ */
 #tabbar{position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;justify-content:center;
   padding:0 12px calc(env(safe-area-inset-bottom) + 10px);pointer-events:none}
-.tabs{pointer-events:auto;width:100%;max-width:var(--maxw);display:grid;grid-template-columns:repeat(5,1fr);
-  gap:2px;background:var(--nav);border:1px solid var(--line);border-radius:22px;padding:7px 6px;
+/* Six onglets sur un écran de 390 px : chacun tient dans 62 px, donc plus de
+   gouttière ni de bourrage latéral, et un libellé d'un point plus petit. */
+.tabs{pointer-events:auto;width:100%;max-width:var(--maxw);display:grid;grid-template-columns:repeat(6,1fr);
+  gap:0;background:var(--nav);border:1px solid var(--line);border-radius:22px;padding:7px 4px;
   box-shadow:var(--sh2);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4)}
-.tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 2px;border-radius:15px;
-  font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut2);
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 1px;border-radius:14px;
+  font-size:9px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--mut2);
+  overflow:hidden;white-space:nowrap;
   transition:transform .14s var(--ease),color .18s,background .18s}
-.tab .ti{position:relative;display:flex;font-size:20px;line-height:1;transition:transform .2s var(--ease)}
+.tab .ti{position:relative;display:flex;font-size:19px;line-height:1;transition:transform .2s var(--ease)}
 .tab:active{transform:scale(.92)}
 .tab.on{color:var(--acc);background:var(--acc-soft)}
 .tab.on .ti{transform:translateY(-1px)}
@@ -1034,8 +1037,8 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v13 · 2026-09-17';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
-var TUTO_V = 3;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
+var BUILD = 'v14 · 2026-09-17';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var TUTO_V = 4;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
   "La discipline bat la motivation.",
@@ -1388,36 +1391,116 @@ function plaque(x1,y1,x2,y2,rd){
     'V'+r2(y1+r)+'A'+r+' '+r+' 0 0 1 '+r2(x1+r)+' '+r2(y1)+'Z';
 }
 var AXE = 59.2;                    /* bord intérieur : laisse un fin sillon central */
+/* ------------------------------------------------- 1. le corps, en neutre */
 var SIL_NEUTRE = [
-  'M60 6.5c7 0 12.3 6 12.3 14.5S67 35.5 60 35.5 47.7 29.5 47.7 21 53 6.5 60 6.5z',
-  plaque(54.5,33,60,47,2),
-  fuseau(19,142,5.5,18,150,5),
-  plaque(44,128,AXE,148,4),
-  fuseau(50,198,8,49,210,7),
-  fuseau(46,242,5.5,44,252,6.5)
+  /* tête */
+  'M60 6.2c7.1 0 12.5 6.1 12.5 14.8S67.1 35.8 60 35.8 47.5 29.7 47.5 21 52.9 6.2 60 6.2z',
+  /* cou */
+  'M54.4 32.4h5.6v14.4h-5.6c.9-4.4 1-9.4 0-14.4z',
+  /* tronc : épaules larges, taille marquée, hanches */
+  'M59.2 44.6H45.2c-3.6 4.6-5.6 10.8-5.8 18-.2 6.8 1 13.8 2.6 20.4 1.4 5.6 2.2 11 2.2 16.4 0 6.6-1 13.2-2.8 19.6l-1 3.6 4.6 5.4h14.2V44.6z',
+  /* épaule, bras, avant-bras, main */
+  fuseau(37.2,47,10.8, 32.6,63,9),
+  fuseau(31.4,63,9, 25.4,102,7),
+  fuseau(24.6,102,7, 19.4,141,5.8),
+  'M19.4 137.6c3.6 0 6.4 2.8 6.4 6.6 0 4.8-2.6 9-6.4 9s-6.6-4.2-6.6-9c0-3.8 3-6.6 6.6-6.6z',
+  /* bassin */
+  'M43.4 124.8h15.8v26.4H47.4c-2-8.6-3.4-17.6-4-26.4z',
+  /* cuisse, genou, mollet, pied */
+  fuseau(52.4,149,11.4, 47,198,9),
+  'M50 195c4.8 0 8.4 3.6 8.4 8.4s-3.6 8.6-8.4 8.6-8.4-3.8-8.4-8.6 3.6-8.4 8.4-8.4z',
+  fuseau(48.8,210,8.4, 45.4,242,5.8),
+  'M46.2 239.6h7.4v7.4l-10 3.8c-2.6 1-4.6.2-4.6-1.8 0-1.8 1.4-2.8 3.2-3.8 2.4-1.4 3.8-3.2 4-5.6z'
 ];
+
+/* Les membres : chaque chef de muscle est un fuseau à lui, posé dans le membre
+   et en retrait de son bord. Les fins sillons entre eux sont ce qui fait lire
+   « deux jumeaux » plutôt que « un mollet ». */
 var SIL = {
   av:{ neutre:SIL_NEUTRE, m:{
-    trapezes:  fuseau(56,41,3.5,45.5,51,7),
-    epaules:   fuseau(37.5,47,10.5,33,62,8.5),
-    pecs:      plaque(38,47,AXE,78,9),
-    abdos:     plaque(46.5,80,AXE,126,6),
-    biceps:    fuseau(31,64,8,25,101,6.5),
-    avantbras: fuseau(24,104,6.5,19,140,5.5),
-    quadris:   fuseau(52,149,11,47,197,8.5),
-    mollets:   fuseau(48.5,210,8,45.5,241,5.5)
-  }},
+  /* trapèze : la pente du cou vers la clavicule */
+  trapezes:
+    'M54.6 33.6c1 4.4 2.6 8.2 4.6 11v3.2H45.2c3.4-3.2 6.6-8 9.4-14.2z',
+
+  /* pectoral : haut plat sous la clavicule, bord externe qui plonge, puis la
+     ligne du bas qui redescend vers le sternum — c'est celle qu'on reconnaît */
+  pecs:
+    'M59.2 48.6H46c-2.4 2.4-3.6 5.8-3.6 10.2 0 3.8.8 7.2 2.6 10 3.6 2.4 8.6 4 14.2 4.8V48.6z',
+
+  /* grand droit : six faisceaux séparés par les intersections tendineuses.
+     C'est ce détail qui fait lire « abdos » et pas « ventre ». */
+  abdos: [
+    'M50.2 82.8h9v11h-8.4c-.3-3.7-.5-7.4-.6-11z',
+    'M50.4 95.6h8.8v10.8h-8.6c-.1-3.6-.2-7.2-.2-10.8z',
+    'M50.2 108.2h9v10.4h-8.4c-.4-3.4-.6-6.9-.6-10.4z',
+    /* oblique : la bande étroite qui ferme le flanc */
+    'M48.4 83.4c-1.6 2.4-2.4 6.8-2.4 12.8 0 6.2.8 12.8 2.4 19.2l1 4 .8-1c-1-11.6-1.6-23.2-1.8-35z'
+  ],
+
+  /* deltoïde antérieur : la coiffe, dessinée après le pectoral parce qu'elle
+     le recouvre à l'épaule, comme dans un vrai corps */
+  epaules:
+    'M46.4 46.6c-5.4.2-9.8 3.2-13 8.8-2.4 4.2-3.8 9.2-3.8 14.2l.2 3.8 4.6-1.4c1.6-4.2 3-9 4-14 1-4.8 3.4-8.8 7-11.8l1-.6z',
+
+  biceps: [
+    fuseau(28.6,69,3.6, 26.2,96,2.6),
+    fuseau(35.6,69,3.4, 31.6,96,2.6)
+  ],
+  avantbras: [
+    fuseau(22.2,106,2.9, 19.6,134,2.2),
+    fuseau(28.2,106,2.7, 23.6,134,2.2)
+  ],
+  /* cuisse : vaste externe, droit fémoral, et le vaste interne en goutte
+     juste au-dessus du genou */
+  quadris: [
+    fuseau(44.6,152,4.2, 42.2,194,3.4),
+    fuseau(52,151,4, 49,193,3.2),
+    fuseau(58,172,2.4, 55.6,194,3.4)
+  ],
+  /* mollet : le jumeau interne descend plus bas que l'externe */
+  mollets: [
+    fuseau(44.6,213,3.4, 43.6,238,2.2),
+    fuseau(52.4,213,3.8, 49,236,2.4)
+  ] } },
   ar:{ neutre:SIL_NEUTRE, m:{
-    trapezes:  plaque(45,38,AXE,76,8),
-    epaules:   fuseau(37.5,47,10.5,33,62,8.5),
-    dos:       plaque(39.5,66,AXE,107,9),
-    triceps:   fuseau(31,64,8,25,101,6.5),
-    avantbras: fuseau(24,104,6.5,19,140,5.5),
-    lombaires: plaque(48,108,AXE,130,5),
-    fessiers:  plaque(43,132,AXE,160,9),
-    ischios:   fuseau(52,162,11,47,197,8.5),
-    mollets:   fuseau(48.5,210,8,45.5,241,5.5)
-  }}
+  /* trapèze : le grand losange, du cou au milieu du dos */
+  trapezes:
+    'M54.8 33.6c1 4.6 2.6 8.4 4.4 11.2v31l-3.2-3.4c-4.4-4.8-8.2-11-11-18l-1.6-4 3-3.2c3.2-3.6 6-8.2 8.4-13.6z',
+
+  /* dorsaux : le V — large sous l'aisselle, étroit sur les lombes */
+  dos:
+    'M43.4 57.6c-1.8 5.4-2.6 11.8-2.2 18.4.4 7 2.2 13.6 5 18.8l1.8 3.2 11.2-8.4V70.6l-3.6-1.6c-4.6-2-8.6-5.4-11.4-9.8l-.8-1.6z',
+
+  /* lombaires : les deux colonnes de l'érecteur du rachis, pas une plaque */
+  lombaires: [
+    fuseau(52.6,103,2.6, 53.4,122,3),
+    fuseau(57.4,102,2.2, 57.8,122,2.6)
+  ],
+
+  /* fessier : la masse ronde, et le pli qui le sépare de la cuisse */
+  fessiers:
+    'M50.6 126.4c-4.4 1.4-7.4 6.6-7.8 13.6-.4 6.4 1.6 12.6 5.2 16.4l1.8 1.8 9.4-1.8v-30.6l-8.6.6z',
+
+  epaules:
+    'M46.4 46.6c-5.4.2-9.8 3.2-13 8.8-2.4 4.2-3.8 9.2-3.8 14.2l.2 3.8 4.6-1.4c1.6-4.2 3-9 4-14 1-4.8 3.4-8.8 7-11.8l1-.6z',
+
+  /* triceps : le chef latéral et le long chef, séparés par le sillon */
+  triceps: [
+    fuseau(28.2,68,3.8, 25.8,98,2.8),
+    fuseau(35.4,68,3.4, 31.6,98,2.6)
+  ],
+  avantbras: [
+    fuseau(22.2,106,2.9, 19.6,134,2.2),
+    fuseau(28.2,106,2.7, 23.6,134,2.2)
+  ],
+  ischios: [
+    fuseau(45,158,4, 42.6,194,3.2),
+    fuseau(53,157,4, 49.6,193,3.4)
+  ],
+  mollets: [
+    fuseau(44.6,213,3.4, 43.6,238,2.2),
+    fuseau(52.4,213,3.8, 49,236,2.4)
+  ] } }
 };
 function silhouette(face,couleurs,w,cls){
   var d=SIL[face]||SIL.av, out='';
@@ -1427,7 +1510,12 @@ function silhouette(face,couleurs,w,cls){
   }
   d.neutre.forEach(function(pth){ out+=paire(pth,'var(--line)'); });
   var ids=Object.keys(d.m);
-  for(var i=0;i<ids.length;i++) out+=paire(d.m[ids[i]],(couleurs&&couleurs[ids[i]])||'var(--line2)');
+  for(var i=0;i<ids.length;i++){
+    var c=(couleurs&&couleurs[ids[i]])||'var(--line2)', pth=d.m[ids[i]];
+    /* un muscle peut avoir plusieurs chefs : chacun son tracé, tous sa couleur */
+    if(Array.isArray(pth)){ for(var k=0;k<pth.length;k++) out+=paire(pth[k],c); }
+    else out+=paire(pth,c);
+  }
   return '<svg class="silh'+(cls?' '+cls:'')+'" viewBox="0 0 120 258" width="'+w+'" height="'+
          Math.round(w*258/120)+'" aria-hidden="true">'+out+'</svg>';
 }
@@ -1575,14 +1663,29 @@ function isOff(key,id){ var a=state.off[key]; return !!(a && a.indexOf(id)>-1); 
 /* retenue pour la journée = au calendrier ET pas retirée */
 function planned(h,key){ return scheduled(h,key) && !isOff(key,h.id); }
 function byTime(a,b){ return toMin(a.time)-toMin(b.time) || a.name.localeCompare(b.name); }
-function scheduledFor(key){ return state.habits.filter(function(h){ return scheduled(h,key); }).sort(byTime); }
-function habitsFor(key){ return state.habits.filter(function(h){ return planned(h,key); }).sort(byTime); }
+function scheduledFor(key){
+  return state.habits.filter(function(h){ return !isSeance(h) && scheduled(h,key); }).sort(byTime);
+}
+/* Les tâches de la journée : les séances n'en font plus partie. Un
+   entraînement n'est pas une case à cocher — il a son onglet, ses compteurs et
+   ses points, mais il n'occupe plus un créneau du « 3 sur 5 ». */
+function habitsFor(key){
+  return state.habits.filter(function(h){ return !isSeance(h) && planned(h,key); }).sort(byTime);
+}
+/* Les séances prévues ce jour-là, pour l'onglet Sport. */
+function seancesFor(key){
+  return state.habits.filter(function(h){ return isSeance(h) && planned(h,key); }).sort(byTime);
+}
 /* la journée du jour a-t-elle été validée ? */
 function dayReady(){ return !!state.plannedDays[today()]; }
 var planDate=null;   /* non nul quand on prépare un autre jour qu'aujourd'hui */
 function planKey(){ return planDate || today(); }
-/* tant qu'elle ne l'est pas : rien d'autre que Jour et Profil */
-function locked(tab){ return !dayReady() && tab!=='jour' && tab!=='profil'; }
+/* Tant qu'elle ne l'est pas : rien d'autre que Jour et Profil. Le Sport n'est
+   pas verrouillé — le verrou existe pour qu'on pose sa journée avant d'aller
+   consulter des chiffres, et s'entraîner n'est pas consulter. */
+function locked(tab){
+  return !dayReady() && tab!=='jour' && tab!=='profil' && tab!=='sport';
+}
 function habitById(id){
   for(var i=0;i<state.habits.length;i++) if(state.habits[i].id===id) return state.habits[i];
   return null;
@@ -1930,7 +2033,10 @@ function recordExo(id){
 function derniereCharge(){
   var out = {};
   carnet().forEach(function(s){
-    var t = fromKey(s.key).getTime() + toMin(s.at || '12:00') * 60000;
+    /* une sauvegarde abîmée peut rendre une heure illisible : midi par
+       défaut, plutôt qu'un « NaN jour » incompréhensible à l'écran */
+    var mn = toMin(s.at || '12:00');
+    var t = fromKey(s.key).getTime() + (isFinite(mn) ? mn : 720) * 60000;
     (s.sea.x || []).forEach(function(ex){
       var x = exoOr(ex.i), n = (ex.s || []).length;
       if(!n) return;
@@ -2319,8 +2425,8 @@ var touched=false;
 });
 function buzz(p){ if(!touched) return; try{ if(navigator.vibrate) navigator.vibrate(p||30); }catch(e){} }
 
-var TABS=[['jour','day','Jour'],['stats','stats','Stats'],['habitudes','habits','Habitudes'],
-          ['journal','journal','Journal'],['profil','profile','Profil']];
+var TABS=[['jour','day','Jour'],['sport','dumbbell','Sport'],['stats','stats','Stats'],
+          ['habitudes','habits','Habitudes'],['journal','journal','Journal'],['profil','profile','Profil']];
 var pendingDel=null, delT=null, statsMonth=null, lbTab='day', justDone=null;
 
 function renderTabs(){
@@ -2368,12 +2474,13 @@ function render(){
   renderTabs();
   var v=$('#view');
   if(state.tab==='jour')           v.innerHTML= (planDate || !dayReady()) ? viewPlan() : viewJour();
+  else if(state.tab==='sport')     v.innerHTML=viewSport();
   else if(state.tab==='stats')     v.innerHTML=viewStats();
   else if(state.tab==='habitudes') v.innerHTML=viewHabitudes();
   else if(state.tab==='journal'){  v.innerHTML=viewJournal(); bindJournal(); }
   else                           { v.innerHTML=viewProfil(); bindAccount(); }
   justDone=null;   /* la pulsation ne se rejoue pas au rendu suivant */
-  $('#fab').classList.toggle('hide', !(state.tab==='jour'||state.tab==='habitudes'));
+  $('#fab').classList.toggle('hide', !(state.tab==='jour'||state.tab==='habitudes'||state.tab==='sport'));
   /* verrouillé = visible avec un cadenas, pas caché : on doit comprendre pourquoi */
   var fb=$('#topbar [data-act="gofocus"]');
   fb.innerHTML = ic('bolt') + (dayReady()?'':'<span class="lk">'+ic('lock')+'</span>');
@@ -2452,8 +2559,11 @@ function viewPlan(){
 }
 
 /* La bande des sept jours, et ce que pèse la semaine. */
+/* Les sept cases de la semaine : un jour est actif dès qu'une tâche y a été
+   validée. Les compteurs d'entraînement, eux, sont passés dans Sport — les
+   mélanger ici n'avait plus de sens une fois les deux comptes séparés. */
 function carteRythme(){
-  var lundi=mondayOf(nowD()), actifs=joursActifs(lundi), t=statSemaine(lundi), tk=today();
+  var lundi=mondayOf(nowD()), actifs=joursActifs(lundi), tk=today();
   var h='<section class="card pop"><div class="sec" style="margin:0 0 2px"><h2>Ton rythme</h2>'+
         '<span class="small">cette semaine</span></div>'+
         '<div class="rythme">';
@@ -2464,47 +2574,28 @@ function carteRythme(){
     h+='<div class="rday"><small>'+DL[i]+'</small><div class="rbox '+cl+'">'+
        (actifs[key]?ic('check'):'')+'</div></div>';
   }
-  h+='</div><div class="wkstat">'+
-     '<div><b>'+t.seances+'</b><span>SÉANCE'+(t.seances>1?'S':'')+'</span></div>'+
-     '<div><b>'+t.series+'</b><span>SÉRIES</span></div>'+
-     '<div><b>'+(t.reps||Math.round(t.secs/60))+'</b><span>'+(!t.reps&&t.secs?'MINUTES':'RÉPÉTITIONS')+'</span></div>'+
-     '</div>'+
-     '<button class="btn pri wide" data-act="bouge" style="margin-top:13px">'+ic('plus')+' J\'ai bougé aujourd\'hui</button>'+
-     '<button class="btn ghost wide sm" data-act="gocarnet" style="margin-top:8px">'+ic('book')+' Voir mon carnet</button>'+
-     '</section>';
+  h+='</div></section>';
   return h;
 }
 /* La prochaine séance, avec de quoi la commencer sans la chercher. */
-function carteSeance(){
-  var p=prochaineSeance(); if(!p) return '';
-  var h=p.h, aujourdhui=(p.key===today());
-  var quand = aujourdhui ? 'Aujourd\'hui' : (p.jours===1 ? 'Demain' : frShort(fromKey(p.key)));
-  var l=exosOf(h), montres=l.slice(0,3), reste=l.length-montres.length;
-  var out='<div class="sec"><h2>Prochaine séance</h2><span class="small">'+esc(quand)+'</span></div>'+
-    '<section class="card pop">'+
-    '<div class="row" style="gap:12px;align-items:flex-start">'+
+/* Dans la journée, le sport ne prend plus toute la place : une ligne quand
+   une séance est prévue aujourd'hui, et elle renvoie vers l'onglet Sport où
+   tout se passe. */
+function rappelSport(){
+  var t=today(), l=seancesFor(t).filter(function(x){ return !isDone(t,x.id); });
+  if(!l.length) return '';
+  var h=l[0];
+  return '<div class="sec"><h2>Séance du jour</h2><span class="small">'+
+      (l.length>1 ? l.length+' prévues' : esc(h.time||''))+'</span></div>'+
+    '<article class="card lift hrow" data-act="tab" data-tab="sport">'+
       '<span class="etile"'+tileStyle(h.color)+'><span class="emo">'+ico(h.emoji,'dumbbell')+'</span></span>'+
-      '<div style="flex:1;min-width:0">'+
-        '<h2 style="font-size:23px">'+esc(h.name)+'</h2>'+
-        '<div class="small muted">'+(h.time?esc(h.time)+' · ':'')+l.length+' exercices · '+
-          setsPrevus(h)+' séries</div></div></div>'+
-    '<div class="exoscroll" style="margin-top:12px">'+
-      montres.map(function(e){
-        var x=exoOr(e.x);
-        return '<div class="exothumb">'+vignetteExo(x,44)+
-          '<div class="tn">'+esc(x.n)+'</div>'+
-          '<div class="tv">'+e.s+' × '+e.r+'</div></div>';
-      }).join('')+
-      (reste>0?'<div class="exomore">+'+reste+'</div>':'')+
-    '</div>';
-  out+= aujourdhui
-    ? '<button class="btn pri wide" data-act="runstart" data-id="'+h.id+'">'+ic('play')+' Démarrer</button>'
-    : '<button class="btn wide" data-act="open" data-id="'+h.id+'">'+ic('book')+' Voir la séance</button>';
-  out+='<button class="btn ghost wide sm" data-act="editseance" data-id="'+h.id+'" style="margin-top:8px">'+
-       ic('edit')+' Modifier la séance</button>';
-  return out+'</section>';
+      '<div class="tmain"><div class="tname">'+esc(h.name)+'</div>'+
+        '<div class="tmeta"><span class="num">'+exosOf(h).length+' exercices · '+setsPrevus(h)+' séries</span>'+
+        '<span class="acc">'+ic('right')+' dans Sport</span></div></div>'+
+      '<div class="tright"><button class="del" data-act="runstart" data-id="'+h.id+'" aria-label="Démarrer">'+
+        ic('play')+'</button></div>'+
+    '</article>';
 }
-
 /* On a bougé sans ouvrir l'app : on inscrit la séance après coup. */
 function bougeToday(){
   var l=seances(), key=today();
@@ -2549,7 +2640,8 @@ function bougeOk(id){
        sinon la séance n'apparaîtrait ni au carnet ni dans les compteurs. */
     ensure(key,libre.id).sea={ d:dureeLibre*60, plein:false, x:[] };
   }
-  state.plannedDays[key]=true;      /* on a bougé : la journée est forcément posée */
+  /* La séance ne valide plus la journée d'habitudes : ce sont deux choses
+     séparées depuis que le sport a son onglet. */
   save(); buzz([25,50,25]); toast('Noté — respect','🔥'); syncLater();
   closeSheet(); render();
 }
@@ -2582,9 +2674,8 @@ function viewJour(){
     h+=done.map(function(x){ return taskCard(x,key,true); }).join('');
   }
 
-  h+= carteSeance();
+  h+= rappelSport();
   h+= carteRythme();
-  if(carnet().length) h+= carteRecup(true);
 
   var demain=dk(addDays(nowD(),1)), pret=!!state.plannedDays[demain];
   h+='<div class="grid2" style="margin-top:16px">'+
@@ -2721,7 +2812,7 @@ function weekTable(){
   return '<section class="card pop"><table class="wtable">'+head+body+'</table></section>';
 }
 /* ------------------------------------------------- récupération et carnet */
-var statsVue='disc', bodyFace='av', anneeVue=null;
+var bodyFace='av', anneeVue=null;
 
 /* ------------------------------------------------------ années de salle */
 function carteAnnee(){
@@ -2755,20 +2846,8 @@ function couleursRecup(){
   recuperation().forEach(function(m){ c[m.id]=ETATS[m.etat].c; });
   return c;
 }
-function carteRecup(compacte){
-  var r=recuperation(), prets=r.filter(function(m){ return m.etat==='pret'; }).length;
-  if(compacte){
-    var frais=fraisDabord().filter(function(m){ return m.etat==='pret'; }).slice(0,3)
-                .map(function(m){ return m.n; }).join(' · ');
-    return '<div class="sec"><h2>Récupération</h2><span class="small">'+prets+'/'+r.length+' prêts</span></div>'+
-      '<section class="card pop"><div class="row" style="gap:14px;align-items:center">'+
-        silhouette(bodyFace,couleursRecup(),58)+
-        '<div style="flex:1;min-width:0">'+
-          '<div style="font-weight:800;margin-bottom:3px">'+(prets?'Frais et disponibles':'Tout est encore chaud')+'</div>'+
-          '<div class="small muted">'+esc(frais||'Laisse passer la nuit, ça reviendra.')+'</div>'+
-          '<button class="btn ghost sm" data-act="gorecup" style="margin-top:10px">'+ic('body')+' Le détail</button>'+
-        '</div></div></section>';
-  }
+function carteRecup(){
+  var r=recuperation();
   var h='<section class="card pop">'+
     '<div class="seg" style="margin-bottom:10px">'+
       '<button class="'+(bodyFace==='av'?'on':'')+'" data-act="bface" data-f="av">Devant</button>'+
@@ -2841,27 +2920,6 @@ function viewStats(){
   var wkPts=rangePoints(mon,addDays(mon,6)), pwPts=rangePoints(prevMon,addDays(prevMon,6));
   var st=dayStat(t), bd=bestDayOfWeek(mon);
   var h='';
-
-  h+='<div class="seg" style="margin-bottom:14px">'+
-     '<button class="'+(statsVue==='disc'?'on':'')+'" data-act="svue" data-v="disc">'+ic('stats')+' Discipline</button>'+
-     '<button class="'+(statsVue==='carnet'?'on':'')+'" data-act="svue" data-v="carnet">'+ic('dumbbell')+' Entraînement</button>'+
-     '</div>';
-
-  if(statsVue==='carnet'){
-    var tw=statSemaine(mon);
-    h+='<div class="sec"><h2>Récupération</h2><span class="small">maintenant</span></div>'+carteRecup(false);
-    h+='<div class="sec"><h2>Cette semaine</h2><span class="small">'+tw.seances+' séance'+(tw.seances>1?'s':'')+'</span></div>'+
-       '<section class="card pop"><div class="wkstat" style="margin:0;padding:0;border:0">'+
-       '<div><b>'+tw.seances+'</b><span>SÉANCES</span></div>'+
-       '<div><b>'+tw.series+'</b><span>SÉRIES</span></div>'+
-       '<div><b>'+(tw.reps||Math.round(tw.secs/60))+'</b><span>'+(!tw.reps&&tw.secs?'MINUTES':'RÉPÉTITIONS')+'</span></div>'+
-       '</div></section>';
-    h+='<div class="sec"><h2>Carnet</h2><span class="small">'+carnet().length+' séance'+(carnet().length>1?'s':'')+'</span></div>'+
-       carteCarnet(20);
-    h+='<div class="dispo">Cadence est une application d\'entraînement : elle ne donne pas d\'avis '+
-       'médical et ne remplace pas un professionnel de santé.</div>';
-    return h;
-  }
 
   h+='<div class="sec"><h2>Le mois</h2><span>'+mg.done+' tâches</span></div>'+mg.html;
 
@@ -2953,6 +3011,77 @@ function viewHabitudes(){
      '<button class="btn" data-act="new">'+ic('plus')+' Une tâche</button>'+
      '<button class="btn pri" data-act="newseance">'+ic('dumbbell')+' Une séance</button>'+
      '</div>';
+  return h;
+}
+
+/* -------------------------------------------------------------- ONGLET SPORT */
+/* Le sport a son onglet parce qu'une séance n'est pas une case à cocher : on la
+   choisit, on la déroule série par série, elle laisse des charges et des
+   répétitions derrière elle. Elle rapporte toujours ses points — l'XP, le rang
+   et les défis du Crew continuent de la voir — mais elle n'occupe plus un
+   créneau du « 3 tâches sur 5 » : ce sont deux comptes différents. */
+function ligneSeance(h, key, compacte){
+  var fait = key && isDone(key, h.id), l = exosOf(h);
+  return '<article class="card lift hrow">'+
+    '<span class="etile"'+tileStyle(h.color)+'><span class="emo">'+ico(h.emoji,'dumbbell')+'</span></span>'+
+    '<div class="tmain"><div class="tname"'+(fait?' style="text-decoration:line-through;text-decoration-color:var(--mut2)"':'')+'>'+esc(h.name)+'</div>'+
+      '<div class="tmeta"><span class="num">'+l.length+' exercice'+(l.length>1?'s':'')+' · '+
+        setsPrevus(h)+' séries</span>'+
+      (compacte ? '' : '<span>'+esc(schedLabel(h))+'</span>')+
+      (fait ? '<span class="grn">'+ic('check')+' faite</span>' : '')+'</div></div>'+
+    '<div class="tright">'+
+      (fait ? '' : '<button class="del" data-act="runstart" data-id="'+h.id+'" aria-label="Démarrer">'+ic('play')+'</button>')+
+      '<button class="del" data-act="editseance" data-id="'+h.id+'" aria-label="Modifier">'+ic('edit')+'</button>'+
+      (compacte ? '' : '<button class="del'+(pendingDel===h.id?' sure':'')+'" data-act="del" data-id="'+h.id+'" aria-label="Supprimer">'+
+        (pendingDel===h.id?'Sûr ?':ic('trash'))+'</button>')+
+    '</div></article>';
+}
+
+function viewSport(){
+  var t = today(), mon = mondayOf(nowD()), tw = statSemaine(mon);
+  var duJour = seancesFor(t), toutes = seancesVisibles();
+  var h = '';
+
+  /* 1. ce qu'il y a à faire maintenant */
+  h += '<div class="sec"><h2>Aujourd\'hui</h2><span class="small">'+esc(frShort(nowD()))+'</span></div>';
+  if(duJour.length){
+    h += duJour.map(function(x){ return ligneSeance(x, t, true); }).join('');
+  }else{
+    var pr = prochaineSeance();
+    h += '<div class="card empty" style="margin-bottom:9px"><span class="e">'+ic('moon')+'</span>'+
+         'Rien de programmé aujourd\'hui.'+
+         (pr ? '<br>Prochaine : <b>'+esc(pr.h.name)+'</b> '+
+               (pr.jours===1?'demain':'le '+esc(frShort(fromKey(pr.key)))) : '')+
+         '</div>';
+  }
+  h += '<div class="grid2" style="margin-bottom:4px">'+
+       '<button class="btn" data-act="bouge">'+ic('bolt')+' J\'ai bougé</button>'+
+       '<button class="btn pri" data-act="newseance">'+ic('plus')+' Une séance</button>'+
+       '</div>';
+
+  /* 2. la bibliothèque */
+  h += '<div class="sec"><h2>Mes séances</h2><span>'+toutes.length+'</span></div>';
+  h += toutes.length
+    ? toutes.map(function(x){ return ligneSeance(x, null, false); }).join('')
+    : '<div class="card empty"><span class="e">'+ic('dumbbell')+'</span><b>Aucune séance.</b><br>'+
+      'Crée-en une : tu choisis des exercices dans le catalogue ('+EXOS.length+' pour l\'instant), '+
+      'tu poses tes séries, et tu la retrouves ici.</div>';
+
+  /* 3. la semaine, la récupération, la force, le carnet */
+  h += '<div class="sec"><h2>Cette semaine</h2><span class="small">'+tw.seances+' séance'+(tw.seances>1?'s':'')+'</span></div>'+
+     '<section class="card pop"><div class="wkstat" style="margin:0;padding:0;border:0">'+
+     '<div><b>'+tw.seances+'</b><span>SÉANCES</span></div>'+
+     '<div><b>'+tw.series+'</b><span>SÉRIES</span></div>'+
+     '<div><b>'+(tw.reps||Math.round(tw.secs/60))+'</b><span>'+(!tw.reps&&tw.secs?'MINUTES':'RÉPÉTITIONS')+'</span></div>'+
+     '</div></section>';
+
+  h += '<div class="sec"><h2>Récupération</h2><span class="small">maintenant</span></div>'+carteRecup();
+  h += carteForce();
+  h += carteCharge();
+  h += '<div class="sec"><h2>Carnet</h2><span class="small">'+carnet().length+' séance'+(carnet().length>1?'s':'')+'</span></div>'+
+       carteCarnet(20);
+  h += '<div class="dispo">Cadence est une application d\'entraînement : elle ne donne pas d\'avis '+
+       'médical et ne remplace pas un professionnel de santé.</div>';
   return h;
 }
 
@@ -4446,8 +4575,6 @@ function viewAthlete(){
   var h='';
   h+= carteGabarit();
   h+='<div class="sec"><h2>La saison</h2></div>'+carteSaison();
-  h+= carteForce();
-  h+= carteCharge();
   h+='<div class="dispo">Cadence est une application d\'entraînement : elle ne donne pas d\'avis '+
      'médical et ne remplace pas un professionnel de santé. En cas de douleur, de blessure ou de '+
      'problème de santé, va voir quelqu\'un dont c\'est le métier.</div>';
@@ -4549,20 +4676,30 @@ function viewProfil(){
       '<button class="btn sm" data-act="ics">'+ic('day')+' Fichier .ics</button>'+
       '<button class="btn sm" data-act="notifperm">'+ic('bell')+' Autoriser les notifs</button>'+
     '</div></div></details>';
-  h+='<details>'+sum('dumbbell','Les séances')+'<div class="dc">'+
-    'Une séance est une tâche du jour comme une autre : elle a une heure, des jours, '+
-    'et la valider rapporte les mêmes points. La différence, c\'est qu\'elle porte une liste '+
-    'd\'exercices avec leurs séries.<br><br>'+
+  h+='<details>'+sum('dumbbell','L\'onglet Sport')+'<div class="dc">'+
+    'Le sport a son onglet, et ce n\'est <b>plus une tâche du jour</b>. Une séance ne se coche '+
+    'pas : on la compose, on la déroule, elle laisse des charges derrière elle. Elle rapporte '+
+    'toujours ses points — l\'XP, le rang, le classement et les défis du Crew la voient — mais '+
+    'elle n\'occupe plus un créneau du « 3 tâches sur 5 ». Ce sont deux comptes différents, et '+
+    'les mélanger faisait passer une heure de salle pour une case cochée.<br><br>'+
+    '<b>Composer une séance.</b> Le <b>+</b> de l\'onglet Sport en crée une : un nom, une icône, '+
+    'puis les exercices, pris dans le catalogue ('+EXOS.length+' pour l\'instant, cherchables par '+
+    'nom ou par muscle). Pour chacun tu poses tes séries, tes répétitions, ta charge et ton repos. '+
+    'Si ton exercice n\'existe pas, crée-le : il te suffit de dire quels muscles il travaille, et '+
+    'il rejoint le catalogue pour de bon.<br><br>'+
+    '<b>Les jours sont facultatifs.</b> Coche des jours et la séance apparaît dans « Aujourd\'hui » '+
+    'au bon moment ; n\'en coche aucun et elle reste simplement dans ta bibliothèque, à lancer '+
+    'quand tu veux.<br><br>'+
     '<b>La dérouler.</b> Appuie sur <b>Démarrer</b> : une série à la fois, le minuteur de repos '+
     'part tout seul, et tu peux corriger les répétitions ou la charge en cours de route. '+
     'À la fin, tout s\'inscrit au carnet sans rien retaper.<br><br>'+
-    '<b>Tu t\'es entraîné sans l\'app ?</b> Le bouton <b>J\'ai bougé aujourd\'hui</b> rattrape le coup, '+
-    'même pour une sortie qui n\'était pas prévue.<br><br>'+
-    '<b>Le catalogue</b> compte '+EXOS.length+' exercices, cherchables par nom ou par muscle. '+
-    'Si le tien n\'y est pas, crée-le : il te suffit de dire ce qu\'il travaille.'+
+    '<b>Tu t\'es entraîné sans l\'app ?</b> <b>J\'ai bougé</b> rattrape le coup, même pour une '+
+    'sortie qui n\'était pas prévue.'+
     '</div></details>';
   h+='<details>'+sum('body','La récupération')+'<div class="dc">'+
-    'La silhouette se colore avec ce qu\'il y a dans ton carnet : <span class="acc">rouge</span> '+
+    'La silhouette est dessinée muscle par muscle — les trois faisceaux de la cuisse, les six '+
+    'du grand droit, les deux jumeaux du mollet — et elle se colore avec ce qu\'il y a dans ton '+
+    'carnet : <span class="acc">rouge</span> '+
     'pour un muscle qui vient de travailler, <span class="gld">jaune</span> pendant qu\'il revient, '+
     '<span class="grn">vert</span> quand il est prêt.<br><br>'+
     'Un muscle moteur prend la durée pleine, un muscle qui suit en prend 60 %. Les durées sont des '+
@@ -5029,7 +5166,7 @@ function renderForm(){
     '</div></div>'+
 
     (f.type==='rec'
-      ? '<div class="field"><label>Jours</label><div class="dchips">'+
+      ? '<div class="field"><label>Jours'+(f.kind==='seance'?' <span style="text-transform:none;letter-spacing:0;color:var(--mut2)">— facultatif</span>':'')+'</label><div class="dchips">'+
           DL.map(function(d,i){
             return '<button class="dchip'+(f.days.indexOf(DIDX[i])>-1?' on':'')+'" data-act="fday" data-d="'+DIDX[i]+'">'+d+'</button>';
           }).join('')+
@@ -5059,7 +5196,12 @@ function saveForm(){
   var f=formData;
   var name=String(f.name||'').trim();
   if(!name){ toast('Il faut un nom','✏️'); return; }
-  if(f.type==='rec' && !f.days.length){ toast('Choisis au moins un jour','📅'); return; }
+  /* Une habitude récurrente sans jour ne reviendrait jamais : c'est une
+     erreur. Une séance sans jour, en revanche, se tient très bien — elle reste
+     dans la bibliothèque et on la lance quand on veut. */
+  if(f.type==='rec' && !f.days.length && f.kind!=='seance'){
+    toast('Choisis au moins un jour','📅'); return;
+  }
   var steps=String(f.steps||'').split('\n').map(function(s){ return s.trim(); }).filter(Boolean).slice(0,20);
   var t=today();
   if(f.kind==='seance'){
@@ -5102,9 +5244,20 @@ function delHabit(id){
   state.habits.splice(i,1);
   save(); buzz([20,40,20]); toast(n+' supprimée','🗑️'); render();
 }
+/* L'onglet Habitudes ne gère plus que les habitudes : les séances se gèrent
+   dans Sport, avec leurs exercices sous la main. */
 function visibleHabits(){
   var t=today();
-  return state.habits.filter(function(h){ return !(h.type==='once' && h.date && h.date<t); });
+  return state.habits.filter(function(h){
+    return !isSeance(h) && !(h.type==='once' && h.date && h.date<t);
+  });
+}
+/* Les séances visibles : les mêmes règles, mais côté entraînement. */
+function seancesVisibles(){
+  var t=today();
+  return state.habits.filter(function(h){
+    return isSeance(h) && !(h.type==='once' && h.date && h.date<t);
+  }).sort(byTime);
 }
 /* on échange avec le voisin *visible* : les tâches passées cachées ne bloquent pas */
 function moveHabit(id,dir){
@@ -5524,6 +5677,8 @@ document.addEventListener('click', function(ev){
   /* --- créer --- */
   if(a==='newseance'){ openSeance(null); return; }
   if(a==='newpick'){
+    /* Dans Sport, la question ne se pose pas : le + crée une séance. */
+    if(state.tab==='sport'){ openSeance(null); return; }
     openSheet('<div class="shead"><span class="etile">'+ic('plus')+'</span>'+
       '<div style="flex:1;min-width:0"><h2>Qu\'est-ce qu\'on ajoute ?</h2>'+
       '<div class="muted small">Les deux comptent pareil dans ta journée</div></div>'+
@@ -5678,8 +5833,7 @@ document.addEventListener('click', function(ev){
   if(a==='bougeok'){ bougeOk(el.getAttribute('data-id')); return; }
   if(a==='bougedur'){ dureeLibre=clamp(dureeLibre+(+el.getAttribute('data-d'))*15,15,240); bougeToday(); return; }
   if(a==='editseance'){ var hs=habitById(el.getAttribute('data-id')); if(hs) openSeance(hs); return; }
-  if(a==='gocarnet'||a==='gorecup'){ state.tab='stats'; statsVue='carnet'; save(); render(); toTop(); return; }
-  if(a==='svue'){  statsVue=el.getAttribute('data-v'); render(); toTop(); return; }
+  if(a==='gocarnet'||a==='gorecup'){ state.tab='sport'; save(); render(); toTop(); return; }
   if(a==='bface'){ bodyFace=el.getAttribute('data-f'); render(); return; }
   if(a==='opencarnet'){ ficheCarnet(el.getAttribute('data-k'), el.getAttribute('data-id')); return; }
 
@@ -5863,8 +6017,10 @@ var TOUR=[
  /* ---------- partie 2 : l'app débloquée ---------- */
  {tab:'jour', sel:'.dayhead', t:'Ta journée',
   x:"L'anneau montre ton avancement, à côté tes points et ta meilleure série. Touche une tâche pour cocher ses étapes une par une, ou la coche pour la valider d'un coup : 10 points, +5 si tu es dans l'heure. Le bouton éclair lance le mode focus."},
+ {tab:'sport', sel:'.hrow|.empty', t:'Le sport a son onglet',
+  x:"Une séance n'est pas une case à cocher : tu la composes avec les exercices du catalogue, tu la déroules série par série, et elle laisse tes charges derrière elle. Elle rapporte ses points comme le reste, mais elle ne compte pas dans tes tâches du jour — ce sont deux choses différentes."},
  {tab:'jour', sel:'.tabs', t:'Le reste de l\'app',
-  x:"Stats : ta régularité mois par mois et tes records. Habitudes : réorganiser et modifier. Journal : humeur, note, poids. Profil : ton rang, tes badges, et le classement — envoie ton code à un pote, dès qu'il l'ajoute vous apparaissez chacun chez l'autre."}
+  x:"Stats : ta régularité mois par mois et tes records. Habitudes : réorganiser et modifier. Journal : humeur, note, poids et nutrition. Profil : ton rang, tes badges, et le classement — envoie ton code à un pote, dès qu'il l'ajoute vous apparaissez chacun chez l'autre."}
 ];
 var PART1=4;                      /* étapes 0..3 : avant la validation du jour */
 var coachOn=false, coachI=0, coachTo=0;
