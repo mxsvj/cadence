@@ -41,6 +41,23 @@ jobs:
           done
           exit $echec
 
+      - name: Les photos d'exercices
+        run: |
+          # Une image manquante ne se voit pas dans la page : elle se voit
+          # à l'écran, à l'usage. On la demande donc vraiment.
+          echec=0
+          for f in tractions devcouche squat gainage rameur; do
+            lu=$(curl -sS -m 20 -o /tmp/$f.jpg -w '%{http_code} %{size_download} %{content_type}' "$SITE/exos/$f.jpg")
+            echo "exos/$f.jpg : $lu"
+            case "$lu" in
+              200\ *image/jpeg) ;;
+              *) echec=1 ;;
+            esac
+            taille=$(echo "$lu" | cut -d' ' -f2)
+            [ "$taille" -gt 4000 ] || { echo "  trop légère pour être une photo"; echec=1; }
+          done
+          exit $echec
+
       - name: Un vrai produit dans la base d'aliments
         run: |
           # Le pot de pâte à tartiner le plus scanné au monde : s'il ne revient
