@@ -349,34 +349,63 @@ son épaisseur et il faut la lui laisser. C'est cette mesure qui a trouvé la
 barre du développé couché qui sortait à gauche, puis les deux squats dont le
 pied touchait le bord du cadre.
 
-### Pourquoi pas de vraies photos
+### Les photos
 
-La question s'est posée, et la réponse tient à trois vérifications.
+Trente-quatre des quarante-trois exercices sont illustrés par une **photo**,
+tirée du jeu de données ouvert
+[free-exercise-db](https://github.com/yuhonas/free-exercise-db). Les neuf
+autres gardent leur dessin construit.
 
-**Les bases de photos « libres » ne le sont pas vraiment.**
-[free-exercise-db](https://github.com/yuhonas/free-exercise-db) affiche 876
-exercices avec deux photos chacun et se présente comme domaine public — mais le
-dépôt **n'a aucun fichier de licence**, seulement un badge. Son amont,
+**Sur la licence, disons les choses telles qu'elles sont.** Le dépôt se
+présente comme domaine public, mais il ne contient aucun fichier de licence —
+seulement un badge. Son amont,
 [wrkout/exercises.json](https://github.com/wrkout/exercises.json), n'en a pas
-davantage et vend par ailleurs un jeu de données commercial. Les photos sont
-visiblement celles d'un studio de musculation. « Domaine public » y est une
-affirmation d'un tiers, pas une cession du titulaire des droits : ce n'est pas
-une base sur laquelle publier.
+davantage et vend par ailleurs un jeu de données commercial. « Domaine
+public » y est donc une affirmation d'un tiers plutôt qu'une cession du
+titulaire des droits. C'est un risque assumé en connaissance de cause, pas une
+garantie ; la source est créditée en bas de l'onglet Sport. Les GIF d'un jeu
+proprement licencié coûtent de 299 à 599 $, ce qui est exclu tant que
+l'application reste gratuite.
 
-**Les bases proprement licenciées sont payantes.** Les GIF d'ExerciseDB
-coûtent entre 299 et 599 $ en licence unique. L'application doit rester
-gratuite ; c'est exclu d'office.
+#### Ce qu'il a fallu faire aux images
 
-**Et même gratuites, elles iraient mal ici.** Sept des quarante-trois
-exercices n'y figurent pas (corde à sauter, burpees, vélo, L-sit, dragon flag,
-hollow body, squat bulgare). La première image d'un exercice est sa position de
-*départ*, qui souvent ne montre pas le mouvement — celle de la planche montre
-un homme à genoux. Enfin une photo de salle, murs rouges et parquet orange,
-n'est pas lisible dans une vignette de 30 px sur fond sombre, alors qu'une
-silhouette pleine l'est.
+Le jeu de données donne deux prises par exercice : la position de départ et la
+position finale. **Ni l'une ni l'autre n'est systématiquement la bonne** — la
+position de départ d'une planche montre un homme à genoux, celle d'un squat un
+homme debout. La prise est donc choisie à l'œil, exercice par exercice
+(`prise.js`) : souvent la seconde, parfois la première quand c'est elle qui
+porte le mouvement (dips, écarté, soulevé de terre, ATR).
 
-Un dessin construit ne coûte rien, fonctionne hors ligne, couvre les
-quarante-trois exercices et ne peut pas montrer autre chose que le mouvement.
+Le recadrage a demandé trois essais, et l'échec est instructif :
+
+1. le recadrage automatique de `sharp` (`strategy.attention`) choisit la zone
+   la plus « dense » de l'image. Sur des photos de salle, c'est un rack de
+   disques bien plus souvent que l'athlète ;
+2. un cadrage écrit à la main en `[gauche, haut, côté]` — la moitié était
+   fausse, parce qu'un rectangle à trois nombres se juge très mal à l'œil sur
+   une planche quadrillée, et parce que j'avais lu les verticales en
+   pourcentage de largeur et les horizontales en pourcentage de hauteur ;
+3. ce qui marche : **un carré du côté du petit bord**, qui glisse le long du
+   grand. Rien n'est jamais coupé en haut ni en bas, et il ne reste qu'un seul
+   nombre à régler par photo — où se trouve l'athlète. La seule erreur
+   possible est de désigner le mauvais côté de l'image, et elle se voit tout
+   de suite.
+
+Les images sortent en 360 × 360, JPEG qualité 72 : **499 Ko pour trente-quatre
+photos**, soit une quinzaine de kilo-octets chacune. Elles sont servies depuis
+`/exos/` et chargées en différé, donc elles ne retardent jamais l'affichage.
+
+#### Une photo a besoin de place
+
+Une vignette de 30 px suffisait pour un dessin — six traits, ça se lit petit.
+Une photo de salle à 30 px n'est qu'une tache rouge. Les vignettes de liste
+sont donc passées à **52 px** et le mode séance à **150 px**. C'est le vrai
+coût des photos, et il se paie en hauteur de ligne.
+
+`dessins.js` vérifie le dossier dans les deux sens — aucune photo déclarée
+manquante, aucun fichier inutilisé — puis demande au navigateur si chaque
+image se charge vraiment, si elle est carrée et si elle est assez définie. Une
+image absente ne se verrait qu'en production, sinon.
 
 ### La récupération
 

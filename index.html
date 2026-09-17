@@ -458,6 +458,12 @@ details .dc li{margin-bottom:6px}
 .exodraw .co{fill:currentColor;stroke:none}
 .exodraw .mt{fill:none;stroke:currentColor}
 .exorow .exodraw,.pickrow .exodraw{padding:1px}
+
+/* une photo d'exercice : même gabarit que le dessin, mais elle a besoin de
+   place — sous 40 px une salle de sport n'est plus qu'une tache */
+.exophoto{display:block;flex:0 0 auto;object-fit:cover;border-radius:10px;
+  background:var(--surf2)}
+.rnbody .exophoto{border-radius:16px;margin-bottom:10px}
 .exorow.now .exodraw{color:var(--acc)}
 .rnbody .exodraw{color:var(--txt);background:none;margin-bottom:4px}
 
@@ -711,6 +717,7 @@ details .dc li{margin-bottom:6px}
 .spark .tgt{fill:var(--gold);font-size:9.5px;font-weight:700}
 .dispo{font-size:11.5px;color:var(--mut2);line-height:1.5;text-align:center;
   padding:16px 6px 4px;max-width:420px;margin:0 auto}
+.dispo a{color:var(--mut);text-decoration:underline}
 
 /* ============================ 15. mode focus ============================ */
 #focus{position:fixed;inset:0;z-index:80;display:none;background:var(--bg);
@@ -1037,7 +1044,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v16 · 2026-09-17';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v17 · 2026-09-17';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 4;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -1807,6 +1814,32 @@ function traitPose(w){
   return Math.round(px * 40 / Math.max(w,8) * 100) / 100;
 }
 
+/* La taille d'une vignette en ligne de liste. Trente pixels suffisaient pour
+   un dessin, qui est fait de six traits ; une photo de salle a besoin du
+   double pour qu'on distingue l'athlète du rack de disques. */
+var VIGN = 52;
+
+/* Les exercices qui ont une photo. Trente-quatre sur quarante-trois : les
+   neuf autres (suspension, pompes piquées, pistol, chaise au mur, hollow
+   body, L-sit, dragon flag, burpees, montées de genoux) n'existent nulle
+   part en photo libre, ou seulement sous un autre mouvement — un « fast
+   skipping » élastique au pied n'est pas une montée de genoux. Ceux-là
+   gardent leur dessin, qui au moins ne ment pas. */
+var PHOTOS = ('tractions tracsup tracprise muscleup rowinv rowhalt curl shrug ' +
+  'pompes pompesdia pompesdecl atr dips dipsbanc devcouche devmil ecarte elevlat ' +
+  'squat squatbarre squatbulg fentes sdt hipthrust mollets gainage gainlat ' +
+  'relevjambes crunch superman course corde velo rameur').split(' ')
+  .reduce(function(o,k){ o[k]=1; return o; }, {});
+
+/* La photo d'un exercice. Elle est servie depuis le site, pas embarquée dans
+   la page : trente-quatre images pèsent un demi-méga, l'app entière en pèse
+   moins. Chargée en différé, elle ne retarde donc jamais l'affichage. */
+function photoExo(id,w){
+  if(!PHOTOS[id]) return '';
+  return '<img class="exophoto" src="exos/'+id+'.jpg" width="'+w+'" height="'+w+'"' +
+         ' loading="lazy" decoding="async" alt="">';
+}
+
 /* Le dessin d'un exercice, prêt à poser dans une ligne de liste. */
 function dessinExo(id,w){
   var P=POSES[id];
@@ -1855,7 +1888,9 @@ function couleursExo(x){
    Un exercice créé à la main n'en a pas ; on retombe alors sur la
    silhouette teintée des muscles choisis, qui reste vraie. */
 function vignetteExo(x,w){
-  var t=w||34, d=dessinExo(x.id,t);
+  var t=w||34, p=photoExo(x.id,t);
+  if(p) return p;
+  var d=dessinExo(x.id,t);
   if(d) return d;
   var c=couleursExo(x), av=0, ar=0;
   Object.keys(c).forEach(function(m){ (SIL.av.m[m]?av++:0); (SIL.ar.m[m]?ar++:0); });
@@ -3224,7 +3259,7 @@ function ficheCarnet(key,id){
     (sea.x||[]).map(function(ex){
       var x=exoOr(ex.i), rec=recordExo(ex.i);
       var det=(ex.s||[]).map(function(t){ return t.r+(t.w?' × '+t.w+' kg':''); }).join('  ·  ');
-      return '<div class="exorow">'+vignetteExo(x,30)+
+      return '<div class="exorow">'+vignetteExo(x,VIGN)+
         '<div class="ei"><div class="en">'+esc(x.n)+'</div>'+
         '<div class="em">'+esc(det)+'</div>'+
         (rec?'<div class="em" style="color:var(--gold)">record '+rec.r+(rec.w?' × '+rec.w+' kg':'')+'</div>':'')+
@@ -3400,7 +3435,10 @@ function viewSport(){
   h += '<div class="sec"><h2>Carnet</h2><span class="small">'+carnet().length+' séance'+(carnet().length>1?'s':'')+'</span></div>'+
        carteCarnet(20);
   h += '<div class="dispo">Cadence est une application d\'entraînement : elle ne donne pas d\'avis '+
-       'médical et ne remplace pas un professionnel de santé.</div>';
+       'médical et ne remplace pas un professionnel de santé.<br>'+
+       'Photos des exercices : jeu de données ouvert '+
+       '<a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener">free-exercise-db</a>. '+
+       'Les exercices sans photo libre gardent un dessin.</div>';
   return h;
 }
 
@@ -5153,7 +5191,7 @@ function ligneExoForm(e,i,n){
       '<button data-act="exup" data-i="'+i+'" aria-label="Monter"'+(i===0?' disabled':'')+'>'+ic('up')+'</button>'+
       '<button data-act="exdown" data-i="'+i+'" aria-label="Descendre"'+(i===n-1?' disabled':'')+'>'+ic('down')+'</button>'+
     '</div>'+
-    vignetteExo(x,30)+
+    vignetteExo(x,VIGN)+
     '<div class="ei"><div class="en">'+esc(x.n)+marqueSensible(x)+'</div>'+
       '<div class="em">'+e.s+' × '+e.r+' '+u+(e.w?' · '+e.w+' kg':'')+' · repos '+e.rest+' s</div></div>'+
     '<button class="del" data-act="exdel" data-i="'+i+'" aria-label="Retirer">'+ic('trash')+'</button>'+
@@ -5217,7 +5255,7 @@ function pickerHTML(){
     ? '<div class="picklist">'+l.map(function(x){
         var mus=(x.m||[]).map(function(m){ return MNAME[m]; }).join(' · ');
         return '<button class="pickrow" data-act="pickexo" data-x="'+esc(x.id)+'">'+
-          vignetteExo(x,30)+
+          vignetteExo(x,VIGN)+
           '<span class="ei"><span class="pn">'+esc(x.n)+marqueSensible(x)+'</span><br>'+
           '<span class="pm">'+esc(mus)+'</span></span></button>';
       }).join('')+'</div>'
@@ -5288,14 +5326,14 @@ function ficheSeance(h){
   var liste = (fait && sea) ? sea.x.map(function(ex){
       var x=exoOr(ex.i), n=(ex.s||[]).length;
       var det=(ex.s||[]).map(function(st){ return st.r+(st.w?'×'+st.w+'kg':''); }).join(' · ');
-      return '<div class="exorow done">'+vignetteExo(x,30)+
+      return '<div class="exorow done">'+vignetteExo(x,VIGN)+
         '<div class="ei"><div class="en">'+esc(x.n)+'</div>'+
         '<div class="em">'+n+' série'+(n>1?'s':'')+' · '+esc(det)+'</div></div>'+
         '<span class="grn">'+ic('check')+'</span></div>';
     }).join('')
     : exosOf(h).map(function(e){
       var x=exoOr(e.x);
-      return '<div class="exorow">'+vignetteExo(x,30)+
+      return '<div class="exorow">'+vignetteExo(x,VIGN)+
         '<div class="ei"><div class="en">'+esc(x.n)+marqueSensible(x)+'</div>'+
         '<div class="em">'+esc(ligneExo(e))+'</div></div></div>';
     }).join('');
@@ -5397,7 +5435,7 @@ function runRender(){
     }).join('')+'</div>';
 
   var gene=exoSensible(exoOr(x.i));
-  out+='<div class="rnbody">'+vignetteExo(exoOr(x.i),124)+
+  out+='<div class="rnbody">'+vignetteExo(exoOr(x.i),150)+
     '<div class="rnname">'+esc(x.n)+'</div>'+
     '<div class="rnserie">Série '+(x.s.length+1)+' sur '+x.nb+'</div>'+
     (gene ? '<div class="small" style="color:var(--gold);margin-top:7px">'+ic('alert')+' '+
