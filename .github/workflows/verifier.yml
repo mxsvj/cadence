@@ -1,0 +1,67 @@
+# Vérifie que le site déployé répond, et que chacune de ses fonctions est bien
+# en ligne. À lancer à la main depuis l'onglet Actions après un déploiement.
+#
+# Pourquoi passer par une action plutôt que d'ouvrir le site : les fonctions
+# ont un contrôle de santé en GET qui dit ce qui leur manque (base branchée ou
+# non, version), et c'est plus rapide à lire ici qu'à travers l'écran. Aucun
+# secret n'est utilisé : ce sont les mêmes URL publiques que le navigateur
+# appelle.
+
+name: Vérifier le déploiement
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    env:
+      SITE: https://cadence-ten-theta.vercel.app
+    steps:
+      - name: La page elle-même
+        run: |
+          code=$(curl -sS -m 30 -o /tmp/page.html -w '%{http_code}' "$SITE/")
+          echo "page : $code"
+          [ "$code" = "200" ] || exit 1
+          grep -o "var BUILD = '[^']*'" /tmp/page.html || echo "version introuvable"
+          echo "icônes dessinées : $(grep -c 'id="i-' /tmp/page.html)"
+
+      - name: Les fonctions
+        run: |
+          echec=0
+          for f in board crew account push food; do
+            reponse=$(curl -sS -m 30 -w '\n%{http_code}' "$SITE/api/$f")
+            corps=$(echo "$reponse" | head -n -1)
+            code=$(echo "$reponse" | tail -n 1)
+            echo "api/$f ($code) : $corps"
+            [ "$code" = "200" ] || echec=1
+          done
+          exit $echec
+
+      - name: Un vrai produit dans la base d'aliments
+        run: |
+          # Le pot de pâte à tartiner le plus scanné au monde : s'il ne revient
+          # pas, c'est Open Food Facts ou le réseau, pas le code.
+          reponse=$(curl -sS -m 30 -w '\n%{http_code}' \
+            -X POST "$SITE/api/food" \
+            -H 'Content-Type: application/json' \
+            -d '{"action":"code","code":"3017620422003"}')
+          corps=$(echo "$reponse" | head -n -1)
+          code=$(echo "$reponse" | tail -n 1)
+          echo "code-barres ($code) : $corps"
+          [ "$code" = "200" ] || exit 1
+          echo "$corps" | grep -q '"kcal"' || { echo "pas de calories dans la réponse"; exit 1; }
+
+      - name: Une recherche par nom
+        run: |
+          reponse=$(curl -sS -m 30 -w '\n%{http_code}' \
+            -X POST "$SITE/api/food" \
+            -H 'Content-Type: application/json' \
+            -d '{"action":"search","q":"skyr"}')
+          corps=$(echo "$reponse" | head -n -1)
+          code=$(echo "$reponse" | tail -n 1)
+          echo "recherche ($code) : $(echo "$corps" | cut -c1-400)"
+          [ "$code" = "200" ] || exit 1

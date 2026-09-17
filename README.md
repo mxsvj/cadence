@@ -16,6 +16,10 @@ Tracker d'habitudes en un seul fichier, pensé pour l'écran d'accueil d'un iPho
 - `manifest.json`, `icon-192.png`, `icon-512.png` — ce qu'il faut pour que
   l'app s'installe sur l'écran d'accueil.
 - `.github/workflows/rappels.yml` — le réveil régulier du minuteur.
+- `.github/workflows/verifier.yml` — à lancer à la main après un déploiement :
+  il appelle la page et le contrôle de santé de chaque fonction, puis demande un
+  vrai code-barres à Open Food Facts. C'est la façon la plus rapide de savoir si
+  une panne vient du code, de la base ou du déploiement.
 
 ## Ce qui est stocké, et où
 
