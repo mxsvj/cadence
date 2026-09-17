@@ -982,12 +982,12 @@ var ICO_EMOJI = {
   '🥛':'shaker','⚗️':'flask','🐟':'fish','🧂':'crystal','🌱':'sprout','🍽️':'meal','📲':'phone',
   '✅':'check','⚠️':'alert','🔔':'bell','🔕':'bell','📨':'arrow','🙃':'face2','👌':'check',
   '🔑':'lock','📴':'plug','🔌':'plug','🎨':'palette','⛰️':'mountain','🏁':'flag','🚩':'flag',
-  '👋':'close','🤷':'face3','📨':'arrow','💬':'book','📸':'camera','🥊':'glove','📋':'habits',
+  '👋':'close','🤷':'face3','💬':'book','📸':'camera','📋':'habits',
   '🔒':'lock','📅':'day','🔢':'hundred','✏️':'edit','🍎':'apple',
   '❌':'close','🗑️':'trash','🔄':'repeat','↩︎':'undo','🔗':'copy',
   '📥':'save','👍':'check','ℹ️':'alert','⏱':'timer','☁️':'cloud',
-  '👤':'profile','👊':'fist','💯':'hundred','🔓':'lock','🔁':'repeat',
-  '🥇':'medal','🥈':'medal','🥉':'medal','👇':'down','😄':'face4'
+  '👤':'profile','👊':'fist','🔓':'lock','🔁':'repeat',
+  '🥈':'medal','🥉':'medal','👇':'down','😄':'face4'
 };
 var SPRITE_IDS = null;
 function connuIcone(n){
@@ -3279,8 +3279,11 @@ function demarrerScan(){
   catch(e){ if(msg) msg.textContent='Ce téléphone ne lit pas ce type de code.'; return; }
   navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
     .then(function(st){
-      if(!vivant){ st.getTracks().forEach(function(t){ t.stop(); }); return; }
-      flux=st; v.srcObject=st; v.play();
+      /* La feuille a pu se refermer pendant que l'utilisateur répondait à la
+         demande d'autorisation : dans ce cas on rend la caméra tout de suite. */
+      if(!vivant || !v || !v.isConnected){ st.getTracks().forEach(function(t){ t.stop(); }); return; }
+      flux=st; v.srcObject=st;
+      var joue=v.play(); if(joue && joue.catch) joue.catch(function(){});
       if(msg) msg.textContent='Approche jusqu\'à ce que le code remplisse le cadre.';
       var boucle=function(){
         if(!vivant) return;

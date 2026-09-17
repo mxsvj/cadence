@@ -287,6 +287,15 @@ suffisent ; et la base est tenue par des bénévoles, donc on met en cache
 n'est donnée qu'en kilojoules — c'est fréquent — elle est convertie. Une fiche
 sans nom ou sans calories est écartée plutôt qu'affichée à moitié.
 
+Un mot est reclassé avant d'être rendu. Le moteur d'Open Food Facts cherche
+dans tous les champs d'une fiche : demander « skyr » lui remonte d'abord des
+fromages blancs dont la description cite le mot quelque part — c'est ce que
+la vérification sur le vrai service a montré. Cadence retrie donc sur ce que
+l'utilisateur voit vraiment, le nom du produit : ceux qui commencent par ce
+qu'il a tapé, puis ceux qui le contiennent, puis le reste dans l'ordre
+d'origine. La comparaison ignore les accents, parce que les fiches sont
+saisies à la main et qu'ils y sont une loterie.
+
 Le code-barres se lit avec `BarcodeDetector`, natif dans Chrome. Safari sur
 iPhone ne l'a pas encore : l'app propose alors de taper les chiffres sous les
 barres, ce qui donne exactement le même résultat sans embarquer une

@@ -31,7 +31,11 @@ function cleanCode(c){
   return (v.length >= 6 && v.length <= 14) ? v : '';
 }
 function cleanQ(q){
-  return String(q || '').replace(/[^\x20-\x7e -ɏ]/g, ' ').trim().slice(0, 48);
+  /* On garde l'ASCII imprimable et le latin étendu — accents et ç compris,
+     c'est une recherche en français. Tout le reste (contrôles, emojis,
+     séparateurs invisibles) devient une espace. */
+  return String(q || '').replace(/[^\u0020-\u007e\u00a0-\u024f]/g, ' ')
+         .replace(/\s+/g, ' ').trim().slice(0, 48);
 }
 
 /* fetch avec une limite de temps : la fonction ne doit pas rester pendue si la
@@ -99,8 +103,30 @@ function parCode(res, code){
   });
 }
 
+/* Le classement d'Open Food Facts cherche dans tous les champs : demander
+   « skyr » remonte d'abord des fromages blancs dont la fiche cite le mot
+   quelque part. On reclasse donc sur ce que l'utilisateur voit vraiment, le
+   nom du produit : d'abord ceux qui commencent par ce qu'il a tapé, puis ceux
+   qui le contiennent, puis le reste dans l'ordre d'origine. */
+function sansAccent(t){
+  /* « pâtes » doit trouver « pates » : les fiches sont saisies à la main par
+     des bénévoles, les accents y sont une loterie. */
+  return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function reclasser(l, q){
+  var m = sansAccent(q);
+  return l.map(function(x, i){
+    var n = sansAccent(x.n), r = 3;
+    if(n === m) r = 0;
+    else if(n.indexOf(m) === 0) r = 1;
+    else if(n.indexOf(m) > -1) r = 2;
+    return { x: x, r: r, i: i };
+  }).sort(function(a, b){ return a.r - b.r || a.i - b.i; })
+    .map(function(o){ return o.x; });
+}
+
 function parNom(res, q){
-  var cle = 'off:q:' + q.toLowerCase();
+  var cle = 'off:q2:' + sansAccent(q);
   return duCache(cle).then(function(hit){
     if(hit) return send(res, 200, { ok: true, cache: true, produits: hit });
     /* Le sous-domaine français fait remonter les produits d'ici en premier ;
@@ -109,7 +135,7 @@ function parNom(res, q){
             + '&page_size=' + MAX_RES + '&fields=' + CHAMPS
             + '&search_terms=' + encodeURIComponent(q);
     return fetchCourt(url).then(function(j){
-      var l = ((j && j.products) || []).map(pourCent).filter(Boolean).slice(0, MAX_RES);
+      var l = reclasser(((j && j.products) || []).map(pourCent).filter(Boolean), q).slice(0, MAX_RES);
       return auCache(cle, l, TTL_Q).then(function(){
         send(res, 200, { ok: true, produits: l });
       });
