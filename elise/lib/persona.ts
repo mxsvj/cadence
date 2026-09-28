@@ -1,23 +1,28 @@
 import "server-only";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { DEFAULT_NAME } from "./persona-profile";
 
-// La persona vit dans `elise-persona.md`, à la racine du projet, pour qu'on
-// puisse la modifier sans toucher au code. next.config.ts veille à ce que le
-// fichier soit bien embarqué dans le déploiement.
+// Les règles de base de l'IA vivent dans `elise-persona.md`, à la racine du
+// projet, pour qu'on puisse les modifier sans toucher au code. Le personnage
+// (nom, âge, apparence…) se règle dans l'espace admin et s'y ajoute.
+// next.config.ts veille à ce que le fichier parte avec le déploiement.
 
 const FIRST_MESSAGE_HEADING = /^##\s+Premier message\s*$/im;
 
 let cached: string | null = null;
 
-/** Le fichier persona complet : c'est l'instruction système du modèle. */
+/** Le fichier des règles de base : le début de l'instruction système. */
 export function getPersona(): string {
   cached ??= readFileSync(path.join(process.cwd(), "elise-persona.md"), "utf8");
   return cached;
 }
 
-/** Le texte placé sous le titre « ## Premier message », jusqu'au titre suivant. */
-export function getFirstMessage(): string {
+/**
+ * Le texte placé sous le titre « ## Premier message », jusqu'au titre
+ * suivant, où `{nom}` devient le nom du personnage.
+ */
+export function getFirstMessage(name: string = DEFAULT_NAME): string {
   const persona = getPersona();
   const match = FIRST_MESSAGE_HEADING.exec(persona);
   if (!match) {
@@ -32,5 +37,10 @@ export function getFirstMessage(): string {
     // on ne garde que les sauts de paragraphe.
     .replace(/([^\n])\n(?!\n)/g, "$1 ");
   if (!message) throw new Error("La section « ## Premier message » de elise-persona.md est vide.");
-  return message;
+  return fillName(message, name);
+}
+
+/** Remplace `{nom}` par le nom du personnage. */
+export function fillName(text: string, name: string): string {
+  return text.replaceAll("{nom}", name);
 }

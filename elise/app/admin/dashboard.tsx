@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import {
@@ -106,7 +105,7 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-serif text-3xl">Tableau de bord</h1>
-          <p className="text-sm text-muted">Les gains d&apos;Élise</p>
+          <p className="text-sm text-muted">Les gains, en direct</p>
         </div>
         <div className="flex items-center gap-4">
           <p className="flex items-center gap-2 text-sm" role="status" suppressHydrationWarning>
@@ -116,9 +115,6 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
             </span>
             {offline ? "Hors ligne, nouvel essai…" : `En direct · mis à jour il y a ${secondsAgo} s`}
           </p>
-          <Link href="/" className="text-sm text-muted underline underline-offset-4">
-            Conversation
-          </Link>
         </div>
       </header>
 
@@ -180,7 +176,7 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
         className="grid grid-cols-1 gap-4 transition-opacity sm:grid-cols-2 lg:grid-cols-4"
         style={{ opacity: dimmed ? 0.45 : 1 }}
       >
-        <div className="flex flex-col gap-1 rounded-3xl border border-line bg-surface p-5 sm:col-span-2 lg:col-span-1 lg:row-span-1">
+        <div className="flex flex-col justify-center gap-1 rounded-3xl border border-line bg-surface p-5 sm:col-span-2 lg:row-span-2">
           <p className="text-sm text-muted">
             Gains · {filters.period} derniers jours{selected ? ` · ${selected.nom}` : ""}
           </p>
@@ -205,6 +201,11 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
           label="Messages achetés"
           value={t.messages.nombre.toLocaleString("fr-FR")}
           detail={`${plural(t.messages.achats, "achat")} · ${formatEuros(t.messages.cents)}`}
+        />
+        <Tile
+          label="Contenus vendus"
+          value={formatEuros(t.contenus.cents)}
+          detail={plural(t.contenus.nombre, "contenu débloqué", "contenus débloqués")}
         />
         <Tile
           label="Abonnements actifs"
@@ -257,6 +258,36 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
         </section>
       </div>
 
+      {/* La LTV : ce qu'un client rapporte sur toute sa vie */}
+      <section aria-label="LTV" className="flex flex-col gap-4 rounded-3xl border border-line bg-surface p-5">
+        <div>
+          <h2 className="font-bold">LTV · valeur d&apos;un client</h2>
+          <p className="text-sm text-muted">
+            Ce qu&apos;un client a dépensé au total, depuis son premier achat. Calculée sur tout l&apos;historique
+            {selected ? `, pour ${selected.nom}` : ""}.
+          </p>
+        </div>
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+          <Figure label={selected ? "LTV" : "LTV moyenne"} value={formatEuros(data.ltv.moyenne_cents)} />
+          {!selected && <Figure label="LTV médiane" value={formatEuros(data.ltv.mediane_cents)} />}
+          {!selected && <Figure label="Meilleure LTV" value={formatEuros(data.ltv.max_cents)} />}
+          <Figure label="Panier moyen" value={formatEuros(data.ltv.panier_moyen_cents)} />
+          <Figure
+            label="Achats par client"
+            value={Number(data.ltv.achats_par_client).toLocaleString("fr-FR", { maximumFractionDigits: 1 })}
+          />
+          <Figure label="Durée de vie moyenne" value={plural(data.ltv.duree_moyenne_jours, "jour")} />
+          {!selected && <Figure label="Clients" value={data.ltv.clients.toLocaleString("fr-FR")} />}
+          {!selected && (
+            <Figure
+              label="Inscrits qui ont payé"
+              value={`${data.ltv.payants} / ${data.ltv.inscrits}`}
+              hint="achats réels, hors démo"
+            />
+          )}
+        </dl>
+      </section>
+
       {/* Par personne */}
       <section className="flex min-w-0 flex-col gap-3 rounded-3xl border border-line bg-surface p-5">
         <div>
@@ -267,14 +298,15 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
           <p className="text-muted">Personne n&apos;a encore rien acheté.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="w-full min-w-[720px] text-sm">
               <thead className="text-left text-xs uppercase tracking-wide text-muted">
                 <tr className="border-b border-line">
                   <th className="py-2 pr-3 font-bold">Personne</th>
                   <th className="py-2 pr-3 text-right font-bold">Pourboires</th>
                   <th className="py-2 pr-3 text-right font-bold">Messages achetés</th>
+                  <th className="py-2 pr-3 text-right font-bold">Contenus</th>
                   <th className="py-2 pr-3 font-bold">Abonnement</th>
-                  <th className="py-2 pr-3 text-right font-bold">Total</th>
+                  <th className="py-2 pr-3 text-right font-bold">LTV</th>
                   <th className="py-2 text-right font-bold">Dernier achat</th>
                 </tr>
               </thead>
@@ -298,6 +330,10 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
                     <td className="py-2 pr-3 text-right">
                       {c.messages_nombre.toLocaleString("fr-FR")}
                       <span className="block text-xs text-muted">{formatEuros(c.messages_cents)}</span>
+                    </td>
+                    <td className="py-2 pr-3 text-right">
+                      {formatEuros(c.contenus_cents)}
+                      <span className="block text-xs text-muted">{plural(c.contenus_nombre, "contenu")}</span>
                     </td>
                     <td className="py-2 pr-3">
                       {c.abonne ? (
@@ -385,6 +421,16 @@ function Tile({ label, value, detail }: { label: string; value: string; detail: 
   );
 }
 
-function plural(n: number, word: string): string {
-  return `${n.toLocaleString("fr-FR")} ${word}${n > 1 ? "s" : ""}`;
+function plural(n: number, word: string, many = `${word}s`): string {
+  return `${Number(n).toLocaleString("fr-FR")} ${n > 1 ? many : word}`;
+}
+
+function Figure({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="text-2xl font-bold tracking-tight">{value}</dd>
+      {hint && <dd className="text-xs text-muted">{hint}</dd>}
+    </div>
+  );
 }

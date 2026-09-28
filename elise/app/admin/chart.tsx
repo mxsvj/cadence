@@ -162,6 +162,7 @@ export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boole
                 <th className="px-3 py-2 text-right font-bold">Total</th>
                 <th className="px-3 py-2 text-right font-bold">Pourboires</th>
                 <th className="px-3 py-2 text-right font-bold">Messages</th>
+                <th className="px-3 py-2 text-right font-bold">Contenus</th>
                 <th className="px-3 py-2 text-right font-bold">Abonnements</th>
               </tr>
             </thead>
@@ -172,6 +173,7 @@ export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boole
                   <td className="px-3 py-1.5 text-right font-semibold">{formatEuros(p.total)}</td>
                   <td className="px-3 py-1.5 text-right">{formatEuros(p.pourboires)}</td>
                   <td className="px-3 py-1.5 text-right">{formatEuros(p.messages)}</td>
+                  <td className="px-3 py-1.5 text-right">{formatEuros(p.contenus)}</td>
                   <td className="px-3 py-1.5 text-right">{formatEuros(p.abonnements)}</td>
                 </tr>
               ))}
@@ -282,6 +284,8 @@ export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boole
                 <dd className="text-right">{formatEuros(tip.pourboires)}</dd>
                 <dt className="text-muted">Messages</dt>
                 <dd className="text-right">{formatEuros(tip.messages)}</dd>
+                <dt className="text-muted">Contenus</dt>
+                <dd className="text-right">{formatEuros(tip.contenus)}</dd>
                 <dt className="text-muted">Abonnements</dt>
                 <dd className="text-right">{formatEuros(tip.abonnements)}</dd>
               </dl>

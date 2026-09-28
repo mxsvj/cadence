@@ -31,6 +31,20 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `security definer` qui vérifient `is_admin()` (`admin_dashboard`,
   `admin_simuler_achat`, `admin_remplir_demo`, `admin_vider_demo`). Le
   « direct » est un rafraîchissement toutes les 4 s. Pas encore de paiement.
+- Personnage, messagerie et vente : `ai_settings` (mode auto/hybride/manuel,
+  persona jsonb), `contacts` (fiche par personne), `scripts`/`script_steps`
+  (étapes ordonnées, prix min/max), `offers` (prix personnalisé,
+  contre-offres), `profiles` (18 ans minimum). La clé secrète
+  (`SUPABASE_SECRET_KEY`, `lib/supabase/admin.ts`) ne sert qu'au serveur ; les
+  personnes n'écrivent que des messages `role='user'`. L'IA propose une offre
+  par la balise `[[PROPOSER prix=…]]`, seulement si `lib/sales.ts` l'a permis ;
+  `proposer_etape` (SQL) impose l'ordre et borne le prix. Les achats sont
+  « démo » tant qu'aucun paiement n'est branché.
+- Lignes rouges posées par le porteur du projet et par Claude : l'IA se dit
+  toujours IA, chaque réponse est marquée IA ou Équipe, jamais de rencontre
+  (même « dans la même région »), jamais de vente par solitude/attachement,
+  prix personnalisé toujours affiché, jamais sous le minimum, rien de visible
+  avant achat, aucun contenu sexuel, 18 ans minimum.
 - Essais : `npm test` (logique + `supabase/schema.sql` sur PGlite) et
   `npm run test:e2e` (build, serveur Next avec `tests/e2e/faux-services.mjs`
   chargé par `NODE_OPTIONS=--import` : faux Supabase adossé à PGlite avec le

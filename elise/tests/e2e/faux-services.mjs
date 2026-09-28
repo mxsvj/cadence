@@ -30,15 +30,17 @@ function database() {
     await db.exec(`
       create role anon nologin;
       create role authenticated nologin;
+      create role service_role nologin bypassrls;
       create schema auth;
-      create table auth.users (id uuid primary key, email text);
+      create table auth.users (id uuid primary key, email text, created_at timestamptz not null default now());
       create function auth.uid() returns uuid language sql stable as $$
         select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
       $$;
-      grant usage on schema auth to anon, authenticated;
-      grant usage on schema public to anon, authenticated;
-      alter default privileges in schema public grant all on tables to anon, authenticated;
-      alter default privileges in schema public grant all on functions to anon, authenticated;
+      grant usage on schema auth to anon, authenticated, service_role;
+      grant usage on schema public to anon, authenticated, service_role;
+      alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+      alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+      alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
     `);
     if (!process.env.FAKE_NO_SCHEMA) {
       await db.exec(readFileSync(path.join(import.meta.dirname, "..", "..", "supabase", "schema.sql"), "utf8"));
@@ -62,7 +64,8 @@ const toJson = (value) => JSON.stringify(value, (_, v) => (typeof v === "bigint"
 async function saveState() {
   const db = await database();
   const tables = {};
-  for (const t of ["messages", "user_facts", "summaries", "purchases", "admins"]) {
+  for (const t of ["messages", "user_facts", "summaries", "purchases", "admins", "profiles", "contacts",
+                   "ai_settings", "scripts", "script_steps", "offers"]) {
     try {
       tables[t] = (await db.query(`select * from public.${t}`)).rows;
     } catch {
@@ -79,8 +82,30 @@ function startControlServer() {
   const port = process.env.E2E_CONTROL_PORT;
   if (!port) return;
   createServer(async (req, res) => {
-    let raw = "";
-    for await (const chunk of req) raw += chunk;
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const buffer = Buffer.concat(chunks);
+    // Relais : le navigateur ne connaît pas fake-supabase.test ; Playwright lui
+    // envoie ses requêtes ici (en-tête x-relay-url), et on les rejoue.
+    const relay = req.headers["x-relay-url"];
+    if (relay) {
+      const headers = Object.fromEntries(
+        Object.entries(req.headers).filter(([k]) => !["host", "x-relay-url", "content-length", "connection"].includes(k)),
+      );
+      const response = await globalThis.fetch(relay, {
+        method: req.method,
+        headers,
+        body: ["GET", "HEAD"].includes(req.method) ? undefined : buffer,
+      });
+      const body = Buffer.from(await response.arrayBuffer());
+      res.writeHead(response.status, {
+        "content-type": response.headers.get("content-type") ?? "application/octet-stream",
+        "access-control-allow-origin": "*",
+      });
+      res.end(body);
+      return;
+    }
+    const raw = buffer.toString();
     try {
       const { sql, params = [] } = JSON.parse(raw);
       const rows = await exclusive(async () => (await (await database()).query(sql, params)).rows);
@@ -120,7 +145,16 @@ const json = (status, body, headers = {}) =>
   });
 const authError = (status, code, msg) => json(status, { code, error_code: code, msg, message: msg });
 
+const SERVICE = { id: "service" };
+
+/** La clé secrète (côté serveur) : tous les droits, comme le rôle service_role. */
+function isService(headers) {
+  const key = process.env.SUPABASE_SECRET_KEY;
+  return Boolean(key) && headers.get("apikey") === key;
+}
+
 function currentUser(headers) {
+  if (isService(headers)) return SERVICE;
   const parts = (headers.get("authorization") ?? "").replace(/^Bearer /, "").split(".");
   if (parts.length !== 3) return null;
   try {
@@ -177,6 +211,10 @@ function whereClause(params, values) {
     const [op, ...rest] = raw.split(".");
     const operand = rest.join(".");
     if (op === "is") parts.push(`${ident(key)} is ${operand === "null" ? "null" : operand === "true" ? "true" : "false"}`);
+    else if (op === "in") {
+      values.push(operand.replace(/^\(|\)$/g, "").split(",").map((v) => v.replace(/^"|"$/g, "")));
+      parts.push(`${ident(key)} = any($${values.length})`);
+    }
     else if (OPS[op]) {
       values.push(operand);
       parts.push(`${ident(key)} ${OPS[op]} $${values.length}`);
@@ -206,7 +244,9 @@ async function asUser(user, work) {
     const db = await database();
     await db.exec("begin");
     try {
-      if (user) {
+      if (user === SERVICE) {
+        await db.exec("set local role service_role");
+      } else if (user) {
         await db.query("select set_config('role', 'authenticated', true), set_config('request.jwt.claim.sub', $1, true)", [user.id]);
       } else {
         await db.exec("set local role anon");
@@ -231,6 +271,17 @@ function pgError(err, user) {
   return json(400, { code, message });
 }
 
+// .single() demande un objet et non une liste (en-tête Accept de PostgREST).
+function rowsResponse(status, rows, headers, extra = {}) {
+  if ((headers.get("accept") ?? "").includes("vnd.pgrst.object+json")) {
+    if (rows.length !== 1) {
+      return json(406, { code: "PGRST116", message: `JSON object requested, ${rows.length} rows returned` });
+    }
+    return json(status, rows[0], extra);
+  }
+  return json(status, rows, extra);
+}
+
 async function handleRest(url, method, headers, body) {
   const user = currentUser(headers);
   const route = url.pathname.replace("/rest/v1/", "");
@@ -242,9 +293,12 @@ async function handleRest(url, method, headers, body) {
       const args = Object.entries(body ?? {});
       const values = args.map(([, v]) => v);
       const call = args.map(([k], i) => `${ident(k)} => $${i + 1}`).join(", ");
-      const rows = await asUser(user, async (db) => (await db.query(`select public.${fn}(${call}) as r`, values)).rows);
+      // to_jsonb : un objet pour une ligne, la valeur pour un scalaire, null pour void.
+      const rows = await asUser(user, async (db) =>
+        (await db.query(`select to_jsonb(r) as j from public.${fn}(${call}) as r`, values)).rows,
+      );
       await exclusive(saveState);
-      const result = rows[0]?.r ?? null;
+      const result = rows[0]?.j ?? null;
       // Une fonction « returns void » ne renvoie rien.
       return result === null || result === "" ? new Response(null, { status: 204 }) : json(200, result);
     }
@@ -262,7 +316,7 @@ async function handleRest(url, method, headers, body) {
         return { rows, total };
       });
       const extra = total === null ? {} : { "content-range": `0-${Math.max(total - 1, 0)}/${total}` };
-      return method === "HEAD" ? new Response(null, { status: 200, headers: extra }) : json(200, rows, extra);
+      return method === "HEAD" ? new Response(null, { status: 200, headers: extra }) : rowsResponse(200, rows, headers, extra);
     }
 
     if (method === "POST") {
@@ -272,20 +326,35 @@ async function handleRest(url, method, headers, body) {
       const tuples = list.map(
         (r) => `(${cols.map((c) => (c in r ? (values.push(r[c]), `$${values.length}`) : "default")).join(", ")})`,
       );
+      let conflict = "";
+      if (prefer.includes("resolution=merge-duplicates")) {
+        const keys = (params.get("on_conflict") ?? "id").split(",").map(ident);
+        const updates = cols.filter((c) => !keys.includes(c)).map((c) => `${c} = excluded.${c}`);
+        conflict = ` on conflict (${keys.join(", ")}) do ${updates.length ? `update set ${updates.join(", ")}` : "nothing"}`;
+      }
       const rows = await asUser(user, async (db) =>
-        (await db.query(`insert into ${table} (${cols.join(", ")}) values ${tuples.join(", ")} returning ${columns(params)}`, values)).rows,
+        (await db.query(`insert into ${table} (${cols.join(", ")}) values ${tuples.join(", ")}${conflict} returning ${columns(params)}`, values)).rows,
       );
       await exclusive(saveState);
       const order = params.get("order");
       if (order?.startsWith("id.")) rows.sort((a, b) => (Number(a.id) - Number(b.id)) * (order.endsWith("desc") ? -1 : 1));
-      return prefer.includes("return=representation") ? json(201, rows) : new Response(null, { status: 201 });
+      return prefer.includes("return=representation") ? rowsResponse(201, rows, headers) : new Response(null, { status: 201 });
     }
 
     if (method === "PATCH") {
       const values = [];
       const set = Object.entries(body).map(([k, v]) => (values.push(v), `${ident(k)} = $${values.length}`));
       const where = whereClause(params, values);
-      await asUser(user, (db) => db.query(`update ${table} set ${set.join(", ")}${where}`, values));
+      const rows = await asUser(user, async (db) =>
+        (await db.query(`update ${table} set ${set.join(", ")}${where} returning ${columns(params)}`, values)).rows,
+      );
+      await exclusive(saveState);
+      return prefer.includes("return=representation") ? rowsResponse(200, rows, headers) : new Response(null, { status: 204 });
+    }
+    if (method === "DELETE") {
+      const values = [];
+      const where = whereClause(params, values);
+      await asUser(user, (db) => db.query(`delete from ${table}${where}`, values));
       await exclusive(saveState);
       return new Response(null, { status: 204 });
     }
@@ -293,6 +362,52 @@ async function handleRest(url, method, headers, body) {
   } catch (err) {
     return pgError(err, user);
   }
+}
+
+// ─── Stockage (fichiers en mémoire, liens signés) ─────────────────────────
+const files = new Map(); // "bucket/chemin" → { body, type }
+const tokens = new Map(); // jeton → "bucket/chemin"
+
+async function handleStorage(url, method, headers, rawBody) {
+  const route = url.pathname.replace("/storage/v1", "");
+  const token = url.searchParams.get("token");
+  let m;
+  if ((m = route.match(/^\/object\/upload\/sign\/(.+)$/))) {
+    const key = decodeURIComponent(m[1]);
+    if (method === "POST") {
+      if (!isService(headers)) return json(403, { error: "service_role requis" });
+      const t = randomUUID();
+      tokens.set(t, key);
+      return json(200, { url: `/object/upload/sign/${key}?token=${t}` });
+    }
+    if (method === "PUT") {
+      if (tokens.get(token) !== key) return json(400, { error: "jeton invalide" });
+      files.set(key, { body: rawBody, type: headers.get("content-type") ?? "application/octet-stream" });
+      return json(200, { Key: key });
+    }
+  }
+  if ((m = route.match(/^\/object\/sign\/(.+)$/))) {
+    const key = decodeURIComponent(m[1]);
+    if (method === "POST") {
+      if (!isService(headers)) return json(403, { error: "service_role requis" });
+      if (!files.has(key)) return json(404, { error: "introuvable" });
+      const t = randomUUID();
+      tokens.set(t, key);
+      return json(200, { signedURL: `/object/sign/${key}?token=${t}` });
+    }
+    if (method === "GET") {
+      const file = files.get(key);
+      if (tokens.get(token) !== key || !file) return json(400, { error: "jeton invalide" });
+      return new Response(file.body, { status: 200, headers: { "content-type": file.type } });
+    }
+  }
+  if ((m = route.match(/^\/object\/([^/]+)$/)) && method === "DELETE") {
+    if (!isService(headers)) return json(403, { error: "service_role requis" });
+    const { prefixes = [] } = JSON.parse(rawBody.toString() || "{}");
+    for (const p of prefixes) files.delete(`${m[1]}/${p}`);
+    return json(200, []);
+  }
+  return json(404, { error: `fake storage : ${method} ${route}` });
 }
 
 // ─── Faux Gemini ─────────────────────────────────────────────────────────
@@ -311,13 +426,19 @@ function gemini(body) {
     if (/chat/.test(last)) faits.push("A un chat, Filou.", "a un chat, filou");
     return reply(JSON.stringify({ faits }));
   }
+  if (system.includes("## Ta tâche")) return reply("Un petit carnet rien que pour toi, si le cœur t'en dit.");
   if (system.includes("carnet de mémoire")) {
     const n = (last.match(/La personne :/g) ?? []).length;
     return reply(`Résumé de test : ${n} messages de la personne résumés.`);
   }
   const userText = contents.filter((c) => c.role === "user").at(-1).parts[0].text;
   if (userText.includes("QUOTA")) return json(429, { error: { code: 429, message: "Resource exhausted" } });
-  const n = llmLog.filter((r) => !r.system.includes("fiche mémoire") && !r.system.includes("carnet")).length;
+  if (userText.includes("PROPOSE-MOI") && system.includes("termine ta réponse par une ligne contenant uniquement")) {
+    return system.includes("[[PROPOSER prix=NN]]")
+      ? reply("Je t'ai préparé quelque chose.\n[[PROPOSER prix=9]]")
+      : reply("Un petit cadeau pour toi.\n[[PROPOSER]]");
+  }
+  const n = llmLog.filter((r) => !r.system.includes("fiche mémoire") && !r.system.includes("carnet de mémoire") && !r.system.includes("## Ta tâche")).length;
   return reply(`C'est noté. **Merci** de me le dire. (réponse de test n° ${n})`);
 }
 
@@ -326,7 +447,12 @@ globalThis.fetch = async function fakeFetch(input, init = {}) {
   const method = (init.method ?? input.method ?? "GET").toUpperCase();
   const headers = new Headers(init.headers ?? input.headers);
   const raw = init.body ?? null;
-  const body = raw ? JSON.parse(typeof raw === "string" ? raw : await new Response(raw).text()) : {};
+  if (url.origin === SUPABASE && url.pathname.startsWith("/storage/v1")) {
+    const bytes = raw ? Buffer.from(await new Response(raw).arrayBuffer()) : Buffer.alloc(0);
+    return handleStorage(url, method, headers, bytes);
+  }
+  const text = raw ? (typeof raw === "string" ? raw : await new Response(raw).text()) : "";
+  const body = text ? JSON.parse(text) : {};
 
   if (url.origin === SUPABASE) {
     return url.pathname.startsWith("/auth/v1") ? handleAuth(url, method, headers, body) : handleRest(url, method, headers, body);

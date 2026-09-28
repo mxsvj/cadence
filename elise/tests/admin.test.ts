@@ -154,7 +154,7 @@ describe("tableau de bord : la démonstration", () => {
       "select public.admin_simuler_achat() as a",
     );
     assert.equal(a.is_demo, true);
-    assert.ok(["tip", "message", "abonnement"].includes(a.kind));
+    assert.ok(["tip", "message", "abonnement", "contenu"].includes(a.kind));
     assert.ok(a.amount_cents > 0);
 
     const [{ n }] = await as<{ n: number }>(ADMIN, "select public.admin_remplir_demo(30) as n");

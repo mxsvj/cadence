@@ -9,13 +9,23 @@ export function Notice({ title, children }: { title: string; children: React.Rea
   );
 }
 
-export function SetupNotice() {
+/** Les réglages du site qui manquent encore sur Vercel. */
+export function missingSettings(): string[] {
+  const missing: string[] = [];
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) missing.push("NEXT_PUBLIC_SUPABASE_URL");
+  if (!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim()) missing.push("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
+  if (!process.env.SUPABASE_SECRET_KEY?.trim()) missing.push("SUPABASE_SECRET_KEY");
+  return missing;
+}
+
+export function SetupNotice({ missing = missingSettings() }: { missing?: string[] }) {
   return (
     <Notice title="Élise n'est pas encore branchée">
-      <p>Il manque les réglages de Supabase. Sur Vercel, dans Settings → Environment Variables, ajoutez :</p>
+      <p>Il manque des réglages. Sur Vercel, dans Settings → Environment Variables, ajoutez :</p>
       <ul className="list-disc pl-6 font-mono text-sm">
-        <li>NEXT_PUBLIC_SUPABASE_URL</li>
-        <li>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</li>
+        {missing.map((m) => (
+          <li key={m}>{m}</li>
+        ))}
       </ul>
       <p>puis redéployez.</p>
     </Notice>

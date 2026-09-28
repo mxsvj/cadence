@@ -5,11 +5,12 @@ import { chatSystemPrompt, cleanReply, formatNow, transcript } from "../lib/prom
 
 describe("persona", () => {
   it("contient la fiche complète", () => {
-    assert.match(getPersona(), /^# Élise/);
+    assert.match(getPersona(), /^# Règles de base/);
   });
   it("extrait le premier message, en paragraphes et sans retours à la ligne parasites", () => {
     const first = getFirstMessage();
     assert.match(first, /^Bonjour, je suis Élise\./);
+    assert.match(getFirstMessage("Chloé"), /^Bonjour, je suis Chloé\./);
     assert.match(first, /appelle \?$/);
     assert.ok(!first.includes("##"));
     for (const paragraph of first.split("\n\n")) assert.ok(!paragraph.includes("\n"));
@@ -21,7 +22,7 @@ describe("chatSystemPrompt : ce que le modèle reçoit", () => {
 
   it("met la persona, la fiche, le résumé et la date", () => {
     const system = chatSystemPrompt({
-      persona: "PERSONA",
+      base: "PERSONA",
       facts: ["Se prénomme Karim.", "A un chat."],
       summary: "Ils ont parlé de son déménagement.",
       now,
@@ -33,7 +34,7 @@ describe("chatSystemPrompt : ce que le modèle reçoit", () => {
   });
 
   it("dit clairement quand on ne sait encore rien", () => {
-    const system = chatSystemPrompt({ persona: "P", facts: [], summary: null, now });
+    const system = chatSystemPrompt({ base: "P", facts: [], summary: null, now });
     assert.match(system, /Tu ne sais encore rien/);
     assert.match(system, /Pas encore de résumé/);
   });

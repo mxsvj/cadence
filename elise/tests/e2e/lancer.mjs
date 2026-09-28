@@ -17,6 +17,7 @@ const env = {
   ...process.env,
   NEXT_PUBLIC_SUPABASE_URL: "http://fake-supabase.test",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_fake",
+  SUPABASE_SECRET_KEY: "sb_secret_fake",
   LLM_PROVIDER: "gemini",
   GEMINI_API_KEY: "fake",
   E2E_STATE: path.join(work, "etat.json"),

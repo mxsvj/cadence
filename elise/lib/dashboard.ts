@@ -2,7 +2,7 @@
 // le formatage des montants. Les calculs sont faits dans la base
 // (fonction admin_dashboard de supabase/schema.sql).
 
-export type PurchaseKind = "tip" | "message" | "abonnement";
+export type PurchaseKind = "tip" | "message" | "abonnement" | "contenu";
 
 export type DashboardData = {
   genere_le: string;
@@ -16,10 +16,23 @@ export type DashboardData = {
     periode_precedente: number;
     pourboires: { nombre: number; cents: number };
     messages: { nombre: number; achats: number; cents: number };
+    contenus: { nombre: number; cents: number };
     abonnements: { actifs: number; nombre: number; cents: number };
   };
+  /** La LTV : ce qu'un client rapporte sur toute sa vie (tout l'historique). */
+  ltv: {
+    clients: number;
+    moyenne_cents: number;
+    mediane_cents: number;
+    max_cents: number;
+    achats_par_client: number;
+    panier_moyen_cents: number;
+    duree_moyenne_jours: number;
+    inscrits: number;
+    payants: number;
+  };
   /** Un point par jour de la période, en centimes. */
-  serie: { jour: string; total: number; pourboires: number; messages: number; abonnements: number }[];
+  serie: { jour: string; total: number; pourboires: number; messages: number; contenus: number; abonnements: number }[];
   derniers: {
     id: number;
     client: string;
@@ -38,8 +51,12 @@ export type DashboardData = {
     pourboires_nombre: number;
     messages_nombre: number;
     messages_cents: number;
+    contenus_cents: number;
+    contenus_nombre: number;
     abonne: boolean;
     total_cents: number;
+    achats: number;
+    premier_achat: string;
     dernier_achat: string;
   }[];
 };
@@ -63,6 +80,7 @@ export function formatEurosRound(cents: number): string {
 export function describePurchase(p: { type: PurchaseKind; quantite: number; cents: number }): string {
   if (p.type === "tip") return `Pourboire de ${formatEuros(p.cents)}`;
   if (p.type === "message") return `${p.quantite} messages achetés · ${formatEuros(p.cents)}`;
+  if (p.type === "contenu") return `Contenu débloqué · ${formatEuros(p.cents)}`;
   return `Abonnement mensuel · ${formatEuros(p.cents)}`;
 }
 

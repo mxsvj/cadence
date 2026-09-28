@@ -18,8 +18,10 @@ before(async () => {
     { id: B, email: "b@example.com" },
   ]));
 
-  await as(A, `insert into public.messages (role, content) values ('assistant', 'Bonjour A'), ('user', 'Salut')`);
-  await as(B, `insert into public.messages (role, content) values ('assistant', 'Bonjour B')`);
+  // Les messages de l'IA sont écrits par le serveur (clé secrète).
+  await as("service", `insert into public.messages (user_id, role, author, content) values ('${A}', 'assistant', 'ai', 'Bonjour A')`);
+  await as(A, `insert into public.messages (role, content) values ('user', 'Salut')`);
+  await as("service", `insert into public.messages (user_id, role, author, content) values ('${B}', 'assistant', 'ai', 'Bonjour B')`);
   await as(A, `insert into public.user_facts (fact) values ('Se prénomme Karim.')`);
   await as(B, `insert into public.user_facts (fact) values ('Se prénomme Léa.')`);
   await as(A, `insert into public.summaries (summary, last_message_id) values ('Résumé A', 1)`);
@@ -41,6 +43,14 @@ describe("supabase/schema.sql", () => {
     await assert.rejects(as(A, `update public.summaries set user_id = '${B}' where user_id = '${A}'`));
     await as(A, `update public.summaries set summary = 'piraté' where user_id = '${B}'`); // ne touche rien
     assert.equal((await as<{ summary: string }>(B, `select summary from public.summaries`))[0].summary, "Résumé B");
+  });
+
+  it("interdit d'écrire au nom de l'IA ou de l'équipe, ou de fabriquer une offre", async () => {
+    await assert.rejects(as(A, `insert into public.messages (role, author, content) values ('assistant', 'ai', 'faux')`));
+    await assert.rejects(as(A, `insert into public.messages (role, author, content) values ('assistant', 'team', 'faux')`));
+    await assert.rejects(as(A, `insert into public.messages (role, kind, content) values ('user', 'offer', 'faux')`));
+    // Et la base refuse un auteur incohérent, même venant du serveur.
+    await assert.rejects(as("service", `insert into public.messages (user_id, role, author, content) values ('${A}', 'assistant', 'user', 'x')`));
   });
 
   it("interdit de modifier un message", async () => {

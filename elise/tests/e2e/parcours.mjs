@@ -8,7 +8,14 @@ import assert from "node:assert/strict";
 const BASE = process.env.E2E_BASE;
 const SHOTS = `${process.env.E2E_SHOTS}/`;
 mkdirSync(SHOTS, { recursive: true });
-const state = () => JSON.parse(readFileSync(process.env.E2E_STATE, "utf8"));
+// L'état du faux Supabase (vide tant qu'il n'a reçu aucune requête).
+const state = () => {
+  try {
+    return JSON.parse(readFileSync(process.env.E2E_STATE, "utf8"));
+  } catch {
+    return { users: [], tables: {}, llm: [] };
+  }
+};
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function until(check, what, timeout = 8000) {
   const start = Date.now();
@@ -19,6 +26,8 @@ async function until(check, what, timeout = 8000) {
   throw new Error(`Délai dépassé : ${what}`);
 }
 const step = (s) => console.log(`✓ ${s}`);
+// Les montants en français s'écrivent avec des espaces insécables (« 9,00 € »).
+const plain = (text) => (text ?? "").replace(/[\u00a0\u202f]/g, " ");
 // SQL d'administration, exécuté dans la base du faux Supabase.
 async function sql(query, params = []) {
   const res = await fetch(`http://127.0.0.1:${process.env.E2E_CONTROL_PORT}`, {
@@ -32,7 +41,49 @@ async function sql(query, params = []) {
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH ?? "/opt/pw-browsers/chromium" });
 const phone = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "fr-FR" };
-const ctx = await browser.newContext(phone);
+const desktop = { viewport: { width: 1280, height: 900 }, locale: "fr-FR" };
+
+// Le navigateur ne connaît pas fake-supabase.test (envoi et lecture des
+// fichiers) : on relaie ses requêtes vers le faux Supabase du serveur.
+const CORS = { "access-control-allow-origin": "*", "access-control-allow-methods": "*", "access-control-allow-headers": "*" };
+async function newContext(options) {
+  const context = await browser.newContext(options);
+  await context.route("http://fake-supabase.test/**", async (route) => {
+    const req = route.request();
+    if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });
+    const res = await fetch(`http://127.0.0.1:${process.env.E2E_CONTROL_PORT}`, {
+      method: req.method(),
+      headers: { ...req.headers(), "x-relay-url": req.url() },
+      body: req.postDataBuffer() ?? undefined,
+    });
+    await route.fulfill({
+      status: res.status,
+      headers: { ...CORS, "content-type": res.headers.get("content-type") ?? "application/octet-stream" },
+      body: Buffer.from(await res.arrayBuffer()),
+    });
+  });
+  return context;
+}
+
+async function signUp(p, email, name, birthdate = "1982-03-14") {
+  await p.goto(`${BASE}/connexion`);
+  await p.getByText("Première visite ? Créer un compte").click();
+  await p.fill('input[name="email"]', email);
+  await p.fill('input[name="password"]', "motdepasse");
+  await p.fill('input[name="nom"]', name);
+  await p.fill('input[name="naissance"]', birthdate);
+  await p.click('button[type="submit"]');
+}
+
+async function logIn(p, email) {
+  await p.goto(`${BASE}/connexion`);
+  await p.fill('input[name="email"]', email);
+  await p.fill('input[name="password"]', "motdepasse");
+  await p.click('button[type="submit"]');
+  await p.waitForURL(`${BASE}/`);
+}
+
+const ctx = await newContext(phone);
 const page = await ctx.newPage();
 const consoleErrors = [];
 page.on("console", (m) => m.type() === "error" && consoleErrors.push(m.text()));
@@ -56,10 +107,15 @@ await page.click('button[type="submit"]');
 await page.getByText("Adresse e-mail ou mot de passe incorrect.").waitFor();
 step("mauvais identifiants : message clair");
 
-// 3. Inscription.
-await page.getByText("Première visite ? Créer un compte").click();
-await page.fill('input[name="email"]', "karim@example.com");
-await page.fill('input[name="password"]', "motdepasse");
+// 3. Inscription : 18 ans minimum, puis prénom et date de naissance.
+const minor = new Date();
+minor.setFullYear(minor.getFullYear() - 16);
+await signUp(page, "karim@example.com", "Karim", minor.toISOString().slice(0, 10));
+await page.waitForTimeout(800);
+assert.equal(new URL(page.url()).pathname, "/connexion");
+assert.equal(state().users.length, 0);
+step("une personne de moins de 18 ans ne peut pas s'inscrire");
+await page.fill('input[name="naissance"]', "1982-03-14");
 await page.click('button[type="submit"]');
 await page.waitForURL(`${BASE}/`);
 await page.getByText("Bonjour, je suis Élise.").waitFor();
@@ -81,8 +137,9 @@ await input.fill("Bonsoir, moi c'est Karim. Tu peux me tutoyer. J'ai un chat. Et
 await page.getByLabel("Envoyer").click();
 await page.getByText("C'est noté. Merci de me le dire. (réponse de test n° 1)").waitFor();
 assert.equal(await input.inputValue(), "");
+assert.equal(await page.getByText("Élise · IA").count(), 2);
 await page.screenshot({ path: `${SHOTS}3-echange.png` });
-step("message envoyé, réponse d'Élise à gauche, sans le gras Markdown");
+step("message envoyé, réponse à gauche marquée « Élise · IA », sans le gras Markdown");
 
 // 6. La fiche : nouveaux faits, sans doublon ni donnée sensible.
 await until(() => state().tables.user_facts.length >= 3, "faits enregistrés");
@@ -94,7 +151,9 @@ step(`fiche : ${facts.join(" / ")} — l'antidépresseur a été écarté, le do
 
 // 7. Ce que le modèle a reçu pour répondre.
 const firstChat = s.llm.find((r) => !r.json);
-assert.match(firstChat.system, /^# Élise — fiche persona/);
+assert.match(firstChat.system, /^# Règles de base de l'IA/);
+assert.match(firstChat.system, /## Ton personnage[\s\S]*Nom : Élise/);
+assert.match(firstChat.system, /Prénom ou pseudo : Karim/);
 assert.match(firstChat.system, /Tu ne sais encore rien/);
 assert.deepEqual(firstChat.contents.map((c) => c.role), ["user", "model", "user"]);
 step("le modèle a reçu : persona + fiche + résumé + conversation");
@@ -102,7 +161,7 @@ step("le modèle a reçu : persona + fiche + résumé + conversation");
 // 8. Quota atteint : rien n'est perdu.
 await input.fill("Test QUOTA");
 await page.getByLabel("Envoyer").click();
-await page.getByText("Élise reçoit beaucoup de messages en ce moment").waitFor();
+await page.getByText("Beaucoup de messages en ce moment. Réessayez dans une minute.").waitFor();
 assert.equal(await input.inputValue(), "Test QUOTA");
 assert.equal(state().tables.messages.length, 3);
 await page.screenshot({ path: `${SHOTS}4-quota.png` });
@@ -152,17 +211,13 @@ await page.screenshot({ path: `${SHOTS}5-historique.png` });
 step("l'historique s'affiche au rechargement");
 
 // 12. Un second compte ne voit rien du premier.
-const ctx2 = await browser.newContext(phone);
+const ctx2 = await newContext(phone);
 const page2 = await ctx2.newPage();
-await page2.goto(`${BASE}/connexion`);
-await page2.getByText("Première visite ? Créer un compte").click();
-await page2.fill('input[name="email"]', "lea@example.com");
-await page2.fill('input[name="password"]', "motdepasse");
-await page2.click('button[type="submit"]');
+await signUp(page2, "lea@example.com", "Léa");
 await page2.waitForURL(`${BASE}/`);
 await page2.getByText("Bonjour, je suis Élise.").waitFor();
 assert.equal(await page2.getByText("Karim").count(), 0);
-assert.equal(await page2.locator("main p").count(), 2); // intitulé du jour + premier message
+assert.equal(await page2.getByText("Élise · IA").count(), 1);
 step("un second compte ne voit que sa propre conversation");
 
 // 13. Effacer toutes mes données.
@@ -214,7 +269,7 @@ await page.getByLabel("Menu").click();
 await page.getByRole("link", { name: "Tableau de bord" }).click();
 await page.waitForURL(`${BASE}/admin`);
 await page.getByText("Aucun achat pour l'instant.").waitFor();
-await page.getByText("En direct").waitFor();
+await page.getByText(/^En direct ·/).waitFor();
 await page.screenshot({ path: `${SHOTS}10-tableau-vide.png`, fullPage: true });
 step("administrateur : lien dans le menu, tableau de bord vide mais prêt");
 
@@ -270,7 +325,7 @@ step("7 jours : courbe, infobulle au toucher, tableau de 7 lignes");
 
 // 22. Sur ordinateur, clair puis sombre.
 for (const colorScheme of ["light", "dark"]) {
-  const deskCtx = await browser.newContext({ viewport: { width: 1280, height: 900 }, colorScheme, locale: "fr-FR" });
+  const deskCtx = await newContext({ ...desktop, colorScheme });
   const desk = await deskCtx.newPage();
   desk.on("pageerror", (e) => consoleErrors.push(String(e)));
   await desk.goto(`${BASE}/connexion`);
@@ -299,8 +354,245 @@ assert.equal(state().tables.purchases[0].amount_cents, 700);
 await page.getByText("Données de démonstration.").waitFor({ state: "detached" });
 step("« Effacer la démo » retire les achats fictifs et garde le vrai");
 
-// 24. Sur ordinateur et en mode sombre, pour le coup d'œil.
-const desk = await browser.newContext({ viewport: { width: 1280, height: 800 }, colorScheme: "dark", locale: "fr-FR" });
+// ═══ Le personnage, la messagerie de l'équipe, la vente ═════════════════
+
+// 24. L'équipe règle le personnage (onglet IA), sur ordinateur.
+const adminCtx = await newContext(desktop);
+const admin = await adminCtx.newPage();
+admin.on("pageerror", (e) => consoleErrors.push(String(e)));
+await logIn(admin, "karim@example.com");
+await admin.goto(`${BASE}/admin/ia`);
+await admin.getByLabel("Nom", { exact: true }).fill("Chloé");
+await admin.getByLabel("Âge").fill("29");
+await admin.getByLabel("Ville", { exact: true }).fill("Annecy");
+await admin.getByLabel("Langue maternelle").selectOption("it");
+await admin.getByText("Se dire dans la même région que la personne").click();
+await admin.getByRole("button", { name: "Ajouter un groupe" }).click();
+await admin.getByLabel("Nom du groupe").fill("Tatouages");
+await admin.getByLabel("Détail").fill("une hirondelle sur le poignet");
+await admin.getByRole("button", { name: "Ajouter une catégorie" }).click();
+await admin.getByLabel("Catégorie").fill("Musique");
+await admin.getByLabel("Préférences").fill("jazz, bossa nova");
+await admin.getByLabel("Messages avant la première offre").fill("0");
+await admin.getByLabel("Messages entre deux offres").fill("0");
+await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
+await admin.getByText("Réglages enregistrés.").waitFor();
+s = state();
+assert.equal(s.tables.ai_settings[0].persona.nom, "Chloé");
+assert.equal(s.tables.ai_settings[0].persona.pres_de_la_personne, true);
+await admin.screenshot({ path: `${SHOTS}14-ia.png`, fullPage: true });
+step("onglet IA : profil du personnage enregistré (nom, âge, ville, langue, groupes, centres d'intérêt)");
+
+// 25. Un script de vente de trois étapes (onglet Contenus).
+const photo = await admin.screenshot({ clip: { x: 0, y: 0, width: 160, height: 100 } });
+await admin.goto(`${BASE}/admin/contenus`);
+await admin.getByLabel("Nom du nouveau script").fill("Principal");
+await admin.getByRole("button", { name: "Créer" }).click();
+await admin.getByText("Script créé.").waitFor();
+
+async function addStep({ title, type, text, file, description, fixed, team, price }) {
+  await admin.getByRole("button", { name: "Ajouter une étape" }).click();
+  const form = admin.locator("form", { has: admin.getByText("Titre (visible uniquement par l'équipe)") });
+  await form.getByLabel("Titre (visible uniquement par l'équipe)").fill(title);
+  await form.getByText(type, { exact: true }).click();
+  if (text) await form.getByLabel("Texte à vendre").fill(text);
+  if (file) {
+    await form.getByLabel("Fichier à vendre").setInputFiles(file);
+    await form.getByText("Fichier envoyé.", { exact: false }).waitFor();
+  }
+  await form.getByLabel("À quoi ça ressemble (pour l'IA)").fill(description);
+  if (fixed) {
+    await form.getByLabel("Un texte fixe, écrit par l'équipe").check();
+    await form.getByLabel("Message fixe").fill(fixed);
+  }
+  if (team) await form.getByLabel("L'équipe, depuis l'onglet Messages").check();
+  if (price) {
+    await form.getByLabel("Prix habituel (€)").fill(price[0]);
+    await form.getByLabel("Minimum accepté (€)").fill(price[1]);
+    await form.getByLabel("Maximum (€)").fill(price[2]);
+  } else {
+    await form.getByLabel("Payant (sinon, offert)").uncheck();
+  }
+  await form.getByRole("button", { name: "Enregistrer l'étape" }).click();
+  await until(() => (state().tables.script_steps ?? []).some((st) => st.title === title), `étape « ${title} » enregistrée`);
+  await form.waitFor({ state: "detached" });
+}
+await addStep({ title: "Bienvenue", type: "Texte", text: "Un poème de bienvenue.", description: "un court poème" });
+await addStep({
+  title: "Carnet de voyage",
+  type: "Photo",
+  file: { name: "carnet.png", mimeType: "image/png", buffer: photo },
+  description: "un carnet de voyage illustré",
+  fixed: "Je t'ai préparé ceci.",
+  price: ["8", "5", "12"],
+});
+await addStep({ title: "Lettre", type: "Texte", text: "Une lettre rien que pour toi.", description: "une lettre", team: true, price: ["4", "3", "6"] });
+s = state();
+assert.deepEqual(s.tables.script_steps.map((st) => st.title), ["Bienvenue", "Carnet de voyage", "Lettre"]);
+assert.ok(s.tables.script_steps[1].media_path.endsWith(".png"));
+await admin.screenshot({ path: `${SHOTS}15-contenus.png`, fullPage: true });
+step("onglet Contenus : script de trois étapes dans l'ordre, fichier envoyé dans le stockage privé");
+
+// 26. Sam s'inscrit : l'IA se présente sous le nom du personnage.
+const samCtx = await newContext(phone);
+const sam = await samCtx.newPage();
+sam.on("pageerror", (e) => consoleErrors.push(String(e)));
+await signUp(sam, "sam@example.com", "Sam");
+await sam.waitForURL(`${BASE}/`);
+await sam.getByText("Bonjour, je suis Chloé.").waitFor();
+await sam.getByText("Chloé · IA").waitFor();
+const samInput = sam.getByLabel("Votre message");
+await samInput.fill("Salut Chloé, moi c'est Sam.");
+await sam.getByLabel("Envoyer").click();
+await sam.getByText(/réponse de test/).waitFor();
+assert.equal(await sam.getByText("Chloé · IA").count(), 2);
+step("nouvelle personne : premier message et réponses signés « Chloé · IA »");
+
+// 27. Mode hybride : Sam n'est pas cochée, l'IA ne lui répond plus.
+await admin.goto(`${BASE}/admin/ia`);
+await admin.getByText("Hybride", { exact: true }).click();
+await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
+await admin.getByText("Réglages enregistrés.").waitFor();
+await admin.getByLabel("L'IA peut parler à Sam").uncheck();
+await until(() => state().tables.contacts.some((c) => !c.ai_enabled), "Sam décochée");
+await samInput.fill("Tu es là ?");
+await sam.getByLabel("Envoyer").click();
+await sam.getByText("Message envoyé. La réponse arrivera ici dès que possible.").waitFor();
+await sam.waitForTimeout(500);
+assert.equal(await sam.getByText("Chloé · IA").count(), 2);
+step("mode hybride : l'IA ne répond pas à une personne décochée, le message attend l'équipe");
+
+// 28. L'équipe répond depuis l'onglet Messages ; Sam le reçoit, signé « Équipe ».
+await admin.goto(`${BASE}/admin/messages`);
+const samRow = admin.getByRole("button", { name: /Sam/ }).first();
+await samRow.waitFor();
+assert.match(await samRow.textContent(), /Tu es là \?/);
+assert.match(await samRow.textContent(), /IA coupée/);
+await samRow.click();
+await admin.getByLabel("Réponse de l'équipe").fill("Oui, ici l'équipe !");
+await admin.getByRole("button", { name: "Envoyer", exact: true }).click();
+await sam.getByText("Oui, ici l'équipe !").waitFor({ timeout: 12000 });
+await sam.getByText("Équipe", { exact: true }).waitFor();
+await sam.screenshot({ path: `${SHOTS}16-reponse-equipe.png` });
+step("l'équipe répond depuis la messagerie : Sam reçoit le message en direct, signé « Équipe »");
+
+// 29. La fiche de Sam : l'IA peut lui répondre, ville, emojis, notes.
+await admin.getByLabel("L'IA peut répondre à cette personne").check();
+await admin.getByLabel("Ville", { exact: true }).fill("Lyon");
+await admin.getByLabel("Emojis de cette personne").fill("🌸");
+await admin.getByLabel("Comment se comporter avec elle", { exact: false }).fill("Aime les voyages.");
+await admin.getByRole("button", { name: "Enregistrer la fiche" }).click();
+await admin.getByText("Fiche enregistrée.").waitFor();
+await admin.screenshot({ path: `${SHOTS}17-messages.png` });
+s = state();
+const samContact = s.tables.contacts.find((c) => c.city === "Lyon");
+assert.deepEqual([samContact.ai_enabled, samContact.emojis, samContact.notes], [true, "🌸", "Aime les voyages."]);
+step("fiche contact enregistrée : IA autorisée, ville, emojis, notes");
+
+// 30. L'IA propose la première étape (gratuite) : offerte et visible tout de suite.
+await samInput.fill("PROPOSE-MOI quelque chose");
+await sam.getByLabel("Envoyer").click();
+await sam.getByText("Un poème de bienvenue.").waitFor();
+await sam.getByText("Offert", { exact: true }).waitFor();
+s = state();
+const salesPrompt = s.llm.filter((r) => !r.json && r.system.includes("## Vente")).at(-1).system;
+assert.match(salesPrompt, /Nom : Chloé/);
+assert.match(salesPrompt, /près de Lyon/);
+assert.match(salesPrompt, /Tu ne proposes jamais de la rencontrer/);
+assert.match(salesPrompt, /Tatouages : une hirondelle sur le poignet/);
+assert.match(salesPrompt, /uniquement ceux-là : 🌸/);
+assert.match(salesPrompt, /Aime les voyages\./);
+assert.match(salesPrompt, /Le prochain contenu, dans l'ordre prévu : un court poème/);
+assert.match(salesPrompt, /la solitude, l'attachement, la culpabilité ou l'urgence/);
+assert.ok(!salesPrompt.includes("Bienvenue")); // le titre reste interne
+step("l'IA propose la 1re étape du script ; elle a reçu personnage, fiche, emojis, notes et garde-fous");
+
+// 31. La deuxième étape (payante) : verrouillée, sans aperçu, prix personnalisé affiché.
+await samInput.fill("PROPOSE-MOI la suite");
+await sam.getByLabel("Envoyer").click();
+await sam.getByText("Je t'ai préparé ceci.").waitFor();
+const card = sam.locator("div", { has: sam.getByText("Photo à débloquer") }).last();
+await card.waitFor();
+assert.match(plain(await card.textContent()), /9,00 €/);
+assert.match(await card.textContent(), /prix personnalisé pour vous/);
+assert.equal(await sam.locator("img").count(), 0);
+const samApi = await sam.evaluate(async () => (await fetch("/api/chat?apres=0")).json());
+assert.ok(samApi.offers.every((o) => !("min_price_cents" in o) && !("step_id" in o)));
+await card.scrollIntoViewIfNeeded();
+await sam.screenshot({ path: `${SHOTS}18-offre-verrouillee.png` });
+step("offre payante : verrouillée, aucune image chargée, prix personnalisé affiché, minimum jamais transmis");
+
+// 32. Contre-offres : refusée sous le minimum, acceptée au-dessus, puis achat.
+await sam.getByRole("button", { name: "Faire une offre" }).click();
+await sam.getByLabel("Montant de votre offre en euros").fill("3");
+await sam.getByRole("button", { name: "Proposer", exact: true }).click();
+await sam.getByText("Offre refusée : c'est en dessous du prix accepté. Il vous reste 2 essais.").waitFor();
+await sam.getByRole("button", { name: "Faire une offre" }).click();
+await sam.getByLabel("Montant de votre offre en euros").fill("6");
+await sam.getByRole("button", { name: "Proposer", exact: true }).click();
+await sam.getByText("Offre acceptée : le contenu est à vous pour 6,00 €.").waitFor();
+await sam.getByRole("button", { name: "Confirmer" }).click();
+await sam.getByText("Débloqué · 6,00 €").waitFor();
+const unlocked = sam.getByAltText("Contenu débloqué");
+await unlocked.waitFor();
+assert.ok(await unlocked.evaluate((img) => img.complete && img.naturalWidth > 0));
+await unlocked.scrollIntoViewIfNeeded();
+await sam.screenshot({ path: `${SHOTS}19-contenu-debloque.png` });
+s = state();
+const bought = s.tables.purchases.find((p) => p.kind === "contenu");
+assert.deepEqual([bought.amount_cents, bought.is_demo], [600, true]);
+step("contre-offre à 3 € refusée, à 6 € acceptée ; achat (paiement de démo) ; la photo s'affiche");
+
+// 33. L'étape 3 se propose par l'équipe : message écrit par l'IA, relu, envoyé.
+await admin.reload();
+await admin.getByText("Étape suivante :").waitFor();
+assert.match(await admin.getByText("Étape suivante :").locator("..").textContent(), /Lettre/);
+await admin.getByRole("button", { name: "Faire écrire par l'IA" }).click();
+await admin.getByText("Relisez le message avant de l'envoyer.").waitFor();
+assert.match(await admin.getByLabel("Message de l'offre").inputValue(), /Un petit carnet rien que pour toi/);
+await admin.getByLabel("Prix de l'offre en euros").fill("5");
+await admin.getByRole("button", { name: "Envoyer l'offre" }).click();
+await admin.getByText("Offre envoyée.").waitFor();
+const letter = sam.locator("div", { has: sam.getByText("Texte à débloquer") }).last();
+await letter.waitFor({ timeout: 12000 });
+assert.match(plain(await letter.textContent()), /5,00 €/);
+step("l'équipe propose l'étape suivante avec un message rédigé par l'IA ; Sam la reçoit en direct");
+
+// 34. Le plafond du mois : 8 € pour Sam, qui a déjà dépensé 6 €.
+await admin.getByLabel("Plafond de dépenses par mois (€)").fill("8");
+await admin.getByRole("button", { name: "Enregistrer la fiche" }).click();
+await admin.getByText("Fiche enregistrée.").waitFor();
+await sam.getByRole("button", { name: /Débloquer pour 5,00/ }).click();
+await sam.getByRole("button", { name: "Confirmer" }).click();
+await sam.getByText("Vous avez atteint le plafond de dépenses de ce mois-ci.").waitFor();
+step("plafond mensuel : l'achat au-delà est refusé, avec un message clair");
+
+// 35. Mode manuel : l'IA ne répond plus à personne.
+await admin.goto(`${BASE}/admin/ia`);
+await admin.getByText("Manuel", { exact: true }).click();
+await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
+await admin.getByText("Réglages enregistrés.").waitFor();
+const aiReplies = await sam.getByText("Chloé · IA").count();
+await samInput.fill("Et maintenant ?");
+await sam.getByLabel("Envoyer").click();
+await sam.getByText("Message envoyé. La réponse arrivera ici dès que possible.").waitFor();
+assert.equal(await sam.getByText("Chloé · IA").count(), aiReplies);
+step("mode manuel : plus aucune réponse de l'IA, tout passe par l'équipe");
+
+// 36. Le tableau de bord compte les contenus et calcule la LTV.
+await admin.goto(`${BASE}/admin`);
+await admin.getByText("LTV · valeur d'un client").waitFor();
+const contentTile = admin.locator("div", { has: admin.getByText("Contenus vendus", { exact: true }) }).last();
+assert.match(plain(await contentTile.textContent()), /6,00 €/);
+await admin.screenshot({ path: `${SHOTS}20-tableau-ltv.png`, fullPage: true });
+step("tableau de bord : contenus vendus et section LTV");
+
+// 37. Retour en mode automatique, puis sur ordinateur et en mode sombre, pour le coup d'œil.
+await admin.goto(`${BASE}/admin/ia`);
+await admin.getByText("Automatique", { exact: true }).click();
+await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
+await admin.getByText("Réglages enregistrés.").waitFor();
+const desk = await newContext({ viewport: { width: 1280, height: 800 }, colorScheme: "dark", locale: "fr-FR" });
 const deskPage = await desk.newPage();
 await deskPage.goto(`${BASE}/connexion`);
 await deskPage.fill('input[name="email"]', "lea@example.com");

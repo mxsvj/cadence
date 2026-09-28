@@ -12,16 +12,18 @@ export async function freshDatabase(users: { id: string; email: string }[]) {
   await db.exec(`
     create role anon nologin;
     create role authenticated nologin;
+    create role service_role nologin bypassrls;
     create schema auth;
-    create table auth.users (id uuid primary key, email text);
+    create table auth.users (id uuid primary key, email text, created_at timestamptz not null default now());
     create function auth.uid() returns uuid language sql stable as $$
       select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
     $$;
-    grant usage on schema auth to anon, authenticated;
-    grant usage on schema public to anon, authenticated;
+    grant usage on schema auth to anon, authenticated, service_role;
+    grant usage on schema public to anon, authenticated, service_role;
     -- Comme Supabase : droits larges par défaut, que le script resserre.
-    alter default privileges in schema public grant all on tables to anon, authenticated;
-    alter default privileges in schema public grant all on functions to anon, authenticated;
+    alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+    alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+    alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
   `);
   for (const u of users) await db.query("insert into auth.users (id, email) values ($1, $2)", [u.id, u.email]);
   await db.exec(schemaSql);
@@ -29,10 +31,13 @@ export async function freshDatabase(users: { id: string; email: string }[]) {
 
   // Exécute `sql` comme le ferait Supabase pour la personne `user` (ou un
   // visiteur non connecté si `user` est null), dans une transaction.
+  // `user` peut aussi valoir "service" : le serveur avec la clé secrète.
   async function as<T = Record<string, unknown>>(user: string | null, sql: string, params: unknown[] = []): Promise<T[]> {
     await db.exec("begin");
     try {
-      if (user) {
+      if (user === "service") {
+        await db.exec("set local role service_role;");
+      } else if (user) {
         await db.exec(`set local role authenticated; select set_config('request.jwt.claim.sub', '${user}', true);`);
       } else {
         await db.exec("set local role anon;");

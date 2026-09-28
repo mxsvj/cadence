@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { latestBirthdate } from "@/lib/age";
 import { authenticate, type AuthState } from "./actions";
 
 export function AuthForm() {
@@ -37,6 +38,36 @@ export function AuthForm() {
         />
         {signingUp && <span className="text-sm text-muted">Au moins 6 caractères.</span>}
       </label>
+
+      {signingUp && (
+        <>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold">Prénom ou pseudo</span>
+            <input
+              name="nom"
+              required
+              maxLength={60}
+              autoComplete="given-name"
+              defaultValue={state.name}
+              className="rounded-2xl border border-line bg-surface px-4 py-3 outline-none focus:border-accent"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold">Date de naissance</span>
+            <input
+              name="naissance"
+              type="date"
+              required
+              min="1900-01-01"
+              max={latestBirthdate()}
+              autoComplete="bday"
+              defaultValue={state.birthdate}
+              className="rounded-2xl border border-line bg-surface px-4 py-3 outline-none focus:border-accent"
+            />
+            <span className="text-sm text-muted">Élise est réservée aux personnes de 18 ans et plus.</span>
+          </label>
+        </>
+      )}
 
       {state.error && (
         <p role="alert" className="rounded-2xl bg-accent-soft px-4 py-3 text-sm">

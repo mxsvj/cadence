@@ -3,9 +3,10 @@
 import type { AuthError } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { checkProfile } from "@/lib/age";
 import { createClient } from "@/lib/supabase/server";
 
-export type AuthState = { error?: string; info?: string; email?: string };
+export type AuthState = { error?: string; info?: string; email?: string; name?: string; birthdate?: string };
 
 // Connexion ou inscription par e-mail et mot de passe (Supabase Auth).
 export async function authenticate(_previous: AuthState, formData: FormData): Promise<AuthState> {
@@ -22,14 +23,27 @@ export async function authenticate(_previous: AuthState, formData: FormData): Pr
     redirect("/");
   }
 
+  // Inscription : prénom et âge d'abord (18 ans minimum), avant de créer le compte.
+  const name = String(formData.get("nom") ?? "").trim();
+  const birthdate = String(formData.get("naissance") ?? "");
+  const invalid = checkProfile(name, birthdate);
+  if (invalid) return { error: invalid, email, name, birthdate };
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: `${await siteOrigin()}/auth/callback` },
+    options: {
+      emailRedirectTo: `${await siteOrigin()}/auth/callback`,
+      data: { display_name: name, birthdate },
+    },
   });
-  if (error) return { error: explain(error), email };
+  if (error) return { error: explain(error), email, name, birthdate };
   // Confirmation par e-mail désactivée dans Supabase : on est déjà connecté.
-  if (data.session) redirect("/");
+  if (data.session) {
+    const { error: profileError } = await supabase.rpc("enregistrer_profil", { p_nom: name, p_naissance: birthdate });
+    if (profileError) console.error("Profil non enregistré :", profileError);
+    redirect("/");
+  }
   // Adresse déjà inscrite : Supabase ne le dit pas franchement, par prudence.
   if (data.user && data.user.identities?.length === 0) {
     return { error: "Un compte existe déjà avec cette adresse. Connectez-vous plutôt.", email };

@@ -31,3 +31,8 @@ export async function loadDashboard(
   if (error) throw new Error(`Tableau de bord indisponible : ${error.message}`);
   return data as DashboardData;
 }
+
+/** Pour les routes et actions de l'équipe : refuse net si on n'est pas administrateur. */
+export async function requireAdmin(supabase: SupabaseClient): Promise<void> {
+  if ((await adminStatus(supabase)) !== "admin") throw new Error("Réservé aux administrateurs.");
+}

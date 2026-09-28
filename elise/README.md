@@ -40,6 +40,12 @@ refuse.
 - **Sécurité** : chaque table est protégée ligne par ligne (Row Level
   Security) ; chacun ne voit que ses propres données, et les visiteurs non
   connectés n'ont accès à rien.
+- **18 ans minimum** : prénom et date de naissance à l'inscription ; la base
+  refuse les mineurs.
+- **Toujours savoir qui répond** : chaque réponse est marquée « Nom · IA » ou
+  « Équipe ».
+- **Espace de l'équipe** (`/admin`, réservé aux administrateurs), en quatre
+  onglets : Tableau de bord, Messages, IA, Contenus (détails plus bas).
 - **Tableau de bord des gains** (`/admin`, réservé aux administrateurs) :
   pourboires, messages achetés, abonnements actifs, total des gains et
   évolution, courbe des gains par jour (7, 30 ou 90 jours), dernier achat en
@@ -64,6 +70,14 @@ refuse.
   bord (`admin/`, `api/admin/dashboard/route.ts`).
 - `lib/dashboard.ts`, `lib/admin.ts` — le tableau de bord : types, formats,
   accès réservé.
+- `lib/persona-profile.ts` — le profil du personnage (champs, langues, âge
+  minimum) ; `lib/settings.ts` — réglages de l'IA et fiches contact.
+- `lib/sales.ts`, `lib/offers.ts`, `lib/conversation.ts` — la vente : ce que
+  l'IA a le droit de proposer, la balise d'offre, l'enregistrement.
+- `lib/team.ts` et `app/admin/messages/` — la messagerie de l'équipe ;
+  `app/admin/ia/` — l'onglet IA ; `app/admin/contenus/` — les scripts.
+- `app/offer-card.tsx` et `app/api/offres/` — l'offre côté personne : achat,
+  contre-offre, contenu débloqué.
 - `proxy.ts` — renvoie vers la connexion quiconque n'est pas connecté.
 - `tests/` — les essais automatiques : `npm test` (logique et base de
   données), `npm run test:e2e` (parcours complet dans un navigateur, contre
@@ -90,9 +104,10 @@ cliquer sur **Set up billing**.
    puis **Save**. Sans ça, chaque inscription attend un e-mail de
    confirmation, et le service d'e-mail gratuit de Supabase n'en envoie que
    très peu, et seulement aux membres de l'équipe du projet.
-4. Relever pour Vercel l'adresse du projet (**Project Settings → Data API**)
-   et la **Publishable key** (**Project Settings → API Keys**). La **Secret
-   key** ne sert à rien ici : ne la copier nulle part.
+4. Relever pour Vercel l'adresse du projet (**Project Settings → Data API**),
+   la **Publishable key** et la **Secret key** (**Project Settings → API
+   Keys**). La Secret key ne va que dans Vercel : jamais dans un message, un
+   e-mail ou un fichier partagé.
 
 5. Plus tard, une fois inscrit sur le site : ouvrir `supabase/admin.sql`,
    y mettre son adresse e-mail, le coller dans le SQL Editor et **Run**. Le
@@ -103,7 +118,7 @@ cliquer sur **Set up billing**.
 1. Sur [vercel.com](https://vercel.com), se connecter avec GitHub, puis **Add
    New → Project** et importer le dépôt `cadence`.
 2. **Root Directory** : `elise`. Le reste (Next.js) est détecté tout seul.
-3. **Environment Variables**, avant de cliquer sur Deploy :
+3. **Environment Variables**, avant de cliquer sur Deploy (5 variables) :
 
    | Nom                                    | Valeur                         |
    | -------------------------------------- | ------------------------------ |
@@ -111,6 +126,7 @@ cliquer sur **Set up billing**.
    | `GEMINI_API_KEY`                       | la clé Gemini                  |
    | `NEXT_PUBLIC_SUPABASE_URL`             | `https://….supabase.co`        |
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_…`             |
+   | `SUPABASE_SECRET_KEY`                  | `sb_secret_…`                  |
 
 4. **Deploy**. Toute modification ultérieure d'une variable demande un
    redéploiement (**Deployments → ⋯ → Redeploy**).
@@ -145,6 +161,74 @@ comptable : « Effacer toutes mes données » ne les supprime pas.
 Les calculs sont faits dans la base (fonction `admin_dashboard`), qui vérifie
 elle-même que la personne connectée est administratrice.
 
+## L'espace de l'équipe
+
+### Messages
+
+La liste des conversations, la plus récente en haut, avec les messages non
+lus, comme dans une messagerie. On ouvre une conversation pour la lire et
+répondre au nom de l'équipe (la personne voit « Équipe »). À côté, la fiche de
+la personne :
+
+- **L'IA peut répondre à cette personne** (compte en mode hybride) ;
+- **ville** et **fuseau horaire** (l'IA sait quelle heure il est chez elle) ;
+- **emojis** que l'IA utilisera avec elle ;
+- **comment se comporter avec elle** : 5 000 caractères de notes pour l'IA ;
+- **script de vente** suivi, et **plafond de dépenses** mensuel propre ;
+- ce que l'IA sait d'elle (sa fiche), sa LTV, et la **vente** : l'étape
+  suivante du script, l'offre en attente (qu'on peut retirer), et l'envoi de
+  l'étape suivante par l'équipe, avec un message écrit à la main ou rédigé par
+  l'IA puis relu.
+
+### IA
+
+- **Qui répond** : automatique (l'IA répond à tout le monde), hybride
+  (seulement aux personnes cochées), manuel (l'IA est coupée).
+- **Personnes** : les cases du mode hybride, et les emojis de chacun.
+- **Profil du personnage** : nom, pseudo, genre, âge (18 ans minimum),
+  anniversaire, profession, ville ou « dans la même région que la personne »,
+  langue maternelle (toutes les langues), taille, poids, pointure, bonnet,
+  cheveux, yeux, origine, silhouette, groupes personnalisés (tatouages,
+  piercings…), centres d'intérêt par catégories libres, et un texte libre.
+- **Paramètres** : créativité, longueur des réponses, nombre de messages relus,
+  premier message, consignes supplémentaires.
+- **Garde-fous de la vente** : plafond mensuel par personne, nombre de
+  messages avant la première offre et entre deux offres.
+
+L'IA reste une IA : elle le dit si on le lui demande, ne propose jamais de
+rencontre (même « dans la même région »), n'utilise jamais les détails
+physiques dans un registre sexuel.
+
+### Contenus
+
+Des scripts de vente faits d'étapes dans un ordre précis. Pour chaque étape :
+un titre (visible de l'équipe seulement), le contenu (photo, vidéo ou texte),
+ce à quoi il ressemble (pour que l'IA puisse en parler), le message qui
+l'accompagne (écrit par l'IA ou fixe), qui choisit le moment (l'IA ou
+l'équipe), et le prix : habituel, minimum, maximum, ou gratuit. Le premier
+script est celui de tout le monde, sauf choix contraire dans la fiche.
+
+Les règles, vérifiées par la base de données elle-même :
+
+- seule l'**étape suivante** peut être proposée, une offre à la fois ;
+- le prix proposé reste **entre le minimum et le maximum** ; s'il diffère du
+  prix habituel, il est affiché « prix personnalisé pour vous » ;
+- la personne peut **faire une offre** : acceptée si elle atteint le minimum
+  (jamais révélé), refusée sinon, trois refus au plus ;
+- **rien du contenu** (ni fichier, ni aperçu, ni texte) n'est transmis avant
+  l'achat ; les fichiers sont dans un dossier privé et ne sortent que par un
+  lien valable cinq minutes ;
+- un achat au-delà du **plafond du mois** est refusé ;
+- l'IA ne vend jamais par la solitude, l'attachement, la culpabilité ou
+  l'urgence, ne propose rien si la personne va mal ou parle de difficultés
+  d'argent, et il n'y a jamais de contenu sexuel.
+
+**Aucun vrai paiement n'est branché** : un achat est enregistré comme
+« démo », sans débit. Pour encaisser pour de vrai, il faudra un prestataire de
+paiement, et ce sera payant : chez Stripe par exemple, 1,5 % + 0,25 € par
+paiement avec une carte européenne standard, davantage avec une carte premium
+ou étrangère, sans abonnement.
+
 ## Passer de Gemini à Claude
 
 Le jour venu, sur Vercel (**Settings → Environment Variables**) :
@@ -172,8 +256,11 @@ qui suit le Flash le plus récent).
   modèle tous les messages non résumés (réglage `CONTEXT_MESSAGES` dans
   `lib/memory.ts`).
 - **Fuseau horaire** : Élise vit à l'heure de Paris.
-- **Paiements** : pas encore branchés. Le tableau de bord lit la table
-  `purchases`, que remplira le futur service de paiement.
+- **Paiements** : pas encore branchés (achats « démo »). Le tableau de bord
+  lit la table `purchases`, que remplira le futur service de paiement.
+- **Stockage Supabase gratuit** : 1 Go de fichiers, 50 Mo par fichier.
+- **Direct** : la conversation et la messagerie se mettent à jour toutes les
+  4 à 5 secondes, pas instantanément.
 
 ## Développer sur sa machine (facultatif)
 

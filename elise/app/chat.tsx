@@ -2,11 +2,33 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { MAX_MESSAGE_LENGTH } from "@/lib/limits";
+import type { Offer } from "@/lib/offers";
 import { eraseMyData, signOut } from "./actions";
+import { OfferCard } from "./offer-card";
 
-type Message = { id: number; role: "user" | "assistant"; content: string; created_at: string };
+type Message = {
+  id: number;
+  role: "user" | "assistant";
+  author: "user" | "ai" | "team";
+  kind: "text" | "offer";
+  offer_id: number | null;
+  content: string;
+  created_at: string;
+};
+
+/** Les réponses de l'équipe arrivent toutes les quelques secondes. */
+const POLL_MS = 5000;
+
+const byId = (offers: Offer[]) => Object.fromEntries(offers.map((o) => [o.id, o])) as Record<number, Offer>;
+
+/** Ajoute des messages sans doublon, dans l'ordre. */
+function merge(current: Message[], incoming: Message[]): Message[] {
+  const known = new Set(current.map((m) => m.id));
+  const fresh = incoming.filter((m) => !known.has(m.id));
+  return fresh.length ? [...current, ...fresh].sort((a, b) => (a.id < 0 ? 1 : b.id < 0 ? -1 : a.id - b.id)) : current;
+}
 
 const dayFormat = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "Europe/Paris",
@@ -24,8 +46,21 @@ function dayLabel(iso: string): string {
   return dayFormat.format(new Date(iso));
 }
 
-export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Message[]; isAdmin?: boolean }) {
+export function Chat({
+  initialMessages,
+  initialOffers,
+  name,
+  isAdmin = false,
+}: {
+  initialMessages: Message[];
+  initialOffers: Offer[];
+  name: string;
+  isAdmin?: boolean;
+}) {
   const [messages, setMessages] = useState(initialMessages);
+  const [offers, setOffers] = useState(() => byId(initialOffers));
+  const [notice, setNotice] = useState<string | null>(null);
+  const sending = useRef(false);
   const [draft, setDraft] = useState("");
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +72,35 @@ export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Me
   const firstScroll = useRef(true);
   const router = useRouter();
 
-  // Toujours voir le dernier message, et l'indicateur « Élise écrit ».
+  // Le dernier message connu, lu par le rafraîchissement régulier.
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  // Les nouveaux messages (réponses de l'équipe, offres) et l'état des offres.
+  const poll = useCallback(async () => {
+    if (sending.current || document.visibilityState !== "visible") return;
+    const lastId = Math.max(0, ...messagesRef.current.map((m) => m.id));
+    try {
+      const res = await fetch(`/api/chat?apres=${lastId}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as { messages: Message[]; offers: Offer[] };
+      if (sending.current) return;
+      setMessages((m) => merge(m, data.messages));
+      setOffers(byId(data.offers));
+      if (data.messages.some((m) => m.role === "assistant")) setNotice(null);
+    } catch {
+      // Réseau coupé : on réessaiera au prochain tour.
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => void poll(), POLL_MS);
+    return () => window.clearInterval(timer);
+  }, [poll]);
+
+  // Toujours voir le dernier message, et l'indicateur « … écrit ».
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end", behavior: firstScroll.current ? "instant" : "smooth" });
     firstScroll.current = false;
@@ -55,10 +118,20 @@ export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Me
     const content = draft.trim();
     if (!content || waiting) return;
     setError(null);
-    const pending: Message = { id: -Date.now(), role: "user", content, created_at: new Date().toISOString() };
+    setNotice(null);
+    const pending: Message = {
+      id: -Date.now(),
+      role: "user",
+      author: "user",
+      kind: "text",
+      offer_id: null,
+      content,
+      created_at: new Date().toISOString(),
+    };
     setMessages((m) => [...m, pending]);
     setDraft("");
     setWaiting(true);
+    sending.current = true;
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -70,8 +143,14 @@ export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Me
         router.replace("/connexion");
         return;
       }
-      if (!res.ok) throw new Error(data.error ?? "Élise n'a pas pu répondre. Réessayez dans un instant.");
-      setMessages((m) => [...m.filter((x) => x.id !== pending.id), ...(data.messages as Message[])]);
+      if (res.status === 403) {
+        router.replace("/bienvenue");
+        return;
+      }
+      if (!res.ok) throw new Error(data.error ?? "Pas de réponse cette fois-ci. Réessayez dans un instant.");
+      setMessages((m) => merge(m.filter((x) => x.id !== pending.id), data.messages as Message[]));
+      if (data.offers?.length) setOffers((o) => ({ ...o, ...byId(data.offers as Offer[]) }));
+      if (data.waiting) setNotice("Message envoyé. La réponse arrivera ici dès que possible.");
     } catch (err) {
       // Rien n'a été enregistré : le message revient dans la zone de saisie.
       setMessages((m) => m.filter((x) => x.id !== pending.id));
@@ -83,6 +162,7 @@ export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Me
       );
     } finally {
       setWaiting(false);
+      sending.current = false;
     }
   }
 
@@ -117,10 +197,10 @@ export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Me
           aria-hidden
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-serif text-xl text-accent"
         >
-          É
+          {name.charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 leading-tight">
-          <h1 className="font-serif text-xl">Élise</h1>
+          <h1 className="font-serif text-xl">{name}</h1>
           <p className="text-xs text-muted">Intelligence artificielle · prototype</p>
         </div>
         <div className="relative">
@@ -177,15 +257,27 @@ export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Me
                   {day}
                 </p>
               )}
-              <p
-                className={`max-w-[85%] whitespace-pre-wrap break-words rounded-3xl px-4 py-2.5 leading-normal ${
+              <div
+                className={`max-w-[85%] break-words rounded-3xl px-4 py-2.5 leading-normal ${
                   mine
                     ? "self-end rounded-br-md bg-accent-soft"
                     : "self-start rounded-bl-md border border-line bg-surface"
                 } ${m.id < 0 ? "opacity-70" : ""}`}
               >
-                {m.content}
-              </p>
+                <p className="whitespace-pre-wrap">{m.content}</p>
+                {m.kind === "offer" && m.offer_id !== null && offers[m.offer_id] && (
+                  <OfferCard
+                    offer={offers[m.offer_id]}
+                    onChange={(o) => setOffers((current) => ({ ...current, [o.id]: o }))}
+                  />
+                )}
+              </div>
+              {/* Toujours dire qui répond : l'IA, ou quelqu'un de l'équipe. */}
+              {!mine && (
+                <p className="mt-1 ml-3 text-[11px] font-semibold text-muted">
+                  {m.author === "team" ? "Équipe" : `${name} · IA`}
+                </p>
+              )}
             </div>
           );
         })}
@@ -193,7 +285,7 @@ export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Me
         {waiting && (
           <div
             role="status"
-            aria-label="Élise écrit"
+            aria-label="Réponse en cours"
             className="flex gap-1.5 self-start rounded-3xl rounded-bl-md border border-line bg-surface px-4 py-4"
           >
             {[0, 150, 300].map((delay) => (
@@ -214,6 +306,11 @@ export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Me
             {error}
           </p>
         )}
+        {notice && (
+          <p role="status" className="mb-2 px-2 text-sm text-muted">
+            {notice}
+          </p>
+        )}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -228,7 +325,7 @@ export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Me
             onKeyDown={onKeyDown}
             rows={1}
             maxLength={MAX_MESSAGE_LENGTH}
-            placeholder="Écrire à Élise…"
+            placeholder={`Écrire à ${name}…`}
             aria-label="Votre message"
             className="max-h-40 flex-1 resize-none rounded-3xl border border-line bg-surface px-4 py-2.5 leading-normal outline-none focus:border-accent"
           />
@@ -253,7 +350,7 @@ export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Me
               Tout effacer ?
             </h2>
             <p className="mt-3 leading-relaxed text-muted">
-              Vos messages, ce qu&apos;Élise sait de vous et le résumé de vos conversations seront supprimés
+              Vos messages, ce que {name} sait de vous et le résumé de vos conversations seront supprimés
               définitivement. Votre compte, lui, reste ouvert.
             </p>
             <div className="mt-6 flex flex-col gap-2">
