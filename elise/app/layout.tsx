@@ -13,6 +13,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Occuper tout l'écran de l'iPhone, et rétrécir la page quand le clavier
+  // s'ouvre, pour que la zone de saisie reste visible.
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#fbf7f2" },
     { media: "(prefers-color-scheme: dark)", color: "#1c1917" },

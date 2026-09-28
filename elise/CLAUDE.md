@@ -21,3 +21,13 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   c'est un projet séparé dont le « Root Directory » est `elise`.
 - Supabase (`*.supabase.co`) n'est pas joignable depuis l'environnement cloud
   de Claude Code ; l'API Gemini l'est.
+- Mémoire : 20 derniers messages envoyés au modèle ; résumé déclenché dans
+  `after()` quand plus de 40 messages ne sont pas résumés
+  (`summaries.last_message_id` marque la limite) ; faits extraits après chaque
+  réponse, filtrés par `lib/facts.ts`. Tout passe par le client Supabase de
+  la personne connectée (RLS), jamais par une clé secrète.
+- Essais : `npm test` (logique), `supabase/schema.sql` testé sur PGlite, et
+  parcours complet dans Chromium contre de faux Supabase/Gemini chargés par
+  `NODE_OPTIONS=--import` (scripts gardés hors du dépôt).
+- Les variables `NEXT_PUBLIC_*` sont figées au moment du build : les changer
+  sur Vercel demande un redéploiement.
