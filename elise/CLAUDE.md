@@ -26,8 +26,14 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   (`summaries.last_message_id` marque la limite) ; faits extraits après chaque
   réponse, filtrés par `lib/facts.ts`. Tout passe par le client Supabase de
   la personne connectée (RLS), jamais par une clé secrète.
-- Essais : `npm test` (logique), `supabase/schema.sql` testé sur PGlite, et
-  parcours complet dans Chromium contre de faux Supabase/Gemini chargés par
-  `NODE_OPTIONS=--import` (scripts gardés hors du dépôt).
+- Tableau de bord `/admin` : table `purchases` (tip / message / abonnement,
+  `is_demo` pour les achats fictifs), table `admins`, fonctions SQL
+  `security definer` qui vérifient `is_admin()` (`admin_dashboard`,
+  `admin_simuler_achat`, `admin_remplir_demo`, `admin_vider_demo`). Le
+  « direct » est un rafraîchissement toutes les 4 s. Pas encore de paiement.
+- Essais : `npm test` (logique + `supabase/schema.sql` sur PGlite) et
+  `npm run test:e2e` (build, serveur Next avec `tests/e2e/faux-services.mjs`
+  chargé par `NODE_OPTIONS=--import` : faux Supabase adossé à PGlite avec le
+  vrai schéma, faux Gemini ; parcours Chromium dans `tests/e2e/parcours.mjs`).
 - Les variables `NEXT_PUBLIC_*` sont figées au moment du build : les changer
   sur Vercel demande un redéploiement.

@@ -19,6 +19,16 @@ async function until(check, what, timeout = 8000) {
   throw new Error(`Délai dépassé : ${what}`);
 }
 const step = (s) => console.log(`✓ ${s}`);
+// SQL d'administration, exécuté dans la base du faux Supabase.
+async function sql(query, params = []) {
+  const res = await fetch(`http://127.0.0.1:${process.env.E2E_CONTROL_PORT}`, {
+    method: "POST",
+    body: JSON.stringify({ sql: query, params }),
+  });
+  const body = await res.json();
+  if (!res.ok) throw new Error(body.error);
+  return body;
+}
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH ?? "/opt/pw-browsers/chromium" });
 const phone = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "fr-FR" };
@@ -187,7 +197,109 @@ await page.click('button[type="submit"]');
 await page.waitForURL(`${BASE}/`);
 step("déconnexion puis reconnexion");
 
-// 15. Sur ordinateur et en mode sombre, pour le coup d'œil.
+// 15. Le tableau de bord n'existe pas pour qui n'est pas administrateur.
+let res = await page.goto(`${BASE}/admin`);
+assert.equal(res.status(), 404);
+await page.goto(BASE);
+await page.getByLabel("Menu").click();
+assert.equal(await page.getByRole("link", { name: "Tableau de bord" }).count(), 0);
+await page.keyboard.press("Escape");
+assert.equal(await page.evaluate(async () => (await fetch("/api/admin/dashboard")).status), 404);
+step("pas administrateur : ni page, ni lien, ni chiffres");
+
+// 16. Karim devient administrateur, comme avec supabase/admin.sql.
+await sql("insert into public.admins (user_id) select id from auth.users where email = $1", ["karim@example.com"]);
+await page.goto(BASE);
+await page.getByLabel("Menu").click();
+await page.getByRole("link", { name: "Tableau de bord" }).click();
+await page.waitForURL(`${BASE}/admin`);
+await page.getByText("Aucun achat pour l'instant.").waitFor();
+await page.getByText("En direct").waitFor();
+await page.screenshot({ path: `${SHOTS}10-tableau-vide.png`, fullPage: true });
+step("administrateur : lien dans le menu, tableau de bord vide mais prêt");
+
+// 17. Soixante jours de démonstration.
+await page.getByRole("button", { name: "Remplir 60 jours de démo" }).click();
+await page.getByText("Données de démonstration.").waitFor();
+await page.getByText("60 jours d'achats fictifs ajoutés.").waitFor();
+s = state();
+assert.ok(s.tables.purchases.length > 60 && s.tables.purchases.every((p) => p.is_demo));
+assert.ok((await page.locator("svg[role=img] path").count()) >= 2);
+step(`démo : ${s.tables.purchases.length} achats fictifs, courbe tracée`);
+
+// 18. Un vrai achat arrive, comme l'écrira le service de paiement : il
+// s'affiche en direct, sans recharger la page.
+await sql("insert into public.purchases (user_id, kind, amount_cents) select id, 'tip', 700 from auth.users where email = $1", ["lea@example.com"]);
+const latestCard = page.locator("section", { has: page.getByRole("heading", { name: "Dernier achat" }) });
+await latestCard.getByText("lea@example.com").waitFor({ timeout: 10000 });
+await latestCard.getByText("Pourboire de 7,00 €").waitFor();
+await page.screenshot({ path: `${SHOTS}11-tableau-direct.png`, fullPage: true });
+step("un nouvel achat apparaît en direct dans « Dernier achat », sans recharger");
+
+// 19. Le bouton « Simuler un achat ».
+const before = state().tables.purchases.length;
+await page.getByRole("button", { name: "Simuler un achat" }).click();
+await page.getByText("Achat fictif ajouté.").waitFor();
+await until(() => state().tables.purchases.length === before + 1, "achat simulé");
+step("« Simuler un achat » ajoute un achat fictif");
+
+// 20. Une personne à la fois.
+await page.locator("#filtre-personne").selectOption({ label: "lea@example.com" });
+await page.getByText("Gains · 30 derniers jours · lea@example.com").waitFor();
+await page.getByText("1 pourboire", { exact: true }).waitFor();
+assert.equal(await page.getByText("7,00 €").count() > 0, true);
+await page.screenshot({ path: `${SHOTS}12-une-personne.png`, fullPage: true });
+await page.getByRole("button", { name: "Voir tout le monde" }).click();
+await page.getByText("Gains · 30 derniers jours", { exact: true }).waitFor();
+step("filtre sur une personne : ses pourboires, ses messages, son abonnement");
+
+// 21. Sept jours, l'infobulle, et le tableau des valeurs.
+await page.getByRole("button", { name: "7 jours" }).click();
+const chart = page.locator('svg[aria-label*="sur 7 jours"]');
+await chart.waitFor();
+await chart.scrollIntoViewIfNeeded(); // le doigt ne touche que ce qui est à l'écran
+const box = await chart.boundingBox();
+await page.touchscreen.tap(box.x + box.width * 0.5, box.y + 100);
+await page.locator("div[role=status]", { hasText: "Abonnements" }).waitFor();
+await page.screenshot({ path: `${SHOTS}12b-infobulle-telephone.png` });
+await page.getByRole("button", { name: "Voir le tableau" }).click();
+assert.equal(await page.locator("figure table tbody tr").count(), 7);
+await page.getByRole("button", { name: "Voir la courbe" }).click();
+await chart.waitFor();
+step("7 jours : courbe, infobulle au toucher, tableau de 7 lignes");
+
+// 22. Sur ordinateur, clair puis sombre.
+for (const colorScheme of ["light", "dark"]) {
+  const deskCtx = await browser.newContext({ viewport: { width: 1280, height: 900 }, colorScheme, locale: "fr-FR" });
+  const desk = await deskCtx.newPage();
+  desk.on("pageerror", (e) => consoleErrors.push(String(e)));
+  await desk.goto(`${BASE}/connexion`);
+  await desk.fill('input[name="email"]', "karim@example.com");
+  await desk.fill('input[name="password"]', "motdepasse");
+  await desk.click('button[type="submit"]');
+  await desk.waitForURL(`${BASE}/`);
+  await desk.goto(`${BASE}/admin`);
+  const svg = desk.locator("svg[role=img]");
+  await svg.waitFor();
+  await svg.scrollIntoViewIfNeeded();
+  const b = await svg.boundingBox();
+  await desk.mouse.move(b.x + b.width * 0.8, b.y + 120);
+  await desk.locator("div[role=status]", { hasText: "Abonnements" }).waitFor();
+  await desk.screenshot({ path: `${SHOTS}13-tableau-ordinateur-${colorScheme === "dark" ? "sombre" : "clair"}.png`, fullPage: true });
+  await deskCtx.close();
+}
+step("tableau de bord sur ordinateur, clair et sombre");
+
+// 23. Effacer la démo : les achats fictifs partent, le vrai reste.
+await page.getByRole("button", { name: "Effacer la démo" }).click();
+await page.getByRole("button", { name: "Confirmer : effacer la démo" }).click();
+await page.getByText("Achats fictifs effacés.").waitFor();
+await until(() => state().tables.purchases.length === 1, "démo effacée");
+assert.equal(state().tables.purchases[0].amount_cents, 700);
+await page.getByText("Données de démonstration.").waitFor({ state: "detached" });
+step("« Effacer la démo » retire les achats fictifs et garde le vrai");
+
+// 24. Sur ordinateur et en mode sombre, pour le coup d'œil.
 const desk = await browser.newContext({ viewport: { width: 1280, height: 800 }, colorScheme: "dark", locale: "fr-FR" });
 const deskPage = await desk.newPage();
 await deskPage.goto(`${BASE}/connexion`);
@@ -201,7 +313,8 @@ await deskPage.getByText(/réponse de test/).waitFor();
 await deskPage.screenshot({ path: `${SHOTS}9-ordinateur-sombre.png` });
 step("sur ordinateur, Entrée envoie le message ; mode sombre");
 
-assert.deepEqual(consoleErrors.filter((e) => !e.includes("status of 429")), []);
+// Les 429 (quota simulé) et 404 (pages réservées) sont voulus.
+assert.deepEqual(consoleErrors.filter((e) => !/status of (429|404)/.test(e)), []);
 step("aucune erreur dans la console du navigateur");
 
 await browser.close();

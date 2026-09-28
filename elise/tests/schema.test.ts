@@ -1,53 +1,22 @@
-// Essaie supabase/schema.sql sur un vrai PostgreSQL (PGlite, en mémoire),
-// avec une imitation minimale de ce que Supabase fournit : le schéma auth,
-// auth.uid(), et les rôles anon et authenticated.
-import { PGlite } from "@electric-sql/pglite";
+// Essaie supabase/schema.sql sur un vrai PostgreSQL (PGlite, en mémoire) :
+// cloisonnement des données entre personnes, droits, effacement.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { before, describe, it } from "node:test";
+import { freshDatabase } from "./db";
 
 const A = "11111111-1111-1111-1111-111111111111";
 const B = "22222222-2222-2222-2222-222222222222";
-const db = new PGlite();
+let db: Awaited<ReturnType<typeof freshDatabase>>["db"];
+let as: Awaited<ReturnType<typeof freshDatabase>>["as"];
 
-// Exécute `sql` comme le ferait Supabase pour la personne `user` (ou un
-// visiteur non connecté si `user` est null), dans une transaction.
-async function as<T = Record<string, unknown>>(user: string | null, sql: string): Promise<T[]> {
-  await db.exec("begin");
-  try {
-    if (user) {
-      await db.exec(`set local role authenticated; select set_config('request.jwt.claim.sub', '${user}', true);`);
-    } else {
-      await db.exec("set local role anon;");
-    }
-    return (await db.query<T>(sql)).rows;
-  } finally {
-    await db.exec("commit"); // annule tout si la requête a échoué
-  }
-}
 const count = async (user: string, table: string) =>
   (await as<{ n: number }>(user, `select count(*)::int as n from public.${table}`))[0].n;
 
 before(async () => {
-  await db.exec(`
-    create role anon nologin;
-    create role authenticated nologin;
-    create schema auth;
-    create table auth.users (id uuid primary key);
-    create function auth.uid() returns uuid language sql stable as $$
-      select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
-    $$;
-    grant usage on schema auth to anon, authenticated;
-    grant usage on schema public to anon, authenticated;
-    -- Comme Supabase : droits larges par défaut, que le script resserre.
-    alter default privileges in schema public grant all on tables to anon, authenticated;
-    alter default privileges in schema public grant all on functions to anon, authenticated;
-    insert into auth.users values ('${A}'), ('${B}');
-  `);
-  const schema = readFileSync(path.join(import.meta.dirname, "..", "supabase", "schema.sql"), "utf8");
-  await db.exec(schema);
-  await db.exec(schema); // relançable sans erreur
+  ({ db, as } = await freshDatabase([
+    { id: A, email: "a@example.com" },
+    { id: B, email: "b@example.com" },
+  ]));
 
   await as(A, `insert into public.messages (role, content) values ('assistant', 'Bonjour A'), ('user', 'Salut')`);
   await as(B, `insert into public.messages (role, content) values ('assistant', 'Bonjour B')`);

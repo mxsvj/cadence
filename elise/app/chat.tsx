@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { MAX_MESSAGE_LENGTH } from "@/lib/limits";
@@ -23,7 +24,7 @@ function dayLabel(iso: string): string {
   return dayFormat.format(new Date(iso));
 }
 
-export function Chat({ initialMessages }: { initialMessages: Message[] }) {
+export function Chat({ initialMessages, isAdmin = false }: { initialMessages: Message[]; isAdmin?: boolean }) {
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
   const [waiting, setWaiting] = useState(false);
@@ -140,6 +141,11 @@ export function Chat({ initialMessages }: { initialMessages: Message[] }) {
             <>
               <div className="fixed inset-0" onClick={() => setMenuOpen(false)} aria-hidden />
               <div className="absolute right-0 top-12 z-20 w-64 overflow-hidden rounded-2xl border border-line bg-surface shadow-lg">
+                {isAdmin && (
+                  <Link href="/admin" className="block border-b border-line px-4 py-3 hover:bg-accent-soft">
+                    Tableau de bord
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={() => {

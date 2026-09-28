@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { adminStatus } from "@/lib/admin";
 import { MemoryError, ensureFirstMessage, loadMessages, type Message } from "@/lib/memory";
 import { supabaseEnv } from "@/lib/supabase/env";
 import { createClient, currentUserId } from "@/lib/supabase/server";
@@ -34,6 +35,7 @@ export default async function Home() {
       </Notice>
     );
   }
+  const isAdmin = (await adminStatus(supabase)) === "admin";
   // La clé change quand tout a été effacé : la conversation repart de zéro.
-  return <Chat key={messages[0]?.id ?? "vide"} initialMessages={messages} />;
+  return <Chat key={messages[0]?.id ?? "vide"} initialMessages={messages} isAdmin={isAdmin} />;
 }

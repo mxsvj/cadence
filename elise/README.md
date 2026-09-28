@@ -40,6 +40,10 @@ refuse.
 - **Sécurité** : chaque table est protégée ligne par ligne (Row Level
   Security) ; chacun ne voit que ses propres données, et les visiteurs non
   connectés n'ont accès à rien.
+- **Tableau de bord des gains** (`/admin`, réservé aux administrateurs) :
+  pourboires, messages achetés, abonnements actifs, total des gains et
+  évolution, courbe des gains par jour (7, 30 ou 90 jours), dernier achat en
+  direct, et le détail par personne. Voir plus bas.
 
 ## Ce qu'il y a dans ce dossier
 
@@ -48,15 +52,22 @@ refuse.
   sans toucher au code. Le titre `## Premier message` doit rester : l'application
   y cherche le message d'accueil.
 - `supabase/schema.sql` — la base de données : tables, sécurité, fonction
-  d'effacement. À coller une fois dans Supabase.
+  d'effacement, achats et calculs du tableau de bord. À coller dans Supabase ;
+  on peut le relancer sans risque après chaque mise à jour.
+- `supabase/admin.sql` — la ligne qui fait d'un compte un administrateur.
 - `lib/llm.ts` — le seul fichier qui parle au modèle.
 - `lib/memory.ts` — la mémoire : lecture, fiche, résumés, effacement.
 - `lib/prompts.ts` — ce qu'on écrit au modèle en plus de la persona.
 - `lib/facts.ts` — le tri des faits (doublons, sujets interdits).
 - `app/` — les pages : conversation (`page.tsx`, `chat.tsx`), connexion
-  (`connexion/`), serveur de conversation (`api/chat/route.ts`).
+  (`connexion/`), serveur de conversation (`api/chat/route.ts`), tableau de
+  bord (`admin/`, `api/admin/dashboard/route.ts`).
+- `lib/dashboard.ts`, `lib/admin.ts` — le tableau de bord : types, formats,
+  accès réservé.
 - `proxy.ts` — renvoie vers la connexion quiconque n'est pas connecté.
-- `tests/` — les essais automatiques : `npm test`.
+- `tests/` — les essais automatiques : `npm test` (logique et base de
+  données), `npm run test:e2e` (parcours complet dans un navigateur, contre
+  un faux Supabase qui tourne sur la vraie base, et un faux Gemini).
 - `scripts/essai-llm.ts` — un essai du modèle seul : `npm run essai:llm`.
 - `.env.example` — la liste des réglages.
 
@@ -83,6 +94,10 @@ cliquer sur **Set up billing**.
    et la **Publishable key** (**Project Settings → API Keys**). La **Secret
    key** ne sert à rien ici : ne la copier nulle part.
 
+5. Plus tard, une fois inscrit sur le site : ouvrir `supabase/admin.sql`,
+   y mettre son adresse e-mail, le coller dans le SQL Editor et **Run**. Le
+   lien « Tableau de bord » apparaît alors dans le menu `⋯`.
+
 ### 3. Vercel
 
 1. Sur [vercel.com](https://vercel.com), se connecter avec GitHub, puis **Add
@@ -106,6 +121,29 @@ Dans Supabase, **Authentication → URL Configuration** : mettre l'adresse du
 site Vercel (`https://….vercel.app`) dans **Site URL**, et
 `https://….vercel.app/**` dans **Redirect URLs**. Ça ne sert que si la
 confirmation par e-mail est un jour réactivée.
+
+## Le tableau de bord des gains
+
+Page `/admin`, accessible par le menu `⋯` de la conversation pour les
+administrateurs seulement ; pour tous les autres, la page n'existe pas.
+
+- **Chiffres clés** sur la période choisie : gains (et évolution par rapport à
+  la période précédente, total depuis le début), pourboires, messages achetés,
+  abonnements actifs (dernier paiement il y a moins de 31 jours).
+- **Courbe des gains par jour**, avec le détail d'un jour au survol ou au
+  toucher, et un tableau des valeurs.
+- **Dernier achat en direct** : la page redemande les chiffres toutes les
+  4 secondes ; un nouvel achat s'affiche sans recharger.
+- **Par personne** : pourboires, messages achetés, abonnement, total, dernier
+  achat. Toucher un nom filtre toute la page sur cette personne.
+
+Aucun paiement n'est encore branché. En attendant, la section
+« Démonstration » crée des achats fictifs (marqués « démo ») et les efface
+d'un clic, sans jamais toucher aux vrais. Les achats sont une trace
+comptable : « Effacer toutes mes données » ne les supprime pas.
+
+Les calculs sont faits dans la base (fonction `admin_dashboard`), qui vérifie
+elle-même que la personne connectée est administratrice.
 
 ## Passer de Gemini à Claude
 
@@ -134,6 +172,8 @@ qui suit le Flash le plus récent).
   modèle tous les messages non résumés (réglage `CONTEXT_MESSAGES` dans
   `lib/memory.ts`).
 - **Fuseau horaire** : Élise vit à l'heure de Paris.
+- **Paiements** : pas encore branchés. Le tableau de bord lit la table
+  `purchases`, que remplira le futur service de paiement.
 
 ## Développer sur sa machine (facultatif)
 

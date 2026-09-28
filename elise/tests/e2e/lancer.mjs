@@ -22,6 +22,7 @@ const env = {
   E2E_STATE: path.join(work, "etat.json"),
   E2E_SHOTS: path.join(work, "captures"),
   E2E_BASE: `http://localhost:${port}`,
+  E2E_CONTROL_PORT: String(Number(port) + 99),
 };
 
 const build = spawnSync("npx", ["next", "build"], { cwd: root, env, stdio: "inherit" });
