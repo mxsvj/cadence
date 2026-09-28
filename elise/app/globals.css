@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* Palette douce : papier crème, encre brune, accent terre cuite. */
+:root {
+  --background: #fbf7f2;
+  --foreground: #3a322e;
+  --muted: #766960; /* assez sombre pour les petits textes (contraste 4,5:1) */
+  --surface: #ffffff;
+  --line: #ece3da;
+  --accent: #b86b52;
+  --accent-soft: #f3e1d8;
+  /* Tableau de bord : la courbe des gains, et le sens des variations. */
+  --chart: #b86b52;
+  --good: #3f7a4a;
+  --bad: #b3413a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1c1917;
+    --foreground: #eee6df;
+    --muted: #a4968d;
+    --surface: #282320;
+    --line: #3a332f;
+    --accent: #d98c70;
+    --accent-soft: #4a3129;
+    --chart: #c97c60;
+    --good: #86c08f;
+    --bad: #ec8a80;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-chart: var(--chart);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --font-sans: var(--font-nunito);
+  --font-serif: var(--font-fraunces);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 17px;
+}
