@@ -65,7 +65,7 @@ async function saveState() {
   const db = await database();
   const tables = {};
   for (const t of ["messages", "user_facts", "summaries", "purchases", "admins", "profiles", "contacts",
-                   "ai_settings", "scripts", "script_steps", "offers"]) {
+                   "ai_settings", "scripts", "script_steps", "offers", "creators", "creator_contacts"]) {
     try {
       tables[t] = (await db.query(`select * from public.${t}`)).rows;
     } catch {

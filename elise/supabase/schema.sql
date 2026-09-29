@@ -535,6 +535,57 @@ create table if not exists public.ai_settings (
 insert into public.ai_settings (id) values (1) on conflict (id) do nothing;
 
 
+-- ─── Les créatrices : les personnages que l'IA peut incarner ──────────────
+-- Chaque créatrice a son profil (nom, âge, apparence, centres d'intérêt…),
+-- son premier message, et ses réglages avec chaque personne. L'IA incarne
+-- la créatrice choisie dans l'onglet IA (ai_settings.creator_id).
+create table if not exists public.creators (
+  id            bigint generated always as identity primary key,
+  persona       jsonb not null default '{}'::jsonb check (octet_length(persona::text) <= 60000),
+  first_message text not null default '' check (char_length(first_message) <= 2000),
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+-- Avec chaque personne : l'IA peut-elle lui répondre en mode hybride, et
+-- avec quels emojis. Sans ligne ici : oui, et sans emoji imposé.
+create table if not exists public.creator_contacts (
+  creator_id bigint not null references public.creators (id) on delete cascade,
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  ai_enabled boolean not null default true,
+  emojis     text not null default '' check (char_length(emojis) <= 400),
+  updated_at timestamptz not null default now(),
+  primary key (creator_id, user_id)
+);
+
+alter table public.ai_settings add column if not exists creator_id bigint references public.creators (id) on delete set null;
+
+-- Une seule fois : le personnage réglé avant les créatrices en devient une,
+-- active, avec les réglages déjà faits pour chaque personne.
+do $$
+declare
+  reglages public.ai_settings;
+  nouvelle bigint;
+begin
+  if exists (select 1 from public.creators) then
+    return;
+  end if;
+  select * into reglages from public.ai_settings where id = 1;
+  if reglages.persona = '{}'::jsonb and reglages.first_message = '' then
+    return;
+  end if;
+  insert into public.creators (persona, first_message)
+  values (reglages.persona, reglages.first_message)
+  returning id into nouvelle;
+  update public.ai_settings set creator_id = nouvelle where id = 1;
+  insert into public.creator_contacts (creator_id, user_id, ai_enabled, emojis)
+  select nouvelle, c.user_id, c.ai_enabled, c.emojis
+  from public.contacts c
+  where not c.ai_enabled or c.emojis <> '';
+end;
+$$;
+
+
 -- ─── Les offres : un contenu proposé à une personne, à son prix ───────────
 -- Le prix peut être personnalisé (entre le minimum et le maximum de
 -- l'étape) : il est alors affiché comme tel. La personne peut faire une
@@ -574,9 +625,13 @@ alter table public.script_steps enable row level security;
 alter table public.contacts     enable row level security;
 alter table public.ai_settings  enable row level security;
 alter table public.offers       enable row level security;
+alter table public.creators         enable row level security;
+alter table public.creator_contacts enable row level security;
 
 revoke all on public.profiles, public.scripts, public.script_steps, public.contacts,
-  public.ai_settings, public.offers from anon, authenticated;
+  public.ai_settings, public.offers, public.creators, public.creator_contacts from anon, authenticated;
+grant select, insert, update, delete on public.creators         to authenticated;
+grant select, insert, update, delete on public.creator_contacts to authenticated;
 grant select                         on public.profiles     to authenticated;
 grant select, insert, update, delete on public.scripts      to authenticated;
 grant select, insert, update, delete on public.script_steps to authenticated;
@@ -606,6 +661,12 @@ create policy "L'équipe gère les étapes" on public.script_steps for all to au
   using ((select public.is_admin())) with check ((select public.is_admin()));
 drop policy if exists "L'équipe gère les fiches contact" on public.contacts;
 create policy "L'équipe gère les fiches contact" on public.contacts for all to authenticated
+  using ((select public.is_admin())) with check ((select public.is_admin()));
+drop policy if exists "L'équipe gère les créatrices" on public.creators;
+create policy "L'équipe gère les créatrices" on public.creators for all to authenticated
+  using ((select public.is_admin())) with check ((select public.is_admin()));
+drop policy if exists "L'équipe règle chaque créatrice avec chacun" on public.creator_contacts;
+create policy "L'équipe règle chaque créatrice avec chacun" on public.creator_contacts for all to authenticated
   using ((select public.is_admin())) with check ((select public.is_admin()));
 drop policy if exists "L'équipe règle l'IA" on public.ai_settings;
 create policy "L'équipe règle l'IA" on public.ai_settings for all to authenticated
@@ -903,7 +964,11 @@ begin
                                          'texte', left(d.content, 160), 'date', d.created_at),
            'non_lus', (select count(*) from public.messages m
                        where m.user_id = d.user_id and m.role = 'user' and m.id > coalesce(c.last_read_message_id, 0)),
-           'ia_autorisee', coalesce(c.ai_enabled, true),
+           -- En mode hybride, ce que la créatrice active a le droit de faire.
+           'ia_autorisee', coalesce((select cc.ai_enabled
+                                     from public.creator_contacts cc
+                                     join public.ai_settings s on s.id = 1 and s.creator_id = cc.creator_id
+                                     where cc.user_id = d.user_id), true),
            'depense_cents', (select coalesce(sum(pu.amount_cents), 0) from public.purchases pu where pu.user_id = d.user_id))
          order by d.id desc), '[]'::jsonb)
   into resultat
@@ -1012,6 +1077,7 @@ begin
   delete from public.user_facts where user_id = moi;
   delete from public.summaries  where user_id = moi;
   update public.contacts set notes = '', emojis = '', city = '', last_read_message_id = 0 where user_id = moi;
+  update public.creator_contacts set emojis = '' where user_id = moi;
 end;
 $$;
 

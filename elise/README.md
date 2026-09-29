@@ -183,8 +183,8 @@ elle-même que la personne connectée est administratrice.
 
 ## L'espace de l'équipe
 
-Cinq onglets, en bas de l'écran comme dans une appli : Tableau, Messages, IA,
-Contenus, Paramètres.
+Six onglets, en bas de l'écran comme dans une appli : Tableau, Messages, IA,
+Créatrices, Contenus, Paramètres.
 
 ### Le lien secret
 
@@ -223,20 +223,38 @@ la personne :
 
 - **Qui répond** : automatique (l'IA répond à tout le monde), hybride
   (seulement aux personnes cochées), manuel (l'IA est coupée).
-- **Personnes** : les cases du mode hybride, et les emojis de chacun.
+- **La créatrice que l'IA incarne** : l'une des créatrices, ou « Aucune »
+  (le personnage par défaut, « Élise »). Bouton « Créer une créatrice ».
+
+### Créatrices
+
+Les personnages que l'IA peut incarner. « Créer une créatrice » ouvre
+directement sa page complète, qu'on remplit en descendant :
+
+- **Personnes** : ce que cette créatrice fait avec chacune, c'est-à-dire les
+  cases du mode hybride et les emojis qu'elle utilise avec chacune ;
 - **Profil du personnage** : nom, pseudo, genre, âge (18 ans minimum),
   anniversaire, profession, ville ou « dans la même région que la personne »,
   langue maternelle (toutes les langues), taille, poids, pointure, bonnet,
   cheveux, yeux, origine, silhouette, groupes personnalisés (tatouages,
-  piercings…), centres d'intérêt par catégories libres, et un texte libre.
+  piercings…), centres d'intérêt par catégories libres, et un texte libre ;
+- **Premier message** : son message d'accueil (`{nom}` devient son nom).
+
+Puis **Valider** : tout ce qui est rempli appartient à cette créatrice, et
+quand l'IA l'incarne, elle agit selon ce profil. La première créatrice
+validée devient celle que l'IA incarne ; ensuite, on choisit dans l'onglet
+IA. Dans la fiche d'une personne (onglet Messages), « L'IA peut répondre » et
+les emojis sont ceux de la créatrice active.
+
 L'IA reste une IA : elle le dit si on le lui demande, ne propose jamais de
 rencontre (même « dans la même région »), n'utilise jamais les détails
 physiques dans un registre sexuel.
 
 ### Paramètres
 
-- **Réglages de l'IA** : créativité, longueur des réponses, nombre de messages
-  relus, premier message, consignes supplémentaires.
+- **Réglages de l'IA** : nombre de messages relus, consignes
+  supplémentaires. La créativité est réglée au maximum fiable (1,0) et l'IA
+  choisit elle-même la longueur de chaque réponse : rien à régler.
 - **Garde-fous de la vente** : plafond mensuel par personne, nombre de
   messages avant la première offre et entre deux offres.
 - **Le site** : le modèle d'IA en service, et si le lien de l'équipe est

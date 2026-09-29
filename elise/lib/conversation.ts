@@ -51,7 +51,7 @@ export async function buildReply(input: {
 
   const system = chatSystemPrompt({
     base: getPersona(),
-    persona: settings.persona,
+    persona: settings.creator?.persona ?? {},
     person: {
       name: profile?.display_name,
       age: profile ? ageFrom(profile.birthdate, input.now) : undefined,
@@ -67,7 +67,7 @@ export async function buildReply(input: {
     now: input.now,
   });
   const messages: Turn[] = [...recent.map(toTurn), { role: "user", content: input.newMessage }];
-  return { system, messages, facts, sale, name: displayName(settings.persona) };
+  return { system, messages, facts, sale, name: displayName(settings.creator?.persona ?? {}) };
 }
 
 async function insertAiMessage(admin: SupabaseClient, userId: string, content: string): Promise<Message> {
@@ -119,9 +119,9 @@ export async function saveReply(input: {
   }
 }
 
-/** Le message d'accueil : celui des réglages s'il existe, sinon celui du fichier. */
+/** Le message d'accueil : celui de la créatrice active s'il existe, sinon celui du fichier. */
 export function firstMessageFor(settings: AiSettings): string {
-  const name = displayName(settings.persona);
-  const custom = settings.first_message.trim();
+  const name = displayName(settings.creator?.persona ?? {});
+  const custom = settings.creator?.first_message.trim() ?? "";
   return custom ? fillName(custom, name) : getFirstMessage(name);
 }

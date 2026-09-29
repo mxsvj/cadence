@@ -31,7 +31,6 @@ export default async function ParametersPage() {
     );
   }
   const current: AiSettings = { ...DEFAULT_SETTINGS, ...(settings.data ?? {}) };
-  current.temperature = Number(current.temperature);
   const model = currentModel();
   const email = claims.data?.claims?.email as string | undefined;
   const linkReady = accessKey() !== null;

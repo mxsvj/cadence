@@ -1,12 +1,12 @@
 "use server";
 
 import { requireAdmin } from "@/lib/admin";
-import { generate } from "@/lib/llm";
+import { CHAT_TEMPERATURE, generate } from "@/lib/llm";
 import { MESSAGE_COLUMNS, loadMessages, toTurn, type Message } from "@/lib/memory";
 import { describeStep, parseEuros, type Step } from "@/lib/offers";
 import { getPersona } from "@/lib/persona";
 import { personSection, personaSection } from "@/lib/prompts";
-import { ageFrom, loadProfile, type AiSettings } from "@/lib/settings";
+import { ageFrom, loadContact, loadProfile, loadSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import { timeZones } from "@/lib/team";
 
@@ -68,21 +68,35 @@ export async function saveContact(userId: string, form: ContactForm): Promise<Re
     if (!timeZones().includes(form.timezone)) return { ok: false, error: "Fuseau horaire inconnu." };
     const cap = form.spending_cap.trim() ? parseEuros(form.spending_cap) : null;
     if (form.spending_cap.trim() && cap === null) return { ok: false, error: "Plafond illisible : indiquez un montant en euros." };
+    const now = new Date().toISOString();
     const { error } = await supabase.from("contacts").upsert(
       {
         user_id: userId,
-        ai_enabled: form.ai_enabled,
         city: form.city.trim().slice(0, 120),
         timezone: form.timezone,
-        emojis: form.emojis.trim().slice(0, 400),
         notes: form.notes,
         script_id: form.script_id,
         spending_cap_cents: cap,
-        updated_at: new Date().toISOString(),
+        updated_at: now,
       },
       { onConflict: "user_id" },
     );
     if (error) throw error;
+    // IA autorisée et emojis : ceux de la créatrice active avec cette personne.
+    const { data: settings } = await supabase.from("ai_settings").select("creator_id").eq("id", 1).maybeSingle();
+    if (settings?.creator_id) {
+      const { error: creatorError } = await supabase.from("creator_contacts").upsert(
+        {
+          creator_id: settings.creator_id,
+          user_id: userId,
+          ai_enabled: form.ai_enabled,
+          emojis: form.emojis.trim().slice(0, 400),
+          updated_at: now,
+        },
+        { onConflict: "creator_id,user_id" },
+      );
+      if (creatorError) throw creatorError;
+    }
     return { ok: true };
   } catch (err) {
     return failure(err, "La fiche n'a pas été enregistrée.");
@@ -128,28 +142,27 @@ export async function withdrawOffer(offerId: number): Promise<Result> {
 export async function draftOfferMessage(userId: string, stepId: number, price: string): Promise<Result<{ text: string }>> {
   try {
     const supabase = await adminClient();
-    const [{ data: settings }, { data: step }, contact, profile, recent] = await Promise.all([
-      supabase.from("ai_settings").select("*").eq("id", 1).single(),
+    const [s, { data: step }, profile, recent] = await Promise.all([
+      loadSettings(supabase),
       supabase.from("script_steps").select("*").eq("id", stepId).single(),
-      supabase.from("contacts").select("*").eq("user_id", userId).maybeSingle(),
       loadProfile(supabase, userId),
       loadMessages(supabase, userId, 12),
     ]);
-    const s = settings as AiSettings;
+    // La fiche de la personne, avec les réglages de la créatrice active.
+    const c = await loadContact(supabase, userId, s.creator_id);
     const st = step as Step;
-    const c = contact.data as { city?: string; timezone?: string; notes?: string; emojis?: string } | null;
     const now = new Date();
     const system = [
       getPersona(),
-      personaSection(s.persona ?? {}, { city: c?.city }),
+      personaSection(s.creator?.persona ?? {}, { city: c.city }),
       personSection(
         {
           name: profile?.display_name,
           age: profile ? ageFrom(profile.birthdate, now) : undefined,
-          city: c?.city,
-          timezone: c?.timezone,
-          notes: c?.notes,
-          emojis: c?.emojis,
+          city: c.city,
+          timezone: c.timezone,
+          notes: c.notes,
+          emojis: c.emojis,
         },
         now,
       ),
@@ -164,8 +177,7 @@ export async function draftOfferMessage(userId: string, stepId: number, price: s
     const text = await generate({
       system,
       messages: recent.map(toTurn),
-      temperature: Number(s.temperature ?? 0.8),
-      maxTokens: 300,
+      temperature: CHAT_TEMPERATURE,
     });
     return { ok: true, text: text.replace(/\[\[[^\]]*\]\]/g, "").trim() };
   } catch (err) {

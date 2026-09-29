@@ -1,7 +1,7 @@
 import { after, NextResponse, type NextRequest } from "next/server";
 import { buildReply, saveReply } from "@/lib/conversation";
 import { MAX_MESSAGE_LENGTH } from "@/lib/limits";
-import { LlmError, generate } from "@/lib/llm";
+import { CHAT_TEMPERATURE, LlmError, generate } from "@/lib/llm";
 import { MESSAGE_COLUMNS, MemoryError, rememberFacts, summarizeIfNeeded, type Message } from "@/lib/memory";
 import { OFFER_COLUMNS, parseProposal, type Offer } from "@/lib/offers";
 import { cleanReply } from "@/lib/prompts";
@@ -70,11 +70,8 @@ export async function POST(request: Request) {
   let reply: string;
   let settings: Awaited<ReturnType<typeof loadSettings>>;
   try {
-    const [profile, loadedSettings, contact] = await Promise.all([
-      loadProfile(supabase, userId),
-      loadSettings(admin),
-      loadContact(admin, userId),
-    ]);
+    const [profile, loadedSettings] = await Promise.all([loadProfile(supabase, userId), loadSettings(admin)]);
+    const contact = await loadContact(admin, userId, loadedSettings.creator_id);
     if (!profile) return problem(403, "Complétez d'abord votre profil.");
     settings = loadedSettings;
 
@@ -90,8 +87,7 @@ export async function POST(request: Request) {
       await generate({
         system: context.system,
         messages: context.messages,
-        maxTokens: settings.max_tokens,
-        temperature: settings.temperature,
+        temperature: CHAT_TEMPERATURE,
       }),
     );
   } catch (err) {

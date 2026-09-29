@@ -2,7 +2,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MESSAGE_COLUMNS, type Message } from "./memory";
 import type { Script, Step } from "./offers";
-import { defaultContact, type AiMode, type Contact } from "./settings";
+import { displayName } from "./persona-profile";
+import { loadContact, loadSettings, type AiMode, type Contact } from "./settings";
 
 // Ce que voit l'équipe dans l'onglet « Messages ». Tout est lu avec la
 // session de l'administrateur : la base (RLS et fonctions admin_*) vérifie
@@ -51,6 +52,8 @@ export type TeamOffer = {
 export type Thread = {
   person: Person;
   contact: Contact;
+  /** La créatrice active (son IA autorisée et ses emojis sont dans la fiche), ou null. */
+  creatorName: string | null;
   messages: Message[];
   offers: TeamOffer[];
   steps: Record<number, Pick<Step, "id" | "title" | "content_type">>;
@@ -75,9 +78,9 @@ export async function loadInbox(supabase: SupabaseClient): Promise<{ mode: AiMod
 }
 
 export async function loadThread(supabase: SupabaseClient, userId: string): Promise<Thread | null> {
-  const [person, contact, messages, offers, scripts, facts] = await Promise.all([
+  const [person, settings, messages, offers, scripts, facts] = await Promise.all([
     supabase.rpc("admin_personne", { p_user: userId }),
-    supabase.from("contacts").select("*").eq("user_id", userId).maybeSingle(),
+    loadSettings(supabase),
     supabase.from("messages").select(MESSAGE_COLUMNS).eq("user_id", userId).order("id", { ascending: false }).limit(300),
     supabase.from("offers").select("*").eq("user_id", userId).order("id"),
     supabase.from("scripts").select("id, name, position").order("position").order("id"),
@@ -85,6 +88,8 @@ export async function loadThread(supabase: SupabaseClient, userId: string): Prom
   ]);
   const p = check(person, "Personne introuvable") as Person | null;
   if (!p) return null;
+  // La fiche, avec ce que la créatrice active fait avec cette personne.
+  const contact = await loadContact(supabase, userId, settings.creator_id);
 
   const offerRows = check(offers, "Offres illisibles") as TeamOffer[];
   const stepIds = [...new Set(offerRows.map((o) => o.step_id).filter((id): id is number => id !== null))];
@@ -99,7 +104,8 @@ export async function loadThread(supabase: SupabaseClient, userId: string): Prom
 
   return {
     person: p,
-    contact: { ...defaultContact(userId), ...((check(contact, "Fiche illisible") as Contact | null) ?? {}) },
+    contact,
+    creatorName: settings.creator ? displayName(settings.creator.persona) : null,
     messages: (check(messages, "Messages illisibles") as Message[]).reverse(),
     offers: offerRows,
     steps,

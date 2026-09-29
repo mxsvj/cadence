@@ -19,10 +19,7 @@ function Field({ label, children, hint }: { label: string; children: React.React
 
 // Les réglages fins de l'IA et les garde-fous de la vente.
 export function ParametersForm({ initial }: { initial: AiSettings }) {
-  const [temperature, setTemperature] = useState(initial.temperature);
-  const [maxTokens, setMaxTokens] = useState(initial.max_tokens);
   const [contextMessages, setContextMessages] = useState(initial.context_messages);
-  const [firstMessage, setFirstMessage] = useState(initial.first_message);
   const [extra, setExtra] = useState(initial.extra_instructions);
   const [cap, setCap] = useState((initial.spending_cap_cents / 100).toFixed(2).replace(".", ","));
   const [minMessages, setMinMessages] = useState(initial.sales_min_messages);
@@ -35,10 +32,7 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
     setSaving(true);
     setNotice(null);
     const result = await saveParameters({
-      temperature,
-      max_tokens: maxTokens,
       context_messages: contextMessages,
-      first_message: firstMessage,
       extra_instructions: extra,
       spending_cap: cap,
       sales_min_messages: minMessages,
@@ -54,27 +48,12 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
         <h2 id="titre-reglages" className="font-bold">
           Réglages de l&apos;IA
         </h2>
-        <Field label={`Créativité : ${temperature.toFixed(2).replace(".", ",")}`} hint="Plus bas : plus prévisible. Plus haut : plus varié.">
-          <input
-            type="range"
-            min={0}
-            max={1.5}
-            step={0.05}
-            value={temperature}
-            onChange={(e) => setTemperature(Number(e.target.value))}
-            className="accent-[var(--accent)]"
-          />
-        </Field>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Longueur maximale d'une réponse" hint="En jetons (environ ¾ de mot chacun), de 100 à 4 000.">
-            <input type="number" min={100} max={4000} value={maxTokens} onChange={(e) => setMaxTokens(Number(e.target.value))} className={input} />
-          </Field>
-          <Field label="Messages relus à chaque réponse" hint="De 6 à 60. Au-delà du double, les plus anciens sont résumés.">
-            <input type="number" min={6} max={60} value={contextMessages} onChange={(e) => setContextMessages(Number(e.target.value))} className={input} />
-          </Field>
-        </div>
-        <Field label="Premier message" hint="Vide : celui de elise-persona.md. {nom} devient le nom du personnage.">
-          <textarea value={firstMessage} rows={4} maxLength={2000} onChange={(e) => setFirstMessage(e.target.value)} className={input} />
+        <p className="text-sm text-muted">
+          La créativité est réglée au maximum fiable, et l&apos;IA choisit elle-même la longueur de chaque réponse. Le
+          premier message se règle pour chaque créatrice, dans l&apos;onglet Créatrices.
+        </p>
+        <Field label="Messages relus à chaque réponse" hint="De 6 à 60. Au-delà du double, les plus anciens sont résumés.">
+          <input type="number" min={6} max={60} value={contextMessages} onChange={(e) => setContextMessages(Number(e.target.value))} className={input} />
         </Field>
         <Field label={`Consignes supplémentaires (${extra.length} / 5000)`} hint="Ajoutées à la fin de la consigne de l'IA.">
           <textarea value={extra} rows={4} maxLength={5000} onChange={(e) => setExtra(e.target.value)} className={input} />
