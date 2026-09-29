@@ -71,13 +71,13 @@ describe("le personnage", () => {
 describe("la personne", () => {
   it("donne l'heure chez elle, ses emojis et les notes de l'équipe", () => {
     const text = personSection(
-      { name: "Karim", age: 44, city: "Montréal", timezone: "America/Toronto", emojis: "😊 🌿", notes: "Préfère les messages courts." },
+      { name: "Karim", age: 44, city: "Montréal", timezone: "America/Toronto", emojiMode: "choisis", emojis: "😊 🌿", notes: "Préfère les messages courts." },
       now,
     );
     assert.match(text, /Prénom ou pseudo : Karim/);
     assert.match(text, /Âge : 44 ans/);
     assert.match(text, /lundi 28 septembre à 15:14 \(America\/Toronto\)/);
-    assert.match(text, /uniquement ceux-là : 😊 🌿/);
+    assert.match(text, /uniquement ceux-là, selon la discussion : 😊 🌿/);
     assert.match(text, /Préfère les messages courts\./);
   });
 });

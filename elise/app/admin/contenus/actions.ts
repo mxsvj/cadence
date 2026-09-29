@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { requireAdmin } from "@/lib/admin";
+import { SCHEMA_HINT, requireAdmin, schemaOutdated } from "@/lib/admin";
 import { MAX_MEDIA, mainType, parseEuros, type MediaItem, type Step } from "@/lib/offers";
 import { CONTENT_BUCKET, createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -19,17 +19,27 @@ async function adminClient() {
 
 function failure(err: unknown, fallback: string): { ok: false; error: string } {
   console.error(fallback, err);
+  if (schemaOutdated(err)) return { ok: false, error: `${fallback.replace(/\.$/, "")} : ${SCHEMA_HINT}` };
   return { ok: false, error: fallback };
 }
 
-export async function createScript(name: string): Promise<Result<{ id: number }>> {
+/** Une créatrice (son numéro) ou null : le script sert alors à toutes. */
+const creatorOrNull = (value: unknown): number | null | undefined =>
+  value === null ? null : Number.isSafeInteger(value) && (value as number) > 0 ? (value as number) : undefined;
+
+export async function createScript(name: string, creatorId: number | null = null): Promise<Result<{ id: number }>> {
   try {
     const supabase = await adminClient();
     const clean = name.trim().slice(0, 120);
     if (!clean) return { ok: false, error: "Donnez un nom au script." };
+    const creator = creatorOrNull(creatorId);
+    if (creator === undefined) return { ok: false, error: "Créatrice inconnue. Rechargez la page." };
     const { data: last } = await supabase.from("scripts").select("position").order("position", { ascending: false }).limit(1);
     const position = ((last?.[0]?.position as number | undefined) ?? 0) + 1;
-    const { data, error } = await supabase.from("scripts").insert({ name: clean, position }).select("id").single();
+    // Sans créatrice, on n'écrit pas la colonne : la création marche même avant de relancer schema.sql.
+    const row: { name: string; position: number; creator_id?: number } = { name: clean, position };
+    if (creator !== null) row.creator_id = creator;
+    const { data, error } = await supabase.from("scripts").insert(row).select("id").single();
     if (error) throw error;
     return { ok: true, id: data.id as number };
   } catch (err) {
@@ -47,6 +57,20 @@ export async function renameScript(id: number, name: string): Promise<Result> {
     return { ok: true };
   } catch (err) {
     return failure(err, "Le script n'a pas été renommé.");
+  }
+}
+
+/** Rattacher un script à une créatrice, ou le rendre à toutes (null). */
+export async function setScriptCreator(id: number, creatorId: number | null): Promise<Result> {
+  try {
+    const supabase = await adminClient();
+    const creator = creatorOrNull(creatorId);
+    if (creator === undefined) return { ok: false, error: "Créatrice inconnue. Rechargez la page." };
+    const { error } = await supabase.from("scripts").update({ creator_id: creator }).eq("id", id);
+    if (error) throw error;
+    return { ok: true };
+  } catch (err) {
+    return failure(err, "Le script n'a pas été associé.");
   }
 }
 

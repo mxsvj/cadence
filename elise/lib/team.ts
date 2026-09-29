@@ -83,7 +83,8 @@ export async function loadThread(supabase: SupabaseClient, userId: string): Prom
     loadSettings(supabase),
     supabase.from("messages").select(MESSAGE_COLUMNS).eq("user_id", userId).order("id", { ascending: false }).limit(300),
     supabase.from("offers").select("*").eq("user_id", userId).order("id"),
-    supabase.from("scripts").select("id, name, position").order("position").order("id"),
+    // « * » : creator_id n'existe qu'une fois schema.sql relancé.
+    supabase.from("scripts").select("*").order("position").order("id"),
     supabase.from("user_facts").select("fact").eq("user_id", userId).order("id"),
   ]);
   const p = check(person, "Personne introuvable") as Person | null;
@@ -109,9 +110,23 @@ export async function loadThread(supabase: SupabaseClient, userId: string): Prom
     messages: (check(messages, "Messages illisibles") as Message[]).reverse(),
     offers: offerRows,
     steps,
-    scripts: check(scripts, "Scripts illisibles") as Script[],
+    scripts: usableScripts(check(scripts, "Scripts illisibles") as Script[], settings.creator_id, contact.script_id),
     facts: (check(facts, "Fiche illisible") as { fact: string }[]).map((f) => f.fact),
   };
+}
+
+/**
+ * Les scripts qu'on peut choisir dans la fiche : ceux de la créatrice active
+ * et ceux qui servent à toutes. Celui déjà choisi reste visible, signalé,
+ * s'il est à une autre créatrice (l'IA ne s'en sert pas).
+ */
+export function usableScripts(scripts: Script[], activeCreator: number | null, chosen: number | null): Script[] {
+  return scripts.flatMap((s) => {
+    const owner = s.creator_id == null ? null : Number(s.creator_id);
+    if (owner === null || owner === activeCreator) return [{ ...s, creator_id: owner }];
+    if (s.id === chosen) return [{ ...s, creator_id: owner, name: `${s.name} (autre créatrice : pas utilisé)` }];
+    return [];
+  });
 }
 
 /** Les fuseaux horaires que connaît le navigateur ou le serveur. */

@@ -411,7 +411,23 @@ await admin.getByText("Aucune créatrice pour l'instant").waitFor();
 await admin.getByRole("link", { name: "Créer une créatrice" }).click();
 await admin.waitForURL(`${BASE}/admin/creatrices/nouvelle`);
 await admin.getByLabel("L'IA peut parler à Karim").waitFor();
-await admin.getByLabel("Nom", { exact: true }).fill("Chloé");
+await admin.getByText("S'enregistre tout seul dès que vous écrivez.").waitFor();
+assert.equal(state().tables.creators?.length ?? 0, 0); // ouvrir la page ne crée rien
+// Le prénom, puis « retour » sans valider : il est déjà enregistré, et la
+// liste le montre (pas une ancienne version gardée par le navigateur).
+await admin.getByLabel("Prénom", { exact: true }).fill("Chloé");
+await admin.getByText("✓ Enregistré").waitFor();
+await admin.goBack();
+await admin.waitForURL(`${BASE}/admin/creatrices`);
+await admin.getByRole("link", { name: "Créatrice Chloé" }).waitFor();
+s = state();
+assert.equal(s.tables.creators.length, 1);
+assert.equal(s.tables.ai_settings[0].creator_id, null); // pas encore validée
+step("créatrice : le prénom s'enregistre tout seul ; après « retour », Chloé est dans la liste");
+
+await admin.getByRole("link", { name: "Créatrice Chloé" }).click();
+await admin.waitForURL(/\/admin\/creatrices\/\d+$/);
+assert.equal(await admin.getByLabel("Prénom", { exact: true }).inputValue(), "Chloé");
 await admin.getByLabel("Âge").fill("29");
 await admin.getByLabel("Ville", { exact: true }).fill("Annecy");
 await admin.getByLabel("Langue maternelle").selectOption("it");
@@ -425,12 +441,25 @@ await admin.getByLabel("Préférences").fill("jazz, bossa nova");
 await admin
   .getByLabel("Le message d'accueil")
   .fill("Bonjour, je suis {nom}. Je suis une intelligence artificielle : ici, on discute librement. Comment aimeriez-vous que je vous appelle ?");
+// Les emojis de Chloé avec Karim : seulement ceux-là (un emoji refusé est retiré).
+await admin.getByRole("button", { name: "Emojis avec Karim : au choix de l'IA" }).click();
+await admin.getByLabel("Seulement ceux que je choisis").check();
+await admin.getByRole("tab", { name: "Nature" }).click();
+await admin.getByRole("button", { name: "Emoji 🌸" }).click();
+await admin.getByRole("tab", { name: "Boissons" }).click();
+await admin.getByRole("button", { name: "Emoji ☕" }).click();
+await admin.getByLabel("Autres emojis pour Karim").fill("🍑 🦋");
+await admin.getByRole("button", { name: "Ajouter", exact: true }).click();
+await admin.getByRole("button", { name: "Retirer 🦋" }).waitFor();
+assert.equal(await admin.getByRole("button", { name: "Retirer 🍑" }).count(), 0);
 await admin.screenshot({ path: `${SHOTS}14-creatrice.png`, fullPage: true });
 await admin.getByRole("button", { name: "Valider" }).click();
 await admin.waitForURL(`${BASE}/admin/creatrices`);
 await admin.getByText("Incarnée par l'IA").waitFor();
 s = state();
 assert.equal(s.tables.creators.length, 1);
+const karimWithChloe = s.tables.creator_contacts.find((c) => c.emoji_mode === "choisis");
+assert.equal(karimWithChloe.emojis, "🌸 ☕ 🦋");
 assert.equal(s.tables.creators[0].persona.nom, "Chloé");
 assert.equal(s.tables.creators[0].persona.pres_de_la_personne, true);
 assert.match(s.tables.creators[0].first_message, /on discute librement/);
@@ -444,7 +473,7 @@ const chloe = admin.getByRole("radio", { name: /Chloé/ });
 await chloe.waitFor();
 assert.ok(await chloe.isChecked());
 assert.equal(await admin.getByText("Profil du personnage").count(), 0);
-assert.equal(await admin.getByLabel("Nom", { exact: true }).count(), 0);
+assert.equal(await admin.getByLabel("Prénom", { exact: true }).count(), 0);
 await admin.screenshot({ path: `${SHOTS}14-ia.png`, fullPage: true });
 step("onglet IA : qui répond, et Chloé cochée comme créatrice incarnée ; plus de profil ici");
 
@@ -479,8 +508,18 @@ const photo = await paint("#b86b52,#f3e1d8 55%,#7aa0b8");
 const photo2 = await paint("#3f7a4a,#f6e7b0 50%,#b86b52");
 await admin.goto(`${BASE}/admin/contenus`);
 await admin.getByLabel("Nom du nouveau script").fill("Principal");
+assert.equal(await admin.getByLabel("Créatrice du nouveau script").inputValue(), String(s.tables.creators[0].id)); // la créatrice active
 await admin.getByRole("button", { name: "Créer" }).click();
 await admin.getByText("Script créé.").waitFor();
+assert.equal(Number(state().tables.scripts[0].creator_id), Number(s.tables.creators[0].id));
+await admin.getByRole("tab", { name: /Principal.*Chloé.*par défaut/ }).waitFor();
+// Rendu à toutes les créatrices, puis de nouveau à Chloé.
+await admin.getByLabel("Créatrice du script").selectOption({ label: "Toutes les créatrices" });
+await admin.getByText("Le script sert à toutes les créatrices.").waitFor();
+assert.equal(state().tables.scripts[0].creator_id, null);
+await admin.getByLabel("Créatrice du script").selectOption({ label: "Chloé" });
+await admin.getByText("Script associé à Chloé.").waitFor();
+assert.equal(Number(state().tables.scripts[0].creator_id), Number(s.tables.creators[0].id));
 
 async function addStep({ title, files, text, description, instruction, fixed, team, price }) {
   await admin.getByRole("button", { name: "Ajouter un message au script" }).click();
@@ -560,7 +599,7 @@ await admin.getByText("Hybride", { exact: true }).click();
 await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
 await admin.getByText("Réglages enregistrés.").waitFor();
 await admin.goto(`${BASE}/admin/creatrices`);
-await admin.getByRole("link", { name: "Modifier" }).click();
+await admin.getByRole("link", { name: "Créatrice Chloé" }).click();
 await admin.getByLabel("L'IA peut parler à Sam").uncheck();
 await admin.getByRole("button", { name: "Valider" }).click();
 await admin.waitForURL(`${BASE}/admin/creatrices`);
@@ -589,7 +628,9 @@ step("l'équipe répond depuis la messagerie : Sam reçoit le message en direct,
 // 29. La fiche de Sam : l'IA peut lui répondre, ville, emojis, notes.
 await admin.getByLabel("L'IA peut répondre à cette personne").check();
 await admin.getByLabel("Ville", { exact: true }).fill("Lyon");
-await admin.getByLabel("Emojis de cette personne").fill("🌸");
+await admin.getByLabel("Seulement ceux que je choisis").check();
+await admin.getByRole("tab", { name: "Nature" }).click();
+await admin.getByRole("button", { name: "Emoji 🌸" }).click();
 await admin.getByLabel("Comment se comporter avec elle", { exact: false }).fill("Aime les voyages.");
 await admin.getByRole("button", { name: "Enregistrer la fiche" }).click();
 await admin.getByText("Fiche enregistrée.").waitFor();
@@ -598,7 +639,7 @@ s = state();
 const samContact = s.tables.contacts.find((c) => c.city === "Lyon");
 assert.equal(samContact.notes, "Aime les voyages.");
 const samWithChloe = s.tables.creator_contacts.find((c) => c.user_id === samContact.user_id);
-assert.deepEqual([samWithChloe.ai_enabled, samWithChloe.emojis], [true, "🌸"]);
+assert.deepEqual([samWithChloe.ai_enabled, samWithChloe.emoji_mode, samWithChloe.emojis], [true, "choisis", "🌸"]);
 step("fiche contact enregistrée : ville, notes ; IA autorisée et emojis pour Chloé, la créatrice active");
 
 // 30. L'IA propose la première étape (gratuite) : offerte et visible tout de suite.
@@ -612,7 +653,7 @@ assert.match(salesPrompt, /Nom : Chloé/);
 assert.match(salesPrompt, /près de Lyon/);
 assert.match(salesPrompt, /Tu ne proposes jamais de la rencontrer/);
 assert.match(salesPrompt, /Tatouages : une hirondelle sur le poignet/);
-assert.match(salesPrompt, /uniquement ceux-là : 🌸/);
+assert.match(salesPrompt, /uniquement ceux-là, selon la discussion : 🌸/);
 assert.match(salesPrompt, /Aime les voyages\./);
 assert.match(salesPrompt, /Le prochain contenu, dans l'ordre prévu : un court poème \(un texte\)/);
 assert.match(salesPrompt, /« dis que c'est un petit cadeau de bienvenue »/);

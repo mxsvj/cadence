@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import { emojiSummary, type EmojiMode } from "@/lib/emojis";
 import {
   GENRES,
   MAX_TEXT,
@@ -12,14 +13,17 @@ import {
   type InterestCategory,
   type PersonaProfile,
 } from "@/lib/persona-profile";
-import { EmojiPicker } from "../emoji-picker";
-import { saveCreator } from "./actions";
+import { EmojiChoice } from "../emoji-picker";
+import { saveCreator, type PersonSetting } from "./actions";
 
-export type PersonRow = { user_id: string; name: string; ai_enabled: boolean; emojis: string };
-
+export type PersonRow = PersonSetting & { name: string };
 
 const input = "rounded-xl border border-line bg-surface px-3 py-2 outline-none focus:border-accent";
 const card = "flex flex-col gap-4 rounded-3xl border border-line bg-surface p-5";
+/** Après la dernière frappe, le temps d'attendre avant d'enregistrer. */
+const AUTOSAVE_MS = 700;
+/** Personnes affichées d'un coup ; « Afficher plus » pour la suite. */
+const PAGE = 20;
 
 function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
   return (
@@ -34,9 +38,16 @@ function Field({ label, children, hint }: { label: string; children: React.React
 /** Une créatrice telle qu'on la modifie : son profil et son premier message. */
 export type CreatorDraft = { id: number | null; persona: PersonaProfile; first_message: string };
 
+type Values = { persona: PersonaProfile; firstMessage: string; people: PersonRow[] };
+type Status = { state: "idle" | "saving" | "saved" } | { state: "error"; message: string };
+
+const sameSetting = (a: PersonSetting, b: PersonSetting) =>
+  a.ai_enabled === b.ai_enabled && a.emoji_mode === b.emoji_mode && a.emojis === b.emojis;
+
 // La page d'une créatrice : les personnes (ce qu'elle fait avec chacune),
-// son profil, son premier message, puis « Valider ». Quand l'IA est active,
-// c'est cette créatrice qu'elle incarne, avec tout ce qui est rempli ici.
+// son profil, son premier message. Tout s'enregistre tout seul à chaque
+// changement : on peut partir et revenir. « Valider » quand elle est prête ;
+// quand l'IA l'incarne, elle agit selon tout ce qui est rempli ici.
 export function CreatorForm({
   creator,
   people: initialPeople,
@@ -51,111 +62,225 @@ export function CreatorForm({
   const [firstMessage, setFirstMessage] = useState(creator.first_message);
   const [people, setPeople] = useState(initialPeople);
   const [search, setSearch] = useState("");
-  const [emojiFor, setEmojiFor] = useState(initialPeople[0]?.user_id ?? "");
-  const [notice, setNotice] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [limit, setLimit] = useState(PAGE);
+  const [emojiFor, setEmojiFor] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status>({ state: creator.id ? "saved" : "idle" });
+  const [validating, setValidating] = useState(false);
+  const [version, setVersion] = useState(0);
+  const firstNameRef = useRef<HTMLInputElement>(null);
 
-  const set = <K extends keyof PersonaProfile>(key: K, value: PersonaProfile[K]) =>
+  // L'enregistrement automatique : une seule sauvegarde à la fois, dans
+  // l'ordre (la première crée la créatrice, les suivantes la modifient).
+  const idRef = useRef(creator.id);
+  const savedPeople = useRef(new Map(initialPeople.map((p) => [p.user_id, p as PersonSetting])));
+  const chain = useRef<Promise<unknown>>(Promise.resolve());
+  const pending = useRef<(() => Promise<unknown>) | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const touch = () => setVersion((v) => v + 1);
+  const set = <K extends keyof PersonaProfile>(key: K, value: PersonaProfile[K]) => {
     setPersona((p) => ({ ...p, [key]: value }));
+    touch();
+  };
   const text = (key: keyof PersonaProfile) => (persona[key] as string | undefined) ?? "";
+
+  async function persist(values: Values, validate: boolean) {
+    setStatus({ state: "saving" });
+    const changed = values.people.filter((p) => {
+      const saved = savedPeople.current.get(p.user_id);
+      return !saved || !sameSetting(saved, p);
+    });
+    let result: Awaited<ReturnType<typeof saveCreator>>;
+    try {
+      result = await saveCreator({
+        id: idRef.current,
+        persona: values.persona,
+        first_message: values.firstMessage,
+        people: changed.map(({ user_id, ai_enabled, emoji_mode, emojis }) => ({ user_id, ai_enabled, emoji_mode, emojis })),
+        validate,
+      });
+    } catch {
+      result = { ok: false, error: "Pas de connexion : les derniers changements ne sont pas enregistrés. Réessayez." };
+    }
+    if (!result.ok) {
+      setStatus({ state: "error", message: result.error });
+      return result;
+    }
+    idRef.current = result.id;
+    for (const p of changed) savedPeople.current.set(p.user_id, p);
+    setStatus({ state: "saved" });
+    return result;
+  }
+
+  /** Enregistre tout de suite ce qui attend encore. */
+  const flush = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    const job = pending.current;
+    pending.current = null;
+    if (job) chain.current = chain.current.then(job);
+    return chain.current;
+  }, []);
+
+  const schedule = useEffectEvent(() => {
+    const values = { persona, firstMessage, people };
+    pending.current = () => persist(values, false);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(flush, AUTOSAVE_MS);
+  });
+  useEffect(() => {
+    if (version > 0) schedule();
+  }, [version]);
+  // En quittant la page (onglet, retour) : rien de ce qui a été tapé ne se perd.
+  useEffect(() => () => void flush(), [flush]);
+
+  async function leave(e: React.MouseEvent) {
+    e.preventDefault();
+    await flush();
+    router.push("/admin/creatrices");
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
-    setNotice(null);
-    const result = await saveCreator({
-      id: creator.id,
-      persona,
-      first_message: firstMessage,
-      people: people.map(({ user_id, ai_enabled, emojis }) => ({ user_id, ai_enabled, emojis })),
-    });
-    setSaving(false);
-    if (!result.ok) return setNotice(result.error);
+    setValidating(true);
+    await flush();
+    const values = { persona, firstMessage, people };
+    const result = (await (chain.current = chain.current.then(() => persist(values, true)))) as Awaited<
+      ReturnType<typeof persist>
+    >;
+    setValidating(false);
+    if (!result.ok) {
+      if (!persona.nom?.trim()) {
+        firstNameRef.current?.focus();
+        firstNameRef.current?.scrollIntoView({ block: "center" });
+      }
+      return;
+    }
     router.push("/admin/creatrices");
-    router.refresh();
   }
 
-  function toggle(person: PersonRow) {
-    setPeople((list) => list.map((p) => (p.user_id === person.user_id ? { ...p, ai_enabled: !p.ai_enabled } : p)));
+  function updatePerson(userId: string, change: Partial<PersonSetting>) {
+    setPeople((list) => list.map((p) => (p.user_id === userId ? { ...p, ...change } : p)));
+    touch();
+  }
+
+  function sameForEveryone(from: PersonRow) {
+    setPeople((list) => list.map((p) => ({ ...p, emoji_mode: from.emoji_mode, emojis: from.emojis })));
+    touch();
   }
 
   const groups = persona.groupes ?? [];
   const interests = persona.interets ?? [];
   const setGroups = (g: CustomGroup[]) => set("groupes", g);
   const setInterests = (i: InterestCategory[]) => set("interets", i);
-  const visible = people.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
-  const emojiPerson = people.find((p) => p.user_id === emojiFor);
+  const visible = people.filter((p) => p.name.toLowerCase().includes(search.trim().toLowerCase()));
   const name = text("nom").trim();
 
   return (
-    <form onSubmit={submit} className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 pb-28 sm:px-6">
+    <form onSubmit={submit} className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 pb-32 sm:px-6">
       <header>
-        <Link href="/admin/creatrices" className="text-sm text-muted underline underline-offset-4">
+        <Link href="/admin/creatrices" onClick={leave} className="text-sm text-muted underline underline-offset-4">
           ← Créatrices
         </Link>
-        <h1 className="mt-2 font-serif text-3xl">{creator.id ? name || "Créatrice" : "Nouvelle créatrice"}</h1>
+        <h1 className="mt-2 font-serif text-3xl">{name || (creator.id ? "Créatrice sans prénom" : "Nouvelle créatrice")}</h1>
         <p className="text-sm text-muted">
-          Tout ce qui est rempli ici appartient à cette créatrice : quand l&apos;IA l&apos;incarne, elle agit selon ce
-          profil. Elle reste une IA et le dit toujours si on le lui demande.
+          Tout s&apos;enregistre tout seul, à chaque changement : vous pouvez partir et revenir quand vous voulez.
+          Quand l&apos;IA incarne cette créatrice, elle agit selon tout ce qui est rempli ici, et reste une IA qui
+          le dit toujours si on le lui demande.
         </p>
       </header>
 
-      {/* Les personnes (mode hybride) et leurs emojis */}
+      {/* Les personnes : l'IA leur répond-elle (mode hybride), et avec quels emojis */}
       <section className={card} aria-labelledby="titre-personnes">
-        <h2 id="titre-personnes" className="font-bold">
-          Personnes
-        </h2>
-        <p className="text-sm text-muted">
-          Ce que cette créatrice fait avec chaque personne. En mode hybride, l&apos;IA ne parle qu&apos;aux personnes
-          cochées. Tout est enregistré avec « Valider », en bas de la page.
-        </p>
+        <div>
+          <h2 id="titre-personnes" className="font-bold">
+            Personnes
+          </h2>
+          <p className="text-sm text-muted">
+            Les personnes inscrites qui parlent à {name || "cette créatrice"}. Pour chacune : l&apos;IA peut-elle lui
+            répondre (en mode hybride), et avec quels emojis.
+          </p>
+        </div>
         {people.length === 0 ? (
-          <p className="text-sm text-muted">Personne ne s&apos;est encore inscrit.</p>
+          <p className="text-sm text-muted">
+            Personne ne s&apos;est encore inscrit : les réglages de chaque personne apparaîtront ici.
+          </p>
         ) : (
           <>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Chercher une personne"
-              aria-label="Chercher une personne"
-              className={input}
-            />
-            <ul className="grid max-h-64 gap-1 overflow-y-auto sm:grid-cols-2">
-              {visible.map((p) => (
-                <li key={p.user_id}>
-                  <label className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-accent-soft">
-                    <input
-                      type="checkbox"
-                      checked={p.ai_enabled}
-                      onChange={() => toggle(p)}
-                      className="size-4 accent-[var(--accent)]"
-                      aria-label={`L'IA peut parler à ${p.name}`}
-                    />
-                    <span className="truncate">{p.name}</span>
-                    {p.emojis && <span className="ml-auto shrink-0">{p.emojis}</span>}
-                  </label>
-                </li>
-              ))}
+            {people.length > 6 && (
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setLimit(PAGE);
+                }}
+                placeholder="Chercher une personne inscrite"
+                aria-label="Chercher une personne inscrite"
+                className={input}
+              />
+            )}
+            <ul className="flex flex-col gap-2">
+              {visible.slice(0, limit).map((p) => {
+                const open = emojiFor === p.user_id;
+                const summary = emojiSummary(p.emoji_mode, p.emojis);
+                return (
+                  <li key={p.user_id} className="flex flex-col gap-2 rounded-2xl border border-line p-3">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="min-w-0 flex-1 truncate font-semibold">{p.name}</span>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={p.ai_enabled}
+                          onChange={() => updatePerson(p.user_id, { ai_enabled: !p.ai_enabled })}
+                          className="size-4 accent-[var(--accent)]"
+                          aria-label={`L'IA peut parler à ${p.name}`}
+                        />
+                        L&apos;IA lui répond
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEmojiFor(open ? null : p.user_id)}
+                      aria-expanded={open}
+                      aria-label={`Emojis avec ${p.name} : ${summary}`}
+                      className="flex items-center justify-between gap-2 rounded-xl bg-background px-3 py-2 text-left text-sm"
+                    >
+                      <span className="min-w-0">
+                        Emojis :{" "}
+                        <span className={p.emoji_mode === "choisis" && p.emojis ? "text-lg" : "text-muted"}>{summary}</span>
+                      </span>
+                      <span className="shrink-0 font-semibold text-accent">{open ? "Fermer" : "Choisir"}</span>
+                    </button>
+                    {open && (
+                      <div className="flex flex-col gap-2">
+                        <EmojiChoice
+                          who={p.name}
+                          mode={p.emoji_mode}
+                          emojis={p.emojis}
+                          onChange={(emoji_mode: EmojiMode, emojis: string) => updatePerson(p.user_id, { emoji_mode, emojis })}
+                        />
+                        {people.length > 1 && (
+                          <button type="button" onClick={() => sameForEveryone(p)} className="self-start text-sm text-accent underline">
+                            Mettre les mêmes emojis pour tout le monde
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
-            <div className="flex flex-col gap-2 border-t border-line pt-4">
-              <h3 className="font-semibold">Emojis par personne</h3>
-              <p className="text-sm text-muted">L&apos;IA n&apos;utilisera que ceux-là avec la personne choisie.</p>
-              <select value={emojiFor} onChange={(e) => setEmojiFor(e.target.value)} aria-label="Personne" className={input}>
-                {people.map((p) => (
-                  <option key={p.user_id} value={p.user_id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              {emojiPerson && (
-                <EmojiPicker
-                    value={emojiPerson.emojis}
-                    onChange={(emojis) =>
-                      setPeople((list) => list.map((p) => (p.user_id === emojiPerson.user_id ? { ...p, emojis } : p)))
-                    }
-                  />
-              )}
-            </div>
+            {visible.length > limit && (
+              <button
+                type="button"
+                onClick={() => setLimit((l) => l + PAGE)}
+                className="self-start rounded-full border border-line px-4 py-1.5 text-sm font-semibold"
+              >
+                Afficher plus ({visible.length - limit})
+              </button>
+            )}
+            {search && visible.length === 0 && <p className="text-sm text-muted">Personne à ce nom.</p>}
           </>
         )}
       </section>
@@ -173,8 +298,14 @@ export function CreatorForm({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Nom">
-            <input value={text("nom")} onChange={(e) => set("nom", e.target.value)} placeholder="Élise" className={input} />
+          <Field label="Prénom">
+            <input
+              ref={firstNameRef}
+              value={text("nom")}
+              onChange={(e) => set("nom", e.target.value)}
+              placeholder="Katherine"
+              className={input}
+            />
           </Field>
           <Field label="Pseudo">
             <input value={text("pseudo")} onChange={(e) => set("pseudo", e.target.value)} className={input} />
@@ -345,12 +476,15 @@ export function CreatorForm({
         <h2 id="titre-premier-message" className="font-bold">
           Premier message
         </h2>
-        <Field label="Le message d'accueil" hint="Envoyé à chaque nouvelle personne. Vide : le message d'accueil par défaut. {nom} devient le nom de la créatrice.">
+        <Field label="Le message d'accueil" hint="Envoyé à chaque nouvelle personne. Vide : le message d'accueil par défaut. {nom} devient son prénom.">
           <textarea
             value={firstMessage}
             rows={5}
             maxLength={2000}
-            onChange={(e) => setFirstMessage(e.target.value)}
+            onChange={(e) => {
+              setFirstMessage(e.target.value);
+              touch();
+            }}
             placeholder="Bonjour, je suis {nom}…"
             className={input}
           />
@@ -359,18 +493,35 @@ export function CreatorForm({
 
       {/* Juste au-dessus de la barre d'onglets. */}
       <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 border-t border-line bg-background/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3">
-          <button type="submit" disabled={saving} className="rounded-full bg-accent px-6 py-2.5 font-bold text-white disabled:opacity-60">
-            {saving ? "Enregistrement…" : "Valider"}
-          </button>
-          <Link href="/admin/creatrices" className="px-2 text-sm text-muted">
-            Annuler
-          </Link>
-          {notice && (
-            <p role="status" className="text-sm text-muted">
-              {notice}
+        <div className="mx-auto flex max-w-4xl flex-col gap-2">
+          {status.state === "error" && (
+            <p role="alert" className="rounded-xl border border-bad px-3 py-2 text-sm font-semibold text-bad">
+              {status.message}
             </p>
           )}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="submit"
+              disabled={validating}
+              className="rounded-full bg-accent px-6 py-2.5 font-bold text-white disabled:opacity-60"
+            >
+              {validating ? "Validation…" : "Valider"}
+            </button>
+            <p role="status" className="text-sm text-muted">
+              {status.state === "saving"
+                ? "Enregistrement…"
+                : status.state === "saved"
+                  ? "✓ Enregistré"
+                  : status.state === "error"
+                    ? ""
+                    : "S'enregistre tout seul dès que vous écrivez."}
+            </p>
+            {status.state === "error" && (
+              <button type="button" onClick={touch} className="text-sm font-semibold text-accent underline">
+                Réessayer
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </form>

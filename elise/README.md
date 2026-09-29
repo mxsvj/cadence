@@ -211,9 +211,11 @@ la personne :
 
 - **L'IA peut répondre à cette personne** (compte en mode hybride) ;
 - **ville** et **fuseau horaire** (l'IA sait quelle heure il est chez elle) ;
-- **emojis** que l'IA utilisera avec elle ;
+- **emojis** de la créatrice active avec elle : au choix de l'IA, seulement
+  ceux qu'on choisit, ou aucun ;
 - **comment se comporter avec elle** : 5 000 caractères de notes pour l'IA ;
-- **script de vente** suivi, et **plafond de dépenses** mensuel propre ;
+- **script de vente** suivi (ceux de la créatrice active ou de toutes), et
+  **plafond de dépenses** mensuel propre ;
 - ce que l'IA sait d'elle (sa fiche), sa LTV, et la **vente** : l'étape
   suivante du script, l'offre en attente (qu'on peut retirer), et l'envoi de
   l'étape suivante par l'équipe, avec un message écrit à la main ou rédigé par
@@ -228,23 +230,32 @@ la personne :
 
 ### Créatrices
 
-Les personnages que l'IA peut incarner. « Créer une créatrice » ouvre
-directement sa page complète, qu'on remplit en descendant :
+Les personnages que l'IA peut incarner. Chaque créatrice est un bouton à
+son prénom : on le touche pour revenir sur sa page, telle qu'on l'a laissée.
+« Créer une créatrice » ouvre directement sa page complète, qu'on remplit en
+descendant. **Tout s'enregistre tout seul** à chaque changement (« ✓
+Enregistré » en bas) : on peut partir et revenir quand on veut.
 
-- **Personnes** : ce que cette créatrice fait avec chacune, c'est-à-dire les
-  cases du mode hybride et les emojis qu'elle utilise avec chacune ;
-- **Profil du personnage** : nom, pseudo, genre, âge (18 ans minimum),
+- **Personnes** : ce que cette créatrice fait avec chacune : « L'IA lui
+  répond » (mode hybride) et ses **emojis** avec elle, au choix : « Au choix
+  de l'IA » (selon la discussion), « Seulement ceux que je choisis » (tout le
+  catalogue, rangé par familles, plus un champ pour coller n'importe quel
+  emoji ; les sous-entendus sexuels sont refusés), ou « Aucun emoji ».
+  « Mettre les mêmes emojis pour tout le monde » recopie un réglage ;
+- **Profil du personnage** : prénom, pseudo, genre, âge (18 ans minimum),
   anniversaire, profession, ville ou « dans la même région que la personne »,
   langue maternelle (toutes les langues), taille, poids, pointure, bonnet,
   cheveux, yeux, origine, silhouette, groupes personnalisés (tatouages,
   piercings…), centres d'intérêt par catégories libres, et un texte libre ;
-- **Premier message** : son message d'accueil (`{nom}` devient son nom).
+- **Premier message** : son message d'accueil (`{nom}` devient son prénom).
 
-Puis **Valider** : tout ce qui est rempli appartient à cette créatrice, et
-quand l'IA l'incarne, elle agit selon ce profil. La première créatrice
-validée devient celle que l'IA incarne ; ensuite, on choisit dans l'onglet
-IA. Dans la fiche d'une personne (onglet Messages), « L'IA peut répondre » et
-les emojis sont ceux de la créatrice active.
+Puis **Valider** (le prénom est alors obligatoire) : tout ce qui est rempli
+appartient à cette créatrice, et quand l'IA l'incarne, elle agit selon ce
+profil. La première créatrice validée devient celle que l'IA incarne ;
+ensuite, on choisit dans l'onglet IA. Dans la fiche d'une personne (onglet
+Messages), « L'IA peut répondre » et les emojis sont ceux de la créatrice
+active. Si un enregistrement échoue, la raison s'affiche en rouge, avec
+« Réessayer ».
 
 L'IA reste une IA : elle le dit si on le lui demande, ne propose jamais de
 rencontre (même « dans la même région »), n'utilise jamais les détails
@@ -278,8 +289,11 @@ Gratuit », « Message 2 · Payant · 9 € »…). Pour chaque message :
 - qui choisit le moment : l'IA ou l'équipe ;
 - le prix : gratuit, ou payant avec prix habituel, minimum et maximum.
 
-Le premier script est celui de tout le monde, sauf choix contraire dans la
-fiche.
+Chaque script appartient à une créatrice (« Script de ») ou sert à toutes.
+L'IA n'utilise que les scripts de la créatrice qu'elle incarne et ceux qui
+servent à toutes : chaque personne suit le script de sa fiche, sinon le
+premier de la créatrice active, sinon le premier qui sert à toutes (marqué
+« par défaut »).
 
 Les règles, vérifiées par la base de données elle-même :
 

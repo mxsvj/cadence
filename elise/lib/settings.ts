@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isEmojiMode, type EmojiMode } from "./emojis";
 import type { PersonaProfile } from "./persona-profile";
 
 // Les réglages de l'IA et la fiche contact d'une personne, lus avec le
@@ -27,7 +28,8 @@ export type Contact = {
   /** Avec la créatrice active : l'IA peut-elle répondre en mode hybride ? */
   ai_enabled: boolean;
   notes: string;
-  /** Avec la créatrice active : les seuls emojis que l'IA utilise. */
+  /** Avec la créatrice active : emojis au choix de l'IA, seulement ceux de la liste, ou aucun. */
+  emoji_mode: EmojiMode;
   emojis: string;
   city: string;
   timezone: string;
@@ -77,6 +79,7 @@ export function defaultContact(userId: string): Contact {
     user_id: userId,
     ai_enabled: true,
     notes: "",
+    emoji_mode: "libre",
     emojis: "",
     city: "",
     timezone: "Europe/Paris",
@@ -93,18 +96,23 @@ export function defaultContact(userId: string): Contact {
 export async function loadContact(admin: SupabaseClient, userId: string, creatorId: number | null): Promise<Contact> {
   const [contact, withCreator] = await Promise.all([
     admin.from("contacts").select("*").eq("user_id", userId).maybeSingle(),
+    // « * » : une colonne ajoutée plus tard ne casse pas la conversation tant
+    // que schema.sql n'a pas été relancé.
     creatorId === null
       ? Promise.resolve({ data: null, error: null })
-      : admin.from("creator_contacts").select("ai_enabled, emojis").eq("creator_id", creatorId).eq("user_id", userId).maybeSingle(),
+      : admin.from("creator_contacts").select("*").eq("creator_id", creatorId).eq("user_id", userId).maybeSingle(),
   ]);
   if (contact.error) throw new Error(`Fiche contact illisible : ${contact.error.message}`);
   if (withCreator.error) throw new Error(`Réglages de la créatrice illisibles : ${withCreator.error.message}`);
-  const own = (withCreator.data ?? {}) as { ai_enabled?: boolean; emojis?: string };
+  const own = (withCreator.data ?? {}) as { ai_enabled?: boolean; emoji_mode?: unknown; emojis?: string };
+  const emojis = own.emojis ?? "";
   return {
     ...defaultContact(userId),
     ...(contact.data ?? {}),
     ai_enabled: own.ai_enabled ?? true,
-    emojis: own.emojis ?? "",
+    // Sans le réglage (schema.sql pas encore relancé) : une liste remplie vaut « seulement ceux-là ».
+    emoji_mode: isEmojiMode(own.emoji_mode) ? own.emoji_mode : emojis.trim() ? "choisis" : "libre",
+    emojis,
   };
 }
 

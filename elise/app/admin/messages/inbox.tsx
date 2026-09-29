@@ -7,7 +7,7 @@ import type { Message } from "@/lib/memory";
 import { contentLabel, mediaCounts, type Step } from "@/lib/offers";
 import type { AiMode } from "@/lib/settings";
 import type { InboxItem, TeamOffer, Thread } from "@/lib/team";
-import { EmojiPicker } from "../emoji-picker";
+import { EmojiChoice } from "../emoji-picker";
 import {
   draftOfferMessage,
   markRead,
@@ -48,6 +48,7 @@ function contactForm(t: Thread): ContactForm {
     ai_enabled: t.contact.ai_enabled,
     city: t.contact.city,
     timezone: t.contact.timezone,
+    emoji_mode: t.contact.emoji_mode,
     emojis: t.contact.emojis,
     notes: t.contact.notes,
     script_id: t.contact.script_id,
@@ -461,8 +462,13 @@ export function Inbox({
                   </label>
                   {thread?.creatorName && (
                     <div className="flex flex-col gap-1 text-sm">
-                      <span className="font-semibold">Emojis avec cette personne</span>
-                      <EmojiPicker value={form.emojis} onChange={(emojis) => setForm({ ...form, emojis })} />
+                      <span className="font-semibold">Emojis de {thread.creatorName} avec cette personne</span>
+                      <EmojiChoice
+                        who={thread.person.nom}
+                        mode={form.emoji_mode}
+                        emojis={form.emojis}
+                        onChange={(emoji_mode, emojis) => setForm({ ...form, emoji_mode, emojis })}
+                      />
                     </div>
                   )}
                   <label className="flex flex-col gap-1 text-sm">
@@ -486,7 +492,7 @@ export function Inbox({
                       onChange={(e) => setForm({ ...form, script_id: e.target.value ? Number(e.target.value) : null })}
                       className="rounded-xl border border-line bg-surface px-3 py-2"
                     >
-                      <option value="">Script par défaut (le premier)</option>
+                      <option value="">Script par défaut{thread.creatorName ? ` de ${thread.creatorName}` : ""}</option>
                       {thread.scripts.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.name}

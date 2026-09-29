@@ -560,6 +560,23 @@ create table if not exists public.creator_contacts (
 
 alter table public.ai_settings add column if not exists creator_id bigint references public.creators (id) on delete set null;
 
+-- Les emojis de la créatrice avec chaque personne : au choix de l'IA selon la
+-- discussion (libre), seulement ceux de la liste (choisis), ou aucun. À
+-- l'arrivée de ce réglage, une liste déjà remplie devient « choisis ».
+do $$
+begin
+  if not exists (select 1 from information_schema.columns
+                 where table_schema = 'public' and table_name = 'creator_contacts' and column_name = 'emoji_mode') then
+    alter table public.creator_contacts add column emoji_mode text not null default 'libre'
+      check (emoji_mode in ('libre', 'choisis', 'aucun'));
+    update public.creator_contacts set emoji_mode = 'choisis' where emojis <> '';
+  end if;
+end;
+$$;
+
+-- Un script de vente appartient à une créatrice, ou sert à toutes (null).
+alter table public.scripts add column if not exists creator_id bigint references public.creators (id) on delete set null;
+
 -- Une seule fois : le personnage réglé avant les créatrices en devient une,
 -- active, avec les réglages déjà faits pour chaque personne.
 do $$
@@ -578,8 +595,8 @@ begin
   values (reglages.persona, reglages.first_message)
   returning id into nouvelle;
   update public.ai_settings set creator_id = nouvelle where id = 1;
-  insert into public.creator_contacts (creator_id, user_id, ai_enabled, emojis)
-  select nouvelle, c.user_id, c.ai_enabled, c.emojis
+  insert into public.creator_contacts (creator_id, user_id, ai_enabled, emojis, emoji_mode)
+  select nouvelle, c.user_id, c.ai_enabled, c.emojis, case when c.emojis <> '' then 'choisis' else 'libre' end
   from public.contacts c
   where not c.ai_enabled or c.emojis <> '';
 end;
@@ -685,7 +702,9 @@ create policy "L'équipe voit les achats" on public.purchases for select to auth
 
 
 -- ─── La vente : l'étape suivante, toujours dans l'ordre ────────────────────
--- Le script d'une personne : celui de sa fiche, sinon le premier.
+-- Le script d'une personne : celui de sa fiche (s'il est à la créatrice
+-- active ou à toutes), sinon le premier de la créatrice active, sinon le
+-- premier qui sert à toutes.
 create or replace function public.script_de(p_user uuid)
 returns bigint
 language sql
@@ -693,9 +712,16 @@ stable
 security definer
 set search_path = ''
 as $$
+  with active as (select creator_id from public.ai_settings where id = 1)
   select coalesce(
-    (select c.script_id from public.contacts c where c.user_id = p_user and c.script_id is not null),
-    (select s.id from public.scripts s order by s.position, s.id limit 1));
+    (select c.script_id from public.contacts c
+       join public.scripts s on s.id = c.script_id
+      where c.user_id = p_user
+        and (s.creator_id is null or s.creator_id = (select creator_id from active))),
+    (select s.id from public.scripts s
+      where s.creator_id = (select creator_id from active)
+      order by s.position, s.id limit 1),
+    (select s.id from public.scripts s where s.creator_id is null order by s.position, s.id limit 1));
 $$;
 
 -- La première étape du script ni vendue, ni offerte, ni en cours d'offre.
@@ -1077,7 +1103,7 @@ begin
   delete from public.user_facts where user_id = moi;
   delete from public.summaries  where user_id = moi;
   update public.contacts set notes = '', emojis = '', city = '', last_read_message_id = 0 where user_id = moi;
-  update public.creator_contacts set emojis = '' where user_id = moi;
+  update public.creator_contacts set emojis = '', emoji_mode = 'libre' where user_id = moi;
 end;
 $$;
 
