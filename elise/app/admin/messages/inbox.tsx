@@ -244,7 +244,14 @@ export function Inbox({
           {list.length === 0 && <li className="p-4 text-sm text-muted">Personne n&apos;a encore écrit.</li>}
           {list.map((c) => {
             const aiOff = mode === "manuel" || (mode === "hybride" && !c.ia_autorisee);
-            const prefix = c.dernier.auteur === "ai" ? "IA : " : c.dernier.auteur === "team" ? "Équipe : " : "";
+            const prefix =
+              c.dernier.type === "relance"
+                ? "IA (nouvelles) : "
+                : c.dernier.auteur === "ai"
+                  ? "IA : "
+                  : c.dernier.auteur === "team"
+                    ? "Équipe : "
+                    : "";
             return (
               <li key={c.user_id}>
                 <button
@@ -364,7 +371,8 @@ export function Inbox({
                           )}
                         </div>
                         <span className="mt-1 px-2 text-[11px] font-semibold text-muted" suppressHydrationWarning>
-                          {theirs ? person.nom : m.author === "team" ? "Équipe" : "IA"} · {timeAgo(m.created_at, now)}
+                          {theirs ? person.nom : m.author === "team" ? "Équipe" : "IA"}
+                          {m.kind === "relance" && " · prise de nouvelles"} · {timeAgo(m.created_at, now)}
                         </span>
                       </li>
                     );

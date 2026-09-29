@@ -29,7 +29,8 @@ export type Message = Turn & {
   created_at: string;
   /** Qui a écrit : la personne, l'IA ou l'équipe. */
   author: "user" | "ai" | "team";
-  kind: "text" | "offer";
+  /** relance : l'IA a pris des nouvelles après une absence. */
+  kind: "text" | "offer" | "relance";
   offer_id: number | null;
 };
 
@@ -39,6 +40,7 @@ export const MESSAGE_COLUMNS = "id, role, author, kind, offer_id, content, creat
 export function toTurn(m: Message): Turn {
   if (m.author === "team") return { role: "assistant", content: `(Message de l'équipe) ${m.content}` };
   if (m.kind === "offer") return { role: "assistant", content: `(Offre de contenu envoyée) ${m.content}` };
+  if (m.kind === "relance") return { role: "assistant", content: `(Tu as pris de ses nouvelles après son absence) ${m.content}` };
   return { role: m.role, content: m.content };
 }
 

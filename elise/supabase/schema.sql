@@ -29,7 +29,8 @@ alter table public.messages drop constraint if exists messages_author_check;
 alter table public.messages add constraint messages_author_check
   check ((role = 'user' and author = 'user') or (role = 'assistant' and author in ('ai', 'team')));
 alter table public.messages drop constraint if exists messages_kind_check;
-alter table public.messages add constraint messages_kind_check check (kind in ('text', 'offer'));
+-- « relance » : le message de l'IA qui prend des nouvelles après une absence.
+alter table public.messages add constraint messages_kind_check check (kind in ('text', 'offer', 'relance'));
 
 
 -- ─── La fiche : ce qu'Élise sait de l'utilisateur ──────────────────────────
@@ -483,6 +484,12 @@ create index if not exists script_steps_script_idx on public.script_steps (scrip
 
 -- Chaque message du script peut contenir plusieurs photos et vidéos (au plus
 -- 10), dans l'ordre : [{"path": "...", "kind": "image" | "video"}].
+-- Quand le proposer : le sujet de conversation que ce contenu illustre
+-- (« quand il parle de voyages »). Vide : quand la conversation s'y prête.
+alter table public.script_steps add column if not exists moment text not null default '';
+alter table public.script_steps drop constraint if exists script_steps_moment_check;
+alter table public.script_steps add constraint script_steps_moment_check check (char_length(moment) <= 300);
+
 alter table public.script_steps add column if not exists media jsonb not null default '[]'::jsonb;
 alter table public.script_steps drop constraint if exists script_steps_media_check;
 alter table public.script_steps add constraint script_steps_media_check
@@ -1108,6 +1115,82 @@ end;
 $$;
 
 
+-- ─── Prendre des nouvelles après une absence ──────────────────────────────
+-- Coupé tant que l'équipe ne l'active pas (onglet Paramètres). Chaque
+-- personne peut le refuser depuis son menu. Un seul message par absence :
+-- tant qu'elle n'est pas revenue, l'IA n'écrit plus. Jamais de vente dedans,
+-- et jamais sous une offre qui attend sa réponse.
+alter table public.ai_settings add column if not exists relance_active boolean not null default false;
+alter table public.ai_settings add column if not exists relance_heures integer not null default 48;
+alter table public.ai_settings drop constraint if exists ai_settings_relance_heures_check;
+alter table public.ai_settings add constraint ai_settings_relance_heures_check check (relance_heures between 24 and 336);
+
+alter table public.profiles add column if not exists relances_ok boolean not null default true;
+-- Dernière visite (même sans écrire), à dix minutes près.
+alter table public.profiles add column if not exists vu_le timestamptz;
+
+create or replace function public.regler_relances(p_ok boolean)
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+begin
+  if (select auth.uid()) is null then
+    raise exception 'Connexion requise.' using errcode = '42501';
+  end if;
+  update public.profiles set relances_ok = coalesce(p_ok, true) where user_id = (select auth.uid());
+end;
+$$;
+
+create or replace function public.marquer_visite()
+returns void
+language sql
+volatile
+security definer
+set search_path = ''
+as $$
+  update public.profiles set vu_le = now()
+  where user_id = (select auth.uid()) and (vu_le is null or vu_le < now() - interval '10 minutes');
+$$;
+
+-- Les personnes à qui prendre des nouvelles : absentes depuis p_heures (ni
+-- visite ni message), qui ont déjà écrit au moins une fois, qui acceptent
+-- ces messages, à qui l'IA a le droit d'écrire (pas en mode manuel ; en
+-- hybride, seulement si elle est cochée), et dont le dernier message n'est
+-- ni une prise de nouvelles ni une offre en attente. Les plus anciennes
+-- absences d'abord.
+create or replace function public.a_relancer(p_heures integer, p_limite integer default 50)
+returns table (user_id uuid)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p.user_id
+  from public.profiles p
+  join lateral (
+    select m.kind, m.created_at from public.messages m
+    where m.user_id = p.user_id
+    order by m.id desc
+    limit 1
+  ) dernier on true
+  where p.relances_ok
+    and dernier.kind <> 'relance'
+    and greatest(dernier.created_at, coalesce(p.vu_le, dernier.created_at)) < now() - make_interval(hours => p_heures)
+    and exists (select 1 from public.messages m where m.user_id = p.user_id and m.role = 'user')
+    and not exists (select 1 from public.offers o where o.user_id = p.user_id and o.status = 'proposee')
+    and not exists (select 1 from public.admins a where a.user_id = p.user_id)
+    and not exists (select 1 from public.ai_settings s where s.id = 1 and s.mode = 'manuel')
+    and not exists (select 1 from public.creator_contacts cc
+                    join public.ai_settings s on s.id = 1 and s.mode = 'hybride' and s.creator_id = cc.creator_id
+                    where cc.user_id = p.user_id and not cc.ai_enabled)
+  order by dernier.created_at
+  limit greatest(p_limite, 0);
+$$;
+
+
 -- ─── Les droits sur les fonctions ──────────────────────────────────────────
 -- Par défaut, tout le monde peut appeler une fonction : on referme tout,
 -- puis on rouvre ce qui doit l'être. Les fonctions internes ne sont
@@ -1119,18 +1202,19 @@ revoke execute on function
   public.admin_proposer(uuid, bigint, integer, text), public.admin_retirer_offre(bigint),
   public.acheter_offre(bigint), public.faire_une_offre(bigint, integer), public.mon_contenu(bigint),
   public.admin_boite(), public.admin_personne(uuid), public.admin_envoyer(uuid, text),
-  public.admin_marquer_lu(uuid), public.effacer_mes_donnees()
+  public.admin_marquer_lu(uuid), public.effacer_mes_donnees(),
+  public.regler_relances(boolean), public.marquer_visite(), public.a_relancer(integer, integer)
   from public, anon, authenticated;
 grant execute on function
   public.enregistrer_profil(text, date), public.acheter_offre(bigint),
   public.faire_une_offre(bigint, integer), public.mon_contenu(bigint), public.effacer_mes_donnees(),
   public.admin_proposer(uuid, bigint, integer, text), public.admin_retirer_offre(bigint),
   public.admin_boite(), public.admin_personne(uuid), public.admin_envoyer(uuid, text),
-  public.admin_marquer_lu(uuid)
+  public.admin_marquer_lu(uuid), public.regler_relances(boolean), public.marquer_visite()
   to authenticated;
 grant execute on function
   public.script_de(uuid), public.prochaine_etape(uuid), public.depense_du_mois(uuid), public.plafond_de(uuid),
-  public.proposer_etape(uuid, bigint, integer, text, text, uuid)
+  public.proposer_etape(uuid, bigint, integer, text, text, uuid), public.a_relancer(integer, integer)
   to service_role;
 
 

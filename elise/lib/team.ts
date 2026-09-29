@@ -13,7 +13,7 @@ export type InboxItem = {
   user_id: string;
   email: string;
   nom: string;
-  dernier: { id: number; auteur: "user" | "ai" | "team"; type: "text" | "offer"; texte: string; date: string };
+  dernier: { id: number; auteur: "user" | "ai" | "team"; type: "text" | "offer" | "relance"; texte: string; date: string };
   non_lus: number;
   ia_autorisee: boolean;
   depense_cents: number;

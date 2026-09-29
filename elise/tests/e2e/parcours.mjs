@@ -521,7 +521,7 @@ await admin.getByLabel("Créatrice du script").selectOption({ label: "Chloé" })
 await admin.getByText("Script associé à Chloé.").waitFor();
 assert.equal(Number(state().tables.scripts[0].creator_id), Number(s.tables.creators[0].id));
 
-async function addStep({ title, files, text, description, instruction, fixed, team, price }) {
+async function addStep({ title, files, text, description, instruction, fixed, team, price, moment }) {
   await admin.getByRole("button", { name: "Ajouter un message au script" }).click();
   const form = admin.locator("form", { has: admin.getByText("Titre (visible uniquement par l'équipe)") });
   await form.getByLabel("Titre (visible uniquement par l'équipe)").fill(title);
@@ -536,6 +536,7 @@ async function addStep({ title, files, text, description, instruction, fixed, te
     await form.getByLabel("Mot pour mot : l'IA envoie exactement ce texte").check();
     await form.getByLabel("Texte envoyé mot pour mot").fill(fixed);
   }
+  if (moment) await form.getByLabel("Quand le proposer").fill(moment);
   if (team) await form.getByLabel("L'équipe, depuis l'onglet Messages").check();
   if (price) {
     await form.getByLabel("Prix habituel (€)").fill(price[0]);
@@ -564,6 +565,7 @@ await addStep({
   description: "un carnet de voyage illustré",
   fixed: "Je t'ai préparé ceci.",
   price: ["8", "5", "12"],
+  moment: "quand il parle de voyages",
 });
 await addStep({ title: "Lettre", text: "Une lettre rien que pour toi.", description: "une lettre", team: true, price: ["4", "3", "6"] });
 s = state();
@@ -665,6 +667,9 @@ step("l'IA propose la 1re étape du script ; elle a reçu personnage, fiche, emo
 await samInput.fill("PROPOSE-MOI la suite");
 await sam.getByLabel("Envoyer").click();
 await sam.getByText("Je t'ai préparé ceci.").waitFor();
+const carnetPrompt = state().llm.filter((r) => !r.json && r.system.includes("## Vente")).at(-1).system;
+assert.match(carnetPrompt, /Il illustre ce sujet : quand il parle de voyages\. Propose-le seulement si la conversation en cours porte vraiment là-dessus/);
+assert.match(carnetPrompt, /jamais pour relancer la conversation, combler un silence ou changer de sujet/);
 const card = sam.locator("div", { has: sam.getByText("2 photos à débloquer") }).last();
 await card.waitFor();
 assert.match(plain(await card.textContent()), /9,00 €/);
@@ -674,7 +679,7 @@ const samApi = await sam.evaluate(async () => (await fetch("/api/chat?apres=0"))
 assert.ok(samApi.offers.every((o) => !("min_price_cents" in o) && !("step_id" in o)));
 await card.scrollIntoViewIfNeeded();
 await sam.screenshot({ path: `${SHOTS}18-offre-verrouillee.png` });
-step("offre payante : verrouillée, aucune image chargée, prix personnalisé affiché, minimum jamais transmis");
+step("offre payante : verrouillée, aucune image chargée, prix personnalisé affiché, minimum jamais transmis ; l'IA ne la propose que sur le sujet qu'elle illustre");
 
 // 32. Contre-offres : refusée sous le minimum, acceptée au-dessus, puis achat.
 await sam.getByRole("button", { name: "Faire une offre" }).click();
@@ -725,6 +730,57 @@ await sam.getByRole("button", { name: /Débloquer pour 5,00/ }).click();
 await sam.getByRole("button", { name: "Confirmer" }).click();
 await sam.getByText("Vous avez atteint le plafond de dépenses de ce mois-ci.").waitFor();
 step("plafond mensuel : l'achat au-delà est refusé, avec un message clair");
+
+// 34b. Prendre des nouvelles : l'équipe l'active (après 24 h d'absence).
+await admin.goto(`${BASE}/admin/parametres`);
+await admin.getByText("Bloqué", { exact: true }).count().then((n) => assert.equal(n, 0)); // CRON_SECRET présent
+await admin.getByText("Prendre des nouvelles des personnes absentes").click();
+await admin.getByLabel("Après une absence de").selectOption("24");
+await admin.getByRole("button", { name: "Enregistrer les paramètres" }).click();
+await admin.getByText("Paramètres enregistrés.", { exact: false }).waitFor();
+s = state();
+assert.deepEqual([s.tables.ai_settings[0].relance_active, s.tables.ai_settings[0].relance_heures], [true, 24]);
+await sam.reload();
+await sam.getByLabel("Menu").click();
+const samSwitch = sam.getByRole("switch", { name: /Recevoir des nouvelles de Chloé/ });
+assert.equal(await samSwitch.getAttribute("aria-checked"), "true");
+await sam.mouse.click(20, 600); // referme le menu
+step("prendre des nouvelles : activé par l'équipe ; la personne voit le réglage dans son menu");
+
+// 34c. Sam ne vient plus depuis 30 heures (l'offre en attente est retirée :
+// jamais de prise de nouvelles sous une offre). Vercel appelle la tâche.
+const samId = (await sql("select user_id from public.profiles where display_name = 'Sam'"))[0].user_id;
+await sql("update public.offers set status = 'retiree' where user_id = $1 and status = 'proposee'", [samId]);
+await sql("update public.messages set created_at = created_at - interval '30 hours' where user_id = $1", [samId]);
+await sql("update public.profiles set vu_le = now() - interval '30 hours' where user_id = $1", [samId]);
+const cron = (auth) => fetch(`${BASE}/api/relances`, { headers: auth ? { authorization: auth } : {} });
+assert.equal((await cron()).status, 401);
+assert.equal((await cron("Bearer un-faux-secret-0123456789")).status, 401);
+const report = await (await cron(`Bearer ${process.env.CRON_SECRET}`)).json();
+assert.deepEqual([report.active, report.sent, report.failed], [true, 1, 0]);
+s = state();
+const nouvelles = s.tables.messages.filter((m) => m.user_id === samId && m.kind === "relance");
+assert.deepEqual(nouvelles.map((m) => m.content), ["Coucou ! Comment s'est passée ta semaine à Lyon ?"]);
+const relancePrompt = s.llm.filter((r) => r.system.includes("prendre de ses nouvelles")).at(-1).system;
+assert.match(relancePrompt, /n'est pas venue depuis un jour/);
+assert.match(relancePrompt, /Ne propose aucun contenu et n'écris aucune balise/);
+assert.match(relancePrompt, /Rien qui crée de l'attachement ou de la dépendance/);
+assert.match(relancePrompt, /Aime les voyages\./); // la fiche de l'équipe
+const again = await (await cron(`Bearer ${process.env.CRON_SECRET}`)).json();
+assert.equal(again.sent, 0); // un seul message par absence
+await sam.reload();
+await sam.getByText("Coucou ! Comment s'est passée ta semaine à Lyon ?").waitFor();
+await admin.goto(`${BASE}/admin/messages?u=${samId}`);
+await admin.getByText("IA · prise de nouvelles", { exact: false }).first().waitFor();
+await sam.screenshot({ path: `${SHOTS}19b-nouvelles.png` });
+step("après 30 h d'absence, une seule prise de nouvelles, sans balise ni vente ; l'équipe la voit dans Messages");
+
+// 34d. Sam refuse ces messages depuis son menu.
+await sam.getByLabel("Menu").click();
+await samSwitch.click();
+await until(() => state().tables.profiles.find((p) => p.user_id === samId)?.relances_ok === false, "Sam refuse les nouvelles");
+await sam.mouse.click(20, 600); // referme le menu
+step("la personne peut refuser les prises de nouvelles depuis son menu");
 
 // 35. Mode manuel : l'IA ne répond plus à personne.
 await admin.goto(`${BASE}/admin/ia`);

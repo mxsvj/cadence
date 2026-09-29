@@ -18,6 +18,9 @@ export type AiSettings = {
   spending_cap_cents: number;
   sales_min_messages: number;
   sales_gap_messages: number;
+  /** Prendre des nouvelles après une absence (onglet Paramètres), et au bout de combien d'heures. */
+  relance_active: boolean;
+  relance_heures: number;
   /** La créatrice choisie dans l'onglet IA (null : personnage par défaut). */
   creator_id: number | null;
   creator: Creator | null;
@@ -38,7 +41,8 @@ export type Contact = {
   last_read_message_id: number;
 };
 
-export type Profile = { display_name: string; birthdate: string };
+/** relances_ok : la personne accepte que l'IA prenne de ses nouvelles (absent avant schema.sql relancé). */
+export type Profile = { display_name: string; birthdate: string; relances_ok?: boolean; vu_le?: string | null };
 
 export const DEFAULT_SETTINGS: AiSettings = {
   mode: "auto",
@@ -47,6 +51,8 @@ export const DEFAULT_SETTINGS: AiSettings = {
   spending_cap_cents: 10000,
   sales_min_messages: 10,
   sales_gap_messages: 12,
+  relance_active: false,
+  relance_heures: 48,
   creator_id: null,
   creator: null,
 };
@@ -69,6 +75,8 @@ export async function loadSettings(admin: SupabaseClient): Promise<AiSettings> {
     spending_cap_cents: data.spending_cap_cents ?? DEFAULT_SETTINGS.spending_cap_cents,
     sales_min_messages: data.sales_min_messages ?? DEFAULT_SETTINGS.sales_min_messages,
     sales_gap_messages: data.sales_gap_messages ?? DEFAULT_SETTINGS.sales_gap_messages,
+    relance_active: data.relance_active === true,
+    relance_heures: data.relance_heures ?? DEFAULT_SETTINGS.relance_heures,
     creator_id: creatorId,
     creator: creatorId === null ? null : await loadCreator(admin, creatorId),
   };
@@ -126,7 +134,7 @@ export function aiMayReply(settings: AiSettings, contact: Contact): boolean {
 export async function loadProfile(supabase: SupabaseClient, userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("display_name, birthdate")
+    .select("*")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw new Error(`Profil illisible : ${error.message}`);

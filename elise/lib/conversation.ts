@@ -25,6 +25,7 @@ function toSalePrompt(sale: SaleContext): SalePrompt {
           maxCents: next.max_price_cents,
           messageMode: next.message_mode,
           instruction: next.message_mode === "ia" ? next.message_text.trim() : "",
+          moment: next.moment ?? "",
         }
       : null,
     canPropose: sale.canPropose,

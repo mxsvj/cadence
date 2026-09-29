@@ -3,6 +3,7 @@ import Link from "next/link";
 import { signOut } from "@/app/actions";
 import { Notice } from "@/app/notice";
 import { currentModel } from "@/lib/llm";
+import { cronSecret } from "@/lib/relances";
 import { DEFAULT_SETTINGS, type AiSettings } from "@/lib/settings";
 import { accessKey } from "@/lib/team-access";
 import { adminGate } from "../gate";
@@ -34,6 +35,7 @@ export default async function ParametersPage() {
   const model = currentModel();
   const email = claims.data?.claims?.email as string | undefined;
   const linkReady = accessKey() !== null;
+  const cronReady = cronSecret() !== null;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6">
@@ -67,6 +69,19 @@ export default async function ParametersPage() {
                 Désactivé
                 <span className="block text-xs text-muted">ADMIN_ACCESS_KEY manque dans Vercel (au moins 24 caractères).</span>
               </>
+            )}
+          </dd>
+          <dt className="text-muted">Prendre des nouvelles</dt>
+          <dd className="min-w-0">
+            {!cronReady ? (
+              <>
+                Bloqué
+                <span className="block text-xs text-muted">CRON_SECRET manque dans Vercel (au moins 16 caractères).</span>
+              </>
+            ) : current.relance_active ? (
+              "Activé · chaque jour en fin d'après-midi"
+            ) : (
+              "Désactivé (réglage ci-dessus)"
             )}
           </dd>
         </dl>

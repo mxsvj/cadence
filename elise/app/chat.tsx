@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { MAX_MESSAGE_LENGTH } from "@/lib/limits";
 import type { Offer } from "@/lib/offers";
-import { eraseMyData, signOut } from "./actions";
+import { eraseMyData, setRelances, signOut } from "./actions";
 import { OfferCard } from "./offer-card";
 
 type Message = {
   id: number;
   role: "user" | "assistant";
   author: "user" | "ai" | "team";
-  kind: "text" | "offer";
+  kind: "text" | "offer" | "relance";
   offer_id: number | null;
   content: string;
   created_at: string;
@@ -51,11 +51,14 @@ export function Chat({
   initialOffers,
   name,
   isAdmin = false,
+  relances = null,
 }: {
   initialMessages: Message[];
   initialOffers: Offer[];
   name: string;
   isAdmin?: boolean;
+  /** null : l'équipe n'a pas activé la prise de nouvelles. */
+  relances?: { ok: boolean } | null;
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [offers, setOffers] = useState(() => byId(initialOffers));
@@ -66,6 +69,7 @@ export function Chat({
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [relancesOk, setRelancesOk] = useState(relances?.ok ?? true);
   const [erasing, startErasing] = useTransition();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -225,6 +229,34 @@ export function Chat({
                   <Link href="/admin" className="block border-b border-line px-4 py-3 hover:bg-accent-soft">
                     Tableau de bord
                   </Link>
+                )}
+                {relances && (
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={relancesOk}
+                    onClick={async () => {
+                      const next = !relancesOk;
+                      setRelancesOk(next);
+                      const result = await setRelances(next);
+                      if (result?.error) {
+                        setRelancesOk(!next);
+                        setNotice(result.error);
+                      }
+                    }}
+                    className="flex w-full items-center justify-between gap-3 border-b border-line px-4 py-3 text-left hover:bg-accent-soft"
+                  >
+                    <span>
+                      Recevoir des nouvelles de {name}
+                      <span className="block text-xs text-muted">Un petit message si je ne viens pas pendant un moment</span>
+                    </span>
+                    <span
+                      aria-hidden
+                      className={`flex h-6 w-10 shrink-0 items-center rounded-full p-0.5 transition ${relancesOk ? "justify-end bg-accent" : "justify-start bg-line"}`}
+                    >
+                      <span className="size-5 rounded-full bg-white shadow" />
+                    </span>
+                  </button>
                 )}
                 <button
                   type="button"

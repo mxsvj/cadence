@@ -60,6 +60,8 @@ export type SalePrompt = {
     messageMode: "ia" | "fixe";
     /** Ce que l'équipe veut que l'IA dise en proposant (mode « ia ») ; vide : libre. */
     instruction?: string;
+    /** Le sujet que le contenu illustre ; vide : quand la conversation s'y prête. */
+    moment?: string;
   } | null;
   canPropose: boolean;
 };
@@ -154,6 +156,7 @@ const SALE_RULES = [
   "Après un refus, n'insiste pas et n'y reviens pas de toi-même.",
   "Ne propose rien si la personne va mal, est triste ou parle de difficultés d'argent : la conversation passe avant tout.",
   "Ne décris jamais un contenu au point de le donner avant l'achat, et ne promets rien qu'il ne contient pas.",
+  "Un contenu se propose pour illustrer ou prolonger le sujet dont vous parlez, jamais pour relancer la conversation, combler un silence ou changer de sujet.",
   "Aucun contenu ni sous-entendu sexuel, jamais.",
 ];
 
@@ -178,8 +181,11 @@ export function salesSection(sale: SalePrompt | null): string {
         : n.instruction
           ? `Ta réponse accompagnera l'offre. Ce que l'équipe veut que tu dises en le proposant, à reformuler avec tes mots, sans rien y ajouter : « ${n.instruction} »`
           : "Ta réponse accompagnera l'offre : présente le contenu en une ou deux phrases, sans le décrire entièrement.";
+    const when = n.moment?.trim()
+      ? `Il illustre ce sujet : ${n.moment.trim()}. Propose-le seulement si la conversation en cours porte vraiment là-dessus ; sinon, n'en parle pas du tout.`
+      : "Propose-le seulement s'il enrichit naturellement ce dont vous parlez en ce moment (il l'illustre ou le prolonge).";
     parts.push(
-      `Le prochain contenu, dans l'ordre prévu : ${n.description}\n${price}\nTu peux le proposer dans cette réponse, seulement si la conversation s'y prête naturellement. Pour le faire, termine ta réponse par une ligne contenant uniquement ${tag}. ${message}`,
+      `Le prochain contenu, dans l'ordre prévu : ${n.description}\n${price}\n${when} Dans le doute, ne le propose pas : il y aura d'autres occasions. Pour le proposer, termine ta réponse par une ligne contenant uniquement ${tag}. ${message}`,
     );
   } else {
     parts.push("Ne propose aucun contenu dans cette réponse et n'écris aucune balise.");

@@ -24,6 +24,8 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
   const [cap, setCap] = useState((initial.spending_cap_cents / 100).toFixed(2).replace(".", ","));
   const [minMessages, setMinMessages] = useState(initial.sales_min_messages);
   const [gapMessages, setGapMessages] = useState(initial.sales_gap_messages);
+  const [relanceActive, setRelanceActive] = useState(initial.relance_active);
+  const [relanceHours, setRelanceHours] = useState(initial.relance_heures);
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -37,6 +39,11 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
       spending_cap: cap,
       sales_min_messages: minMessages,
       sales_gap_messages: gapMessages,
+      // Seulement si ça a changé : le reste s'enregistre même avant la mise à jour de la base.
+      relance:
+        relanceActive !== initial.relance_active || relanceHours !== initial.relance_heures
+          ? { active: relanceActive, hours: relanceHours }
+          : undefined,
     });
     setSaving(false);
     setNotice(result.ok ? "Paramètres enregistrés. Ils valent dès le prochain message." : result.error);
@@ -79,6 +86,35 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
             <input type="number" min={0} value={gapMessages} onChange={(e) => setGapMessages(Number(e.target.value))} className={input} />
           </Field>
         </div>
+      </section>
+
+      <section className={card} aria-labelledby="titre-nouvelles">
+        <h2 id="titre-nouvelles" className="font-bold">
+          Prendre des nouvelles
+        </h2>
+        <p className="text-sm text-muted">
+          Quand une personne ne vient plus, l&apos;IA lui écrit un court message amical pour prendre de ses nouvelles,
+          une fois par jour en fin d&apos;après-midi. Un seul message par absence, jamais de vente dedans ni juste après, jamais de
+          reproche, et chaque personne peut le refuser depuis son menu.
+        </p>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={relanceActive}
+            onChange={(e) => setRelanceActive(e.target.checked)}
+            className="mt-1 size-4 accent-[var(--accent)]"
+          />
+          <span className="font-semibold">Prendre des nouvelles des personnes absentes</span>
+        </label>
+        <Field label="Après une absence de" hint="Sans visite ni message. Le message part au passage quotidien suivant.">
+          <select value={relanceHours} onChange={(e) => setRelanceHours(Number(e.target.value))} disabled={!relanceActive} className={input}>
+            {[24, 48, 72, 96, 168, 336].map((h) => (
+              <option key={h} value={h}>
+                {h < 168 ? `${h} heures` : h === 168 ? "1 semaine" : "2 semaines"}
+              </option>
+            ))}
+          </select>
+        </Field>
       </section>
 
       <div className="flex flex-wrap items-center gap-3">

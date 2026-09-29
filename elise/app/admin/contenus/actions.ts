@@ -134,6 +134,7 @@ export type StepForm = {
   ai_description: string;
   message_mode: "ia" | "fixe";
   message_text: string;
+  moment: string;
   trigger_mode: "ia" | "equipe";
   is_paid: boolean;
   price: string;
@@ -181,6 +182,7 @@ export async function saveStep(form: StepForm): Promise<Result<{ step: Step }>> 
       ai_description: form.ai_description.trim().slice(0, 3000),
       message_mode: form.message_mode,
       message_text: form.message_text.trim().slice(0, 2000),
+      moment: String(form.moment ?? "").trim().slice(0, 300),
       trigger_mode: form.trigger_mode,
       is_paid: form.is_paid,
       price_cents: price,
