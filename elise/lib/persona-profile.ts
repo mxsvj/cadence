@@ -68,7 +68,7 @@ export function languageName(code: string | undefined): string | null {
 }
 
 export function displayName(p: PersonaProfile): string {
-  return p.nom?.trim() || DEFAULT_NAME;
+  return p.nom?.trim() || p.pseudo?.trim() || DEFAULT_NAME;
 }
 
 /** Nettoie un profil reçu d'un formulaire : champs connus, longueurs bornées, âge ≥ 18. */

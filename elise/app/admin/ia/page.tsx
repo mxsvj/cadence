@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Notice } from "@/app/notice";
-import { displayName, type PersonaProfile } from "@/lib/persona-profile";
+import type { PersonaProfile } from "@/lib/persona-profile";
 import type { AiMode } from "@/lib/settings";
 import { adminGate } from "../gate";
 import { AiSettingsForm } from "./settings-form";
@@ -26,7 +26,7 @@ export default async function AiPage() {
   }
   const list = (creators.data ?? []).map((c) => {
     const p = (c.persona ?? {}) as PersonaProfile;
-    return { id: Number(c.id), name: displayName(p), details: [p.age ? `${p.age} ans` : "", p.ville ?? ""].filter(Boolean).join(" · ") };
+    return { id: Number(c.id), name: p.nom?.trim() || p.pseudo?.trim() || "Sans prénom", details: [p.age ? `${p.age} ans` : "", p.ville ?? ""].filter(Boolean).join(" · ") };
   });
   const creatorId = settings.data?.creator_id === null || settings.data?.creator_id === undefined ? null : Number(settings.data.creator_id);
   return (

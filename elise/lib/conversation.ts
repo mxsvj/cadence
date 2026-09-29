@@ -58,6 +58,7 @@ export async function buildReply(input: {
       city: contact.city,
       timezone: contact.timezone,
       notes: contact.notes,
+      emojiMode: contact.emoji_mode,
       emojis: contact.emojis,
     },
     facts,

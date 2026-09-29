@@ -1,6 +1,7 @@
 "use server";
 
-import { requireAdmin } from "@/lib/admin";
+import { SCHEMA_HINT, requireAdmin, schemaOutdated } from "@/lib/admin";
+import { cleanEmojis, isEmojiMode, type EmojiMode } from "@/lib/emojis";
 import { CHAT_TEMPERATURE, generate } from "@/lib/llm";
 import { MESSAGE_COLUMNS, loadMessages, toTurn, type Message } from "@/lib/memory";
 import { describeStep, parseEuros, type Step } from "@/lib/offers";
@@ -24,6 +25,7 @@ async function adminClient() {
 function failure(err: unknown, fallback: string): { ok: false; error: string } {
   const message = (err as { message?: string })?.message;
   console.error(fallback, err);
+  if (schemaOutdated(err)) return { ok: false, error: `${fallback.replace(/\.$/, "")} : ${SCHEMA_HINT}` };
   return { ok: false, error: message && !message.startsWith("Réservé") ? message : fallback };
 }
 
@@ -54,6 +56,7 @@ export type ContactForm = {
   ai_enabled: boolean;
   city: string;
   timezone: string;
+  emoji_mode: EmojiMode;
   emojis: string;
   notes: string;
   script_id: number | null;
@@ -90,7 +93,8 @@ export async function saveContact(userId: string, form: ContactForm): Promise<Re
           creator_id: settings.creator_id,
           user_id: userId,
           ai_enabled: form.ai_enabled,
-          emojis: form.emojis.trim().slice(0, 400),
+          emoji_mode: isEmojiMode(form.emoji_mode) ? form.emoji_mode : "libre",
+          emojis: cleanEmojis(form.emojis),
           updated_at: now,
         },
         { onConflict: "creator_id,user_id" },
@@ -162,6 +166,7 @@ export async function draftOfferMessage(userId: string, stepId: number, price: s
           city: c.city,
           timezone: c.timezone,
           notes: c.notes,
+          emojiMode: c.emoji_mode,
           emojis: c.emojis,
         },
         now,

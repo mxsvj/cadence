@@ -13,6 +13,7 @@ import {
   previewLink,
   renameScript,
   saveStep,
+  setScriptCreator,
   uploadLink,
   type StepForm,
 } from "./actions";
@@ -28,16 +29,65 @@ function summary(step: Step): string {
 }
 const euros = (cents: number) => (cents ? (cents / 100).toFixed(2).replace(".", ",") : "");
 
-export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: Step[] }) {
+type CreatorOption = { id: number; name: string };
+
+/** « Pour » : à qui est le script. Vide : à toutes les créatrices. */
+function CreatorSelect({
+  creators,
+  value,
+  onChange,
+  label,
+  className = "",
+}: {
+  creators: CreatorOption[];
+  value: number | null;
+  onChange: (id: number | null) => void;
+  label: string;
+  className?: string;
+}) {
+  return (
+    <select
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
+      aria-label={label}
+      className={`${input} min-w-0 ${className}`}
+    >
+      <option value="">Toutes les créatrices</option>
+      {creators.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+export function ContentEditor({
+  scripts,
+  steps,
+  creators,
+  activeCreator,
+}: {
+  scripts: Script[];
+  steps: Step[];
+  creators: CreatorOption[];
+  activeCreator: number | null;
+}) {
   const router = useRouter();
   const [selected, setSelected] = useState<number | null>(scripts[0]?.id ?? null);
   const [newName, setNewName] = useState("");
+  const [newFor, setNewFor] = useState<number | null>(activeCreator);
   const [editing, setEditing] = useState<number | "new" | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const script = scripts.find((s) => s.id === selected) ?? scripts[0] ?? null;
   const scriptSteps = steps.filter((s) => s.script_id === script?.id);
+  const creatorName = (id: number | null | undefined) => creators.find((c) => c.id === id)?.name ?? null;
+  // Le script suivi par défaut (sans script dans la fiche) : le premier de la
+  // créatrice active, sinon le premier qui sert à toutes.
+  const defaultScript =
+    (activeCreator !== null && scripts.find((s) => s.creator_id === activeCreator)) || scripts.find((s) => s.creator_id == null) || null;
 
   async function run(action: Promise<{ ok: boolean; error?: string }>, done?: string) {
     const result = await action;
@@ -48,7 +98,7 @@ export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: St
 
   async function addScript(e: React.FormEvent) {
     e.preventDefault();
-    const result = await createScript(newName);
+    const result = await createScript(newName, newFor);
     if (result.ok) {
       setSelected(result.id);
       setNewName("");
@@ -73,7 +123,7 @@ export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: St
         <h2 className="font-bold">Scripts</h2>
         {scripts.length > 0 && (
           <div className="flex flex-wrap gap-2" role="tablist" aria-label="Scripts">
-            {scripts.map((s, i) => (
+            {scripts.map((s) => (
               <button
                 key={s.id}
                 type="button"
@@ -89,7 +139,10 @@ export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: St
                 }`}
               >
                 {s.name}
-                {i === 0 && <span className="ml-1 font-normal opacity-80">· par défaut</span>}
+                {creators.length > 0 && (
+                  <span className="ml-1 font-normal opacity-80">· {creatorName(s.creator_id) ?? "toutes"}</span>
+                )}
+                {s.id === defaultScript?.id && <span className="ml-1 font-normal opacity-80">· par défaut</span>}
               </button>
             ))}
           </div>
@@ -100,8 +153,17 @@ export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: St
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Nom d'un nouveau script"
             aria-label="Nom du nouveau script"
-            className={`${input} min-w-0 flex-1`}
+            className={`${input} min-w-0 ${creators.length > 0 ? "basis-full sm:basis-0" : ""} flex-1`}
           />
+          {creators.length > 0 && (
+            <CreatorSelect
+              creators={creators}
+              value={newFor}
+              onChange={setNewFor}
+              label="Créatrice du nouveau script"
+              className="flex-1 sm:flex-none"
+            />
+          )}
           <button type="submit" disabled={!newName.trim()} className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
             Créer
           </button>
@@ -124,8 +186,25 @@ export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: St
             }}
           />
         )}
+        {script && creators.length > 0 && (
+          <label className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="font-semibold">Script de</span>
+            <CreatorSelect
+              creators={creators}
+              value={script.creator_id ?? null}
+              label="Créatrice du script"
+              onChange={(id) =>
+                run(
+                  setScriptCreator(script.id, id),
+                  id === null ? "Le script sert à toutes les créatrices." : `Script associé à ${creatorName(id)}.`,
+                )
+              }
+            />
+          </label>
+        )}
         <p className="text-xs text-muted">
-          Chaque personne suit le script choisi dans sa fiche (onglet Messages), sinon le premier de la liste.
+          L&apos;IA ne propose que les scripts de la créatrice qu&apos;elle incarne, ou ceux qui servent à toutes.
+          Chaque personne suit le script choisi dans sa fiche (onglet Messages), sinon celui marqué « par défaut ».
         </p>
       </section>
 

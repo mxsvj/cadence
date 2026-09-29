@@ -2,6 +2,7 @@
 // la personne, la fiche, le résumé, la vente, la date, et les consignes des
 // deux tâches de mémoire (fiche et résumé).
 
+import { emojiInstruction, type EmojiMode } from "./emojis";
 import { displayName, languageName, type PersonaProfile } from "./persona-profile";
 
 export type Turn = { role: "user" | "assistant"; content: string };
@@ -41,6 +42,8 @@ export type PersonContext = {
   city?: string;
   timezone?: string;
   notes?: string;
+  /** Emojis de la créatrice avec elle : au choix de l'IA, seulement ceux-là, ou aucun. */
+  emojiMode?: EmojiMode;
   emojis?: string;
 };
 
@@ -139,9 +142,7 @@ export function personSection(person: PersonContext, now: Date): string {
   if (person.city) lines.push(`- Ville : ${person.city}`);
   const time = localTime(now, person.timezone || "Europe/Paris");
   if (time) lines.push(`- Chez elle, nous sommes le ${time} (${person.timezone || "Europe/Paris"}) : adapte-toi au moment de sa journée.`);
-  if (person.emojis?.trim()) {
-    lines.push(`- Emojis à utiliser avec elle, avec modération et uniquement ceux-là : ${person.emojis.trim()}`);
-  }
+  lines.push(emojiInstruction(person.emojiMode, person.emojis));
   const notes = person.notes?.trim()
     ? `\n\nNotes de l'équipe, pour savoir comment te comporter avec elle (ne les cite jamais) :\n${person.notes.trim()}`
     : "";

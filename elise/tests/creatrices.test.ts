@@ -41,11 +41,19 @@ describe("le personnage réglé avant les créatrices", () => {
     assert.equal(creators[0].first_message, "Coucou, c'est {nom} !");
     const [settings] = await base.as<{ creator_id: number }>(ADMIN, "select creator_id from public.ai_settings");
     assert.equal(Number(settings.creator_id), Number(creators[0].id));
-    const rows = await base.as<{ user_id: string; ai_enabled: boolean; emojis: string }>(
+    const rows = await base.as<{ user_id: string; ai_enabled: boolean; emojis: string; emoji_mode: string }>(
       ADMIN,
-      "select user_id, ai_enabled, emojis from public.creator_contacts",
+      "select user_id, ai_enabled, emojis, emoji_mode from public.creator_contacts",
     );
-    assert.deepEqual(rows, [{ user_id: KARIM, ai_enabled: false, emojis: "🌸" }]);
+    assert.deepEqual(rows, [{ user_id: KARIM, ai_enabled: false, emojis: "🌸", emoji_mode: "choisis" }]);
+  });
+
+  it("à l'arrivée du réglage des emojis, une liste déjà remplie devient « seulement ceux-là »", async () => {
+    await base.db.exec("alter table public.creator_contacts drop column emoji_mode");
+    await base.db.exec(schemaSql);
+    const [row] = await base.as<{ emoji_mode: string }>(ADMIN, "select emoji_mode from public.creator_contacts where user_id = $1", [KARIM]);
+    assert.equal(row.emoji_mode, "choisis");
+    await assert.rejects(base.as(ADMIN, "update public.creator_contacts set emoji_mode = 'beaucoup'"), /check constraint/);
   });
 });
 
@@ -101,7 +109,63 @@ describe("les créatrices", () => {
 
   it("« Tout effacer » retire aussi les emojis choisis pour la personne", async () => {
     await base.as(KARIM, "select public.effacer_mes_donnees()");
-    const rows = await base.as<{ emojis: string }>(ADMIN, "select emojis from public.creator_contacts where user_id = $1", [KARIM]);
-    assert.ok(rows.every((r) => r.emojis === ""));
+    const rows = await base.as<{ emojis: string; emoji_mode: string }>(
+      ADMIN,
+      "select emojis, emoji_mode from public.creator_contacts where user_id = $1",
+      [KARIM],
+    );
+    assert.ok(rows.length > 0);
+    assert.ok(rows.every((r) => r.emojis === "" && r.emoji_mode === "libre"));
+  });
+});
+
+describe("les scripts de chaque créatrice", () => {
+  let chloe: number;
+  let ines: number;
+  const scripts: Record<string, number> = {};
+  const scriptOf = async (user: string) => Number((await base.db.query<{ r: number }>("select public.script_de($1) as r", [user])).rows[0].r);
+  const activate = (id: number | null) => base.as(ADMIN, "update public.ai_settings set creator_id = $1 where id = 1", [id]);
+
+  before(async () => {
+    [{ id: chloe }] = await base.as<{ id: number }>(ADMIN, "select id from public.creators order by id limit 1");
+    [{ id: ines }] = await base.as<{ id: number }>(ADMIN, "insert into public.creators (persona) values ('{\"nom\": \"Inès\"}') returning id");
+    for (const [name, position, creator] of [
+      ["Pour toutes", 1, null],
+      ["Chloé 1", 2, chloe],
+      ["Chloé 2", 3, chloe],
+      ["Inès 1", 4, ines],
+    ] as const) {
+      const [{ id }] = await base.as<{ id: number }>(
+        ADMIN,
+        "insert into public.scripts (name, position, creator_id) values ($1, $2, $3) returning id",
+        [name, position, creator],
+      );
+      scripts[name] = Number(id);
+    }
+  });
+
+  it("sans script dans la fiche : le premier de la créatrice active, sinon le premier pour toutes", async () => {
+    await activate(chloe);
+    assert.equal(await scriptOf(LEA), scripts["Chloé 1"]);
+    await activate(ines);
+    assert.equal(await scriptOf(LEA), scripts["Inès 1"]);
+    await activate(null);
+    assert.equal(await scriptOf(LEA), scripts["Pour toutes"]);
+  });
+
+  it("le script de la fiche ne sert qu'avec sa créatrice (ou s'il sert à toutes)", async () => {
+    await base.as(ADMIN, "insert into public.contacts (user_id, script_id) values ($1, $2)", [LEA, scripts["Chloé 2"]]);
+    await activate(chloe);
+    assert.equal(await scriptOf(LEA), scripts["Chloé 2"]);
+    await activate(ines);
+    assert.equal(await scriptOf(LEA), scripts["Inès 1"]);
+    await base.as(ADMIN, "update public.contacts set script_id = $2 where user_id = $1", [LEA, scripts["Pour toutes"]]);
+    assert.equal(await scriptOf(LEA), scripts["Pour toutes"]);
+  });
+
+  it("supprimer une créatrice laisse ses scripts à toutes", async () => {
+    await base.as(ADMIN, "delete from public.creators where id = $1", [ines]);
+    const [row] = await base.as<{ creator_id: number | null }>(ADMIN, "select creator_id from public.scripts where id = $1", [scripts["Inès 1"]]);
+    assert.equal(row.creator_id, null);
   });
 });

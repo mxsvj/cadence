@@ -11,6 +11,16 @@ const MISSING = new Set(["PGRST202", "42883"]);
 
 export type AdminStatus = "admin" | "not_admin" | "schema_outdated";
 
+/** Colonne, table ou fonction absente : le script SQL n'a pas été relancé. */
+const OUTDATED = new Set([...MISSING, "PGRST204", "PGRST205", "42703", "42P01"]);
+
+export function schemaOutdated(err: unknown): boolean {
+  const code = (err as { code?: unknown } | null)?.code;
+  return typeof code === "string" && OUTDATED.has(code);
+}
+
+export const SCHEMA_HINT = "la base doit être mise à jour : relancez supabase/schema.sql dans Supabase (SQL Editor → Run).";
+
 export async function adminStatus(supabase: SupabaseClient): Promise<AdminStatus> {
   const { data, error } = await supabase.rpc("is_admin");
   if (error) return MISSING.has(error.code) ? "schema_outdated" : "not_admin";

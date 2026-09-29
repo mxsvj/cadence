@@ -33,7 +33,8 @@ export type Step = {
   max_price_cents: number;
 };
 
-export type Script = { id: number; name: string; position: number };
+/** Un script de vente ; creator_id : la créatrice à qui il est, null s'il sert à toutes. */
+export type Script = { id: number; name: string; position: number; creator_id?: number | null };
 
 /** Une offre telle que la personne la voit : jamais de prix minimum ici. */
 export type Offer = {

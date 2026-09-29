@@ -34,10 +34,12 @@ impossibles à faire à sa place (créer un compte, copier une clé).
 - Personnage, messagerie et vente : `ai_settings` (mode auto/hybride/manuel,
   `creator_id` = la créatrice incarnée), `creators` (persona jsonb, premier
   message), `creator_contacts` (IA autorisée et emojis de chaque créatrice
-  avec chaque personne ; les colonnes `persona`, `first_message`,
+  avec chaque personne : `emoji_mode` libre/choisis/aucun + `emojis`,
+  nettoyés par `lib/emojis.ts` ; les colonnes `persona`, `first_message`,
   `temperature`, `max_tokens` d'`ai_settings` et `ai_enabled`, `emojis` de
   `contacts` ne servent plus), `contacts` (fiche par personne), `scripts`/`script_steps`
-  (étapes ordonnées, prix min/max), `offers` (prix personnalisé,
+  (étapes ordonnées, prix min/max ; `scripts.creator_id` null = pour toutes,
+  `script_de` ne prend que ceux de la créatrice active ou de toutes), `offers` (prix personnalisé,
   contre-offres), `profiles` (18 ans minimum). La clé secrète
   (`SUPABASE_SECRET_KEY`, `lib/supabase/admin.ts`) ne sert qu'au serveur ; les
   personnes n'écrivent que des messages `role='user'`. L'IA propose une offre
@@ -82,6 +84,15 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   chaque créatrice (`saveCreator`, page unique Personnes → Profil → Premier
   message → Valider) ; l'onglet Paramètres, les réglages fins et les
   garde-fous (`saveParameters`).
+- Page d'une créatrice : enregistrement automatique (700 ms après la
+  dernière frappe, une sauvegarde à la fois, la première crée la ligne ;
+  seules les personnes modifiées sont envoyées). `saveCreator` appelle
+  `revalidatePath("/admin", "layout")` : sans ça, le bouton « retour » du
+  navigateur remontre la liste gardée en cache (sans la créatrice). « Valider »
+  exige le prénom et rend la créatrice active s'il n'y en a pas. Les
+  lectures des colonnes récentes passent par `select("*")` pour que le site
+  marche encore tant que `schema.sql` n'est pas relancé ; les erreurs de
+  colonne absente affichent « relancez supabase/schema.sql » (`schemaOutdated`).
 - Lien secret de l'équipe : `/acces?cle=<ADMIN_ACCESS_KEY>` (`app/acces/route.ts`,
   `lib/team-access.ts`) ouvre la session du premier compte de `admins` par
   `auth.admin.generateLink` + `verifyOtp`, sans e-mail envoyé, puis redirige
