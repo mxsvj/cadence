@@ -34,8 +34,12 @@ export function AdminNav() {
             </Link>
           );
         })}
-        <Link href="/" className="ml-auto shrink-0 px-3 py-2 text-sm text-muted underline underline-offset-4">
-          Conversation
+        {/* Ce que voit une personne qui parle à l'IA, pour tester. */}
+        <Link
+          href="/?vue=conversation"
+          className="ml-auto shrink-0 px-3 py-2 text-sm text-muted underline underline-offset-4"
+        >
+          Tester la conversation
         </Link>
       </div>
     </nav>

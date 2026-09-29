@@ -75,12 +75,14 @@ async function signUp(p, email, name, birthdate = "1982-03-14") {
   await p.click('button[type="submit"]');
 }
 
-async function logIn(p, email) {
+// Après la connexion, une personne arrive sur la conversation, l'équipe sur
+// son tableau de bord.
+async function logIn(p, email, landing = "/") {
   await p.goto(`${BASE}/connexion`);
   await p.fill('input[name="email"]', email);
   await p.fill('input[name="password"]', "motdepasse");
   await p.click('button[type="submit"]');
-  await p.waitForURL(`${BASE}/`);
+  await p.waitForURL(`${BASE}${landing}`);
 }
 
 const ctx = await newContext(phone);
@@ -277,13 +279,21 @@ step("lien de l'équipe : clé fausse refusée ; sans administrateur, la bonne c
 // 16. Karim devient administrateur, comme avec supabase/admin.sql.
 await sql("insert into public.admins (user_id) select id from auth.users where email = $1", ["karim@example.com"]);
 await page.goto(BASE);
-await page.getByLabel("Menu").click();
-await page.getByRole("link", { name: "Tableau de bord" }).click();
 await page.waitForURL(`${BASE}/admin`);
 await page.getByText("Aucun achat pour l'instant.").waitFor();
 await page.getByText(/^En direct ·/).waitFor();
 await page.screenshot({ path: `${SHOTS}10-tableau-vide.png`, fullPage: true });
-step("administrateur : lien dans le menu, tableau de bord vide mais prêt");
+step("administrateur : l'appli s'ouvre sur le tableau de bord, pas sur la conversation");
+
+// 16a. La conversation reste là pour la tester, et le menu ramène au tableau de bord.
+await page.getByRole("link", { name: "Tester la conversation" }).click();
+await page.waitForURL(`${BASE}/?vue=conversation`);
+await page.getByLabel("Votre message").waitFor();
+await page.getByLabel("Menu").click();
+await page.getByRole("link", { name: "Tableau de bord" }).click();
+await page.waitForURL(`${BASE}/admin`);
+await page.getByText("Aucun achat pour l'instant.").waitFor();
+step("l'équipe peut tester la conversation, puis revenir au tableau de bord");
 
 // 16b. Le lien secret ouvre directement le tableau de bord, sans e-mail ni
 // mot de passe, et la clé ne reste pas dans la barre d'adresse.
@@ -353,8 +363,7 @@ for (const colorScheme of ["light", "dark"]) {
   await desk.fill('input[name="email"]', "karim@example.com");
   await desk.fill('input[name="password"]', "motdepasse");
   await desk.click('button[type="submit"]');
-  await desk.waitForURL(`${BASE}/`);
-  await desk.goto(`${BASE}/admin`);
+  await desk.waitForURL(`${BASE}/admin`);
   const svg = desk.locator("svg[role=img]");
   await svg.waitFor();
   await svg.scrollIntoViewIfNeeded();
@@ -381,7 +390,7 @@ step("« Effacer la démo » retire les achats fictifs et garde le vrai");
 const adminCtx = await newContext(desktop);
 const admin = await adminCtx.newPage();
 admin.on("pageerror", (e) => consoleErrors.push(String(e)));
-await logIn(admin, "karim@example.com");
+await logIn(admin, "karim@example.com", "/admin");
 await admin.goto(`${BASE}/admin/ia`);
 await admin.getByLabel("Nom", { exact: true }).fill("Chloé");
 await admin.getByLabel("Âge").fill("29");
