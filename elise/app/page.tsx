@@ -14,7 +14,10 @@ import { Notice, SetupNotice, missingSettings } from "./notice";
 /** Messages affichés à l'ouverture (les plus récents). */
 const DISPLAY_MESSAGES = 200;
 
-type Loaded = { messages: Message[]; offers: Offer[]; name: string } | { problem: string } | "profil";
+type Loaded =
+  | { messages: Message[]; offers: Offer[]; name: string; relances: { ok: boolean } | null }
+  | { problem: string }
+  | "profil";
 
 export default async function Home({ searchParams }: PageProps<"/">) {
   await connection(); // toujours calculée à la visite, jamais figée au déploiement
@@ -40,8 +43,16 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       const [messages, offers] = await Promise.all([
         loadMessages(supabase, userId, DISPLAY_MESSAGES),
         supabase.from("offers").select(OFFER_COLUMNS).eq("user_id", userId).order("id"),
+        // La visite compte comme un retour, même sans écrire (prendre des
+        // nouvelles). Sans importance si la base n'est pas encore à jour.
+        isAdmin ? null : supabase.rpc("marquer_visite"),
       ]);
-      loaded = { messages, offers: (offers.data ?? []) as Offer[], name: displayName(settings.creator?.persona ?? {}) };
+      loaded = {
+        messages,
+        offers: (offers.data ?? []) as Offer[],
+        name: displayName(settings.creator?.persona ?? {}),
+        relances: settings.relance_active ? { ok: profile.relances_ok !== false } : null,
+      };
     }
   } catch (err) {
     console.error(err);
@@ -72,6 +83,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       initialOffers={loaded.offers}
       name={loaded.name}
       isAdmin={isAdmin}
+      relances={loaded.relances}
     />
   );
 }

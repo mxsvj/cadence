@@ -10,6 +10,17 @@ export async function signOut() {
   redirect("/connexion");
 }
 
+// « Recevoir des nouvelles » : la personne accepte, ou non, que l'IA lui
+// écrive après une absence.
+export async function setRelances(ok: boolean): Promise<{ error: string } | void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("regler_relances", { p_ok: Boolean(ok) });
+  if (error) {
+    console.error("Réglage des nouvelles impossible :", error);
+    return { error: "Le réglage n'a pas été enregistré. Réessayez dans un instant." };
+  }
+}
+
 // « Effacer toutes mes données » : messages, fiche et résumé. Au retour sur
 // la page, Élise se présente à nouveau, comme au premier jour.
 export async function eraseMyData(): Promise<{ error: string } | void> {

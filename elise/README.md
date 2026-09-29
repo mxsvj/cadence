@@ -129,6 +129,7 @@ cliquer sur **Set up billing**.
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_…`               | Config |
    | `SUPABASE_SECRET_KEY`                  | `sb_secret_…`                    | Secret |
    | `ADMIN_ACCESS_KEY`                     | le code du lien de l'équipe      | Secret |
+   | `CRON_SECRET`                          | 16 caractères ou plus, au hasard | Secret |
 
    Les pièges vus au premier déploiement :
    - l'adresse Supabase s'arrête à `.supabase.co` : sans `/rest/v1/` ni `/`
@@ -268,8 +269,21 @@ physiques dans un registre sexuel.
   choisit elle-même la longueur de chaque réponse : rien à régler.
 - **Garde-fous de la vente** : plafond mensuel par personne, nombre de
   messages avant la première offre et entre deux offres.
-- **Le site** : le modèle d'IA en service, et si le lien de l'équipe est
-  activé.
+- **Prendre des nouvelles** (coupé par défaut) : quand une personne ne vient
+  plus depuis le délai choisi (24 h à 2 semaines, sans visite ni message),
+  l'IA lui écrit un court message amical pour prendre de ses nouvelles. Une
+  tâche planifiée de Vercel passe une fois par jour, en fin d'après-midi
+  (gratuit en Hobby, à l'heure près). Garde-fous : un seul message par
+  absence (plus rien tant qu'elle ne revient pas) ; jamais sous une offre en
+  attente ; jamais de vente dedans, ni d'offre avant que la personne ait
+  écrit 3 messages ; jamais de reproche ni de mot qui crée de l'attachement ;
+  pas en mode manuel, et en mode hybride seulement aux personnes cochées ;
+  jamais à l'équipe. Chaque personne peut le refuser dans son menu
+  (« Recevoir des nouvelles de … »). Le message attend dans la conversation
+  (pas encore de notification sur le téléphone) ; l'équipe le voit marqué
+  « prise de nouvelles ».
+- **Le site** : le modèle d'IA en service, si le lien de l'équipe est
+  activé, et si la prise de nouvelles peut tourner (`CRON_SECRET`).
 - **Compte** : le compte connecté, « Tester la conversation » (ce que voient
   les personnes) et « Se déconnecter ».
 
@@ -286,7 +300,12 @@ Gratuit », « Message 2 · Payant · 9 € »…). Pour chaque message :
 - **ce que l'IA dit avec** : soit elle l'écrit elle-même en suivant la
   consigne de l'équipe (« dis que tu les as prises pour lui »), soit elle
   envoie un texte mot pour mot ;
-- qui choisit le moment : l'IA ou l'équipe ;
+- qui choisit le moment : l'IA ou l'équipe ; pour l'IA, **quand le
+  proposer** : le sujet que le contenu illustre (« quand il parle de
+  voyages » pour un vlog de vacances, des coulisses…). L'IA ne le propose que
+  si la conversation porte là-dessus, et dans le doute elle attend. Sans
+  sujet, seulement s'il enrichit naturellement ce dont on parle ; jamais pour
+  relancer la conversation ni combler un silence ;
 - le prix : gratuit, ou payant avec prix habituel, minimum et maximum.
 
 Chaque script appartient à une créatrice (« Script de ») ou sert à toutes.

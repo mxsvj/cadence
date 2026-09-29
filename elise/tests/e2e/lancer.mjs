@@ -25,6 +25,7 @@ const env = {
   E2E_BASE: `http://localhost:${port}`,
   E2E_CONTROL_PORT: String(Number(port) + 99),
   ADMIN_ACCESS_KEY: "cle-de-test-du-lien-equipe-0123456789",
+  CRON_SECRET: "secret-de-test-des-relances-0123",
 };
 
 const build = spawnSync("npx", ["next", "build"], { cwd: root, env, stdio: "inherit" });

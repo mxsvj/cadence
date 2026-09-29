@@ -249,6 +249,12 @@ export function ContentEditor({
                       {step.is_paid && ` · de ${formatEuros(step.min_price_cents)} à ${formatEuros(step.max_price_cents)}`} ·
                       proposé par {step.trigger_mode === "ia" ? "l'IA" : "l'équipe"}
                     </span>
+                    {step.trigger_mode === "ia" && step.moment?.trim() && (
+                      <span className="mt-1 block text-sm">
+                        <span className="text-muted">Quand le proposer : </span>
+                        {step.moment.trim()}
+                      </span>
+                    )}
                     {step.message_text.trim() && (
                       <span className="mt-1 block text-sm">
                         <span className="text-muted">
@@ -381,6 +387,7 @@ function StepEditor({
     ai_description: step?.ai_description ?? "",
     message_mode: step?.message_mode ?? "ia",
     message_text: step?.message_text ?? "",
+    moment: step?.moment ?? "",
     trigger_mode: step?.trigger_mode ?? "ia",
     is_paid: step?.is_paid ?? true,
     price: euros(step?.price_cents ?? 0),
@@ -579,6 +586,22 @@ function StepEditor({
           <input type="radio" checked={form.trigger_mode === "equipe"} onChange={() => set("trigger_mode", "equipe")} className="accent-[var(--accent)]" />
           L&apos;équipe, depuis l&apos;onglet Messages
         </label>
+        {form.trigger_mode === "ia" && (
+          <label className="mt-1 flex flex-col gap-1">
+            <span className="font-semibold">Quand le proposer (pour l&apos;IA)</span>
+            <input
+              value={form.moment}
+              onChange={(e) => set("moment", e.target.value)}
+              maxLength={300}
+              placeholder="Ex. : quand il parle de voyages ou de vacances"
+              className={input}
+            />
+            <span className="text-xs text-muted">
+              Le sujet que ce contenu illustre (un vlog, des coulisses…). L&apos;IA ne le propose que si la
+              conversation porte là-dessus ; dans le doute, elle attend. Vide : quand la conversation s&apos;y prête.
+            </span>
+          </label>
+        )}
       </fieldset>
 
       <fieldset className="flex flex-col gap-2 text-sm">

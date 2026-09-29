@@ -7,6 +7,9 @@ import type { AiSettings } from "./settings";
 // décidé ici, côté serveur, avant d'écrire la consigne : l'IA ne voit que
 // l'étape suivante du script, et seulement si les garde-fous le permettent.
 
+/** Après une prise de nouvelles (lib/relances.ts), messages de la personne avant toute offre. */
+export const NO_SALE_AFTER_RELANCE = 3;
+
 type OfferRow = {
   id: number;
   step_id: number | null;
@@ -25,20 +28,47 @@ export type SaleContext = {
   canPropose: boolean;
 };
 
+/** Les garde-fous, réunis : l'IA peut-elle proposer l'étape suivante maintenant ? */
+export function mayPropose(
+  input: {
+    next: Pick<Step, "trigger_mode"> | null;
+    pending: boolean;
+    /** Messages de la personne, celui qu'elle vient d'envoyer compris. */
+    userMessages: number;
+    /** Messages échangés depuis la dernière offre (Infinity s'il n'y en a pas). */
+    sinceLastOffer: number;
+    /** Messages de la personne depuis la dernière prise de nouvelles (null s'il n'y en a pas). */
+    sinceRelance: number | null;
+    withinCap: boolean;
+  },
+  settings: Pick<AiSettings, "sales_min_messages" | "sales_gap_messages">,
+): boolean {
+  return (
+    input.next !== null &&
+    input.next.trigger_mode === "ia" &&
+    !input.pending &&
+    input.userMessages >= settings.sales_min_messages &&
+    input.sinceLastOffer >= settings.sales_gap_messages &&
+    (input.sinceRelance === null || input.sinceRelance >= NO_SALE_AFTER_RELANCE) &&
+    input.withinCap
+  );
+}
+
 export async function loadSaleContext(
   admin: SupabaseClient,
   userId: string,
   settings: AiSettings,
 ): Promise<SaleContext> {
-  const [next, offers, userCount, lastOffer, spent, cap] = await Promise.all([
+  const [next, offers, userCount, lastOffer, spent, cap, lastRelance] = await Promise.all([
     admin.rpc("prochaine_etape", { p_user: userId }),
     admin.from("offers").select("id, step_id, price_cents, status").eq("user_id", userId).order("id"),
     admin.from("messages").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("role", "user"),
     admin.from("messages").select("id").eq("user_id", userId).eq("kind", "offer").order("id", { ascending: false }).limit(1),
     admin.rpc("depense_du_mois", { p_user: userId }),
     admin.rpc("plafond_de", { p_user: userId }),
+    admin.from("messages").select("id").eq("user_id", userId).eq("kind", "relance").order("id", { ascending: false }).limit(1),
   ]);
-  for (const r of [next, offers, userCount, lastOffer, spent, cap]) {
+  for (const r of [next, offers, userCount, lastOffer, spent, cap, lastRelance]) {
     if (r.error) throw new Error(`Contexte de vente illisible : ${r.error.message}`);
   }
 
@@ -71,19 +101,31 @@ export async function loadSaleContext(
     sinceLastOffer = count ?? 0;
   }
 
+  // Après une prise de nouvelles, la conversation d'abord : aucune offre
+  // avant que la personne ait écrit quelques messages.
+  let sinceRelance: number | null = null;
+  const lastRelanceId = (lastRelance.data as { id: number }[] | null)?.[0]?.id;
+  if (lastRelanceId) {
+    const { count, error } = await admin
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("role", "user")
+      .gt("id", lastRelanceId);
+    if (error) throw new Error(`Messages illisibles : ${error.message}`);
+    sinceRelance = (count ?? 0) + 1; // + 1 : le message qu'elle vient d'envoyer
+  }
+
   // + 1 : le message que la personne vient d'envoyer, pas encore enregistré.
   const userMessages = (userCount.count ?? 0) + 1;
   const spentCents = Number(spent.data ?? 0);
   const capCents = cap.data === null || cap.data === undefined ? null : Number(cap.data);
   const withinCap = !nextStep?.is_paid || capCents === null || spentCents + nextStep.min_price_cents <= capCents;
 
-  const canPropose =
-    nextStep !== null &&
-    nextStep.trigger_mode === "ia" &&
-    pendingRow === null &&
-    userMessages >= settings.sales_min_messages &&
-    sinceLastOffer >= settings.sales_gap_messages &&
-    withinCap;
+  const canPropose = mayPropose(
+    { next: nextStep, pending: pendingRow !== null, userMessages, sinceLastOffer, sinceRelance, withinCap },
+    settings,
+  );
 
   return {
     next: nextStep,

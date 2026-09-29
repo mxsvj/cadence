@@ -319,6 +319,16 @@ async function handleRest(url, method, headers, body) {
       const args = Object.entries(body ?? {});
       const values = args.map(([, v]) => v);
       const call = args.map(([k], i) => `${ident(k)} => $${i + 1}`).join(", ");
+      // Une fonction qui renvoie plusieurs lignes (returns table / setof) :
+      // PostgREST renvoie un tableau d'objets, comme une table.
+      const { rows: kind } = await exclusive(async () =>
+        (await database()).query("select bool_or(proretset) as set from pg_proc where proname = $1 and pronamespace = 'public'::regnamespace", [fn]),
+      );
+      if (kind[0]?.set) {
+        const list = await asUser(user, async (db) => (await db.query(`select * from public.${fn}(${call})`, values)).rows);
+        await exclusive(saveState);
+        return json(200, list);
+      }
       // to_jsonb : un objet pour une ligne, la valeur pour un scalaire, null pour void.
       const rows = await asUser(user, async (db) =>
         (await db.query(`select to_jsonb(r) as j from public.${fn}(${call}) as r`, values)).rows,
@@ -451,6 +461,10 @@ function gemini(body) {
     if (/antid/.test(last)) faits.push("Prend des antidépresseurs.");
     if (/chat/.test(last)) faits.push("A un chat, Filou.", "a un chat, filou");
     return reply(JSON.stringify({ faits }));
+  }
+  // Prendre des nouvelles : avec une balise, pour vérifier qu'elle est retirée.
+  if (system.includes("Ta tâche maintenant : prendre de ses nouvelles")) {
+    return reply("Coucou ! **Comment** s'est passée ta semaine à Lyon ?\n[[PROPOSER]]");
   }
   if (system.includes("## Ta tâche")) return reply("Un petit carnet rien que pour toi, si le cœur t'en dit.");
   if (system.includes("carnet de mémoire")) {

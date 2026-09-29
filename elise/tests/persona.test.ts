@@ -102,6 +102,15 @@ describe("la vente", () => {
     assert.ok(!refused.includes("5,00 €"));
   });
 
+  it("ne propose un contenu que s'il illustre le sujet en cours", () => {
+    const free = salesSection({ owned: [], pending: null, next, canPropose: true });
+    assert.match(free, /seulement s'il enrichit naturellement ce dont vous parlez en ce moment/);
+    assert.match(free, /Dans le doute, ne le propose pas/);
+    assert.match(free, /jamais pour relancer la conversation, combler un silence ou changer de sujet/);
+    const themed = salesSection({ owned: [], pending: null, next: { ...next, moment: "quand il parle de voyages" }, canPropose: true });
+    assert.match(themed, /Il illustre ce sujet : quand il parle de voyages\. Propose-le seulement si la conversation en cours porte vraiment là-dessus/);
+  });
+
   it("rappelle toujours les garde-fous", () => {
     const text = salesSection({ owned: ["un poème"], pending: { description: "une photo", priceCents: 700 }, next: null, canPropose: false });
     assert.match(text, /la solitude, l'attachement, la culpabilité ou l'urgence/);

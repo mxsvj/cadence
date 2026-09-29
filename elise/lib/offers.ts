@@ -26,6 +26,8 @@ export type Step = {
   ai_description: string;
   message_mode: "ia" | "fixe";
   message_text: string;
+  /** Le sujet que ce contenu illustre : l'IA ne le propose que si on en parle (vide : quand ça s'y prête). */
+  moment?: string;
   trigger_mode: "ia" | "equipe";
   is_paid: boolean;
   price_cents: number;

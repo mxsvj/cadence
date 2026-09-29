@@ -93,6 +93,25 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   lectures des colonnes récentes passent par `select("*")` pour que le site
   marche encore tant que `schema.sql` n'est pas relancé ; les erreurs de
   colonne absente affichent « relancez supabase/schema.sql » (`schemaOutdated`).
+- Prendre des nouvelles : `lib/relances.ts` + `/api/relances` (tâche Vercel
+  quotidienne `0 16 * * *` dans `vercel.json`, Hobby = une fois par jour à
+  l'heure près ; `Authorization: Bearer CRON_SECRET`). `a_relancer()` (SQL,
+  service_role) choisit les absents : `ai_settings.relance_active` /
+  `relance_heures`, `profiles.relances_ok` (menu de la personne,
+  `regler_relances`), `profiles.vu_le` (`marquer_visite` à chaque ouverture
+  de la conversation), dernier message pas déjà une `kind='relance'`, pas
+  d'offre en attente, jamais un administrateur. Le message est écrit avec la
+  consigne habituelle sans vente (`sale: null`) + `relanceTask` ; les
+  balises sont retirées. `mayPropose` (`lib/sales.ts`) interdit toute offre
+  tant que la personne n'a pas écrit `NO_SALE_AFTER_RELANCE` (3) messages
+  depuis. Ces lectures passent par la clé secrète (pas de session). Pas de
+  notification téléphone : le message attend dans la conversation.
+- Contenus contextuels : `script_steps.moment` (« quand il parle de
+  voyages ») ; `salesSection` ne laisse proposer l'étape que si la
+  conversation porte sur ce sujet (sinon, seulement si le contenu enrichit
+  le sujet en cours), « dans le doute, ne le propose pas ».
+- Le faux PostgREST des essais (`faux-services.mjs`) renvoie un tableau pour
+  les fonctions `returns table` / `setof`, comme le vrai.
 - Lien secret de l'équipe : `/acces?cle=<ADMIN_ACCESS_KEY>` (`app/acces/route.ts`,
   `lib/team-access.ts`) ouvre la session du premier compte de `admins` par
   `auth.admin.generateLink` + `verifyOtp`, sans e-mail envoyé, puis redirige
