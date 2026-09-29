@@ -29,7 +29,7 @@ export async function proxy(request: NextRequest) {
   const signedIn = Boolean(data?.claims?.sub);
   const path = request.nextUrl.pathname;
   const isPublic =
-    path.startsWith("/connexion") || path.startsWith("/auth/") || path.startsWith("/api/") || path === "/acces";
+    path.startsWith("/connexion") || path.startsWith("/auth/") || path.startsWith("/api/") || path === "/acces" || path.startsWith("/acces/");
 
   if (!signedIn && !isPublic) return redirectKeepingCookies(request, response, "/connexion");
   if (signedIn && path.startsWith("/connexion")) return redirectKeepingCookies(request, response, "/");

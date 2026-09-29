@@ -265,16 +265,21 @@ assert.equal(await page.evaluate(async () => (await fetch("/api/admin/dashboard"
 step("pas administrateur : ni page, ni lien, ni chiffres");
 
 // 15b. Le lien secret de l'équipe : une clé fausse est refusée, et tant
-// qu'aucun administrateur n'existe, la bonne clé explique quoi faire.
+// qu'aucun administrateur n'existe, la bonne clé explique quoi faire. La
+// raison s'affiche aussi pour qui est déjà connecté (Karim), au lieu de le
+// renvoyer sur la conversation.
 const KEY = process.env.ADMIN_ACCESS_KEY;
 const linkCtx = await newContext(phone);
 const linkPage = await linkCtx.newPage();
 await linkPage.goto(`${BASE}/acces?cle=mauvaise-cle-mauvaise-cle-mauvaise`);
 await linkPage.getByText("Ce lien d'accès n'est pas valable.").waitFor();
 await linkPage.goto(`${BASE}/acces?cle=${KEY}`);
-await linkPage.getByText(/aucun compte administrateur n'existe encore/).waitFor();
-assert.equal(new URL(linkPage.url()).pathname, "/connexion");
-step("lien de l'équipe : clé fausse refusée ; sans administrateur, la bonne clé dit quoi faire");
+await linkPage.getByText(/Aucun compte administrateur n'existe encore/).waitFor();
+assert.equal(new URL(linkPage.url()).pathname, "/acces/refus");
+await page.goto(`${BASE}/acces?cle=${KEY}`);
+await page.getByText(/Aucun compte administrateur n'existe encore/).waitFor();
+assert.equal(new URL(page.url()).pathname, "/acces/refus");
+step("lien de l'équipe : clé fausse refusée ; sans administrateur, la raison s'affiche, même connecté");
 
 // 16. Karim devient administrateur, comme avec supabase/admin.sql.
 await sql("insert into public.admins (user_id) select id from auth.users where email = $1", ["karim@example.com"]);

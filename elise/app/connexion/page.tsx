@@ -6,10 +6,6 @@ import { AuthForm } from "./form";
 // Les messages des liens qui ramènent ici (?erreur=…).
 const ERRORS: Record<string, string> = {
   lien: "Ce lien n'est plus valable. Connectez-vous, ou recommencez l'inscription.",
-  acces: "Ce lien d'accès n'est pas valable.",
-  equipe:
-    "Le lien de l'équipe est prêt, mais aucun compte administrateur n'existe encore : inscrivez-vous, puis exécutez supabase/admin.sql dans Supabase.",
-  "acces-panne": "Le lien de l'équipe n'a pas pu ouvrir la session. Réessayez dans un instant.",
 };
 
 export default async function ConnexionPage({ searchParams }: PageProps<"/connexion">) {
