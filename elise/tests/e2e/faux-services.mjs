@@ -146,6 +146,8 @@ const json = (status, body, headers = {}) =>
 const authError = (status, code, msg) => json(status, { code, error_code: code, msg, message: msg });
 
 const SERVICE = { id: "service" };
+/** Les liens de connexion à usage unique (generate_link), jeton → compte. */
+const oneTimeTokens = new Map();
 
 /** La clé secrète (côté serveur) : tous les droits, comme le rôle service_role. */
 function isService(headers) {
@@ -190,6 +192,30 @@ async function handleAuth(url, method, headers, body) {
   if (route === "/user" && method === "GET") {
     const u = currentUser(headers);
     return u ? json(200, userJson(u)) : authError(403, "bad_jwt", "invalid JWT");
+  }
+  // Le lien secret de l'équipe : l'API d'administration (clé secrète) crée un
+  // lien de connexion à usage unique, que le serveur échange aussitôt.
+  if (route.startsWith("/admin/users/") && method === "GET") {
+    if (!isService(headers)) return authError(401, "no_authorization", "service role required");
+    const u = users.find((x) => x.id === route.split("/")[3]);
+    return u ? json(200, userJson(u)) : authError(404, "user_not_found", "User not found");
+  }
+  if (route === "/admin/generate_link" && method === "POST") {
+    if (!isService(headers)) return authError(401, "no_authorization", "service role required");
+    const u = users.find((x) => x.email === body.email);
+    if (!u) return authError(404, "user_not_found", "User not found");
+    const token = randomUUID();
+    oneTimeTokens.set(token, u.id);
+    return json(200, {
+      action_link: `http://fake-supabase.test/auth/v1/verify?token=${token}&type=${body.type}`,
+      email_otp: "123456", hashed_token: token, redirect_to: "", verification_type: body.type, ...userJson(u),
+    });
+  }
+  if (route === "/verify" && method === "POST") {
+    const id = oneTimeTokens.get(body.token_hash);
+    oneTimeTokens.delete(body.token_hash);
+    const u = users.find((x) => x.id === id);
+    return u ? json(200, session(u)) : authError(403, "otp_expired", "Email link is invalid or has expired");
   }
   if (route === "/logout") return new Response(null, { status: 204 });
   return authError(404, "not_found", `fake auth: ${method} ${route}`);

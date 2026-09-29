@@ -111,22 +111,33 @@ cliquer sur **Set up billing**.
 
 5. Plus tard, une fois inscrit sur le site : ouvrir `supabase/admin.sql`,
    y mettre son adresse e-mail, le coller dans le SQL Editor et **Run**. Le
-   lien « Tableau de bord » apparaît alors dans le menu `⋯`.
+   lien « Tableau de bord » apparaît alors dans le menu `⋯`, et le lien secret
+   de l'équipe (plus bas) ouvre ce compte-là.
 
 ### 3. Vercel
 
 1. Sur [vercel.com](https://vercel.com), se connecter avec GitHub, puis **Add
    New → Project** et importer le dépôt `cadence`.
 2. **Root Directory** : `elise`. Le reste (Next.js) est détecté tout seul.
-3. **Environment Variables**, avant de cliquer sur Deploy (5 variables) :
+3. **Environment Variables**, avant de cliquer sur Deploy :
 
-   | Nom                                    | Valeur                         |
-   | -------------------------------------- | ------------------------------ |
-   | `LLM_PROVIDER`                         | `gemini`                       |
-   | `GEMINI_API_KEY`                       | la clé Gemini                  |
-   | `NEXT_PUBLIC_SUPABASE_URL`             | `https://….supabase.co`        |
-   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_…`             |
-   | `SUPABASE_SECRET_KEY`                  | `sb_secret_…`                  |
+   | Nom                                    | Valeur                           | Type   |
+   | -------------------------------------- | -------------------------------- | ------ |
+   | `LLM_PROVIDER`                         | `gemini`                         | Config |
+   | `GEMINI_API_KEY`                       | la clé Gemini                    | Secret |
+   | `NEXT_PUBLIC_SUPABASE_URL`             | `https://<projet>.supabase.co`   | Config |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_…`               | Config |
+   | `SUPABASE_SECRET_KEY`                  | `sb_secret_…`                    | Secret |
+   | `ADMIN_ACCESS_KEY`                     | le code du lien de l'équipe      | Secret |
+
+   Les pièges vus au premier déploiement :
+   - l'adresse Supabase s'arrête à `.supabase.co` : sans `/rest/v1/` ni `/`
+     à la fin (sinon « Invalid path specified in request URL ») ;
+   - les clés se copient avec le bouton « copier » de Supabase, jamais à la
+     main : une clé raccourcie avec « … » provoque « Cannot convert argument
+     to a ByteString » ;
+   - les deux `NEXT_PUBLIC_…` sont publiques par nature : type **Config**
+     (Vercel le demande pour les noms en `NEXT_PUBLIC_`).
 
 4. **Deploy**. Toute modification ultérieure d'une variable demande un
    redéploiement (**Deployments → ⋯ → Redeploy**).
@@ -162,6 +173,22 @@ Les calculs sont faits dans la base (fonction `admin_dashboard`), qui vérifie
 elle-même que la personne connectée est administratrice.
 
 ## L'espace de l'équipe
+
+### Le lien secret
+
+`https://<adresse du site>/acces?cle=<ADMIN_ACCESS_KEY>` ouvre directement le
+tableau de bord, sans e-mail ni mot de passe : le serveur ouvre la session du
+compte administrateur (le premier de la table `admins`), puis affiche
+`/admin`, sans la clé dans la barre d'adresse. La session reste ouverte sur
+l'appareil ; le lien peut resservir à tout moment.
+
+- Ce lien vaut un mot de passe : ne jamais le partager ni le publier.
+- `ADMIN_ACCESS_KEY` : au moins 24 caractères, au hasard (en dessous, le lien
+  reste désactivé). Pour changer de lien, changer la variable et redéployer :
+  l'ancien lien cesse de marcher.
+- Tant qu'aucun administrateur n'existe (`supabase/admin.sql`), le lien
+  l'explique au lieu d'ouvrir la session.
+- Les personnes qui parlent à Élise, elles, gardent leur compte par e-mail.
 
 ### Messages
 

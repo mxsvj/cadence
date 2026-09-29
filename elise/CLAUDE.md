@@ -51,3 +51,11 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   vrai schéma, faux Gemini ; parcours Chromium dans `tests/e2e/parcours.mjs`).
 - Les variables `NEXT_PUBLIC_*` sont figées au moment du build : les changer
   sur Vercel demande un redéploiement.
+- Lien secret de l'équipe : `/acces?cle=<ADMIN_ACCESS_KEY>` (`app/acces/route.ts`,
+  `lib/team-access.ts`) ouvre la session du premier compte de `admins` par
+  `auth.admin.generateLink` + `verifyOtp`, sans e-mail envoyé, puis redirige
+  vers `/admin`. Les règles de la base (RLS, `is_admin()`) restent la seule
+  barrière : le lien ne fait qu'ouvrir une vraie session d'administrateur.
+- Au premier déploiement, le porteur du projet a collé des exemples au lieu
+  des vraies valeurs (`sb_publishable_…`, `/rest/v1/` en trop) : donner des
+  valeurs à copier telles quelles, ou lui faire utiliser le bouton « copier ».
