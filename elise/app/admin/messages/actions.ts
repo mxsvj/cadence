@@ -3,7 +3,7 @@
 import { requireAdmin } from "@/lib/admin";
 import { generate } from "@/lib/llm";
 import { MESSAGE_COLUMNS, loadMessages, toTurn, type Message } from "@/lib/memory";
-import { parseEuros, type Step } from "@/lib/offers";
+import { describeStep, parseEuros, type Step } from "@/lib/offers";
 import { getPersona } from "@/lib/persona";
 import { personSection, personaSection } from "@/lib/prompts";
 import { ageFrom, loadProfile, type AiSettings } from "@/lib/settings";
@@ -153,8 +153,12 @@ export async function draftOfferMessage(userId: string, stepId: number, price: s
         },
         now,
       ),
-      `## Ta tâche\n\nÉcris le court message (une ou deux phrases) qui accompagne l'offre de ce contenu : ${st.ai_description || st.content_type}.${
+      `## Ta tâche\n\nÉcris le court message (une ou deux phrases) qui accompagne l'offre de ce contenu : ${describeStep(st)}.${
         st.is_paid ? ` Prix : ${price || (st.price_cents / 100).toFixed(2)} €.` : " C'est un cadeau."
+      }${
+        st.message_mode === "ia" && st.message_text.trim()
+          ? ` Ce que l'équipe veut que tu dises, à reformuler avec tes mots, sans rien y ajouter : « ${st.message_text.trim()} ».`
+          : ""
       } Présente-le avec naturel, dans la continuité de la conversation, sans le décrire entièrement. Jamais de pression, jamais en jouant sur la solitude ou l'attachement, aucun sous-entendu sexuel. Réponds uniquement par le message.`,
     ].join("\n\n");
     const text = await generate({

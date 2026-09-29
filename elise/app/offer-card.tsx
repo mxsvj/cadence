@@ -2,14 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { formatEuros } from "@/lib/dashboard";
-import { MAX_REFUSED_BIDS, type Offer } from "@/lib/offers";
+import { MAX_REFUSED_BIDS, contentLabel, type Offer } from "@/lib/offers";
 
-const TYPE_LABEL: Record<Offer["content_type"], string> = { image: "Photo", video: "Vidéo", texte: "Texte" };
+type Unlocked = { type: Offer["content_type"]; texte: string; items: { kind: "image" | "video"; url: string }[] };
 
-type Unlocked = { type: Offer["content_type"]; texte: string; url: string | null };
+/** « 3 photos et 1 vidéo à débloquer », « Texte à débloquer ». */
+function lockedLabel(offer: Offer): string {
+  const photos = offer.photo_count ?? 0;
+  const videos = offer.video_count ?? 0;
+  if (!photos && !videos) return "Texte à débloquer";
+  const text = contentLabel(photos, videos);
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)} à débloquer`;
+}
 
 // Une offre dans la conversation. Tant qu'elle n'est pas achetée, rien du
-// contenu n'est chargé : ni aperçu, ni flou, seulement le type et le prix.
+// contenu n'est chargé : ni aperçu, ni flou, seulement ce qu'elle contient
+// (« 3 photos ») et le prix.
 export function OfferCard({ offer, onChange }: { offer: Offer; onChange: (offer: Offer) => void }) {
   const [step, setStep] = useState<"idle" | "confirm" | "bid">("idle");
   const [amount, setAmount] = useState("");
@@ -95,17 +103,28 @@ export function OfferCard({ offer, onChange }: { offer: Offer; onChange: (offer:
         </p>
         {loadError && <p className="text-sm text-muted">{loadError}</p>}
         {!content && !loadError && <p className="text-sm text-muted">Chargement…</p>}
-        {content?.type === "texte" && (
-          <p className="whitespace-pre-wrap rounded-2xl bg-background px-3 py-2">{content.texte}</p>
+        {content && content.items.length > 0 && (
+          <div className={`grid gap-2 ${content.items.length > 1 ? "grid-cols-2" : ""}`}>
+            {content.items.map((item, i) =>
+              item.kind === "video" ? (
+                <video key={item.url} src={item.url} controls playsInline className="max-h-96 w-full rounded-2xl bg-background" />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- lien signé temporaire, hors de l'optimiseur d'images
+                <img
+                  key={item.url}
+                  src={item.url}
+                  alt={content.items.length > 1 ? `Contenu débloqué, ${i + 1} sur ${content.items.length}` : "Contenu débloqué"}
+                  className="max-h-96 w-full rounded-2xl object-contain"
+                />
+              ),
+            )}
+          </div>
         )}
-        {content?.type === "image" && content.url && (
-          // eslint-disable-next-line @next/next/no-img-element -- lien signé temporaire, hors de l'optimiseur d'images
-          <img src={content.url} alt="Contenu débloqué" className="max-h-96 w-full rounded-2xl object-contain" />
+        {content?.texte && (
+          <p className={`whitespace-pre-wrap ${content.items.length ? "text-sm" : "rounded-2xl bg-background px-3 py-2"}`}>
+            {content.texte}
+          </p>
         )}
-        {content?.type === "video" && content.url && (
-          <video src={content.url} controls playsInline className="max-h-96 w-full rounded-2xl" />
-        )}
-        {content?.texte && content.type !== "texte" && <p className="whitespace-pre-wrap text-sm">{content.texte}</p>}
       </div>
     );
   }
@@ -121,7 +140,7 @@ export function OfferCard({ offer, onChange }: { offer: Offer; onChange: (offer:
           </svg>
         </span>
         <div className="min-w-0">
-          <p className="font-semibold">{TYPE_LABEL[offer.content_type]} à débloquer</p>
+          <p className="font-semibold">{lockedLabel(offer)}</p>
           <p className="text-sm">
             <span className="font-bold">{formatEuros(offer.price_cents)}</span>
             {offer.personalized && <span className="text-muted"> · prix personnalisé pour vous</span>}

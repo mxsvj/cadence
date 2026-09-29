@@ -35,6 +35,8 @@ export type TeamOffer = {
   id: number;
   step_id: number | null;
   content_type: Step["content_type"];
+  photo_count: number;
+  video_count: number;
   price_cents: number;
   personalized: boolean;
   status: "proposee" | "achetee" | "offerte" | "retiree";

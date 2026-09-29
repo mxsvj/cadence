@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatEuros, timeAgo } from "@/lib/dashboard";
 import type { Message } from "@/lib/memory";
-import type { Step } from "@/lib/offers";
+import { contentLabel, mediaCounts, type Step } from "@/lib/offers";
 import type { AiMode } from "@/lib/settings";
 import type { InboxItem, TeamOffer, Thread } from "@/lib/team";
 import { EmojiPicker } from "../emoji-picker";
@@ -27,7 +27,11 @@ const STATUS_LABEL: Record<TeamOffer["status"], string> = {
   offerte: "Offert",
   retiree: "Retirée",
 };
-const TYPE_LABEL: Record<Step["content_type"], string> = { image: "Photo", video: "Vidéo", texte: "Texte" };
+/** « 3 photos et 1 vidéo », avec une majuscule. */
+const label = (photos: number, videos: number) => {
+  const text = contentLabel(photos, videos);
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
 
 function zones(): string[] {
   try {
@@ -347,7 +351,7 @@ export function Inbox({
                                   ? thread.steps[offer.step_id].title
                                   : "Étape supprimée"}
                               </span>
-                              {TYPE_LABEL[offer.content_type]} · {formatEuros(offer.price_cents)}
+                              {label(offer.photo_count, offer.video_count)} · {formatEuros(offer.price_cents)}
                               {offer.personalized ? " (personnalisé)" : ""} · {STATUS_LABEL[offer.status]}
                               {offer.last_bid_cents !== null && (
                                 <span className="block text-xs text-muted">
@@ -536,7 +540,7 @@ export function Inbox({
                 ) : (
                   <div className="flex flex-col gap-2 rounded-xl border border-line p-3 text-sm">
                     <p>
-                      <span className="font-semibold">Étape suivante :</span> {next.title} ({TYPE_LABEL[next.content_type]})
+                      <span className="font-semibold">Étape suivante :</span> {next.title} ({contentLabel(mediaCounts(next.media ?? []).photos, mediaCounts(next.media ?? []).videos)})
                     </p>
                     <p className="text-muted">
                       {next.is_paid

@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MESSAGE_COLUMNS, loadFacts, loadMessages, loadSummary, toTurn, type Message } from "./memory";
-import type { Step } from "./offers";
+import { describeStep as describe } from "./offers";
 import { fillName, getFirstMessage, getPersona } from "./persona";
 import { displayName } from "./persona-profile";
 import { chatSystemPrompt, type SalePrompt, type Turn } from "./prompts";
@@ -10,18 +10,6 @@ import { ageFrom, type AiSettings, type Contact, type Profile } from "./settings
 
 // Une réponse de l'IA, de bout en bout : ce qu'elle reçoit (règles, personnage,
 // personne, mémoire, vente) et ce qu'on enregistre ensuite.
-
-const TYPE_LABEL: Record<Step["content_type"], string> = {
-  image: "une photo",
-  video: "une vidéo",
-  texte: "un texte",
-};
-
-/** Ce que l'IA sait d'un contenu : sa description, jamais son titre interne. */
-function describe(step: Step | null): string {
-  if (!step) return "un contenu";
-  return step.ai_description.trim() || TYPE_LABEL[step.content_type];
-}
 
 function toSalePrompt(sale: SaleContext): SalePrompt {
   const next = sale.next;
@@ -36,6 +24,7 @@ function toSalePrompt(sale: SaleContext): SalePrompt {
           minCents: next.min_price_cents,
           maxCents: next.max_price_cents,
           messageMode: next.message_mode,
+          instruction: next.message_mode === "ia" ? next.message_text.trim() : "",
         }
       : null,
     canPropose: sale.canPropose,

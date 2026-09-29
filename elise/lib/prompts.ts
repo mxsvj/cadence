@@ -55,6 +55,8 @@ export type SalePrompt = {
     minCents: number;
     maxCents: number;
     messageMode: "ia" | "fixe";
+    /** Ce que l'équipe veut que l'IA dise en proposant (mode « ia ») ; vide : libre. */
+    instruction?: string;
   } | null;
   canPropose: boolean;
 };
@@ -172,7 +174,9 @@ export function salesSection(sale: SalePrompt | null): string {
     const message =
       n.messageMode === "fixe"
         ? "L'offre sera accompagnée d'un message écrit par l'équipe : n'annonce pas toi-même le prix."
-        : "Ta réponse accompagnera l'offre : présente le contenu en une ou deux phrases, sans le décrire entièrement.";
+        : n.instruction
+          ? `Ta réponse accompagnera l'offre. Ce que l'équipe veut que tu dises en le proposant, à reformuler avec tes mots, sans rien y ajouter : « ${n.instruction} »`
+          : "Ta réponse accompagnera l'offre : présente le contenu en une ou deux phrases, sans le décrire entièrement.";
     parts.push(
       `Le prochain contenu, dans l'ordre prévu : ${n.description}\n${price}\nTu peux le proposer dans cette réponse, seulement si la conversation s'y prête naturellement. Pour le faire, termine ta réponse par une ligne contenant uniquement ${tag}. ${message}`,
     );

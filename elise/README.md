@@ -246,16 +246,26 @@ physiques dans un registre sexuel.
 
 ### Contenus
 
-Des scripts de vente faits d'étapes dans un ordre précis. Pour chaque étape :
-un titre (visible de l'équipe seulement), le contenu (photo, vidéo ou texte),
-ce à quoi il ressemble (pour que l'IA puisse en parler), le message qui
-l'accompagne (écrit par l'IA ou fixe), qui choisit le moment (l'IA ou
-l'équipe), et le prix : habituel, minimum, maximum, ou gratuit. Le premier
-script est celui de tout le monde, sauf choix contraire dans la fiche.
+Des scripts de vente faits de messages dans un ordre précis (« Message 1 ·
+Gratuit », « Message 2 · Payant · 9 € »…). Pour chaque message :
+
+- un titre, visible de l'équipe seulement ;
+- ce qu'il contient : **jusqu'à 10 photos et vidéos**, un texte (lettre,
+  légende, poème…), ou les deux ; la personne voit « 3 photos et 1 vidéo à
+  débloquer », puis toute la galerie une fois payé ;
+- ce à quoi il ressemble, pour que l'IA puisse en parler sans le montrer ;
+- **ce que l'IA dit avec** : soit elle l'écrit elle-même en suivant la
+  consigne de l'équipe (« dis que tu les as prises pour lui »), soit elle
+  envoie un texte mot pour mot ;
+- qui choisit le moment : l'IA ou l'équipe ;
+- le prix : gratuit, ou payant avec prix habituel, minimum et maximum.
+
+Le premier script est celui de tout le monde, sauf choix contraire dans la
+fiche.
 
 Les règles, vérifiées par la base de données elle-même :
 
-- seule l'**étape suivante** peut être proposée, une offre à la fois ;
+- seul le **message suivant** peut être proposé, une offre à la fois ;
 - le prix proposé reste **entre le minimum et le maximum** ; s'il diffère du
   prix habituel, il est affiché « prix personnalisé pour vous » ;
 - la personne peut **faire une offre** : acceptée si elle atteint le minimum
