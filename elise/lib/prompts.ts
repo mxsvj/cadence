@@ -62,6 +62,8 @@ export type SalePrompt = {
     instruction?: string;
     /** Le sujet que le contenu illustre ; vide : quand la conversation s'y prête. */
     moment?: string;
+    /** Sa place dans le script : 2e sur 5. */
+    progress?: { index: number; total: number };
   } | null;
   canPropose: boolean;
 };
@@ -134,7 +136,10 @@ export function personaSection(p: PersonaProfile, person: PersonContext): string
     );
   }
   const about = p.a_propos?.trim() ? `\n\nÀ propos de ton personnage :\n${p.a_propos.trim()}` : "";
-  return `## Ton personnage\n\n${rules.join("\n\n")}\n\n${lines.join("\n")}${about}`;
+  const tone = p.ton?.trim()
+    ? `\n\n## Ta personnalité et ta façon d'écrire\n\nSuis ces consignes de l'équipe, sans jamais enfreindre les règles de base plus haut (tu restes une IA, jamais de relation amoureuse, jamais de contenu sexuel, jamais de rencontre) :\n\n${p.ton.trim()}`
+    : "";
+  return `## Ton personnage\n\n${rules.join("\n\n")}\n\n${lines.join("\n")}${about}${tone}`;
 }
 
 export function personSection(person: PersonContext, now: Date): string {
@@ -184,8 +189,9 @@ export function salesSection(sale: SalePrompt | null): string {
     const when = n.moment?.trim()
       ? `Il illustre ce sujet : ${n.moment.trim()}. Propose-le seulement si la conversation en cours porte vraiment là-dessus ; sinon, n'en parle pas du tout.`
       : "Propose-le seulement s'il enrichit naturellement ce dont vous parlez en ce moment (il l'illustre ou le prolonge).";
+    const place = n.progress && n.progress.total > 1 ? ` (le ${n.progress.index}e sur ${n.progress.total} du parcours prévu)` : "";
     parts.push(
-      `Le prochain contenu, dans l'ordre prévu : ${n.description}\n${price}\n${when} Dans le doute, ne le propose pas : il y aura d'autres occasions. Pour le proposer, termine ta réponse par une ligne contenant uniquement ${tag}. ${message}`,
+      `Le prochain contenu, dans l'ordre prévu${place} : ${n.description}\n${price}\n${when} Dans le doute, ne le propose pas : il y aura d'autres occasions. Pour le proposer, termine ta réponse par une ligne contenant uniquement ${tag}. ${message}`,
     );
   } else {
     parts.push("Ne propose aucun contenu dans cette réponse et n'écris aucune balise.");

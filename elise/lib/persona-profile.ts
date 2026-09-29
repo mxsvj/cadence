@@ -29,6 +29,8 @@ export type PersonaProfile = {
   interets?: InterestCategory[];
   /** Tout le reste, en texte libre. */
   a_propos?: string;
+  /** Sa personnalité et sa façon d'écrire : les consignes de ton pour l'IA. */
+  ton?: string;
 };
 
 export const DEFAULT_NAME = "Élise";
@@ -96,6 +98,7 @@ export function sanitizePersona(input: unknown): { persona: PersonaProfile; erro
     ethnicite: text("ethnicite", 80),
     corps: text("corps", 60),
     a_propos: text("a_propos", MAX_TEXT),
+    ton: text("ton", MAX_TEXT),
   };
   const age = Number(src.age);
   if (src.age !== undefined && src.age !== "" && src.age !== null) {

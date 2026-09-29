@@ -4,7 +4,7 @@ import { CHAT_TEMPERATURE, LlmError, generate } from "./llm";
 import { loadFacts, loadMessages, loadSummary, toTurn } from "./memory";
 import { getPersona } from "./persona";
 import { chatSystemPrompt, cleanReply, type Turn } from "./prompts";
-import { ageFrom, aiMayReply, loadContact, loadProfile, loadSettings, type AiSettings } from "./settings";
+import { ageFrom, aiMayReply, loadContact, loadCreator, loadProfile, loadSettings, type AiSettings } from "./settings";
 
 // Prendre des nouvelles après une absence. Une fois par jour (tâche planifiée
 // de Vercel, voir vercel.json), l'IA écrit un court message amical aux
@@ -64,15 +64,23 @@ export type RelanceReport = {
   stopped?: string;
 };
 
-async function writeRelance(admin: SupabaseClient, userId: string, settings: AiSettings, now: Date): Promise<"sent" | "skipped"> {
-  const contact = await loadContact(admin, userId, settings.creator_id);
-  // Mode hybride : seulement les personnes à qui l'IA a le droit de répondre.
-  if (!aiMayReply(settings, contact)) return "skipped";
+/** Dans sa dernière conversation : la créatrice avec qui elle parlait prend de ses nouvelles. */
+async function writeRelance(
+  admin: SupabaseClient,
+  userId: string,
+  creatorId: number,
+  settings: AiSettings,
+  now: Date,
+): Promise<"sent" | "skipped"> {
+  const [creator, contact] = await Promise.all([loadCreator(admin, creatorId), loadContact(admin, userId, creatorId)]);
+  // Une créatrice qui n'est plus en ligne n'écrit pas ; en mode hybride,
+  // seulement aux personnes à qui l'IA a le droit de répondre.
+  if (!creator?.active || !aiMayReply(settings, contact)) return "skipped";
   const [profile, facts, summary, recent] = await Promise.all([
     loadProfile(admin, userId),
-    loadFacts(admin, userId),
-    loadSummary(admin, userId),
-    loadMessages(admin, userId, RECENT_MESSAGES),
+    loadFacts(admin, userId, creatorId),
+    loadSummary(admin, userId, creatorId),
+    loadMessages(admin, userId, creatorId, RECENT_MESSAGES),
   ]);
   if (!profile || profile.relances_ok === false || !recent.length) return "skipped";
   const last = recent[recent.length - 1];
@@ -83,7 +91,7 @@ async function writeRelance(admin: SupabaseClient, userId: string, settings: AiS
   const system = [
     chatSystemPrompt({
       base: getPersona(),
-      persona: settings.creator?.persona ?? {},
+      persona: creator.persona,
       person: {
         name: profile.display_name,
         age: ageFrom(profile.birthdate, now),
@@ -110,7 +118,7 @@ async function writeRelance(admin: SupabaseClient, userId: string, settings: AiS
 
   const { error } = await admin
     .from("messages")
-    .insert({ user_id: userId, role: "assistant", author: "ai", kind: "relance", content });
+    .insert({ user_id: userId, creator_id: creatorId, role: "assistant", author: "ai", kind: "relance", content });
   if (error) throw new Error(`Message non enregistré : ${error.message}`);
   return "sent";
 }
@@ -124,13 +132,13 @@ export async function runRelances(admin: SupabaseClient, now: Date = new Date())
 
   const { data, error } = await admin.rpc("a_relancer", { p_heures: settings.relance_heures, p_limite: RELANCE_BATCH });
   if (error) throw new Error(`Liste des absences illisible : ${error.message}`);
-  for (const { user_id } of (data ?? []) as { user_id: string }[]) {
+  for (const { user_id, creator_id } of (data ?? []) as { user_id: string; creator_id: number }[]) {
     if (Date.now() - started > TIME_BUDGET_MS) {
       report.stopped = "temps écoulé : la suite au prochain passage";
       break;
     }
     try {
-      report[await writeRelance(admin, user_id, settings, now)]++;
+      report[await writeRelance(admin, user_id, Number(creator_id), settings, now)]++;
     } catch (err) {
       report.failed++;
       console.error(`Prise de nouvelles impossible (${user_id}) :`, err);

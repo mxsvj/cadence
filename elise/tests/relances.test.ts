@@ -13,11 +13,11 @@ const NINA = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee";
 
 let base: Awaited<ReturnType<typeof freshDatabase>>;
 
-async function message(user: string, role: "user" | "assistant", hoursAgo: number, kind = "text") {
+async function message(user: string, role: "user" | "assistant", hoursAgo: number, kind = "text", creator = 1) {
   await base.db.query(
-    `insert into public.messages (user_id, role, author, kind, content, created_at)
-     values ($1, $2, $3, $4, 'Bonjour', now() - make_interval(hours => $5))`,
-    [user, role, role === "user" ? "user" : "ai", kind, hoursAgo],
+    `insert into public.messages (user_id, creator_id, role, author, kind, content, created_at)
+     values ($1, $6, $2, $3, $4, 'Bonjour', now() - make_interval(hours => $5))`,
+    [user, role, role === "user" ? "user" : "ai", kind, hoursAgo, creator],
   );
 }
 const due = async (hours = 48) =>
@@ -57,7 +57,7 @@ describe("prendre des nouvelles", () => {
 
   it("jamais sous une offre qui attend sa réponse", async () => {
     await base.db.query(
-      "insert into public.offers (user_id, content_type, price_cents, status, proposed_by) values ($1, 'image', 500, 'proposee', 'ai')",
+      "insert into public.offers (user_id, creator_id, content_type, price_cents, status, proposed_by) values ($1, 1, 'image', 500, 'proposee', 'ai')",
       [LEA],
     );
     assert.deepEqual(await due(1), []);
@@ -76,9 +76,8 @@ describe("prendre des nouvelles", () => {
   });
 
   it("seulement si l'IA a le droit d'écrire : pas en mode manuel, et en hybride si la personne est cochée", async () => {
-    const [{ id }] = await base.as<{ id: number }>(ADMIN, "insert into public.creators (persona) values ('{}') returning id");
-    await base.as(ADMIN, "update public.ai_settings set creator_id = $1, mode = 'hybride' where id = 1", [id]);
-    await base.as(ADMIN, "insert into public.creator_contacts (creator_id, user_id, ai_enabled) values ($1, $2, false)", [id, LEA]);
+    await base.as(ADMIN, "update public.ai_settings set mode = 'hybride' where id = 1");
+    await base.as(ADMIN, "insert into public.creator_contacts (creator_id, user_id, ai_enabled) values (1, $1, false)", [LEA]);
     assert.deepEqual(await due(1), []);
     await base.as(ADMIN, "update public.creator_contacts set ai_enabled = true where user_id = $1", [LEA]);
     assert.deepEqual(await due(1), [LEA]);
@@ -86,6 +85,19 @@ describe("prendre des nouvelles", () => {
     assert.deepEqual(await due(1), []);
     await base.as(ADMIN, "update public.ai_settings set mode = 'auto' where id = 1");
     assert.deepEqual(await due(1), [LEA]);
+  });
+
+  it("une seule par personne : sa dernière conversation, avec une créatrice en ligne", async () => {
+    const [{ id: kath }] = await base.as<{ id: number }>(
+      ADMIN,
+      "insert into public.creators (persona, active) values ('{\"nom\": \"Katherine\"}', true) returning id",
+    );
+    await message(LEA, "user", 5, "text", kath); // Léa a parlé ensuite à Katherine
+    const rows = await base.as<{ user_id: string; creator_id: number }>("service", "select * from public.a_relancer(1, 50)");
+    assert.deepEqual(rows.map((r) => [r.user_id, Number(r.creator_id)]), [[LEA, Number(kath)]]);
+    await base.as(ADMIN, "update public.creators set active = false where id = $1", [kath]);
+    assert.deepEqual(await due(1), []); // Katherine n'est plus en ligne : pas de message
+    await base.as(ADMIN, "update public.creators set active = true where id = $1", [kath]);
   });
 
   it("la liste n'est lisible que par le serveur", async () => {
@@ -96,7 +108,7 @@ describe("prendre des nouvelles", () => {
 
   it("une personne ne peut pas écrire elle-même un message « relance »", async () => {
     await assert.rejects(
-      base.as(KARIM, "insert into public.messages (user_id, role, author, kind, content) values ($1, 'user', 'user', 'relance', 'x')", [KARIM]),
+      base.as(KARIM, "insert into public.messages (user_id, creator_id, role, author, kind, content) values ($1, 1, 'user', 'user', 'relance', 'x')", [KARIM]),
       /row-level security/,
     );
   });

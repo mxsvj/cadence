@@ -47,12 +47,18 @@ function dayLabel(iso: string): string {
 }
 
 export function Chat({
+  creatorId,
+  others = false,
   initialMessages,
   initialOffers,
   name,
   isAdmin = false,
   relances = null,
 }: {
+  /** La créatrice de cette conversation. */
+  creatorId: number;
+  /** D'autres créatrices sont en ligne : lien vers le choix. */
+  others?: boolean;
   initialMessages: Message[];
   initialOffers: Offer[];
   name: string;
@@ -87,7 +93,7 @@ export function Chat({
     if (sending.current || document.visibilityState !== "visible") return;
     const lastId = Math.max(0, ...messagesRef.current.map((m) => m.id));
     try {
-      const res = await fetch(`/api/chat?apres=${lastId}`, { cache: "no-store" });
+      const res = await fetch(`/api/chat?apres=${lastId}&c=${creatorId}`, { cache: "no-store" });
       if (!res.ok) return;
       const data = (await res.json()) as { messages: Message[]; offers: Offer[] };
       if (sending.current) return;
@@ -97,7 +103,7 @@ export function Chat({
     } catch {
       // Réseau coupé : on réessaiera au prochain tour.
     }
-  }, []);
+  }, [creatorId]);
 
   useEffect(() => {
     const timer = window.setInterval(() => void poll(), POLL_MS);
@@ -140,7 +146,7 @@ export function Chat({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, creator: creatorId }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 401) {
@@ -149,6 +155,11 @@ export function Chat({
       }
       if (res.status === 403) {
         router.replace("/bienvenue");
+        return;
+      }
+      if (res.status === 410) {
+        // Plus en ligne : retour au choix des créatrices.
+        router.replace("/");
         return;
       }
       if (!res.ok) throw new Error(data.error ?? "Pas de réponse cette fois-ci. Réessayez dans un instant.");
@@ -197,6 +208,15 @@ export function Chat({
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-line bg-background/90 px-4 py-3 backdrop-blur pt-[max(0.75rem,env(safe-area-inset-top))]">
+        {others && (
+          <Link
+            href="/"
+            aria-label="Toutes les créatrices"
+            className="-ml-2 flex size-9 shrink-0 items-center justify-center rounded-full text-2xl text-muted hover:bg-accent-soft"
+          >
+            ‹
+          </Link>
+        )}
         <div
           aria-hidden
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-serif text-xl text-accent"

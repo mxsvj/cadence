@@ -8,8 +8,8 @@ import type { PersonaProfile } from "./persona-profile";
 
 export type AiMode = "auto" | "hybride" | "manuel";
 
-/** Une créatrice : le personnage que l'IA incarne, et son premier message. */
-export type Creator = { id: number; persona: PersonaProfile; first_message: string };
+/** Une créatrice : le personnage que l'IA incarne, son premier message, et si les personnes peuvent la choisir. */
+export type Creator = { id: number; persona: PersonaProfile; first_message: string; active: boolean };
 
 export type AiSettings = {
   mode: AiMode;
@@ -18,20 +18,21 @@ export type AiSettings = {
   spending_cap_cents: number;
   sales_min_messages: number;
   sales_gap_messages: number;
+  /** Pause après un achat, en heures (0 : aucune). */
+  sales_pause_hours: number;
+  /** Offres payantes proposées par l'IA sur 24 heures, au plus. */
+  sales_max_per_day: number;
   /** Prendre des nouvelles après une absence (onglet Paramètres), et au bout de combien d'heures. */
   relance_active: boolean;
   relance_heures: number;
-  /** La créatrice choisie dans l'onglet IA (null : personnage par défaut). */
-  creator_id: number | null;
-  creator: Creator | null;
 };
 
 export type Contact = {
   user_id: string;
-  /** Avec la créatrice active : l'IA peut-elle répondre en mode hybride ? */
+  /** Avec la créatrice de la conversation : l'IA peut-elle répondre en mode hybride ? */
   ai_enabled: boolean;
   notes: string;
-  /** Avec la créatrice active : emojis au choix de l'IA, seulement ceux de la liste, ou aucun. */
+  /** Avec la créatrice de la conversation : emojis au choix de l'IA, seulement ceux de la liste, ou aucun. */
   emoji_mode: EmojiMode;
   emojis: string;
   city: string;
@@ -51,23 +52,29 @@ export const DEFAULT_SETTINGS: AiSettings = {
   spending_cap_cents: 10000,
   sales_min_messages: 10,
   sales_gap_messages: 12,
+  sales_pause_hours: 24,
+  sales_max_per_day: 1,
   relance_active: false,
   relance_heures: 48,
-  creator_id: null,
-  creator: null,
 };
 
 export async function loadCreator(admin: SupabaseClient, id: number): Promise<Creator | null> {
-  const { data, error } = await admin.from("creators").select("id, persona, first_message").eq("id", id).maybeSingle();
+  if (!Number.isSafeInteger(id) || id <= 0) return null;
+  const { data, error } = await admin.from("creators").select("*").eq("id", id).maybeSingle();
   if (error) throw new Error(`Créatrice illisible : ${error.message}`);
-  return data ? { ...(data as Creator), id: Number(data.id) } : null;
+  if (!data) return null;
+  return {
+    id: Number(data.id),
+    persona: (data.persona ?? {}) as PersonaProfile,
+    first_message: (data.first_message as string) ?? "",
+    active: data.active === true,
+  };
 }
 
 export async function loadSettings(admin: SupabaseClient): Promise<AiSettings> {
   const { data, error } = await admin.from("ai_settings").select("*").eq("id", 1).maybeSingle();
   if (error) throw new Error(`Réglages de l'IA illisibles : ${error.message}`);
   if (!data) return DEFAULT_SETTINGS;
-  const creatorId = data.creator_id === null || data.creator_id === undefined ? null : Number(data.creator_id);
   return {
     mode: data.mode ?? DEFAULT_SETTINGS.mode,
     context_messages: data.context_messages ?? DEFAULT_SETTINGS.context_messages,
@@ -75,10 +82,10 @@ export async function loadSettings(admin: SupabaseClient): Promise<AiSettings> {
     spending_cap_cents: data.spending_cap_cents ?? DEFAULT_SETTINGS.spending_cap_cents,
     sales_min_messages: data.sales_min_messages ?? DEFAULT_SETTINGS.sales_min_messages,
     sales_gap_messages: data.sales_gap_messages ?? DEFAULT_SETTINGS.sales_gap_messages,
+    sales_pause_hours: data.sales_pause_hours ?? DEFAULT_SETTINGS.sales_pause_hours,
+    sales_max_per_day: data.sales_max_per_day ?? DEFAULT_SETTINGS.sales_max_per_day,
     relance_active: data.relance_active === true,
     relance_heures: data.relance_heures ?? DEFAULT_SETTINGS.relance_heures,
-    creator_id: creatorId,
-    creator: creatorId === null ? null : await loadCreator(admin, creatorId),
   };
 }
 
@@ -98,17 +105,16 @@ export function defaultContact(userId: string): Contact {
 }
 
 /**
- * La fiche d'une personne : ce que l'équipe sait d'elle (contacts), et ce que
- * la créatrice active fait avec elle (creator_contacts : IA autorisée, emojis).
+ * La fiche d'une personne : ce que l'équipe sait d'elle (contacts, commun à
+ * toutes les créatrices), et ce que la créatrice de la conversation fait avec
+ * elle (creator_contacts : IA autorisée, emojis).
  */
-export async function loadContact(admin: SupabaseClient, userId: string, creatorId: number | null): Promise<Contact> {
+export async function loadContact(admin: SupabaseClient, userId: string, creatorId: number): Promise<Contact> {
   const [contact, withCreator] = await Promise.all([
     admin.from("contacts").select("*").eq("user_id", userId).maybeSingle(),
     // « * » : une colonne ajoutée plus tard ne casse pas la conversation tant
     // que schema.sql n'a pas été relancé.
-    creatorId === null
-      ? Promise.resolve({ data: null, error: null })
-      : admin.from("creator_contacts").select("*").eq("creator_id", creatorId).eq("user_id", userId).maybeSingle(),
+    admin.from("creator_contacts").select("*").eq("creator_id", creatorId).eq("user_id", userId).maybeSingle(),
   ]);
   if (contact.error) throw new Error(`Fiche contact illisible : ${contact.error.message}`);
   if (withCreator.error) throw new Error(`Réglages de la créatrice illisibles : ${withCreator.error.message}`);

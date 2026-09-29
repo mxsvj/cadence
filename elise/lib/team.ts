@@ -3,14 +3,20 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { MESSAGE_COLUMNS, type Message } from "./memory";
 import type { Script, Step } from "./offers";
 import { displayName } from "./persona-profile";
-import { loadContact, loadSettings, type AiMode, type Contact } from "./settings";
+import { describeBlock, loadSaleContext } from "./sales";
+import { loadContact, loadCreator, loadSettings, type AiMode, type Contact } from "./settings";
+import { createAdminClient } from "./supabase/admin";
 
-// Ce que voit l'équipe dans l'onglet « Messages ». Tout est lu avec la
-// session de l'administrateur : la base (RLS et fonctions admin_*) vérifie
-// elle-même qu'il en est bien un.
+// Ce que voit l'équipe dans l'onglet « Messages » : une conversation par
+// personne et par créatrice. Tout est lu avec la session de
+// l'administrateur : la base (RLS et fonctions admin_*) vérifie elle-même
+// qu'il en est bien un.
 
 export type InboxItem = {
   user_id: string;
+  creator_id: number;
+  /** Le prénom de la créatrice de cette conversation. */
+  creatrice: string;
   email: string;
   nom: string;
   dernier: { id: number; auteur: "user" | "ai" | "team"; type: "text" | "offer" | "relance"; texte: string; date: string };
@@ -52,8 +58,13 @@ export type TeamOffer = {
 export type Thread = {
   person: Person;
   contact: Contact;
-  /** La créatrice active (son IA autorisée et ses emojis sont dans la fiche), ou null. */
-  creatorName: string | null;
+  /** La créatrice de cette conversation (son IA autorisée et ses emojis sont dans la fiche). */
+  creatorId: number;
+  creatorName: string;
+  /** En ligne : les personnes peuvent la choisir, et l'IA leur répond. */
+  creatorActive: boolean;
+  /** Où en est la vente : « Prochaine offre dans 3 messages. », etc. */
+  sale: string;
   messages: Message[];
   offers: TeamOffer[];
   steps: Record<number, Pick<Step, "id" | "title" | "content_type">>;
@@ -77,20 +88,36 @@ export async function loadInbox(supabase: SupabaseClient): Promise<{ mode: AiMod
   };
 }
 
-export async function loadThread(supabase: SupabaseClient, userId: string): Promise<Thread | null> {
-  const [person, settings, messages, offers, scripts, facts] = await Promise.all([
-    supabase.rpc("admin_personne", { p_user: userId }),
+export async function loadThread(supabase: SupabaseClient, userId: string, creatorId: number): Promise<Thread | null> {
+  const [person, settings, creator, messages, offers, scripts, facts, contact] = await Promise.all([
+    supabase.rpc("admin_personne", { p_user: userId, p_creator: creatorId }),
     loadSettings(supabase),
-    supabase.from("messages").select(MESSAGE_COLUMNS).eq("user_id", userId).order("id", { ascending: false }).limit(300),
-    supabase.from("offers").select("*").eq("user_id", userId).order("id"),
+    loadCreator(supabase, creatorId),
+    supabase
+      .from("messages")
+      .select(MESSAGE_COLUMNS)
+      .eq("user_id", userId)
+      .eq("creator_id", creatorId)
+      .order("id", { ascending: false })
+      .limit(300),
+    supabase.from("offers").select("*").eq("user_id", userId).eq("creator_id", creatorId).order("id"),
     // « * » : creator_id n'existe qu'une fois schema.sql relancé.
     supabase.from("scripts").select("*").order("position").order("id"),
-    supabase.from("user_facts").select("fact").eq("user_id", userId).order("id"),
+    supabase.from("user_facts").select("fact").eq("user_id", userId).eq("creator_id", creatorId).order("id"),
+    // La fiche, avec ce que cette créatrice fait avec cette personne.
+    loadContact(supabase, userId, creatorId),
   ]);
   const p = check(person, "Personne introuvable") as Person | null;
-  if (!p) return null;
-  // La fiche, avec ce que la créatrice active fait avec cette personne.
-  const contact = await loadContact(supabase, userId, settings.creator_id);
+  if (!p || !creator) return null;
+  // Où en est la vente, et pourquoi l'IA ne propose pas (lu avec la clé
+  // secrète : les fonctions de vente sont réservées au serveur).
+  let sale = "";
+  try {
+    const context = await loadSaleContext(createAdminClient(), userId, creatorId, settings, false);
+    sale = describeBlock(context.block, context.next);
+  } catch (err) {
+    console.error("État de la vente illisible :", err);
+  }
 
   const offerRows = check(offers, "Offres illisibles") as TeamOffer[];
   const stepIds = [...new Set(offerRows.map((o) => o.step_id).filter((id): id is number => id !== null))];
@@ -106,18 +133,21 @@ export async function loadThread(supabase: SupabaseClient, userId: string): Prom
   return {
     person: p,
     contact,
-    creatorName: settings.creator ? displayName(settings.creator.persona) : null,
+    creatorId,
+    creatorName: displayName(creator.persona),
+    creatorActive: creator.active,
+    sale,
     messages: (check(messages, "Messages illisibles") as Message[]).reverse(),
     offers: offerRows,
     steps,
-    scripts: usableScripts(check(scripts, "Scripts illisibles") as Script[], settings.creator_id, contact.script_id),
+    scripts: usableScripts(check(scripts, "Scripts illisibles") as Script[], creatorId, contact.script_id),
     facts: (check(facts, "Fiche illisible") as { fact: string }[]).map((f) => f.fact),
   };
 }
 
 /**
- * Les scripts qu'on peut choisir dans la fiche : ceux de la créatrice active
- * et ceux qui servent à toutes. Celui déjà choisi reste visible, signalé,
+ * Les scripts qu'on peut choisir dans la fiche : ceux de la créatrice de la
+ * conversation et ceux qui servent à toutes. Celui déjà choisi reste visible, signalé,
  * s'il est à une autre créatrice (l'IA ne s'en sert pas).
  */
 export function usableScripts(scripts: Script[], activeCreator: number | null, chosen: number | null): Script[] {

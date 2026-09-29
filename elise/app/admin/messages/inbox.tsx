@@ -20,6 +20,13 @@ import {
 
 const REFRESH_MS = 4000;
 
+/** Une conversation : une personne et une créatrice, notées « personne:créatrice ». */
+const keyOf = (userId: string, creatorId: number) => `${userId}:${creatorId}`;
+function parseKey(key: string): { user: string; creator: number } {
+  const [user, creator] = key.split(":");
+  return { user, creator: Number(creator) };
+}
+
 const MODE_LABEL: Record<AiMode, string> = { auto: "Automatique", hybride: "Hybride", manuel: "Manuel" };
 const STATUS_LABEL: Record<TeamOffer["status"], string> = {
   proposee: "En attente",
@@ -58,14 +65,15 @@ function contactForm(t: Thread): ContactForm {
 
 export function Inbox({
   initial,
-  initialUser,
+  initialConversation,
 }: {
   initial: { mode: AiMode; conversations: InboxItem[] };
-  initialUser: string | null;
+  /** « personne:créatrice », depuis l'adresse de la page. */
+  initialConversation: string | null;
 }) {
   const [list, setList] = useState(initial.conversations);
   const [mode, setMode] = useState(initial.mode);
-  const [selected, setSelected] = useState<string | null>(initialUser);
+  const [selected, setSelected] = useState<string | null>(initialConversation);
   const [thread, setThread] = useState<Thread | null>(null);
   const [showPanel, setShowPanel] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -92,16 +100,17 @@ export function Inbox({
     setMode(data.mode);
   }, []);
 
-  const loadThread = useCallback(async (userId: string) => {
-    const res = await fetch(`/api/admin/messages/${userId}`, { cache: "no-store" }).catch(() => null);
-    if (!res?.ok || selectedRef.current !== userId) return;
+  const loadThread = useCallback(async (key: string) => {
+    const { user, creator } = parseKey(key);
+    const res = await fetch(`/api/admin/messages/${user}?c=${creator}`, { cache: "no-store" }).catch(() => null);
+    if (!res?.ok || selectedRef.current !== key) return;
     const data = (await res.json()) as Thread;
     setThread(data);
     // La fiche n'est remplie qu'à l'ouverture (ou après un enregistrement) :
     // on n'écrase pas une saisie en cours.
-    const switched = formFor.current !== userId;
+    const switched = formFor.current !== key;
     if (switched || reloadForm.current) {
-      formFor.current = userId;
+      formFor.current = key;
       reloadForm.current = false;
       setForm(contactForm(data));
       const next = data.person.prochaine_etape;
@@ -115,25 +124,26 @@ export function Inbox({
     const lastUserMessage = Math.max(0, ...data.messages.filter((m) => m.role === "user").map((m) => m.id));
     if (lastUserMessage > lastSeen.current) {
       lastSeen.current = lastUserMessage;
-      void markRead(userId).then(loadList);
+      void markRead(user, creator).then(loadList);
     }
   }, [loadList]);
 
-  function open(userId: string) {
-    selectedRef.current = userId;
+  function open(key: string) {
+    const { user, creator } = parseKey(key);
+    selectedRef.current = key;
     lastSeen.current = 0;
-    setSelected(userId);
+    setSelected(key);
     setThread(null);
     setShowPanel(false);
     setError(null);
-    window.history.replaceState(null, "", `/admin/messages?u=${userId}`);
-    void loadThread(userId);
+    window.history.replaceState(null, "", `/admin/messages?u=${user}&c=${creator}`);
+    void loadThread(key);
   }
 
   // Au premier affichage, et ensuite toutes les quelques secondes.
   useEffect(() => {
-    if (initialUser) void loadThread(initialUser);
-  }, [initialUser, loadThread]);
+    if (initialConversation) void loadThread(initialConversation);
+  }, [initialConversation, loadThread]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -158,7 +168,8 @@ export function Inbox({
     if (!selected || !reply.trim()) return;
     setSending(true);
     setError(null);
-    const result = await sendTeamMessage(selected, reply);
+    const { user, creator } = parseKey(selected);
+    const result = await sendTeamMessage(user, creator, reply);
     setSending(false);
     if (!result.ok) return setError(result.error);
     setReply("");
@@ -170,7 +181,8 @@ export function Inbox({
     e.preventDefault();
     if (!selected || !form) return;
     setBusy(true);
-    const result = await saveContact(selected, form);
+    const { user, creator } = parseKey(selected);
+    const result = await saveContact(user, creator, form);
     setBusy(false);
     setFormNotice(result.ok ? "Fiche enregistrée." : result.error);
     if (result.ok) {
@@ -183,7 +195,8 @@ export function Inbox({
   async function propose(step: Step) {
     if (!selected) return;
     setBusy(true);
-    const result = await proposeNext(selected, step.id, offerPrice, offerMessage);
+    const { user, creator } = parseKey(selected);
+    const result = await proposeNext(user, creator, step.id, offerPrice, offerMessage);
     setBusy(false);
     setOfferNotice(result.ok ? "Offre envoyée." : result.error);
     if (result.ok) {
@@ -196,7 +209,8 @@ export function Inbox({
     if (!selected) return;
     setBusy(true);
     setOfferNotice("L'IA écrit…");
-    const result = await draftOfferMessage(selected, step.id, offerPrice);
+    const { user, creator } = parseKey(selected);
+    const result = await draftOfferMessage(user, creator, step.id, offerPrice);
     setBusy(false);
     if (result.ok) {
       setOfferMessage(result.text);
@@ -252,13 +266,14 @@ export function Inbox({
                   : c.dernier.auteur === "team"
                     ? "Équipe : "
                     : "";
+            const key = keyOf(c.user_id, c.creator_id);
             return (
-              <li key={c.user_id}>
+              <li key={key}>
                 <button
                   type="button"
-                  onClick={() => open(c.user_id)}
+                  onClick={() => open(key)}
                   className={`flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-accent-soft ${
-                    selected === c.user_id ? "bg-accent-soft" : ""
+                    selected === key ? "bg-accent-soft" : ""
                   }`}
                 >
                   <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent font-serif text-lg text-white">
@@ -266,7 +281,10 @@ export function Inbox({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
-                      <span className={`truncate ${c.non_lus ? "font-bold" : "font-semibold"}`}>{c.nom}</span>
+                      <span className="min-w-0 truncate">
+                        <span className={c.non_lus ? "font-bold" : "font-semibold"}>{c.nom}</span>
+                        <span className="text-xs text-muted"> · avec {c.creatrice}</span>
+                      </span>
                       <span className="shrink-0 text-xs text-muted" suppressHydrationWarning>
                         {timeAgo(c.dernier.date, now)}
                       </span>
@@ -321,9 +339,12 @@ export function Inbox({
                   {person.nom.charAt(0).toUpperCase()}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-bold">{person.nom}</span>
+                  <span className="block truncate font-bold">
+                    {person.nom} <span className="text-sm font-normal text-muted">· avec {thread.creatorName}</span>
+                  </span>
                   <span className="block truncate text-xs text-muted">
                     {person.age ? `${person.age} ans · ` : ""}LTV {formatEuros(person.depense_cents)}
+                    {!thread.creatorActive && " · créatrice hors ligne"}
                   </span>
                 </span>
                 <button
@@ -432,7 +453,6 @@ export function Inbox({
                     <input
                       type="checkbox"
                       checked={form.ai_enabled}
-                      disabled={!thread?.creatorName}
                       onChange={(e) => setForm({ ...form, ai_enabled: e.target.checked })}
                       className="mt-1 size-4 accent-[var(--accent)] disabled:opacity-50"
                     />
@@ -440,9 +460,8 @@ export function Inbox({
                       <span className="font-semibold">L&apos;IA peut répondre à cette personne</span>
                       <span className="block text-xs text-muted">{aiLine}</span>
                       <span className="block text-xs text-muted">
-                        {thread?.creatorName
-                          ? `Réglage de ${thread.creatorName}, la créatrice active (comme les emojis).`
-                          : "Choisissez d'abord une créatrice dans l'onglet IA."}
+                        Réglage de {thread.creatorName} pour cette personne (comme les emojis). Ville, fuseau, notes,
+                        script et plafond valent pour toutes les créatrices.
                       </span>
                     </span>
                   </label>
@@ -468,17 +487,15 @@ export function Inbox({
                       ))}
                     </select>
                   </label>
-                  {thread?.creatorName && (
-                    <div className="flex flex-col gap-1 text-sm">
-                      <span className="font-semibold">Emojis de {thread.creatorName} avec cette personne</span>
-                      <EmojiChoice
-                        who={thread.person.nom}
-                        mode={form.emoji_mode}
-                        emojis={form.emojis}
-                        onChange={(emoji_mode, emojis) => setForm({ ...form, emoji_mode, emojis })}
-                      />
-                    </div>
-                  )}
+                  <div className="flex flex-col gap-1 text-sm">
+                    <span className="font-semibold">Emojis de {thread.creatorName} avec cette personne</span>
+                    <EmojiChoice
+                      who={thread.person.nom}
+                      mode={form.emoji_mode}
+                      emojis={form.emojis}
+                      onChange={(emoji_mode, emojis) => setForm({ ...form, emoji_mode, emojis })}
+                    />
+                  </div>
                   <label className="flex flex-col gap-1 text-sm">
                     <span className="flex justify-between font-semibold">
                       Comment se comporter avec elle
@@ -500,7 +517,7 @@ export function Inbox({
                       onChange={(e) => setForm({ ...form, script_id: e.target.value ? Number(e.target.value) : null })}
                       className="rounded-xl border border-line bg-surface px-3 py-2"
                     >
-                      <option value="">Script par défaut{thread.creatorName ? ` de ${thread.creatorName}` : ""}</option>
+                      <option value="">Script par défaut de {thread.creatorName}</option>
                       {thread.scripts.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.name}
@@ -543,7 +560,12 @@ export function Inbox({
               </section>
 
               <section className="flex flex-col gap-3">
-                <h3 className="font-bold">Vente</h3>
+                <h3 className="font-bold">Vente avec {thread.creatorName}</h3>
+                {thread.sale && (
+                  <p role="status" className="rounded-xl bg-accent-soft px-3 py-2 text-sm">
+                    {thread.sale}
+                  </p>
+                )}
                 {pending && (
                   <div className="rounded-xl border border-line p-3 text-sm">
                     <p>

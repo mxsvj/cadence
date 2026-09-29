@@ -7,7 +7,7 @@ import { MESSAGE_COLUMNS, loadMessages, toTurn, type Message } from "@/lib/memor
 import { describeStep, parseEuros, type Step } from "@/lib/offers";
 import { getPersona } from "@/lib/persona";
 import { personSection, personaSection } from "@/lib/prompts";
-import { ageFrom, loadContact, loadProfile, loadSettings } from "@/lib/settings";
+import { ageFrom, loadContact, loadCreator, loadProfile } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import { timeZones } from "@/lib/team";
 
@@ -29,11 +29,11 @@ function failure(err: unknown, fallback: string): { ok: false; error: string } {
   return { ok: false, error: message && !message.startsWith("Réservé") ? message : fallback };
 }
 
-/** Répondre au nom de l'équipe : le message sera marqué « Équipe ». */
-export async function sendTeamMessage(userId: string, text: string): Promise<Result<{ message: Message }>> {
+/** Répondre au nom de l'équipe, dans cette conversation : le message sera marqué « Équipe ». */
+export async function sendTeamMessage(userId: string, creatorId: number, text: string): Promise<Result<{ message: Message }>> {
   try {
     const supabase = await adminClient();
-    const { data: id, error } = await supabase.rpc("admin_envoyer", { p_user: userId, p_texte: text });
+    const { data: id, error } = await supabase.rpc("admin_envoyer", { p_user: userId, p_creator: creatorId, p_texte: text });
     if (error) throw error;
     const { data, error: readError } = await supabase.from("messages").select(MESSAGE_COLUMNS).eq("id", id).single();
     if (readError) throw readError;
@@ -43,10 +43,10 @@ export async function sendTeamMessage(userId: string, text: string): Promise<Res
   }
 }
 
-export async function markRead(userId: string): Promise<void> {
+export async function markRead(userId: string, creatorId: number): Promise<void> {
   try {
     const supabase = await adminClient();
-    await supabase.rpc("admin_marquer_lu", { p_user: userId });
+    await supabase.rpc("admin_marquer_lu", { p_user: userId, p_creator: creatorId });
   } catch (err) {
     console.error("Lecture non marquée :", err);
   }
@@ -63,8 +63,12 @@ export type ContactForm = {
   spending_cap: string; // en euros, vide = plafond général
 };
 
-/** La fiche contact : ce qui aide l'IA à se comporter avec cette personne. */
-export async function saveContact(userId: string, form: ContactForm): Promise<Result> {
+/**
+ * La fiche contact : ce qui aide l'IA à se comporter avec cette personne
+ * (commun à toutes les créatrices), et ce que la créatrice de cette
+ * conversation fait avec elle (IA autorisée, emojis).
+ */
+export async function saveContact(userId: string, creatorId: number, form: ContactForm): Promise<Result> {
   try {
     const supabase = await adminClient();
     if (form.notes.length > 5000) return { ok: false, error: "Les notes dépassent 5 000 caractères." };
@@ -85,12 +89,11 @@ export async function saveContact(userId: string, form: ContactForm): Promise<Re
       { onConflict: "user_id" },
     );
     if (error) throw error;
-    // IA autorisée et emojis : ceux de la créatrice active avec cette personne.
-    const { data: settings } = await supabase.from("ai_settings").select("creator_id").eq("id", 1).maybeSingle();
-    if (settings?.creator_id) {
+    // IA autorisée et emojis : ceux de la créatrice de cette conversation.
+    {
       const { error: creatorError } = await supabase.from("creator_contacts").upsert(
         {
-          creator_id: settings.creator_id,
+          creator_id: creatorId,
           user_id: userId,
           ai_enabled: form.ai_enabled,
           emoji_mode: isEmojiMode(form.emoji_mode) ? form.emoji_mode : "libre",
@@ -110,6 +113,7 @@ export async function saveContact(userId: string, form: ContactForm): Promise<Re
 /** Proposer l'étape suivante, au prix choisi (ramené dans la fourchette par la base). */
 export async function proposeNext(
   userId: string,
+  creatorId: number,
   stepId: number,
   price: string,
   message: string,
@@ -120,6 +124,7 @@ export async function proposeNext(
     if (price.trim() && cents === null) return { ok: false, error: "Prix illisible : indiquez un montant en euros." };
     const { error } = await supabase.rpc("admin_proposer", {
       p_user: userId,
+      p_creator: creatorId,
       p_step: stepId,
       p_prix_cents: cents,
       p_message: message,
@@ -143,22 +148,28 @@ export async function withdrawOffer(offerId: number): Promise<Result> {
 }
 
 /** Faire écrire par l'IA le message qui accompagne une offre ; l'équipe le relit avant l'envoi. */
-export async function draftOfferMessage(userId: string, stepId: number, price: string): Promise<Result<{ text: string }>> {
+export async function draftOfferMessage(
+  userId: string,
+  creatorId: number,
+  stepId: number,
+  price: string,
+): Promise<Result<{ text: string }>> {
   try {
     const supabase = await adminClient();
-    const [s, { data: step }, profile, recent] = await Promise.all([
-      loadSettings(supabase),
+    const [creator, { data: step }, profile, recent, c] = await Promise.all([
+      loadCreator(supabase, creatorId),
       supabase.from("script_steps").select("*").eq("id", stepId).single(),
       loadProfile(supabase, userId),
-      loadMessages(supabase, userId, 12),
+      loadMessages(supabase, userId, creatorId, 12),
+      // La fiche de la personne, avec les réglages de cette créatrice.
+      loadContact(supabase, userId, creatorId),
     ]);
-    // La fiche de la personne, avec les réglages de la créatrice active.
-    const c = await loadContact(supabase, userId, s.creator_id);
+    if (!creator) return { ok: false, error: "Cette créatrice n'existe plus." };
     const st = step as Step;
     const now = new Date();
     const system = [
       getPersona(),
-      personaSection(s.creator?.persona ?? {}, { city: c.city }),
+      personaSection(creator.persona, { city: c.city }),
       personSection(
         {
           name: profile?.display_name,

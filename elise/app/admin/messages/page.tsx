@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Messages · Élise" };
 export default async function MessagesPage({ searchParams }: PageProps<"/admin/messages">) {
   const gate = await adminGate();
   if ("node" in gate) return gate.node;
-  const { u } = await searchParams;
+  const { u, c } = await searchParams;
 
   let inbox: Awaited<ReturnType<typeof loadInbox>> | null = null;
   try {
@@ -26,5 +26,7 @@ export default async function MessagesPage({ searchParams }: PageProps<"/admin/m
       </Notice>
     );
   }
-  return <Inbox initial={inbox} initialUser={typeof u === "string" && /^[0-9a-f-]{36}$/i.test(u) ? u : null} />;
+  // La conversation ouverte : ?u=<personne>&c=<créatrice>.
+  const valid = typeof u === "string" && /^[0-9a-f-]{36}$/i.test(u) && typeof c === "string" && /^\d+$/.test(c);
+  return <Inbox initial={inbox} initialConversation={valid ? `${u}:${c}` : null} />;
 }
