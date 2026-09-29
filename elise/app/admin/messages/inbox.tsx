@@ -225,7 +225,7 @@ export function Inbox({
   return (
     <div
       className="mx-auto grid w-full max-w-6xl grid-cols-1 lg:grid-cols-[20rem_1fr]"
-      style={{ height: "calc(100dvh - 3.5rem - env(safe-area-inset-top, 0px))" }}
+      style={{ height: "calc(100dvh - 4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))" }}
     >
       {/* La liste des conversations */}
       <aside className={`min-h-0 flex-col border-r border-line ${selected ? "hidden lg:flex" : "flex"}`}>

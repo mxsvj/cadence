@@ -46,14 +46,6 @@ export function AiSettingsForm({
 }) {
   const [mode, setMode] = useState<AiMode>(initial.mode);
   const [persona, setPersona] = useState<PersonaProfile>(initial.persona ?? {});
-  const [temperature, setTemperature] = useState(initial.temperature);
-  const [maxTokens, setMaxTokens] = useState(initial.max_tokens);
-  const [contextMessages, setContextMessages] = useState(initial.context_messages);
-  const [firstMessage, setFirstMessage] = useState(initial.first_message);
-  const [extra, setExtra] = useState(initial.extra_instructions);
-  const [cap, setCap] = useState((initial.spending_cap_cents / 100).toFixed(2).replace(".", ","));
-  const [minMessages, setMinMessages] = useState(initial.sales_min_messages);
-  const [gapMessages, setGapMessages] = useState(initial.sales_gap_messages);
   const [people, setPeople] = useState(initialPeople);
   const [search, setSearch] = useState("");
   const [emojiFor, setEmojiFor] = useState(initialPeople[0]?.user_id ?? "");
@@ -69,18 +61,7 @@ export function AiSettingsForm({
     e.preventDefault();
     setSaving(true);
     setNotice(null);
-    const result = await saveSettings({
-      mode,
-      temperature,
-      max_tokens: maxTokens,
-      context_messages: contextMessages,
-      first_message: firstMessage,
-      extra_instructions: extra,
-      spending_cap: cap,
-      sales_min_messages: minMessages,
-      sales_gap_messages: gapMessages,
-      persona,
-    });
+    const result = await saveSettings({ mode, persona });
     setSaving(false);
     setNotice(result.ok ? "Réglages enregistrés. Ils valent dès le prochain message." : result.error);
   }
@@ -113,7 +94,10 @@ export function AiSettingsForm({
     <form onSubmit={submit} className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 pb-28 sm:px-6">
       <header>
         <h1 className="font-serif text-3xl">IA</h1>
-        <p className="text-sm text-muted">Qui répond, qui est le personnage, et comment il se comporte.</p>
+        <p className="text-sm text-muted">
+          Qui répond, et qui est le personnage. Les réglages fins et les garde-fous de la vente sont dans
+          Paramètres.
+        </p>
       </header>
 
       {/* Le mode */}
@@ -398,61 +382,8 @@ export function AiSettingsForm({
         </datalist>
       </section>
 
-      {/* Les paramètres */}
-      <section className={card} aria-labelledby="titre-parametres">
-        <h2 id="titre-parametres" className="font-bold">
-          Paramètres
-        </h2>
-        <Field label={`Créativité : ${temperature.toFixed(2).replace(".", ",")}`} hint="Plus bas : plus prévisible. Plus haut : plus varié.">
-          <input
-            type="range"
-            min={0}
-            max={1.5}
-            step={0.05}
-            value={temperature}
-            onChange={(e) => setTemperature(Number(e.target.value))}
-            className="accent-[var(--accent)]"
-          />
-        </Field>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Longueur maximale d'une réponse" hint="En jetons (environ ¾ de mot chacun), de 100 à 4 000.">
-            <input type="number" min={100} max={4000} value={maxTokens} onChange={(e) => setMaxTokens(Number(e.target.value))} className={input} />
-          </Field>
-          <Field label="Messages relus à chaque réponse" hint="De 6 à 60. Au-delà du double, les plus anciens sont résumés.">
-            <input type="number" min={6} max={60} value={contextMessages} onChange={(e) => setContextMessages(Number(e.target.value))} className={input} />
-          </Field>
-        </div>
-        <Field label="Premier message" hint="Vide : celui de elise-persona.md. {nom} devient le nom du personnage.">
-          <textarea value={firstMessage} rows={4} maxLength={2000} onChange={(e) => setFirstMessage(e.target.value)} className={input} />
-        </Field>
-        <Field label={`Consignes supplémentaires (${extra.length} / 5000)`} hint="Ajoutées à la fin de la consigne de l'IA.">
-          <textarea value={extra} rows={4} maxLength={5000} onChange={(e) => setExtra(e.target.value)} className={input} />
-        </Field>
-      </section>
-
-      {/* Les garde-fous */}
-      <section className={card} aria-labelledby="titre-garde-fous">
-        <h2 id="titre-garde-fous" className="font-bold">
-          Garde-fous de la vente
-        </h2>
-        <p className="text-sm text-muted">
-          En plus des règles fixes : jamais de vente par la solitude, l&apos;attachement ou la pression, rien si la
-          personne va mal, jamais sous le prix minimum.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Plafond par personne et par mois (€)" hint="Réglable personne par personne dans sa fiche.">
-            <input value={cap} inputMode="decimal" onChange={(e) => setCap(e.target.value)} className={input} />
-          </Field>
-          <Field label="Messages avant la première offre">
-            <input type="number" min={0} value={minMessages} onChange={(e) => setMinMessages(Number(e.target.value))} className={input} />
-          </Field>
-          <Field label="Messages entre deux offres">
-            <input type="number" min={0} value={gapMessages} onChange={(e) => setGapMessages(Number(e.target.value))} className={input} />
-          </Field>
-        </div>
-      </section>
-
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
+      {/* Juste au-dessus de la barre d'onglets. */}
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 border-t border-line bg-background/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-3">
           <button type="submit" disabled={saving} className="rounded-full bg-accent px-5 py-2.5 font-bold text-white disabled:opacity-60">
             {saving ? "Enregistrement…" : "Enregistrer les réglages"}

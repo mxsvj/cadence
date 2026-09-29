@@ -290,7 +290,15 @@ await page.getByText(/^En direct ·/).waitFor();
 await page.screenshot({ path: `${SHOTS}10-tableau-vide.png`, fullPage: true });
 step("administrateur : l'appli s'ouvre sur le tableau de bord, pas sur la conversation");
 
-// 16a. La conversation reste là pour la tester, et le menu ramène au tableau de bord.
+// 16a. Les onglets sont en bas de l'écran, comme dans une appli. La
+// conversation reste là pour la tester (onglet Paramètres), et le menu
+// ramène au tableau de bord.
+const bar = await page.getByRole("navigation", { name: "Espace de l'équipe" }).boundingBox();
+assert.ok(bar.y > 844 - 120, `barre d'onglets en bas (y = ${bar.y})`);
+assert.equal(await page.getByRole("navigation", { name: "Espace de l'équipe" }).getByRole("link").count(), 5);
+await page.getByRole("link", { name: "Paramètres" }).click();
+await page.waitForURL(`${BASE}/admin/parametres`);
+await page.getByRole("heading", { name: "Garde-fous de la vente" }).waitFor();
 await page.getByRole("link", { name: "Tester la conversation" }).click();
 await page.waitForURL(`${BASE}/?vue=conversation`);
 await page.getByLabel("Votre message").waitFor();
@@ -298,7 +306,7 @@ await page.getByLabel("Menu").click();
 await page.getByRole("link", { name: "Tableau de bord" }).click();
 await page.waitForURL(`${BASE}/admin`);
 await page.getByText("Aucun achat pour l'instant.").waitFor();
-step("l'équipe peut tester la conversation, puis revenir au tableau de bord");
+step("onglets en bas (5, dont Paramètres) ; l'équipe teste la conversation, puis revient au tableau de bord");
 
 // 16b. Le lien secret ouvre directement le tableau de bord, sans e-mail ni
 // mot de passe, et la clé ne reste pas dans la barre d'adresse.
@@ -408,8 +416,6 @@ await admin.getByLabel("Détail").fill("une hirondelle sur le poignet");
 await admin.getByRole("button", { name: "Ajouter une catégorie" }).click();
 await admin.getByLabel("Catégorie").fill("Musique");
 await admin.getByLabel("Préférences").fill("jazz, bossa nova");
-await admin.getByLabel("Messages avant la première offre").fill("0");
-await admin.getByLabel("Messages entre deux offres").fill("0");
 await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
 await admin.getByText("Réglages enregistrés.").waitFor();
 s = state();
@@ -417,6 +423,22 @@ assert.equal(s.tables.ai_settings[0].persona.nom, "Chloé");
 assert.equal(s.tables.ai_settings[0].persona.pres_de_la_personne, true);
 await admin.screenshot({ path: `${SHOTS}14-ia.png`, fullPage: true });
 step("onglet IA : profil du personnage enregistré (nom, âge, ville, langue, groupes, centres d'intérêt)");
+
+// 24b. L'onglet Paramètres : les garde-fous de la vente, l'état du site, le compte.
+await admin.getByRole("link", { name: "Paramètres" }).click();
+await admin.waitForURL(`${BASE}/admin/parametres`);
+await admin.getByText("gemini-flash-latest").waitFor();
+await admin.getByText("Activé", { exact: true }).waitFor();
+await admin.getByText("karim@example.com").waitFor();
+await admin.getByLabel("Messages avant la première offre").fill("0");
+await admin.getByLabel("Messages entre deux offres").fill("0");
+await admin.getByRole("button", { name: "Enregistrer les paramètres" }).click();
+await admin.getByText("Paramètres enregistrés.").waitFor();
+s = state();
+assert.deepEqual([s.tables.ai_settings[0].sales_min_messages, s.tables.ai_settings[0].sales_gap_messages], [0, 0]);
+assert.equal(s.tables.ai_settings[0].persona.nom, "Chloé"); // le personnage n'a pas bougé
+await admin.screenshot({ path: `${SHOTS}14b-parametres.png`, fullPage: true });
+step("onglet Paramètres : garde-fous enregistrés, modèle et lien de l'équipe affichés, personnage intact");
 
 // 25. Un script de vente de trois étapes (onglet Contenus).
 const photo = await admin.screenshot({ clip: { x: 0, y: 0, width: 160, height: 100 } });

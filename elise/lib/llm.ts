@@ -46,6 +46,13 @@ const DEFAULTS = {
 
 const TIMEOUT_MS = 45_000;
 
+/** Le fournisseur et le modèle en service, pour l'onglet Paramètres. */
+export function currentModel(): { provider: string; model: string } {
+  const provider = (process.env.LLM_PROVIDER ?? "gemini").trim().toLowerCase();
+  if (provider === "claude") return { provider, model: process.env.CLAUDE_MODEL?.trim() || DEFAULTS.claude };
+  return { provider, model: process.env.GEMINI_MODEL?.trim() || DEFAULTS.gemini };
+}
+
 export async function generate(options: GenerateOptions): Promise<string> {
   const provider = (process.env.LLM_PROVIDER ?? "gemini").trim().toLowerCase();
   const messages = normalize(options.messages);
