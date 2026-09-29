@@ -32,7 +32,11 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `admin_simuler_achat`, `admin_remplir_demo`, `admin_vider_demo`). Le
   « direct » est un rafraîchissement toutes les 4 s. Pas encore de paiement.
 - Personnage, messagerie et vente : `ai_settings` (mode auto/hybride/manuel,
-  persona jsonb), `contacts` (fiche par personne), `scripts`/`script_steps`
+  `creator_id` = la créatrice incarnée), `creators` (persona jsonb, premier
+  message), `creator_contacts` (IA autorisée et emojis de chaque créatrice
+  avec chaque personne ; les colonnes `persona`, `first_message`,
+  `temperature`, `max_tokens` d'`ai_settings` et `ai_enabled`, `emojis` de
+  `contacts` ne servent plus), `contacts` (fiche par personne), `scripts`/`script_steps`
   (étapes ordonnées, prix min/max), `offers` (prix personnalisé,
   contre-offres), `profiles` (18 ans minimum). La clé secrète
   (`SUPABASE_SECRET_KEY`, `lib/supabase/admin.ts`) ne sert qu'au serveur ; les
@@ -61,6 +65,10 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `/api/offres/[id]/contenu` signe chaque fichier pour 5 minutes. En mode
   `ia`, `message_text` est la consigne de l'équipe (reformulée par l'IA) ;
   en mode `fixe`, le texte envoyé mot pour mot.
+- Réponses : créativité fixe `CHAT_TEMPERATURE = 1` (`lib/llm.ts`, valeur
+  recommandée par Google pour ses modèles récents), pas de plafond de
+  longueur (Gemini n'en reçoit pas, Claude 4096 jetons) : la persona dit à
+  l'IA de choisir elle-même la longueur.
 - Vitesse : `vercel.json` place les fonctions à Paris (`cdg1`, une seule
   région autorisée en Hobby), à côté de Supabase ; `app/admin/loading.tsx`
   s'affiche dès qu'on touche un onglet (sans lui, une page dynamique n'est
@@ -70,8 +78,10 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   marge de l'iPhone, réservés par `app/admin/layout.tsx`). Tout élément fixé
   en bas d'une page admin se pose au-dessus
   (`bottom-[calc(4rem+env(safe-area-inset-bottom))]`). L'onglet IA enregistre
-  mode et personnage (`saveSettings`) ; l'onglet Paramètres, les réglages fins
-  et les garde-fous (`saveParameters`).
+  le mode et la créatrice incarnée (`saveSettings`) ; l'onglet Créatrices,
+  chaque créatrice (`saveCreator`, page unique Personnes → Profil → Premier
+  message → Valider) ; l'onglet Paramètres, les réglages fins et les
+  garde-fous (`saveParameters`).
 - Lien secret de l'équipe : `/acces?cle=<ADMIN_ACCESS_KEY>` (`app/acces/route.ts`,
   `lib/team-access.ts`) ouvre la session du premier compte de `admins` par
   `auth.admin.generateLink` + `verifyOtp`, sans e-mail envoyé, puis redirige

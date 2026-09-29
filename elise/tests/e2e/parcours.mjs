@@ -295,7 +295,7 @@ step("administrateur : l'appli s'ouvre sur le tableau de bord, pas sur la conver
 // ramène au tableau de bord.
 const bar = await page.getByRole("navigation", { name: "Espace de l'équipe" }).boundingBox();
 assert.ok(bar.y > 844 - 120, `barre d'onglets en bas (y = ${bar.y})`);
-assert.equal(await page.getByRole("navigation", { name: "Espace de l'équipe" }).getByRole("link").count(), 5);
+assert.equal(await page.getByRole("navigation", { name: "Espace de l'équipe" }).getByRole("link").count(), 6);
 await page.getByRole("link", { name: "Paramètres" }).click();
 await page.waitForURL(`${BASE}/admin/parametres`);
 await page.getByRole("heading", { name: "Garde-fous de la vente" }).waitFor();
@@ -306,7 +306,7 @@ await page.getByLabel("Menu").click();
 await page.getByRole("link", { name: "Tableau de bord" }).click();
 await page.waitForURL(`${BASE}/admin`);
 await page.getByText("Aucun achat pour l'instant.").waitFor();
-step("onglets en bas (5, dont Paramètres) ; l'équipe teste la conversation, puis revient au tableau de bord");
+step("onglets en bas (6, dont Créatrices et Paramètres) ; l'équipe teste la conversation, puis revient au tableau de bord");
 
 // 16b. Le lien secret ouvre directement le tableau de bord, sans e-mail ni
 // mot de passe, et la clé ne reste pas dans la barre d'adresse.
@@ -399,12 +399,18 @@ step("« Effacer la démo » retire les achats fictifs et garde le vrai");
 
 // ═══ Le personnage, la messagerie de l'équipe, la vente ═════════════════
 
-// 24. L'équipe règle le personnage (onglet IA), sur ordinateur.
+// 24. L'équipe crée sa créatrice (onglet Créatrices), sur ordinateur : une
+// seule page, Personnes puis Profil puis Premier message, et « Valider ».
 const adminCtx = await newContext(desktop);
 const admin = await adminCtx.newPage();
 admin.on("pageerror", (e) => consoleErrors.push(String(e)));
 await logIn(admin, "karim@example.com", "/admin");
-await admin.goto(`${BASE}/admin/ia`);
+await admin.getByRole("link", { name: "Créatrices" }).click();
+await admin.waitForURL(`${BASE}/admin/creatrices`);
+await admin.getByText("Aucune créatrice pour l'instant").waitFor();
+await admin.getByRole("link", { name: "Créer une créatrice" }).click();
+await admin.waitForURL(`${BASE}/admin/creatrices/nouvelle`);
+await admin.getByLabel("L'IA peut parler à Karim").waitFor();
 await admin.getByLabel("Nom", { exact: true }).fill("Chloé");
 await admin.getByLabel("Âge").fill("29");
 await admin.getByLabel("Ville", { exact: true }).fill("Annecy");
@@ -416,13 +422,31 @@ await admin.getByLabel("Détail").fill("une hirondelle sur le poignet");
 await admin.getByRole("button", { name: "Ajouter une catégorie" }).click();
 await admin.getByLabel("Catégorie").fill("Musique");
 await admin.getByLabel("Préférences").fill("jazz, bossa nova");
-await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
-await admin.getByText("Réglages enregistrés.").waitFor();
+await admin
+  .getByLabel("Le message d'accueil")
+  .fill("Bonjour, je suis {nom}. Je suis une intelligence artificielle : ici, on discute librement. Comment aimeriez-vous que je vous appelle ?");
+await admin.screenshot({ path: `${SHOTS}14-creatrice.png`, fullPage: true });
+await admin.getByRole("button", { name: "Valider" }).click();
+await admin.waitForURL(`${BASE}/admin/creatrices`);
+await admin.getByText("Incarnée par l'IA").waitFor();
 s = state();
-assert.equal(s.tables.ai_settings[0].persona.nom, "Chloé");
-assert.equal(s.tables.ai_settings[0].persona.pres_de_la_personne, true);
+assert.equal(s.tables.creators.length, 1);
+assert.equal(s.tables.creators[0].persona.nom, "Chloé");
+assert.equal(s.tables.creators[0].persona.pres_de_la_personne, true);
+assert.match(s.tables.creators[0].first_message, /on discute librement/);
+assert.equal(Number(s.tables.ai_settings[0].creator_id), Number(s.tables.creators[0].id));
+step("onglet Créatrices : Chloé créée sur une seule page puis validée ; l'IA l'incarne aussitôt");
+
+// 24a. L'onglet IA : seulement « Qui répond » et la créatrice incarnée.
+await admin.getByRole("link", { name: "IA", exact: true }).click();
+await admin.waitForURL(`${BASE}/admin/ia`);
+const chloe = admin.getByRole("radio", { name: /Chloé/ });
+await chloe.waitFor();
+assert.ok(await chloe.isChecked());
+assert.equal(await admin.getByText("Profil du personnage").count(), 0);
+assert.equal(await admin.getByLabel("Nom", { exact: true }).count(), 0);
 await admin.screenshot({ path: `${SHOTS}14-ia.png`, fullPage: true });
-step("onglet IA : profil du personnage enregistré (nom, âge, ville, langue, groupes, centres d'intérêt)");
+step("onglet IA : qui répond, et Chloé cochée comme créatrice incarnée ; plus de profil ici");
 
 // 24b. L'onglet Paramètres : les garde-fous de la vente, l'état du site, le compte.
 await admin.getByRole("link", { name: "Paramètres" }).click();
@@ -430,15 +454,17 @@ await admin.waitForURL(`${BASE}/admin/parametres`);
 await admin.getByText("gemini-flash-latest").waitFor();
 await admin.getByText("Activé", { exact: true }).waitFor();
 await admin.getByText("karim@example.com").waitFor();
+assert.equal(await admin.getByText(/^Créativité/).count(), 0);
+assert.equal(await admin.getByLabel("Longueur maximale d'une réponse").count(), 0);
 await admin.getByLabel("Messages avant la première offre").fill("0");
 await admin.getByLabel("Messages entre deux offres").fill("0");
 await admin.getByRole("button", { name: "Enregistrer les paramètres" }).click();
 await admin.getByText("Paramètres enregistrés.").waitFor();
 s = state();
 assert.deepEqual([s.tables.ai_settings[0].sales_min_messages, s.tables.ai_settings[0].sales_gap_messages], [0, 0]);
-assert.equal(s.tables.ai_settings[0].persona.nom, "Chloé"); // le personnage n'a pas bougé
+assert.equal(s.tables.creators[0].persona.nom, "Chloé"); // la créatrice n'a pas bougé
 await admin.screenshot({ path: `${SHOTS}14b-parametres.png`, fullPage: true });
-step("onglet Paramètres : garde-fous enregistrés, modèle et lien de l'équipe affichés, personnage intact");
+step("onglet Paramètres : sans créativité ni longueur à régler ; garde-fous enregistrés, créatrice intacte");
 
 // 25. Un script de vente de trois étapes (onglet Contenus).
 // Deux images d'essai en couleur, pour voir la galerie après l'achat.
@@ -519,21 +545,26 @@ sam.on("pageerror", (e) => consoleErrors.push(String(e)));
 await signUp(sam, "sam@example.com", "Sam");
 await sam.waitForURL(`${BASE}/`);
 await sam.getByText("Bonjour, je suis Chloé.").waitFor();
+await sam.getByText("ici, on discute librement", { exact: false }).waitFor(); // son premier message à elle
 await sam.getByText("Chloé · IA").waitFor();
 const samInput = sam.getByLabel("Votre message");
 await samInput.fill("Salut Chloé, moi c'est Sam.");
 await sam.getByLabel("Envoyer").click();
 await sam.getByText(/réponse de test/).waitFor();
 assert.equal(await sam.getByText("Chloé · IA").count(), 2);
-step("nouvelle personne : premier message et réponses signés « Chloé · IA »");
+step("nouvelle personne : le premier message de Chloé, et des réponses signées « Chloé · IA »");
 
-// 27. Mode hybride : Sam n'est pas cochée, l'IA ne lui répond plus.
+// 27. Mode hybride : Sam est décochée dans la page de Chloé, l'IA ne lui répond plus.
 await admin.goto(`${BASE}/admin/ia`);
 await admin.getByText("Hybride", { exact: true }).click();
 await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
 await admin.getByText("Réglages enregistrés.").waitFor();
+await admin.goto(`${BASE}/admin/creatrices`);
+await admin.getByRole("link", { name: "Modifier" }).click();
 await admin.getByLabel("L'IA peut parler à Sam").uncheck();
-await until(() => state().tables.contacts.some((c) => !c.ai_enabled), "Sam décochée");
+await admin.getByRole("button", { name: "Valider" }).click();
+await admin.waitForURL(`${BASE}/admin/creatrices`);
+await until(() => (state().tables.creator_contacts ?? []).some((c) => !c.ai_enabled), "Sam décochée pour Chloé");
 await samInput.fill("Tu es là ?");
 await sam.getByLabel("Envoyer").click();
 await sam.getByText("Message envoyé. La réponse arrivera ici dès que possible.").waitFor();
@@ -565,8 +596,10 @@ await admin.getByText("Fiche enregistrée.").waitFor();
 await admin.screenshot({ path: `${SHOTS}17-messages.png` });
 s = state();
 const samContact = s.tables.contacts.find((c) => c.city === "Lyon");
-assert.deepEqual([samContact.ai_enabled, samContact.emojis, samContact.notes], [true, "🌸", "Aime les voyages."]);
-step("fiche contact enregistrée : IA autorisée, ville, emojis, notes");
+assert.equal(samContact.notes, "Aime les voyages.");
+const samWithChloe = s.tables.creator_contacts.find((c) => c.user_id === samContact.user_id);
+assert.deepEqual([samWithChloe.ai_enabled, samWithChloe.emojis], [true, "🌸"]);
+step("fiche contact enregistrée : ville, notes ; IA autorisée et emojis pour Chloé, la créatrice active");
 
 // 30. L'IA propose la première étape (gratuite) : offerte et visible tout de suite.
 await samInput.fill("PROPOSE-MOI quelque chose");

@@ -46,6 +46,13 @@ const DEFAULTS = {
 
 const TIMEOUT_MS = 45_000;
 
+/**
+ * La créativité des réponses : la plus haute qui reste fiable. C'est aussi
+ * la valeur que Google recommande pour ses modèles récents (au-delà, l'IA
+ * devient incohérente ; en dessous, plus plate et répétitive).
+ */
+export const CHAT_TEMPERATURE = 1;
+
 /** Le fournisseur et le modèle en service, pour l'onglet Paramètres. */
 export function currentModel(): { provider: string; model: string } {
   const provider = (process.env.LLM_PROVIDER ?? "gemini").trim().toLowerCase();
@@ -189,7 +196,8 @@ async function callClaude(o: Ready): Promise<string> {
     { "x-api-key": key, "anthropic-version": "2023-06-01" },
     {
       model,
-      max_tokens: o.maxTokens ?? 1024,
+      // Claude exige un plafond : large, pour que l'IA choisisse elle-même la longueur.
+      max_tokens: o.maxTokens ?? 4096,
       system: o.json ? `${o.system}\n\nRéponds uniquement avec du JSON valide, sans aucun texte autour.` : o.system,
       messages: o.messages,
       ...(o.temperature !== undefined && { temperature: o.temperature }),

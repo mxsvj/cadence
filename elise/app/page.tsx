@@ -41,7 +41,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         loadMessages(supabase, userId, DISPLAY_MESSAGES),
         supabase.from("offers").select(OFFER_COLUMNS).eq("user_id", userId).order("id"),
       ]);
-      loaded = { messages, offers: (offers.data ?? []) as Offer[], name: displayName(settings.persona) };
+      loaded = { messages, offers: (offers.data ?? []) as Offer[], name: displayName(settings.creator?.persona ?? {}) };
     }
   } catch (err) {
     console.error(err);

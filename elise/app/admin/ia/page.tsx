@@ -1,39 +1,39 @@
 import type { Metadata } from "next";
 import { Notice } from "@/app/notice";
-import { languageOptions } from "@/lib/persona-profile";
-import { DEFAULT_SETTINGS, type AiSettings } from "@/lib/settings";
+import { displayName, type PersonaProfile } from "@/lib/persona-profile";
+import type { AiMode } from "@/lib/settings";
 import { adminGate } from "../gate";
-import { AiSettingsForm, type PersonRow } from "./settings-form";
+import { AiSettingsForm } from "./settings-form";
 
 export const metadata: Metadata = { title: "IA · Élise" };
 
-// L'onglet IA : le mode, le personnage, les paramètres, et les réglages par personne.
+// L'onglet IA : qui répond, et quelle créatrice l'IA incarne.
 export default async function AiPage() {
   const gate = await adminGate();
   if ("node" in gate) return gate.node;
   const { supabase } = gate;
 
-  const [settings, profiles, contacts] = await Promise.all([
-    supabase.from("ai_settings").select("*").eq("id", 1).maybeSingle(),
-    supabase.from("profiles").select("user_id, display_name").order("display_name"),
-    supabase.from("contacts").select("user_id, ai_enabled, emojis"),
+  const [settings, creators] = await Promise.all([
+    supabase.from("ai_settings").select("mode, creator_id").eq("id", 1).maybeSingle(),
+    supabase.from("creators").select("id, persona").order("id"),
   ]);
-  if (settings.error || profiles.error || contacts.error) {
+  if (settings.error || creators.error) {
     return (
       <Notice title="Les réglages n'ont pas pu être chargés">
         <p>La base de données ne répond pas, ou le script supabase/schema.sql doit être relancé.</p>
       </Notice>
     );
   }
-  const byUser = new Map((contacts.data ?? []).map((c) => [c.user_id as string, c]));
-  const people: PersonRow[] = (profiles.data ?? []).map((p) => ({
-    user_id: p.user_id as string,
-    name: p.display_name as string,
-    ai_enabled: (byUser.get(p.user_id)?.ai_enabled as boolean | undefined) ?? true,
-    emojis: (byUser.get(p.user_id)?.emojis as string | undefined) ?? "",
-  }));
-  const current: AiSettings = { ...DEFAULT_SETTINGS, ...(settings.data ?? {}) };
-  current.temperature = Number(current.temperature);
-
-  return <AiSettingsForm initial={current} people={people} languages={languageOptions()} />;
+  const list = (creators.data ?? []).map((c) => {
+    const p = (c.persona ?? {}) as PersonaProfile;
+    return { id: Number(c.id), name: displayName(p), details: [p.age ? `${p.age} ans` : "", p.ville ?? ""].filter(Boolean).join(" · ") };
+  });
+  const creatorId = settings.data?.creator_id === null || settings.data?.creator_id === undefined ? null : Number(settings.data.creator_id);
+  return (
+    <AiSettingsForm
+      mode={(settings.data?.mode ?? "auto") as AiMode}
+      creatorId={creatorId}
+      creators={list}
+    />
+  );
 }

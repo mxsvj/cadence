@@ -48,6 +48,18 @@ const TABS = [
     ),
   },
   {
+    href: "/admin/creatrices",
+    label: "Créatrices",
+    name: "Créatrices",
+    icon: (
+      <svg viewBox="0 0 24 24" className={icon} {...stroke}>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+        <path d="m18.5 2.5.6 1.3 1.4.2-1 1 .2 1.4-1.2-.7-1.2.7.2-1.4-1-1 1.4-.2Z" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/contenus",
     label: "Contenus",
     name: "Contenus",
@@ -79,7 +91,7 @@ export function AdminNav() {
       aria-label="Espace de l'équipe"
       className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
-      <ul className="mx-auto grid h-16 max-w-xl grid-cols-5">
+      <ul className="mx-auto grid h-16 max-w-2xl grid-cols-6">
         {TABS.map((t) => {
           const active = t.href === "/admin" ? path === "/admin" : path.startsWith(t.href);
           return (
@@ -93,7 +105,7 @@ export function AdminNav() {
                 }`}
               >
                 <span aria-hidden>{t.icon}</span>
-                <span aria-hidden className="max-w-full truncate px-1">
+                <span aria-hidden className="max-w-full truncate px-0.5">
                   {t.label}
                 </span>
               </Link>

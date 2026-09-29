@@ -423,12 +423,18 @@ export function Inbox({
                     <input
                       type="checkbox"
                       checked={form.ai_enabled}
+                      disabled={!thread?.creatorName}
                       onChange={(e) => setForm({ ...form, ai_enabled: e.target.checked })}
-                      className="mt-1 size-4 accent-[var(--accent)]"
+                      className="mt-1 size-4 accent-[var(--accent)] disabled:opacity-50"
                     />
                     <span>
                       <span className="font-semibold">L&apos;IA peut répondre à cette personne</span>
                       <span className="block text-xs text-muted">{aiLine}</span>
+                      <span className="block text-xs text-muted">
+                        {thread?.creatorName
+                          ? `Réglage de ${thread.creatorName}, la créatrice active (comme les emojis).`
+                          : "Choisissez d'abord une créatrice dans l'onglet IA."}
+                      </span>
                     </span>
                   </label>
                   <label className="flex flex-col gap-1 text-sm">
@@ -453,10 +459,12 @@ export function Inbox({
                       ))}
                     </select>
                   </label>
-                  <div className="flex flex-col gap-1 text-sm">
-                    <span className="font-semibold">Emojis avec cette personne</span>
-                    <EmojiPicker value={form.emojis} onChange={(emojis) => setForm({ ...form, emojis })} />
-                  </div>
+                  {thread?.creatorName && (
+                    <div className="flex flex-col gap-1 text-sm">
+                      <span className="font-semibold">Emojis avec cette personne</span>
+                      <EmojiPicker value={form.emojis} onChange={(emojis) => setForm({ ...form, emojis })} />
+                    </div>
+                  )}
                   <label className="flex flex-col gap-1 text-sm">
                     <span className="flex justify-between font-semibold">
                       Comment se comporter avec elle
