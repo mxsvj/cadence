@@ -53,6 +53,11 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   sur Vercel demande un redéploiement.
 - Un administrateur qui ouvre `/` est renvoyé vers `/admin` (`app/page.tsx`) ;
   `/?vue=conversation` garde la conversation accessible pour la tester.
+- Vitesse : `vercel.json` place les fonctions à Paris (`cdg1`, une seule
+  région autorisée en Hobby), à côté de Supabase ; `app/admin/loading.tsx`
+  s'affiche dès qu'on touche un onglet (sans lui, une page dynamique n'est
+  pas préchargée et rien ne bouge avant la réponse du serveur) ;
+  `adminGate` passe par `cache()` pour ne vérifier qu'une fois par requête.
 - Espace équipe : barre d'onglets fixée en bas (`app/admin/nav.tsx`, 4 rem +
   marge de l'iPhone, réservés par `app/admin/layout.tsx`). Tout élément fixé
   en bas d'une page admin se pose au-dessus

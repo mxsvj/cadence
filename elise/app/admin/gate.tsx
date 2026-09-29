@@ -1,14 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
-import type { ReactNode } from "react";
+import { cache, type ReactNode } from "react";
 import { Notice, SetupNotice, missingSettings } from "@/app/notice";
 import { adminStatus } from "@/lib/admin";
 import { createClient, currentUserId } from "@/lib/supabase/server";
 
 // La porte de l'espace de l'équipe : pour qui n'est pas administrateur, les
-// pages n'existent pas. Chaque page la passe, en plus de la mise en page.
-export async function adminGate(): Promise<{ supabase: SupabaseClient; userId: string } | { node: ReactNode }> {
+// pages n'existent pas. Chaque page la passe, en plus de la mise en page ;
+// cache() fait qu'elle ne vérifie qu'une fois par requête.
+export const adminGate = cache(async function adminGate(): Promise<
+  { supabase: SupabaseClient; userId: string } | { node: ReactNode }
+> {
   await connection();
   if (missingSettings().length) return { node: <SetupNotice /> };
   const supabase = await createClient();
@@ -30,4 +33,4 @@ export async function adminGate(): Promise<{ supabase: SupabaseClient; userId: s
   }
   if (status !== "admin") notFound();
   return { supabase, userId };
-}
+});

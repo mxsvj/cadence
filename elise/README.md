@@ -142,6 +142,11 @@ cliquer sur **Set up billing**.
 4. **Deploy**. Toute modification ultérieure d'une variable demande un
    redéploiement (**Deployments → ⋯ → Redeploy**).
 
+   `vercel.json` fait tourner le site à Paris (`cdg1`), près de la base
+   Supabase : sinon Vercel le place à Washington et chaque page traverse
+   l'Atlantique plusieurs fois. L'offre Hobby permet de choisir une région,
+   sans frais.
+
 ### 4. Relier Supabase au site
 
 Dans Supabase, **Authentication → URL Configuration** : mettre l'adresse du
