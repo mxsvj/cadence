@@ -3,11 +3,73 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// Les onglets de l'équipe, en bas de l'écran comme dans une appli. La barre
+// fait 4 rem (plus la marge de l'iPhone) : la mise en page et la messagerie
+// s'en servent pour ne rien cacher dessous.
+
+const icon = "size-6";
+const stroke = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.8,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
 const TABS = [
-  { href: "/admin", label: "Tableau de bord" },
-  { href: "/admin/messages", label: "Messages" },
-  { href: "/admin/ia", label: "IA" },
-  { href: "/admin/contenus", label: "Contenus" },
+  {
+    href: "/admin",
+    label: "Tableau",
+    name: "Tableau de bord",
+    icon: (
+      <svg viewBox="0 0 24 24" className={icon} {...stroke}>
+        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/messages",
+    label: "Messages",
+    name: "Messages",
+    icon: (
+      <svg viewBox="0 0 24 24" className={icon} {...stroke}>
+        <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/ia",
+    label: "IA",
+    name: "IA",
+    icon: (
+      <svg viewBox="0 0 24 24" className={icon} {...stroke}>
+        <path d="M12 3v3M12 18v3M3 12h3M18 12h3M12 8l1.4 2.6L16 12l-2.6 1.4L12 16l-1.4-2.6L8 12l2.6-1.4Z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/contenus",
+    label: "Contenus",
+    name: "Contenus",
+    icon: (
+      <svg viewBox="0 0 24 24" className={icon} {...stroke}>
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="m3 16 5-5 4 4 3-3 6 6" />
+        <circle cx="15.5" cy="8.5" r="1.5" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/parametres",
+    label: "Paramètres",
+    name: "Paramètres",
+    icon: (
+      <svg viewBox="0 0 24 24" className={icon} {...stroke}>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+      </svg>
+    ),
+  },
 ];
 
 export function AdminNav() {
@@ -15,33 +77,30 @@ export function AdminNav() {
   return (
     <nav
       aria-label="Espace de l'équipe"
-      className="sticky top-0 z-20 border-b border-line bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
-      {/* Hauteur fixe (3,5 rem) : la messagerie s'en sert pour occuper le reste de l'écran. */}
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-1 overflow-x-auto px-3 sm:px-6">
+      <ul className="mx-auto grid h-16 max-w-xl grid-cols-5">
         {TABS.map((t) => {
           const active = t.href === "/admin" ? path === "/admin" : path.startsWith(t.href);
           return (
-            <Link
-              key={t.href}
-              href={t.href}
-              aria-current={active ? "page" : undefined}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${
-                active ? "bg-accent text-white" : "text-muted hover:bg-accent-soft hover:text-foreground"
-              }`}
-            >
-              {t.label}
-            </Link>
+            <li key={t.href} className="min-w-0">
+              <Link
+                href={t.href}
+                aria-label={t.name}
+                aria-current={active ? "page" : undefined}
+                className={`flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${
+                  active ? "text-accent" : "text-muted hover:text-foreground"
+                }`}
+              >
+                <span aria-hidden>{t.icon}</span>
+                <span aria-hidden className="max-w-full truncate px-1">
+                  {t.label}
+                </span>
+              </Link>
+            </li>
           );
         })}
-        {/* Ce que voit une personne qui parle à l'IA, pour tester. */}
-        <Link
-          href="/?vue=conversation"
-          className="ml-auto shrink-0 px-3 py-2 text-sm text-muted underline underline-offset-4"
-        >
-          Tester la conversation
-        </Link>
-      </div>
+      </ul>
     </nav>
   );
 }

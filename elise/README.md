@@ -154,7 +154,7 @@ confirmation par e-mail est un jour réactivée.
 Page `/admin`, réservée aux administrateurs ; pour tous les autres, la page
 n'existe pas. Un administrateur qui ouvre le site (ou l'appli installée sur
 son téléphone) arrive directement dessus, jamais sur la conversation d'une
-personne. « Tester la conversation », en haut à droite, ouvre
+personne. « Tester la conversation », dans l'onglet Paramètres, ouvre
 `/?vue=conversation` pour voir ce que voient les personnes ; le menu `⋯` y
 ramène au tableau de bord.
 
@@ -177,6 +177,9 @@ Les calculs sont faits dans la base (fonction `admin_dashboard`), qui vérifie
 elle-même que la personne connectée est administratrice.
 
 ## L'espace de l'équipe
+
+Cinq onglets, en bas de l'écran comme dans une appli : Tableau, Messages, IA,
+Contenus, Paramètres.
 
 ### Le lien secret
 
@@ -221,14 +224,20 @@ la personne :
   langue maternelle (toutes les langues), taille, poids, pointure, bonnet,
   cheveux, yeux, origine, silhouette, groupes personnalisés (tatouages,
   piercings…), centres d'intérêt par catégories libres, et un texte libre.
-- **Paramètres** : créativité, longueur des réponses, nombre de messages relus,
-  premier message, consignes supplémentaires.
-- **Garde-fous de la vente** : plafond mensuel par personne, nombre de
-  messages avant la première offre et entre deux offres.
-
 L'IA reste une IA : elle le dit si on le lui demande, ne propose jamais de
 rencontre (même « dans la même région »), n'utilise jamais les détails
 physiques dans un registre sexuel.
+
+### Paramètres
+
+- **Réglages de l'IA** : créativité, longueur des réponses, nombre de messages
+  relus, premier message, consignes supplémentaires.
+- **Garde-fous de la vente** : plafond mensuel par personne, nombre de
+  messages avant la première offre et entre deux offres.
+- **Le site** : le modèle d'IA en service, et si le lien de l'équipe est
+  activé.
+- **Compte** : le compte connecté, « Tester la conversation » (ce que voient
+  les personnes) et « Se déconnecter ».
 
 ### Contenus
 
