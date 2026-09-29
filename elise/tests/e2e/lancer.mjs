@@ -24,6 +24,7 @@ const env = {
   E2E_SHOTS: path.join(work, "captures"),
   E2E_BASE: `http://localhost:${port}`,
   E2E_CONTROL_PORT: String(Number(port) + 99),
+  ADMIN_ACCESS_KEY: "cle-de-test-du-lien-equipe-0123456789",
 };
 
 const build = spawnSync("npx", ["next", "build"], { cwd: root, env, stdio: "inherit" });

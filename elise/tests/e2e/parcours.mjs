@@ -262,6 +262,18 @@ await page.keyboard.press("Escape");
 assert.equal(await page.evaluate(async () => (await fetch("/api/admin/dashboard")).status), 404);
 step("pas administrateur : ni page, ni lien, ni chiffres");
 
+// 15b. Le lien secret de l'équipe : une clé fausse est refusée, et tant
+// qu'aucun administrateur n'existe, la bonne clé explique quoi faire.
+const KEY = process.env.ADMIN_ACCESS_KEY;
+const linkCtx = await newContext(phone);
+const linkPage = await linkCtx.newPage();
+await linkPage.goto(`${BASE}/acces?cle=mauvaise-cle-mauvaise-cle-mauvaise`);
+await linkPage.getByText("Ce lien d'accès n'est pas valable.").waitFor();
+await linkPage.goto(`${BASE}/acces?cle=${KEY}`);
+await linkPage.getByText(/aucun compte administrateur n'existe encore/).waitFor();
+assert.equal(new URL(linkPage.url()).pathname, "/connexion");
+step("lien de l'équipe : clé fausse refusée ; sans administrateur, la bonne clé dit quoi faire");
+
 // 16. Karim devient administrateur, comme avec supabase/admin.sql.
 await sql("insert into public.admins (user_id) select id from auth.users where email = $1", ["karim@example.com"]);
 await page.goto(BASE);
@@ -272,6 +284,15 @@ await page.getByText("Aucun achat pour l'instant.").waitFor();
 await page.getByText(/^En direct ·/).waitFor();
 await page.screenshot({ path: `${SHOTS}10-tableau-vide.png`, fullPage: true });
 step("administrateur : lien dans le menu, tableau de bord vide mais prêt");
+
+// 16b. Le lien secret ouvre directement le tableau de bord, sans e-mail ni
+// mot de passe, et la clé ne reste pas dans la barre d'adresse.
+await linkPage.goto(`${BASE}/acces?cle=${KEY}`);
+await linkPage.waitForURL(`${BASE}/admin`);
+await linkPage.getByText("Aucun achat pour l'instant.").waitFor();
+assert.ok(!linkPage.url().includes(KEY));
+await linkCtx.close();
+step("lien de l'équipe : un clic, et le tableau de bord s'ouvre, sans se connecter");
 
 // 17. Soixante jours de démonstration.
 await page.getByRole("button", { name: "Remplir 60 jours de démo" }).click();

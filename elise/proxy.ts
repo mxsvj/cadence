@@ -28,7 +28,8 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const signedIn = Boolean(data?.claims?.sub);
   const path = request.nextUrl.pathname;
-  const isPublic = path.startsWith("/connexion") || path.startsWith("/auth/") || path.startsWith("/api/");
+  const isPublic =
+    path.startsWith("/connexion") || path.startsWith("/auth/") || path.startsWith("/api/") || path === "/acces";
 
   if (!signedIn && !isPublic) return redirectKeepingCookies(request, response, "/connexion");
   if (signedIn && path.startsWith("/connexion")) return redirectKeepingCookies(request, response, "/");
