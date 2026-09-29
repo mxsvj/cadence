@@ -7,14 +7,15 @@ import { accessKey, sameKey } from "@/lib/team-access";
 // administrateur, puis le tableau de bord. Sans e-mail ni mot de passe.
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
-  const refuse = (erreur: string) => NextResponse.redirect(new URL(`/connexion?erreur=${erreur}`, url));
+  // Une page qui dit pourquoi, visible même par qui est déjà connecté.
+  const refuse = (raison: string) => NextResponse.redirect(new URL(`/acces/refus?raison=${raison}`, url));
 
   const expected = accessKey();
   if (!expected) {
     console.warn("Lien de l'équipe refusé : ADMIN_ACCESS_KEY manque ou fait moins de 24 caractères.");
-    return refuse("acces");
+    return refuse("absente");
   }
-  if (!sameKey(url.searchParams.get("cle") ?? "", expected)) return refuse("acces");
+  if (!sameKey(url.searchParams.get("cle") ?? "", expected)) return refuse("cle");
 
   try {
     const admin = createAdminClient();
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
     if (verifyError) throw verifyError;
   } catch (err) {
     console.error("Lien de l'équipe : la session n'a pas pu s'ouvrir.", err);
-    return refuse("acces-panne");
+    return refuse("panne");
   }
   // Adresse propre : la clé ne reste pas affichée dans la barre d'adresse.
   return NextResponse.redirect(new URL("/admin", url));

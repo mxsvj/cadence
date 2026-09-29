@@ -16,12 +16,18 @@ const DISPLAY_MESSAGES = 200;
 
 type Loaded = { messages: Message[]; offers: Offer[]; name: string } | { problem: string } | "profil";
 
-export default async function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
   await connection(); // toujours calculée à la visite, jamais figée au déploiement
   if (missingSettings().length) return <SetupNotice />;
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
   if (!userId) redirect("/connexion");
+
+  // L'équipe arrive sur son tableau de bord, pas sur la conversation d'une
+  // personne. Elle peut tout de même la tester : /?vue=conversation.
+  const isAdmin = (await adminStatus(supabase)) === "admin";
+  const { vue } = await searchParams;
+  if (isAdmin && vue !== "conversation") redirect("/admin");
 
   let loaded: Loaded;
   try {
@@ -58,7 +64,6 @@ export default async function Home() {
     );
   }
 
-  const isAdmin = (await adminStatus(supabase)) === "admin";
   // La clé change quand tout a été effacé : la conversation repart de zéro.
   return (
     <Chat

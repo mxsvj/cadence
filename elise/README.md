@@ -151,8 +151,12 @@ confirmation par e-mail est un jour réactivée.
 
 ## Le tableau de bord des gains
 
-Page `/admin`, accessible par le menu `⋯` de la conversation pour les
-administrateurs seulement ; pour tous les autres, la page n'existe pas.
+Page `/admin`, réservée aux administrateurs ; pour tous les autres, la page
+n'existe pas. Un administrateur qui ouvre le site (ou l'appli installée sur
+son téléphone) arrive directement dessus, jamais sur la conversation d'une
+personne. « Tester la conversation », en haut à droite, ouvre
+`/?vue=conversation` pour voir ce que voient les personnes ; le menu `⋯` y
+ramène au tableau de bord.
 
 - **Chiffres clés** sur la période choisie : gains (et évolution par rapport à
   la période précédente, total depuis le début), pourboires, messages achetés,
