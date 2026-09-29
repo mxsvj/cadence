@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { requireAdmin } from "@/lib/admin";
-import { parseEuros, type ContentType, type Step } from "@/lib/offers";
+import { MAX_MEDIA, mainType, parseEuros, type MediaItem, type Step } from "@/lib/offers";
 import { CONTENT_BUCKET, createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -53,10 +53,10 @@ export async function renameScript(id: number, name: string): Promise<Result> {
 export async function deleteScript(id: number): Promise<Result> {
   try {
     const supabase = await adminClient();
-    const { data: steps } = await supabase.from("script_steps").select("media_path").eq("script_id", id);
+    const { data: steps } = await supabase.from("script_steps").select("media, media_path").eq("script_id", id);
     const { error } = await supabase.from("scripts").delete().eq("id", id);
     if (error) throw error;
-    await removeMedia((steps ?? []).map((s) => s.media_path as string | null));
+    await removeMedia((steps ?? []).flatMap(stepFiles));
     return { ok: true };
   } catch (err) {
     return failure(err, "Le script n'a pas été supprimé.");
@@ -105,9 +105,8 @@ export type StepForm = {
   id: number | null;
   script_id: number;
   title: string;
-  content_type: ContentType;
   content_text: string;
-  media_path: string | null;
+  media: MediaItem[];
   ai_description: string;
   message_mode: "ia" | "fixe";
   message_text: string;
@@ -122,12 +121,18 @@ export async function saveStep(form: StepForm): Promise<Result<{ step: Step }>> 
   try {
     const supabase = await adminClient();
     const title = form.title.trim();
-    if (!title || title.length > 120) return { ok: false, error: "Donnez un titre à l'étape (120 caractères au plus)." };
-    if (!["image", "video", "texte"].includes(form.content_type)) return { ok: false, error: "Type de contenu inconnu." };
-    if (form.content_type === "texte" && !form.content_text.trim()) return { ok: false, error: "Écrivez le texte à vendre." };
-    if (form.content_type !== "texte" && !form.media_path) return { ok: false, error: "Ajoutez le fichier à vendre." };
+    if (!title || title.length > 120) return { ok: false, error: "Donnez un titre au message (120 caractères au plus)." };
+    const media = Array.isArray(form.media) ? form.media : [];
+    if (media.length > MAX_MEDIA) return { ok: false, error: `${MAX_MEDIA} photos ou vidéos au plus par message.` };
+    // Seulement des fichiers envoyés par uploadLink, dans le dossier privé.
+    if (!media.every((m) => MEDIA_PATH.test(m.path) && (m.kind === "image" || m.kind === "video"))) {
+      return { ok: false, error: "Un fichier n'est pas reconnu : renvoyez-le." };
+    }
+    if (!media.length && !form.content_text.trim()) {
+      return { ok: false, error: "Ajoutez des photos ou des vidéos, ou écrivez un texte." };
+    }
     if (form.message_mode === "fixe" && !form.message_text.trim()) {
-      return { ok: false, error: "Écrivez le message qui accompagne l'offre, ou laissez l'IA l'écrire." };
+      return { ok: false, error: "Écrivez le texte que l'IA doit envoyer mot pour mot, ou laissez-la l'écrire." };
     }
     let price = 0;
     let min = 0;
@@ -145,9 +150,10 @@ export async function saveStep(form: StepForm): Promise<Result<{ step: Step }>> 
     const row = {
       script_id: form.script_id,
       title,
-      content_type: form.content_type,
-      content_text: form.content_type === "texte" ? form.content_text : form.content_text.slice(0, 10000),
-      media_path: form.content_type === "texte" ? null : form.media_path,
+      content_type: mainType(media),
+      content_text: form.content_text.trim().slice(0, 10000),
+      media: media.map((m) => ({ path: m.path, kind: m.kind })),
+      media_path: null,
       ai_description: form.ai_description.trim().slice(0, 3000),
       message_mode: form.message_mode,
       message_text: form.message_text.trim().slice(0, 2000),
@@ -169,28 +175,41 @@ export async function saveStep(form: StepForm): Promise<Result<{ step: Step }>> 
       if (error) throw error;
       return { ok: true, step: data as Step };
     }
-    const { data: previous } = await supabase.from("script_steps").select("media_path").eq("id", form.id).single();
+    const { data: previous } = await supabase.from("script_steps").select("media, media_path").eq("id", form.id).single();
     const { data, error } = await supabase.from("script_steps").update(row).eq("id", form.id).select("*").single();
     if (error) throw error;
-    if (previous?.media_path && previous.media_path !== row.media_path) await removeMedia([previous.media_path as string]);
+    // Les fichiers retirés du message quittent aussi le dossier privé.
+    const kept = new Set(row.media.map((m) => m.path));
+    await removeMedia(previous ? stepFiles(previous).filter((path) => !kept.has(path)) : []);
     return { ok: true, step: data as Step };
   } catch (err) {
-    return failure(err, "L'étape n'a pas été enregistrée.");
+    return failure(err, "Le message n'a pas été enregistré.");
   }
 }
 
 export async function deleteStep(id: number): Promise<Result> {
   try {
     const supabase = await adminClient();
-    const { data } = await supabase.from("script_steps").select("media_path").eq("id", id).single();
+    const { data } = await supabase.from("script_steps").select("media, media_path").eq("id", id).single();
     const { error } = await supabase.from("script_steps").delete().eq("id", id);
     if (error) throw error;
-    await removeMedia([data?.media_path as string | null]);
+    await removeMedia(data ? stepFiles(data) : []);
     return { ok: true };
   } catch (err) {
-    return failure(err, "L'étape n'a pas été supprimée.");
+    return failure(err, "Le message n'a pas été supprimé.");
   }
 }
+
+/** Les fichiers d'un message du script (et celui de l'ancien format, s'il reste). */
+function stepFiles(row: { media?: unknown; media_path?: unknown }): string[] {
+  const media = Array.isArray(row.media) ? (row.media as MediaItem[]) : [];
+  const paths = media.map((m) => m.path);
+  if (typeof row.media_path === "string" && row.media_path) paths.push(row.media_path);
+  return paths;
+}
+
+/** Les noms donnés par uploadLink : un identifiant au hasard et l'extension. */
+const MEDIA_PATH = /^[0-9a-f-]{36}\.(jpg|png|webp|gif|heic|mp4|mov|webm)$/;
 
 const EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",

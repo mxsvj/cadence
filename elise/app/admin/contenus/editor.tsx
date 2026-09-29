@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatEuros } from "@/lib/dashboard";
-import type { ContentType, Script, Step } from "@/lib/offers";
+import { MAX_MEDIA, contentLabel, mediaCounts, type MediaItem, type Script, type Step } from "@/lib/offers";
 import {
   createScript,
   deleteScript,
@@ -18,7 +18,14 @@ import {
 } from "./actions";
 
 const input = "rounded-xl border border-line bg-surface px-3 py-2 outline-none focus:border-accent";
-const TYPE_LABEL: Record<ContentType, string> = { image: "Photo", video: "Vidéo", texte: "Texte" };
+/** « 3 photos et 1 vidéo · texte » : ce que contient un message du script. */
+function summary(step: Step): string {
+  const { photos, videos } = mediaCounts(step.media ?? []);
+  const media = photos || videos ? contentLabel(photos, videos) : "";
+  const text = step.content_text.trim() ? "texte" : "";
+  const parts = [media, text].filter(Boolean).join(" · ");
+  return parts.charAt(0).toUpperCase() + parts.slice(1);
+}
 const euros = (cents: number) => (cents ? (cents / 100).toFixed(2).replace(".", ",") : "");
 
 export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: Step[] }) {
@@ -55,8 +62,9 @@ export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: St
       <header>
         <h1 className="font-serif text-3xl">Contenus</h1>
         <p className="text-sm text-muted">
-          Des scripts de vente, étape par étape. L&apos;IA ne propose jamais que l&apos;étape suivante, dans cet ordre,
-          jamais sous le prix minimum. Les titres ne sont visibles que de l&apos;équipe.
+          Des scripts de vente, message par message : photos, vidéos ou texte, gratuits ou payants, avec ce que
+          l&apos;IA dit en les proposant. L&apos;IA ne propose jamais que le message suivant, dans cet ordre, jamais
+          sous le prix minimum. Les titres ne sont visibles que de l&apos;équipe.
         </p>
       </header>
 
@@ -124,9 +132,9 @@ export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: St
       {/* Les étapes du script */}
       {script && (
         <section className="flex flex-col gap-3">
-          <h2 className="font-bold">Étapes de « {script.name} »</h2>
+          <h2 className="font-bold">Messages de « {script.name} »</h2>
           {scriptSteps.length === 0 && editing !== "new" && (
-            <p className="text-sm text-muted">Aucune étape : ajoutez le premier contenu à proposer.</p>
+            <p className="text-sm text-muted">Aucun message : ajoutez le premier contenu à proposer.</p>
           )}
           <ol className="flex flex-col gap-3">
             {scriptSteps.map((step, i) =>
@@ -144,22 +152,34 @@ export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: St
                   />
                 </li>
               ) : (
-                <li key={step.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface p-4">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft font-bold text-accent">
-                    {i + 1}
-                  </span>
+                <li key={step.id} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4 sm:flex-row sm:items-center">
                   <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-bold text-accent">Message {i + 1}</span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                          step.is_paid ? "bg-accent text-white" : "bg-accent-soft text-accent"
+                        }`}
+                      >
+                        {step.is_paid ? `Payant · ${formatEuros(step.price_cents)}` : "Gratuit"}
+                      </span>
+                    </span>
                     <span className="block font-semibold">{step.title}</span>
                     <span className="block text-sm text-muted">
-                      {TYPE_LABEL[step.content_type]} ·{" "}
-                      {step.is_paid
-                        ? `${formatEuros(step.price_cents)} (de ${formatEuros(step.min_price_cents)} à ${formatEuros(step.max_price_cents)})`
-                        : "Gratuit"}{" "}
-                      · proposé par {step.trigger_mode === "ia" ? "l'IA" : "l'équipe"} · message{" "}
-                      {step.message_mode === "ia" ? "écrit par l'IA" : "fixe"}
+                      {summary(step)}
+                      {step.is_paid && ` · de ${formatEuros(step.min_price_cents)} à ${formatEuros(step.max_price_cents)}`} ·
+                      proposé par {step.trigger_mode === "ia" ? "l'IA" : "l'équipe"}
                     </span>
+                    {step.message_text.trim() && (
+                      <span className="mt-1 block text-sm">
+                        <span className="text-muted">
+                          {step.message_mode === "fixe" ? "L'IA envoie mot pour mot : " : "Consigne pour l'IA : "}
+                        </span>
+                        « {step.message_text.trim()} »
+                      </span>
+                    )}
                   </span>
-                  <span className="flex shrink-0 gap-1">
+                  <span className="flex shrink-0 flex-wrap gap-1">
                     <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => run(moveStep(step.id, -1))} className="rounded-lg border border-line px-2 py-1 disabled:opacity-30">
                       ↑
                     </button>
@@ -175,7 +195,7 @@ export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: St
                     <button type="button" onClick={() => setEditing(step.id)} className="rounded-lg border border-line px-3 py-1 text-sm font-semibold">
                       Modifier
                     </button>
-                    <button type="button" onClick={() => run(deleteStep(step.id), "Étape supprimée.")} className="rounded-lg px-2 py-1 text-sm text-bad underline">
+                    <button type="button" onClick={() => run(deleteStep(step.id), "Message supprimé.")} className="rounded-lg px-2 py-1 text-sm text-bad underline">
                       Supprimer
                     </button>
                   </span>
@@ -200,7 +220,7 @@ export function ContentEditor({ scripts, steps }: { scripts: Script[]; steps: St
               onClick={() => setEditing("new")}
               className="self-start rounded-full bg-accent px-4 py-2 text-sm font-bold text-white"
             >
-              Ajouter une étape
+              Ajouter un message au script
             </button>
           )}
         </section>
@@ -260,6 +280,8 @@ function ScriptHeader({
   );
 }
 
+const ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/heic,video/mp4,video/quicktime,video/webm";
+
 function StepEditor({
   scriptId,
   step,
@@ -275,9 +297,8 @@ function StepEditor({
     id: step?.id ?? null,
     script_id: scriptId,
     title: step?.title ?? "",
-    content_type: step?.content_type ?? "image",
     content_text: step?.content_text ?? "",
-    media_path: step?.media_path ?? null,
+    media: step?.media ?? [],
     ai_description: step?.ai_description ?? "",
     message_mode: step?.message_mode ?? "ia",
     message_text: step?.message_text ?? "",
@@ -287,37 +308,57 @@ function StepEditor({
     min_price: euros(step?.min_price_cents ?? 0),
     max_price: euros(step?.max_price_cents ?? 0),
   });
-  const [preview, setPreview] = useState<string | null>(null);
+  // Aperçus : fichier local juste envoyé, ou lien signé de quelques minutes.
+  const [previews, setPreviews] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const set = <K extends keyof StepForm>(key: K, value: StepForm[K]) => setForm((f) => ({ ...f, [key]: value }));
+  const room = MAX_MEDIA - form.media.length;
 
-  async function upload(file: File) {
+  async function upload(files: File[]) {
+    const list = files.slice(0, room);
+    if (!list.length) return setStatus(`${MAX_MEDIA} photos ou vidéos au plus par message.`);
     setBusy(true);
-    setStatus("Envoi du fichier…");
-    const link = await uploadLink(file.type, file.size);
-    if (!link.ok) {
-      setBusy(false);
-      return setStatus(link.error);
+    const added: MediaItem[] = [];
+    let problem: string | null = null;
+    for (const [i, file] of list.entries()) {
+      setStatus(`Envoi ${i + 1} sur ${list.length}…`);
+      const link = await uploadLink(file.type, file.size);
+      if (!link.ok) {
+        problem = `${file.name} : ${link.error}`;
+        break;
+      }
+      const res = await fetch(link.url, {
+        method: "PUT",
+        headers: { "content-type": file.type, "x-upsert": "true" },
+        body: file,
+      }).catch(() => null);
+      if (!res?.ok) {
+        problem = `${file.name} n'a pas pu être envoyé. Réessayez.`;
+        break;
+      }
+      const item: MediaItem = { path: link.path, kind: file.type.startsWith("video/") ? "video" : "image" };
+      added.push(item);
+      setPreviews((p) => ({ ...p, [item.path]: URL.createObjectURL(file) }));
     }
-    const res = await fetch(link.url, {
-      method: "PUT",
-      headers: { "content-type": file.type, "x-upsert": "true" },
-      body: file,
-    }).catch(() => null);
     setBusy(false);
-    if (!res?.ok) return setStatus("Le fichier n'a pas pu être envoyé. Réessayez.");
-    set("media_path", link.path);
-    set("content_type", file.type.startsWith("video/") ? "video" : "image");
-    setPreview(URL.createObjectURL(file));
-    setStatus("Fichier envoyé. Pensez à enregistrer l'étape.");
+    if (added.length) setForm((f) => ({ ...f, media: [...f.media, ...added] }));
+    const skipped = files.length - list.length;
+    setStatus(
+      problem ??
+        `${added.length} fichier${added.length > 1 ? "s" : ""} ajouté${added.length > 1 ? "s" : ""}.${
+          skipped > 0 ? ` ${skipped} de trop (${MAX_MEDIA} au plus).` : ""
+        } Pensez à enregistrer le message.`,
+    );
   }
 
   async function showExisting() {
-    if (!form.media_path) return;
-    const link = await previewLink(form.media_path);
-    if (link.ok) setPreview(link.url);
-    else setStatus(link.error);
+    for (const m of form.media) {
+      if (previews[m.path]) continue;
+      const link = await previewLink(m.path);
+      if (link.ok) setPreviews((p) => ({ ...p, [m.path]: link.url }));
+      else return setStatus(link.error);
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -325,10 +366,11 @@ function StepEditor({
     setBusy(true);
     const result = await saveStep(form);
     setBusy(false);
-    if (result.ok) onDone(step ? "Étape enregistrée." : "Étape ajoutée.");
+    if (result.ok) onDone(step ? "Message enregistré." : "Message ajouté au script.");
     else setStatus(result.error);
   }
 
+  const hidden = form.media.some((m) => !previews[m.path]);
   return (
     <form onSubmit={submit} className="flex flex-col gap-4 rounded-2xl border-2 border-accent bg-surface p-4">
       <label className="flex flex-col gap-1 text-sm">
@@ -336,49 +378,79 @@ function StepEditor({
         <input value={form.title} maxLength={120} onChange={(e) => set("title", e.target.value)} className={input} required />
       </label>
 
-      <fieldset className="flex flex-col gap-2 text-sm">
-        <legend className="mb-1 font-semibold">Ce qui est vendu</legend>
-        <div className="flex gap-2">
-          {(["image", "video", "texte"] as ContentType[]).map((t) => (
-            <label key={t} className={`rounded-full border px-3 py-1.5 ${form.content_type === t ? "border-accent bg-accent-soft" : "border-line"}`}>
-              <input type="radio" name="type" className="sr-only" checked={form.content_type === t} onChange={() => set("content_type", t)} />
-              {TYPE_LABEL[t]}
+      <fieldset className="flex flex-col gap-3 text-sm">
+        <legend className="mb-1 font-semibold">Ce que contient le message</legend>
+        <div className="flex flex-col gap-2">
+          <span>
+            Photos et vidéos ({form.media.length} / {MAX_MEDIA})
+          </span>
+          {form.media.length > 0 && (
+            <ul className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {form.media.map((m, i) => (
+                <li key={m.path} className="relative aspect-square overflow-hidden rounded-xl border border-line bg-background">
+                  {previews[m.path] ? (
+                    m.kind === "video" ? (
+                      <video src={previews[m.path]} muted playsInline className="size-full object-cover" />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element -- aperçu local ou lien signé temporaire
+                      <img src={previews[m.path]} alt={`Photo ${i + 1}`} className="size-full object-cover" />
+                    )
+                  ) : (
+                    <span className="flex size-full items-center justify-center text-xs text-muted">
+                      {m.kind === "video" ? "Vidéo" : "Photo"} {i + 1}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => set("media", form.media.filter((x) => x.path !== m.path))}
+                    aria-label={`Retirer ${m.kind === "video" ? "la vidéo" : "la photo"} ${i + 1}`}
+                    className="absolute right-1 top-1 rounded-full bg-surface/90 px-2 text-sm font-bold"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {hidden && (
+            <button type="button" onClick={showExisting} className="self-start text-sm underline">
+              Voir les fichiers
+            </button>
+          )}
+          {room > 0 && (
+            <label
+              className={`self-start rounded-full border border-line px-4 py-2 font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent ${
+                busy ? "opacity-60" : "cursor-pointer hover:border-accent"
+              }`}
+            >
+              + Ajouter des photos ou des vidéos
+              <input
+                type="file"
+                multiple
+                accept={ACCEPT}
+                disabled={busy}
+                onChange={(e) => {
+                  const files = Array.from(e.target.files ?? []);
+                  e.target.value = "";
+                  if (files.length) upload(files);
+                }}
+                className="sr-only"
+              />
             </label>
-          ))}
+          )}
         </div>
-        {form.content_type === "texte" ? (
+        <label className="flex flex-col gap-1">
+          <span>Texte {form.media.length ? "(facultatif)" : ""}</span>
           <textarea
             value={form.content_text}
             onChange={(e) => set("content_text", e.target.value)}
-            rows={5}
+            rows={4}
             maxLength={10000}
-            placeholder="Le texte que la personne découvrira après l'achat"
-            aria-label="Texte à vendre"
+            placeholder="Le texte que la personne découvre avec le contenu : une lettre, une légende, un poème…"
+            aria-label="Texte du message"
             className={input}
           />
-        ) : (
-          <div className="flex flex-col gap-2">
-            <input
-              type="file"
-              accept={form.content_type === "video" ? "video/mp4,video/quicktime,video/webm" : "image/jpeg,image/png,image/webp,image/gif,image/heic"}
-              onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
-              aria-label="Fichier à vendre"
-              className="text-sm"
-            />
-            {form.media_path && !preview && (
-              <button type="button" onClick={showExisting} className="self-start text-sm underline">
-                Voir le fichier actuel
-              </button>
-            )}
-            {preview &&
-              (form.content_type === "video" ? (
-                <video src={preview} controls className="max-h-60 rounded-xl" />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element -- aperçu local ou lien signé temporaire
-                <img src={preview} alt="Aperçu du contenu" className="max-h-60 self-start rounded-xl" />
-              ))}
-          </div>
-        )}
+        </label>
       </fieldset>
 
       <label className="flex flex-col gap-1 text-sm">
@@ -388,24 +460,34 @@ function StepEditor({
           onChange={(e) => set("ai_description", e.target.value)}
           rows={3}
           maxLength={3000}
-          placeholder="Ce que l'IA peut en dire, sans le montrer : « une photo du lac au coucher du soleil, prise depuis la terrasse »"
+          placeholder="Ce que l'IA peut en dire, sans le montrer : « des photos du lac au coucher du soleil, prises depuis la terrasse »"
           className={input}
         />
       </label>
 
       <fieldset className="flex flex-col gap-2 text-sm">
-        <legend className="mb-1 font-semibold">Le message qui accompagne l&apos;offre</legend>
+        <legend className="mb-1 font-semibold">Ce que l&apos;IA dit avec</legend>
         <label className="flex items-center gap-2">
           <input type="radio" checked={form.message_mode === "ia"} onChange={() => set("message_mode", "ia")} className="accent-[var(--accent)]" />
-          Écrit par l&apos;IA, dans le fil de la conversation
+          L&apos;IA l&apos;écrit elle-même, en suivant votre consigne
         </label>
         <label className="flex items-center gap-2">
           <input type="radio" checked={form.message_mode === "fixe"} onChange={() => set("message_mode", "fixe")} className="accent-[var(--accent)]" />
-          Un texte fixe, écrit par l&apos;équipe
+          Mot pour mot : l&apos;IA envoie exactement ce texte
         </label>
-        {form.message_mode === "fixe" && (
-          <textarea value={form.message_text} onChange={(e) => set("message_text", e.target.value)} rows={3} maxLength={2000} aria-label="Message fixe" className={input} />
-        )}
+        <textarea
+          value={form.message_text}
+          onChange={(e) => set("message_text", e.target.value)}
+          rows={3}
+          maxLength={2000}
+          aria-label={form.message_mode === "fixe" ? "Texte envoyé mot pour mot" : "Consigne pour l'IA"}
+          placeholder={
+            form.message_mode === "fixe"
+              ? "Le message exact qui accompagne l'offre"
+              : "Facultatif. Ex. : dis que tu as pensé à lui en les prenant, et que c'est pour lui seul"
+          }
+          className={input}
+        />
       </fieldset>
 
       <fieldset className="flex flex-col gap-2 text-sm">
@@ -422,35 +504,48 @@ function StepEditor({
 
       <fieldset className="flex flex-col gap-2 text-sm">
         <legend className="mb-1 font-semibold">Prix</legend>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={form.is_paid} onChange={(e) => set("is_paid", e.target.checked)} className="size-4 accent-[var(--accent)]" />
-          Payant (sinon, offert)
-        </label>
-        {form.is_paid && (
-          <div className="grid gap-2 sm:grid-cols-3">
-            {(
-              [
-                ["price", "Prix habituel (€)"],
-                ["min_price", "Minimum accepté (€)"],
-                ["max_price", "Maximum (€)"],
-              ] as const
-            ).map(([key, label]) => (
-              <label key={key} className="flex flex-col gap-1">
-                <span>{label}</span>
-                <input value={form[key]} inputMode="decimal" onChange={(e) => set(key, e.target.value)} className={input} />
-              </label>
-            ))}
-          </div>
+        <div className="flex gap-2">
+          {(
+            [
+              [false, "Gratuit"],
+              [true, "Payant"],
+            ] as const
+          ).map(([paid, label]) => (
+            <label key={label} className={`rounded-full border px-4 py-1.5 ${form.is_paid === paid ? "border-accent bg-accent-soft" : "border-line"}`}>
+              <input type="radio" name="prix" className="sr-only" checked={form.is_paid === paid} onChange={() => set("is_paid", paid)} />
+              {label}
+            </label>
+          ))}
+        </div>
+        {form.is_paid ? (
+          <>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {(
+                [
+                  ["price", "Prix habituel (€)"],
+                  ["min_price", "Minimum accepté (€)"],
+                  ["max_price", "Maximum (€)"],
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key} className="flex flex-col gap-1">
+                  <span>{label}</span>
+                  <input value={form[key]} inputMode="decimal" onChange={(e) => set(key, e.target.value)} className={input} />
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-muted">
+              L&apos;IA ou l&apos;équipe peuvent choisir un prix entre le minimum et le maximum ; il est alors affiché comme
+              personnalisé. Une contre-offre sous le minimum est toujours refusée.
+            </p>
+          </>
+        ) : (
+          <p className="text-xs text-muted">Offert : la personne le reçoit directement, sans rien payer.</p>
         )}
-        <p className="text-xs text-muted">
-          L&apos;IA ou l&apos;équipe peuvent choisir un prix entre le minimum et le maximum ; il est alors affiché comme
-          personnalisé. Une contre-offre sous le minimum est toujours refusée.
-        </p>
       </fieldset>
 
       <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={busy} className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-white disabled:opacity-60">
-          Enregistrer l&apos;étape
+          Enregistrer le message
         </button>
         <button type="button" onClick={onCancel} className="px-3 text-sm text-muted">
           Annuler

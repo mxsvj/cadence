@@ -3,15 +3,26 @@
 
 export type ContentType = "image" | "video" | "texte";
 
-/** Une étape d'un script de vente (visible de l'équipe seulement). */
+/** Une photo ou une vidéo d'un message du script, dans le dossier privé. */
+export type MediaItem = { path: string; kind: "image" | "video" };
+
+/** Au plus 10 photos et vidéos par message du script (la base le vérifie aussi). */
+export const MAX_MEDIA = 10;
+
+/**
+ * Un message d'un script de vente (visible de l'équipe seulement) : des
+ * photos et vidéos, un texte, ou les deux ; gratuit ou payant ; et ce que
+ * l'IA dit en le proposant.
+ */
 export type Step = {
   id: number;
   script_id: number;
   position: number;
   title: string;
+  /** Le type principal, déduit du contenu : vidéo s'il y en a une, sinon photo, sinon texte. */
   content_type: ContentType;
   content_text: string;
-  media_path: string | null;
+  media: MediaItem[];
   ai_description: string;
   message_mode: "ia" | "fixe";
   message_text: string;
@@ -28,6 +39,8 @@ export type Script = { id: number; name: string; position: number };
 export type Offer = {
   id: number;
   content_type: ContentType;
+  photo_count: number;
+  video_count: number;
   price_cents: number;
   personalized: boolean;
   status: "proposee" | "achetee" | "offerte" | "retiree";
@@ -37,7 +50,43 @@ export type Offer = {
 };
 
 export const OFFER_COLUMNS =
-  "id, content_type, price_cents, personalized, status, bids_refused, last_bid_cents, last_bid_status";
+  "id, content_type, photo_count, video_count, price_cents, personalized, status, bids_refused, last_bid_cents, last_bid_status";
+
+/** Le type principal d'un message du script, d'après ce qu'il contient. */
+export function mainType(media: MediaItem[]): ContentType {
+  if (media.some((m) => m.kind === "video")) return "video";
+  return media.length ? "image" : "texte";
+}
+
+export function mediaCounts(media: MediaItem[]): { photos: number; videos: number } {
+  return {
+    photos: media.filter((m) => m.kind === "image").length,
+    videos: media.filter((m) => m.kind === "video").length,
+  };
+}
+
+/**
+ * Ce que contient un message, sans rien en montrer : « 3 photos et 1 vidéo »,
+ * « 1 photo », ou « un texte » quand il n'y a ni photo ni vidéo.
+ */
+export function contentLabel(photos: number, videos: number): string {
+  const parts: string[] = [];
+  if (photos) parts.push(`${photos} photo${photos > 1 ? "s" : ""}`);
+  if (videos) parts.push(`${videos} vidéo${videos > 1 ? "s" : ""}`);
+  return parts.length ? parts.join(" et ") : "un texte";
+}
+
+/**
+ * Ce que l'IA sait d'un message du script : sa description et ce qu'il
+ * contient (« 3 photos et 1 vidéo »), jamais son titre interne.
+ */
+export function describeStep(step: Step | null): string {
+  if (!step) return "un contenu";
+  const { photos, videos } = mediaCounts(step.media ?? []);
+  const what = contentLabel(photos, videos);
+  const description = step.ai_description.trim();
+  return description ? `${description} (${what})` : what;
+}
 
 export const MAX_REFUSED_BIDS = 3;
 

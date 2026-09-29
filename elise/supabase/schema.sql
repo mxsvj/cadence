@@ -481,6 +481,19 @@ create table if not exists public.script_steps (
 );
 create index if not exists script_steps_script_idx on public.script_steps (script_id, position);
 
+-- Chaque message du script peut contenir plusieurs photos et vidéos (au plus
+-- 10), dans l'ordre : [{"path": "...", "kind": "image" | "video"}].
+alter table public.script_steps add column if not exists media jsonb not null default '[]'::jsonb;
+alter table public.script_steps drop constraint if exists script_steps_media_check;
+alter table public.script_steps add constraint script_steps_media_check
+  check (jsonb_typeof(media) = 'array' and jsonb_array_length(media) <= 10);
+-- L'ancien format (un seul fichier, media_path) passe une fois dans la liste.
+update public.script_steps
+   set media = jsonb_build_array(jsonb_build_object(
+         'path', media_path, 'kind', case when content_type = 'video' then 'video' else 'image' end)),
+       media_path = null
+ where media_path is not null and media = '[]'::jsonb;
+
 
 -- ─── La fiche contact : ce que l'équipe règle pour chaque personne ────────
 create table if not exists public.contacts (
@@ -542,6 +555,13 @@ create table if not exists public.offers (
   purchased_at    timestamptz
 );
 create index if not exists offers_user_idx on public.offers (user_id, created_at desc);
+
+-- Ce que contient l'offre, pour l'annoncer sans rien montrer : « 3 photos à
+-- débloquer ». Les offres d'avant (un seul fichier) comptent pour un.
+alter table public.offers add column if not exists photo_count integer not null default 0;
+alter table public.offers add column if not exists video_count integer not null default 0;
+update public.offers set photo_count = 1 where content_type = 'image' and photo_count = 0 and video_count = 0;
+update public.offers set video_count = 1 where content_type = 'video' and photo_count = 0 and video_count = 0;
 
 alter table public.messages  add column if not exists offer_id bigint references public.offers (id) on delete set null;
 alter table public.purchases add column if not exists offer_id bigint references public.offers (id) on delete set null;
@@ -693,8 +713,12 @@ begin
     prix := 0;
   end if;
 
-  insert into public.offers (user_id, step_id, content_type, price_cents, personalized, status, proposed_by)
-  values (p_user, suivante.id, suivante.content_type, prix,
+  insert into public.offers (user_id, step_id, content_type, photo_count, video_count,
+                             price_cents, personalized, status, proposed_by)
+  values (p_user, suivante.id, suivante.content_type,
+          (select count(*) from jsonb_array_elements(suivante.media) m where m ->> 'kind' = 'image')::integer,
+          (select count(*) from jsonb_array_elements(suivante.media) m where m ->> 'kind' = 'video')::integer,
+          prix,
           suivante.is_paid and prix <> suivante.price_cents,
           case when suivante.is_paid then 'proposee' else 'offerte' end, p_par)
   returning * into offre;
@@ -838,7 +862,7 @@ as $$
 declare
   resultat jsonb;
 begin
-  select jsonb_build_object('type', st.content_type, 'texte', st.content_text, 'media_path', st.media_path)
+  select jsonb_build_object('type', st.content_type, 'texte', st.content_text, 'media', st.media)
   into resultat
   from public.offers o
   join public.script_steps st on st.id = o.step_id

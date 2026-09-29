@@ -3,7 +3,7 @@
 // plafond, contenu verrouillé.
 import assert from "node:assert/strict";
 import { before, describe, it } from "node:test";
-import { freshDatabase } from "./db";
+import { freshDatabase, schemaSql } from "./db";
 
 const ADMIN = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 const KARIM = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
@@ -234,5 +234,89 @@ describe("tableau de bord : contenus et LTV", () => {
     assert.equal(d.ltv.payants, 0); // achats « démo » : pas encore de vrai client payant
     assert.equal(d.clients[0].contenus_cents, 2100);
     assert.equal(d.clients[0].achats, 2);
+  });
+});
+
+describe("message du script avec plusieurs photos et vidéos", () => {
+  const SAM = "dddddddd-dddd-dddd-dddd-dddddddddddd";
+  let base: Awaited<ReturnType<typeof freshDatabase>>;
+  let script: number;
+  let pack: number;
+  const media = [
+    { path: "pack/a.jpg", kind: "image" },
+    { path: "pack/b.jpg", kind: "image" },
+    { path: "pack/c.mp4", kind: "video" },
+  ];
+
+  before(async () => {
+    base = await freshDatabase([
+      { id: ADMIN, email: "admin@example.com" },
+      { id: SAM, email: "sam@example.com" },
+    ]);
+    await base.db.query("insert into public.admins (user_id) values ($1)", [ADMIN]);
+    [{ id: script }] = await base.as<{ id: number }>(ADMIN, "insert into public.scripts (name) values ('Packs') returning id");
+    [{ id: pack }] = await base.as<{ id: number }>(
+      ADMIN,
+      `insert into public.script_steps
+         (script_id, position, title, content_type, media, is_paid, price_cents, min_price_cents, max_price_cents)
+       values ($1, 1, 'Le pack', 'video', $2::jsonb, true, 900, 600, 1200) returning id`,
+      [script, JSON.stringify(media)],
+    );
+  });
+
+  it("l'offre annonce 2 photos et 1 vidéo, sans rien montrer", async () => {
+    const [{ r }] = await base.as<{ r: { offre: { id: number } } }>(
+      "service",
+      "select public.proposer_etape($1, $2, null, 'Regarde', 'ai', null) as r",
+      [SAM, pack],
+    );
+    const [offer] = await base.as<{ photo_count: number; video_count: number }>(
+      SAM,
+      "select photo_count, video_count from public.offers where id = $1",
+      [r.offre.id],
+    );
+    assert.deepEqual([offer.photo_count, offer.video_count], [2, 1]);
+    await assert.rejects(base.as(SAM, "select public.mon_contenu($1)", [r.offre.id]), /verrouillé/);
+  });
+
+  it("après l'achat, tout le pack s'ouvre, dans l'ordre", async () => {
+    const [{ id }] = await base.as<{ id: number }>(SAM, "select id from public.offers where status = 'proposee'");
+    await base.as(SAM, "select public.acheter_offre($1)", [id]);
+    const [{ r }] = await base.as<{ r: { media: { path: string; kind: string }[] } }>(
+      SAM,
+      "select public.mon_contenu($1) as r",
+      [id],
+    );
+    assert.deepEqual(r.media, media);
+  });
+
+  it("au plus 10 fichiers par message", async () => {
+    const eleven = JSON.stringify(Array.from({ length: 11 }, (_, i) => ({ path: `x/${i}.jpg`, kind: "image" })));
+    await assert.rejects(
+      base.as(
+        ADMIN,
+        `insert into public.script_steps (script_id, position, title, content_type, media, is_paid)
+         values ($1, 2, 'Trop', 'image', $2::jsonb, false)`,
+        [script, eleven],
+      ),
+      /media_check/,
+    );
+  });
+
+  it("l'ancien fichier unique passe dans la liste quand on relance le script", async () => {
+    const [{ id }] = await base.as<{ id: number }>(
+      ADMIN,
+      `insert into public.script_steps (script_id, position, title, content_type, media_path, is_paid)
+       values ($1, 3, 'Ancien', 'image', 'ancien/photo.png', false) returning id`,
+      [script],
+    );
+    await base.db.exec(schemaSql);
+    const [step] = await base.as<{ media: unknown; media_path: string | null }>(
+      ADMIN,
+      "select media, media_path from public.script_steps where id = $1",
+      [id],
+    );
+    assert.deepEqual(step.media, [{ path: "ancien/photo.png", kind: "image" }]);
+    assert.equal(step.media_path, null);
   });
 });

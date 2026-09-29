@@ -53,6 +53,19 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   sur Vercel demande un redéploiement.
 - Un administrateur qui ouvre `/` est renvoyé vers `/admin` (`app/page.tsx`) ;
   `/?vue=conversation` garde la conversation accessible pour la tester.
+- Messages du script (`script_steps`) : `media` jsonb (au plus 10
+  `{path, kind}`, l'ancien `media_path` y est repris par `schema.sql`),
+  `content_text` facultatif s'il y a des médias, `content_type` déduit
+  (`mainType`). Les offres gardent `photo_count` / `video_count` pour
+  s'annoncer sans rien montrer ; `mon_contenu` rend `media`, et
+  `/api/offres/[id]/contenu` signe chaque fichier pour 5 minutes. En mode
+  `ia`, `message_text` est la consigne de l'équipe (reformulée par l'IA) ;
+  en mode `fixe`, le texte envoyé mot pour mot.
+- Vitesse : `vercel.json` place les fonctions à Paris (`cdg1`, une seule
+  région autorisée en Hobby), à côté de Supabase ; `app/admin/loading.tsx`
+  s'affiche dès qu'on touche un onglet (sans lui, une page dynamique n'est
+  pas préchargée et rien ne bouge avant la réponse du serveur) ;
+  `adminGate` passe par `cache()` pour ne vérifier qu'une fois par requête.
 - Espace équipe : barre d'onglets fixée en bas (`app/admin/nav.tsx`, 4 rem +
   marge de l'iPhone, réservés par `app/admin/layout.tsx`). Tout élément fixé
   en bas d'une page admin se pose au-dessus

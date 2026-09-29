@@ -441,26 +441,35 @@ await admin.screenshot({ path: `${SHOTS}14b-parametres.png`, fullPage: true });
 step("onglet Paramètres : garde-fous enregistrés, modèle et lien de l'équipe affichés, personnage intact");
 
 // 25. Un script de vente de trois étapes (onglet Contenus).
-const photo = await admin.screenshot({ clip: { x: 0, y: 0, width: 160, height: 100 } });
+// Deux images d'essai en couleur, pour voir la galerie après l'achat.
+async function paint(colors) {
+  const painter = await adminCtx.newPage();
+  await painter.setContent(`<div style="width:360px;height:270px;background:linear-gradient(135deg,${colors})"></div>`);
+  const image = await painter.locator("div").screenshot();
+  await painter.close();
+  return image;
+}
+const photo = await paint("#b86b52,#f3e1d8 55%,#7aa0b8");
+const photo2 = await paint("#3f7a4a,#f6e7b0 50%,#b86b52");
 await admin.goto(`${BASE}/admin/contenus`);
 await admin.getByLabel("Nom du nouveau script").fill("Principal");
 await admin.getByRole("button", { name: "Créer" }).click();
 await admin.getByText("Script créé.").waitFor();
 
-async function addStep({ title, type, text, file, description, fixed, team, price }) {
-  await admin.getByRole("button", { name: "Ajouter une étape" }).click();
+async function addStep({ title, files, text, description, instruction, fixed, team, price }) {
+  await admin.getByRole("button", { name: "Ajouter un message au script" }).click();
   const form = admin.locator("form", { has: admin.getByText("Titre (visible uniquement par l'équipe)") });
   await form.getByLabel("Titre (visible uniquement par l'équipe)").fill(title);
-  await form.getByText(type, { exact: true }).click();
-  if (text) await form.getByLabel("Texte à vendre").fill(text);
-  if (file) {
-    await form.getByLabel("Fichier à vendre").setInputFiles(file);
-    await form.getByText("Fichier envoyé.", { exact: false }).waitFor();
+  if (files) {
+    await form.getByLabel("Ajouter des photos ou des vidéos").setInputFiles(files);
+    await form.getByText(`${files.length} fichier${files.length > 1 ? "s" : ""} ajouté`, { exact: false }).waitFor();
   }
+  if (text) await form.getByLabel("Texte du message").fill(text);
   await form.getByLabel("À quoi ça ressemble (pour l'IA)").fill(description);
+  if (instruction) await form.getByLabel("Consigne pour l'IA").fill(instruction);
   if (fixed) {
-    await form.getByLabel("Un texte fixe, écrit par l'équipe").check();
-    await form.getByLabel("Message fixe").fill(fixed);
+    await form.getByLabel("Mot pour mot : l'IA envoie exactement ce texte").check();
+    await form.getByLabel("Texte envoyé mot pour mot").fill(fixed);
   }
   if (team) await form.getByLabel("L'équipe, depuis l'onglet Messages").check();
   if (price) {
@@ -468,27 +477,40 @@ async function addStep({ title, type, text, file, description, fixed, team, pric
     await form.getByLabel("Minimum accepté (€)").fill(price[1]);
     await form.getByLabel("Maximum (€)").fill(price[2]);
   } else {
-    await form.getByLabel("Payant (sinon, offert)").uncheck();
+    await form.getByText("Gratuit", { exact: true }).click();
   }
-  await form.getByRole("button", { name: "Enregistrer l'étape" }).click();
-  await until(() => (state().tables.script_steps ?? []).some((st) => st.title === title), `étape « ${title} » enregistrée`);
+  await form.getByRole("button", { name: "Enregistrer le message" }).click();
+  await until(() => (state().tables.script_steps ?? []).some((st) => st.title === title), `message « ${title} » enregistré`);
   await form.waitFor({ state: "detached" });
 }
-await addStep({ title: "Bienvenue", type: "Texte", text: "Un poème de bienvenue.", description: "un court poème" });
+await addStep({
+  title: "Bienvenue",
+  text: "Un poème de bienvenue.",
+  description: "un court poème",
+  instruction: "dis que c'est un petit cadeau de bienvenue",
+});
 await addStep({
   title: "Carnet de voyage",
-  type: "Photo",
-  file: { name: "carnet.png", mimeType: "image/png", buffer: photo },
+  files: [
+    { name: "carnet-1.png", mimeType: "image/png", buffer: photo },
+    { name: "carnet-2.png", mimeType: "image/png", buffer: photo2 },
+  ],
+  text: "Deux pages de mon carnet.",
   description: "un carnet de voyage illustré",
   fixed: "Je t'ai préparé ceci.",
   price: ["8", "5", "12"],
 });
-await addStep({ title: "Lettre", type: "Texte", text: "Une lettre rien que pour toi.", description: "une lettre", team: true, price: ["4", "3", "6"] });
+await addStep({ title: "Lettre", text: "Une lettre rien que pour toi.", description: "une lettre", team: true, price: ["4", "3", "6"] });
 s = state();
 assert.deepEqual(s.tables.script_steps.map((st) => st.title), ["Bienvenue", "Carnet de voyage", "Lettre"]);
-assert.ok(s.tables.script_steps[1].media_path.endsWith(".png"));
+const carnet = s.tables.script_steps[1];
+assert.deepEqual(carnet.media.map((m) => [m.kind, m.path.endsWith(".png")]), [["image", true], ["image", true]]);
+assert.equal(carnet.content_type, "image");
+assert.equal(s.tables.script_steps[0].message_text, "dis que c'est un petit cadeau de bienvenue");
+await admin.getByText("Payant · 8,00 €").waitFor();
+await admin.getByText("« dis que c'est un petit cadeau de bienvenue »").waitFor();
 await admin.screenshot({ path: `${SHOTS}15-contenus.png`, fullPage: true });
-step("onglet Contenus : script de trois étapes dans l'ordre, fichier envoyé dans le stockage privé");
+step("onglet Contenus : 3 messages dans l'ordre, dont un pack de 2 photos envoyées dans le stockage privé, et une consigne pour l'IA");
 
 // 26. Sam s'inscrit : l'IA se présente sous le nom du personnage.
 const samCtx = await newContext(phone);
@@ -559,7 +581,8 @@ assert.match(salesPrompt, /Tu ne proposes jamais de la rencontrer/);
 assert.match(salesPrompt, /Tatouages : une hirondelle sur le poignet/);
 assert.match(salesPrompt, /uniquement ceux-là : 🌸/);
 assert.match(salesPrompt, /Aime les voyages\./);
-assert.match(salesPrompt, /Le prochain contenu, dans l'ordre prévu : un court poème/);
+assert.match(salesPrompt, /Le prochain contenu, dans l'ordre prévu : un court poème \(un texte\)/);
+assert.match(salesPrompt, /« dis que c'est un petit cadeau de bienvenue »/);
 assert.match(salesPrompt, /la solitude, l'attachement, la culpabilité ou l'urgence/);
 assert.ok(!salesPrompt.includes("Bienvenue")); // le titre reste interne
 step("l'IA propose la 1re étape du script ; elle a reçu personnage, fiche, emojis, notes et garde-fous");
@@ -568,7 +591,7 @@ step("l'IA propose la 1re étape du script ; elle a reçu personnage, fiche, emo
 await samInput.fill("PROPOSE-MOI la suite");
 await sam.getByLabel("Envoyer").click();
 await sam.getByText("Je t'ai préparé ceci.").waitFor();
-const card = sam.locator("div", { has: sam.getByText("Photo à débloquer") }).last();
+const card = sam.locator("div", { has: sam.getByText("2 photos à débloquer") }).last();
 await card.waitFor();
 assert.match(plain(await card.textContent()), /9,00 €/);
 assert.match(await card.textContent(), /prix personnalisé pour vous/);
@@ -590,15 +613,20 @@ await sam.getByRole("button", { name: "Proposer", exact: true }).click();
 await sam.getByText("Offre acceptée : le contenu est à vous pour 6,00 €.").waitFor();
 await sam.getByRole("button", { name: "Confirmer" }).click();
 await sam.getByText("Débloqué · 6,00 €").waitFor();
-const unlocked = sam.getByAltText("Contenu débloqué");
+const unlocked = sam.getByAltText("Contenu débloqué, 1 sur 2");
 await unlocked.waitFor();
-assert.ok(await unlocked.evaluate((img) => img.complete && img.naturalWidth > 0));
+const second = sam.getByAltText("Contenu débloqué, 2 sur 2");
+await second.waitFor();
+await sam.waitForFunction(() =>
+  [...document.querySelectorAll("img[alt^='Contenu débloqué']")].every((img) => img.complete && img.naturalWidth > 0),
+);
+await sam.getByText("Deux pages de mon carnet.").waitFor();
 await unlocked.scrollIntoViewIfNeeded();
 await sam.screenshot({ path: `${SHOTS}19-contenu-debloque.png` });
 s = state();
 const bought = s.tables.purchases.find((p) => p.kind === "contenu");
 assert.deepEqual([bought.amount_cents, bought.is_demo], [600, true]);
-step("contre-offre à 3 € refusée, à 6 € acceptée ; achat (paiement de démo) ; la photo s'affiche");
+step("contre-offre à 3 € refusée, à 6 € acceptée ; achat (paiement de démo) ; les 2 photos et la légende s'affichent");
 
 // 33. L'étape 3 se propose par l'équipe : message écrit par l'IA, relu, envoyé.
 await admin.reload();
