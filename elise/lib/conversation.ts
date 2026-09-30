@@ -22,10 +22,9 @@ function toSalePrompt(sale: SaleContext): SalePrompt {
       ? {
           description: describe(next),
           isPaid: next.is_paid,
-          priceCents: Math.min(next.price_cents, sale.remainingCents ?? Number.POSITIVE_INFINITY),
+          priceCents: next.price_cents,
           minCents: next.min_price_cents,
-          // Jamais au-delà de ce qui reste du plafond du mois.
-          maxCents: Math.min(next.max_price_cents, sale.remainingCents ?? Number.POSITIVE_INFINITY),
+          maxCents: next.max_price_cents,
           messageMode: next.message_mode,
           instruction: next.message_mode === "ia" ? next.message_text.trim() : "",
           moment: next.moment ?? "",

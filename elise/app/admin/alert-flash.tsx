@@ -9,14 +9,13 @@ import { alertDate, markAlertsSeen, useAlerts } from "./alerts-store";
 import { setManual } from "./messages/actions";
 
 // Le bandeau « flash » : dès qu'une nouvelle alerte arrive (contre-offre,
-// plafond presque atteint, urgence), il s'affiche en haut de chaque page de
+// urgence), il s'affiche en haut de chaque page de
 // l'espace de l'équipe, avec « Prendre la main » en un clic. Fermé, il ne
 // revient que pour une alerte plus récente.
 
 export const ALERT_STYLE: Record<TeamAlert["kind"], string> = {
   urgence: "bg-bad text-white",
   contre_offre: "bg-accent text-white",
-  plafond: "bg-foreground text-background",
 };
 
 export function AlertFlash() {

@@ -45,10 +45,9 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   refuse (410) une créatrice hors ligne ; la règle RLS d'écriture des
   messages exige `creatrice_disponible(creator_id)`. Toutes les lectures
   (`lib/memory.ts`, `lib/sales.ts`, `lib/relances.ts`, `lib/team.ts`)
-  prennent la créatrice. Seuls le plafond, la pause après achat, les offres
-  payantes par jour et « une offre en attente à la fois » valent pour la
-  personne entière. `ai_settings.creator_id` ne sert plus (repli de la
-  migration). La base neuve crée une créatrice « Élise » en ligne ;
+  prennent la créatrice. Seuls la pause après achat, les offres payantes par
+  jour et « une offre en attente à la fois » valent pour la personne entière.
+  `ai_settings.creator_id` ne sert plus (repli de la migration). La base neuve crée une créatrice « Élise » en ligne ;
   `supabase/katherine.sql` crée Katherine (profil + `persona.ton`).
 - Personnage, messagerie et vente : `ai_settings` (mode auto/hybride/manuel),
   `creators` (persona jsonb dont `ton` = personnalité et façon d'écrire,
@@ -66,14 +65,15 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   personnes n'écrivent que des messages `role='user'`. L'IA propose une offre
   par la balise `[[PROPOSER prix=…]]`, seulement si `lib/sales.ts` l'a permis
   (`saleBlock` : fin du script, étape de l'équipe, offre en attente, premiers
-  messages, espacement, prise de nouvelles, plafond, pause après achat
+  messages, espacement, prise de nouvelles, urgence, pause après achat
   `sales_pause_hours`, offres payantes sur 24 h `sales_max_per_day` ; un
   cadeau gratuit n'est soumis qu'aux premiers) ; `describeBlock` en fait la
   phrase de la fiche. La consigne donne la place de l'étape (« le 2e sur 5 »)
-  et un prix maximum ramené au reste du plafond. `proposer_etape` (SQL)
-  impose l'ordre, borne le prix, et refuse un contenu payant au-delà du
-  plafond du mois. Les achats sont
-  « démo » tant qu'aucun paiement n'est branché.
+  et la fourchette de prix. `proposer_etape` (SQL) impose l'ordre et borne le
+  prix entre le minimum et le maximum. Pas de plafond de dépenses (retiré à la
+  demande du porteur du projet : colonnes `spending_cap_cents`, fonction
+  `plafond_de` et alertes « plafond » supprimées par `schema.sql`). Les
+  achats sont « démo » tant qu'aucun paiement n'est branché.
 - Lignes rouges posées par le porteur du projet et par Claude : l'IA se dit
   toujours IA, chaque réponse est marquée IA ou Équipe, jamais de rencontre
   (même « dans la même région »), jamais de vente par solitude/attachement,
@@ -152,19 +152,15 @@ impossibles à faire à sa place (créer un compte, copier une clé).
 - Au premier déploiement, le porteur du projet a collé des exemples au lieu
   des vraies valeurs (`sb_publishable_…`, `/rest/v1/` en trop) : donner des
   valeurs à copier telles quelles, ou lui faire utiliser le bouton « copier ».
-- Alertes de l'équipe : table `team_alerts` (kind `contre_offre` | `plafond`
-  | `urgence`, `detail` jsonb sans texte de message, `notified_at`,
-  `handled_at`). Créées par `alerter_equipe` (SQL, interne) : dans
-  `faire_une_offre` (une alerte ouverte par offre, mise à jour), dans
-  `acheter_offre` (80 % du plafond, une fois par mois), et par la route
+- Alertes de l'équipe : table `team_alerts` (kind `contre_offre` | `urgence`,
+  `detail` jsonb sans texte de message, `notified_at`, `handled_at`). Créées par `alerter_equipe` (SQL, interne) : dans
+  `faire_une_offre` (une alerte ouverte par offre, mise à jour), et par la route
   `/api/chat` pour les urgences (`lib/urgency.ts` : `detectUrgency` sur le
   message — humain, age, reclamation, attention — et la balise `[[EQUIPE]]`
   que l'IA ajoute, consigne `teamSection` dans `lib/prompts.ts`, retirée par
   `parseTeamFlag` ; une seule urgence ouverte par conversation). Une urgence
   ouverte bloque toute vente (`saleBlock` → `urgence`) et la prise de
-  nouvelles ; 80 % du plafond bloque les offres payantes de l'IA
-  (`plafond_proche`, `NEAR_CAP_PERCENT` dans `lib/alerts.ts`, même seuil que
-  le SQL). Envoi Discord/Telegram par `lib/notify.ts` (`flushAlerts` dans
+  nouvelles. Envoi Discord/Telegram par `lib/notify.ts` (`flushAlerts` dans
   `after()`, `alertes_a_envoyer` réserve les alertes du dernier jour ;
   `allowed_mentions` vide ; jamais le prénom). Équipe : `admin_alertes`,
   `admin_traiter_alertes`, `admin_prendre_la_main` ; `admin_boite` renvoie

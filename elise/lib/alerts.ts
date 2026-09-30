@@ -5,7 +5,7 @@
 import { formatEuros } from "./dashboard";
 import { URGENCY_LABEL, type UrgencyReason } from "./urgency";
 
-export type AlertKind = "contre_offre" | "plafond" | "urgence";
+export type AlertKind = "contre_offre" | "urgence";
 
 export type AlertDetail = {
   /** urgence */
@@ -16,9 +16,6 @@ export type AlertDetail = {
   prix_cents?: number;
   statut?: "acceptee" | "refusee";
   essais_restants?: number | null;
-  /** plafond */
-  depense_cents?: number;
-  plafond_cents?: number;
 };
 
 export type TeamAlert = {
@@ -36,22 +33,13 @@ export type TeamAlert = {
   created_at?: string;
 };
 
-/** À partir de ce pourcentage du plafond du mois dépensé, l'équipe est prévenue (même seuil que schema.sql). */
-export const NEAR_CAP_PERCENT = 80;
-
-/** Le plafond du mois est-il presque atteint (ou atteint) ? */
-export function nearCap(spentCents: number, capCents: number | null): boolean {
-  return capCents !== null && capCents > 0 && spentCents * 100 >= capCents * NEAR_CAP_PERCENT;
-}
-
 export const ALERT_TITLE: Record<AlertKind, string> = {
   urgence: "Urgence",
   contre_offre: "Contre-offre",
-  plafond: "Plafond bientôt atteint",
 };
 
 /** Du plus pressant au moins pressant, pour trier et pour les pastilles. */
-export const ALERT_ORDER: AlertKind[] = ["urgence", "contre_offre", "plafond"];
+export const ALERT_ORDER: AlertKind[] = ["urgence", "contre_offre"];
 
 /** Ce qui s'est passé, en une phrase, sans le texte des messages. */
 export function alertSummary(alert: Pick<TeamAlert, "kind" | "detail">): string {
@@ -68,10 +56,6 @@ export function alertSummary(alert: Pick<TeamAlert, "kind" | "detail">): string 
           : `refusée${typeof d.essais_restants === "number" ? `, encore ${d.essais_restants} essai${d.essais_restants > 1 ? "s" : ""}` : ""}`;
       return `Propose ${amount}${price} (${outcome})`;
     }
-    case "plafond":
-      return d.depense_cents !== undefined && d.plafond_cents !== undefined
-        ? `${formatEuros(d.depense_cents)} dépensés sur ${formatEuros(d.plafond_cents)} ce mois-ci : l'IA ne propose plus de contenu payant`
-        : "Plafond du mois bientôt atteint : l'IA ne propose plus de contenu payant";
   }
 }
 
@@ -80,7 +64,7 @@ export function alertPath(alert: Pick<TeamAlert, "user_id" | "creator_id">): str
   return `/admin/messages?u=${alert.user_id}&c=${alert.creator_id}`;
 }
 
-const ICON: Record<AlertKind, string> = { urgence: "🔴", contre_offre: "💬", plafond: "🟠" };
+const ICON: Record<AlertKind, string> = { urgence: "🔴", contre_offre: "💬" };
 
 /**
  * Le message envoyé sur Discord ou Telegram : le type d'alerte, la créatrice,

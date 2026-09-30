@@ -13,7 +13,6 @@ const ok: SaleInput = {
   userMessages: 20,
   sinceLastOffer: Infinity,
   sinceRelance: null,
-  remainingCents: null,
   hoursSincePurchase: null,
   paidOffersToday: 0,
 };
@@ -47,13 +46,7 @@ describe("l'avancement du script", () => {
   });
 });
 
-describe("une dépense saine", () => {
-  it("jamais au-delà du plafond du mois", () => {
-    assert.equal(reason({ remainingCents: 400 }), "plafond");
-    assert.equal(reason({ remainingCents: 500 }), null);
-    assert.equal(describeBlock({ reason: "plafond" }, null), "Son plafond du mois ne permet pas ce contenu.");
-  });
-
+describe("le rythme des offres payantes", () => {
   it("une pause après chaque achat", () => {
     assert.deepEqual(saleBlock({ ...ok, hoursSincePurchase: 5.5 }, rules), { reason: "pause", hours: 19 });
     assert.equal(reason({ hoursSincePurchase: 30 }), null);
@@ -66,8 +59,8 @@ describe("une dépense saine", () => {
     assert.equal(saleBlock({ ...ok, paidOffersToday: 1 }, { ...rules, sales_max_per_day: 2 }), null);
   });
 
-  it("un cadeau (gratuit) n'est freiné ni par le plafond, ni par la pause, ni par le nombre par jour", () => {
-    assert.equal(reason({ next: free, remainingCents: 0, hoursSincePurchase: 1, paidOffersToday: 5 }), null);
+  it("un cadeau (gratuit) n'est freiné ni par la pause, ni par le nombre par jour", () => {
+    assert.equal(reason({ next: free, hoursSincePurchase: 1, paidOffersToday: 5 }), null);
     // Mais il attend quand même son tour dans la conversation.
     assert.equal(reason({ next: free, sinceLastOffer: 1 }), "espacement");
   });

@@ -43,11 +43,10 @@ const FILTERS: { id: Filter; label: string; match: (c: InboxItem) => boolean }[]
   { id: "a_traiter", label: "À traiter", match: (c) => (c.alertes?.length ?? 0) > 0 },
   { id: "urgence", label: "Urgences", match: (c) => has(c, "urgence") },
   { id: "contre_offre", label: "Contre-offres", match: (c) => has(c, "contre_offre") },
-  { id: "plafond", label: "Plafond proche", match: (c) => has(c, "plafond") },
   { id: "non_lus", label: "Non lus", match: (c) => c.non_lus > 0 },
   { id: "manuel", label: "Main prise", match: (c) => c.manuel === true },
 ];
-const SHORT: Record<AlertKind, string> = { urgence: "Urgence", contre_offre: "Contre-offre", plafond: "Plafond" };
+const SHORT: Record<AlertKind, string> = { urgence: "Urgence", contre_offre: "Contre-offre" };
 /** Pour « À traiter » : les urgences d'abord. */
 const rank = (c: InboxItem) => Math.min(...(c.alertes ?? []).map((k) => ALERT_ORDER.indexOf(k)), ALERT_ORDER.length);
 const STATUS_LABEL: Record<TeamOffer["status"], string> = {
@@ -81,7 +80,6 @@ function contactForm(t: Thread): ContactForm {
     emojis: t.contact.emojis,
     notes: t.contact.notes,
     script_id: t.contact.script_id,
-    spending_cap: t.contact.spending_cap_cents === null ? "" : euros(t.contact.spending_cap_cents),
   };
 }
 
@@ -595,10 +593,7 @@ export function Inbox({
                 <dt className="text-muted">LTV</dt>
                 <dd className="font-bold">{formatEuros(person.depense_cents)}</dd>
                 <dt className="text-muted">Ce mois-ci</dt>
-                <dd>
-                  {formatEuros(person.depense_mois_cents)}
-                  {person.plafond_cents !== null ? ` / ${formatEuros(person.plafond_cents)}` : ""}
-                </dd>
+                <dd>{formatEuros(person.depense_mois_cents)}</dd>
               </dl>
 
               {form && (
@@ -614,8 +609,8 @@ export function Inbox({
                       <span className="font-semibold">L&apos;IA peut répondre à cette personne</span>
                       <span className="block text-xs text-muted">{aiLine}</span>
                       <span className="block text-xs text-muted">
-                        Réglage de {thread.creatorName} pour cette personne (comme les emojis). Ville, fuseau, notes,
-                        script et plafond valent pour toutes les créatrices.
+                        Réglage de {thread.creatorName} pour cette personne (comme les emojis). Ville, fuseau, notes et
+                        script valent pour toutes les créatrices.
                       </span>
                     </span>
                   </label>
@@ -678,16 +673,6 @@ export function Inbox({
                         </option>
                       ))}
                     </select>
-                  </label>
-                  <label className="flex flex-col gap-1 text-sm">
-                    <span className="font-semibold">Plafond de dépenses par mois (€)</span>
-                    <input
-                      value={form.spending_cap}
-                      onChange={(e) => setForm({ ...form, spending_cap: e.target.value })}
-                      inputMode="decimal"
-                      placeholder="Vide : celui des réglages de l'IA"
-                      className="rounded-xl border border-line bg-surface px-3 py-2 outline-none focus:border-accent"
-                    />
                   </label>
                   <button type="submit" disabled={busy} className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-white disabled:opacity-60">
                     Enregistrer la fiche

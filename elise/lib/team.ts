@@ -39,7 +39,6 @@ export type Person = {
   inscrit_le: string;
   depense_cents: number;
   depense_mois_cents: number;
-  plafond_cents: number | null;
   script_id: number | null;
   prochaine_etape: Step | null;
 };

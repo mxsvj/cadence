@@ -1,6 +1,6 @@
 // Le personnage, la messagerie de l'équipe et la vente de contenus, côté
 // base : âge minimum, secret des prix, ordre de vente, contre-offres,
-// plafond, contenu verrouillé.
+// contenu verrouillé, pas de plafond de dépenses.
 import assert from "node:assert/strict";
 import { before, describe, it } from "node:test";
 import { freshDatabase, schemaSql } from "./db";
@@ -170,17 +170,21 @@ describe("vente : contre-offres, achat, contenu", () => {
     assert.deepEqual([p.kind, p.is_demo], ["contenu", true]);
   });
 
-  it("l'étape suivante est la troisième, jamais proposée au-delà du plafond du mois", async () => {
-    // 6 € déjà dépensés, plafond 10 € : il reste 4 €, sous le minimum de 10 €.
-    await as(ADMIN, `update public.contacts set spending_cap_cents = 1000 where user_id = '${KARIM}'`);
-    await assert.rejects(propose("service", KARIM, steps[2], 1500), /plafond de dépenses du mois/);
-    // Plafond 17 € : il reste 11 €, le prix est ramené à 11 € (entre 10 et 20 €).
-    await as(ADMIN, `update public.contacts set spending_cap_cents = 1700 where user_id = '${KARIM}'`);
-    const { offre } = await propose("service", KARIM, steps[2], 1500);
+  it("l'étape suivante est la troisième, au prix choisi, sans plafond de dépenses", async () => {
+    // Prix personnalisé à 11 € (entre 10 et 20 €), quel que soit ce qui a déjà été dépensé.
+    const { offre } = await propose("service", KARIM, steps[2], 1100);
     assert.deepEqual([offre.price_cents, offre.personalized], [1100, true]);
     await as(KARIM, "select public.acheter_offre($1)", [offre.id]);
-    await as(ADMIN, `update public.contacts set spending_cap_cents = null where user_id = '${KARIM}'`);
     await assert.rejects(propose("service", KARIM, steps[2], 1500), /plus rien à proposer/);
+  });
+
+  it("le plafond de dépenses n'existe plus dans la base", async () => {
+    await assert.rejects(as(ADMIN, "select spending_cap_cents from public.contacts"), /does not exist/);
+    await assert.rejects(as(ADMIN, "select spending_cap_cents from public.ai_settings"), /does not exist/);
+    await assert.rejects(as("service", "select public.plafond_de($1)", [KARIM]), /does not exist/);
+    const p = await one<Record<string, unknown>>(ADMIN, "select public.admin_personne($1, 1) as r", [KARIM]);
+    assert.equal("plafond_cents" in p, false);
+    assert.equal(p.depense_mois_cents, 1700); // ce qu'elle a dépensé ce mois-ci reste affiché
   });
 });
 
@@ -232,7 +236,7 @@ describe("tableau de bord : contenus et LTV", () => {
       ltv: { clients: number; moyenne_cents: number; payants: number; inscrits: number };
       clients: { nom: string; contenus_cents: number; achats: number }[];
     }>(ADMIN, "select public.admin_dashboard() as r");
-    assert.deepEqual(d.totaux.contenus, { nombre: 2, cents: 1700 }); // 6 € + 11 € (prix ramené au plafond)
+    assert.deepEqual(d.totaux.contenus, { nombre: 2, cents: 1700 }); // 6 € + 11 €
     assert.equal(d.ltv.clients, 1);
     assert.equal(d.ltv.moyenne_cents, 1700);
     assert.equal(d.ltv.inscrits, 3);

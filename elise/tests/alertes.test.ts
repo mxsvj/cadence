@@ -1,8 +1,7 @@
-// Les alertes de l'équipe, côté base : contre-offre, plafond presque atteint,
-// urgence, « prendre la main », et qui peut lire ou traiter quoi.
+// Les alertes de l'équipe, côté base : contre-offre, urgence, « prendre la main », et qui peut lire ou traiter quoi.
 import assert from "node:assert/strict";
 import { before, describe, it } from "node:test";
-import { freshDatabase } from "./db";
+import { freshDatabase, schemaSql } from "./db";
 
 const ADMIN = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 const KARIM = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
@@ -79,23 +78,19 @@ describe("alertes : contre-offres", () => {
   });
 });
 
-describe("alertes : plafond presque atteint", () => {
-  it("prévient une fois par mois, dès 80 % du plafond dépensés", async () => {
-    await base.as(ADMIN, "insert into public.contacts (user_id, spending_cap_cents) values ($1, 1300)", [KARIM]);
+describe("alertes : achats sans plafond", () => {
+  it("un achat ne crée aucune alerte, et il n'y a plus d'alerte « plafond »", async () => {
     const [pending] = await open();
-    await base.as(KARIM, "select public.acheter_offre($1)", [pending.offer_id]); // 6 € sur 13 € : moins de 80 %
+    await base.as(KARIM, "select public.acheter_offre($1)", [pending.offer_id]); // 6 €
+    const offer = await propose(KARIM, steps[1]); // 10 €, au prix habituel
+    await base.as(KARIM, "select public.acheter_offre($1)", [offer]);
+    const [{ total }] = await base.as<{ total: number }>("service", "select sum(amount_cents)::integer as total from public.purchases where user_id = $1", [KARIM]);
+    assert.equal(total, 1600);
     assert.deepEqual((await open()).map((a) => a.kind), ["contre_offre"]);
-
-    const offer = await propose(KARIM, steps[1]); // prix ramené à ce qui reste : 7 €
-    await base.as(KARIM, "select public.acheter_offre($1)", [offer]); // 13 € sur 13 €
-    const alerts = await open();
-    const cap = alerts.find((a) => a.kind === "plafond");
-    assert.ok(cap);
-    assert.deepEqual(cap.detail, { depense_cents: 1300, plafond_cents: 1300 });
-
-    // Une seule fois par mois, même traitée.
-    await base.as(ADMIN, "select public.admin_traiter_alertes($1, 1, $2)", [KARIM, cap.id]);
-    assert.equal(await one("service", "select public.alerter_equipe($1, 1, 'plafond', null, '{}') as r", [KARIM]), null);
+    await assert.rejects(
+      base.as("service", "select public.alerter_equipe($1, 1, 'plafond', null, '{}')", [KARIM]),
+      /check constraint/,
+    );
   });
 });
 
@@ -164,5 +159,26 @@ describe("prendre la main", () => {
   it("« Effacer toutes mes données » efface aussi ses alertes", async () => {
     await base.as(KARIM, "select public.effacer_mes_donnees()");
     assert.deepEqual(await open(KARIM), []);
+  });
+});
+
+describe("mise à jour d'une base qui avait le plafond de dépenses", () => {
+  it("relancer schema.sql retire les colonnes, la fonction et les alertes « plafond »", async () => {
+    await base.db.exec(`
+      alter table public.contacts add column spending_cap_cents integer;
+      alter table public.ai_settings add column spending_cap_cents integer not null default 10000;
+      create function public.plafond_de(p_user uuid) returns integer language sql as $$ select 1000 $$;
+      alter table public.team_alerts drop constraint team_alerts_kind_check;
+      insert into public.team_alerts (user_id, creator_id, kind) values ('${LEA}', 1, 'plafond');
+    `);
+    await base.db.exec(schemaSql);
+    const left = await base.db.query(`
+      select column_name from information_schema.columns
+      where table_schema = 'public' and column_name = 'spending_cap_cents'`);
+    assert.deepEqual(left.rows, []);
+    const fn = await base.db.query("select 1 from pg_proc where proname = 'plafond_de'");
+    assert.deepEqual(fn.rows, []);
+    const kinds = await base.db.query<{ kind: string }>("select distinct kind from public.team_alerts order by kind");
+    assert.ok(kinds.rows.every((r) => r.kind === "contre_offre" || r.kind === "urgence"));
   });
 });

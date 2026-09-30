@@ -26,9 +26,9 @@ refuse.
 - **Plusieurs créatrices en ligne** : la personne choisit avec laquelle
   parler (`/`, ou directement `/c/<numéro>` ; une seule en ligne : on arrive
   chez elle). Chaque conversation est totalement séparée : ses messages, ce
-  que l'IA sait de la personne, son résumé, son script et ses offres. Seul le
-  plafond de dépenses (et la pause après un achat, et le nombre d'offres
-  payantes par jour) vaut pour la personne, toutes créatrices confondues.
+  que l'IA sait de la personne, son résumé, son script et ses offres. Seuls la
+  pause après un achat et le nombre d'offres payantes par jour valent pour la
+  personne, toutes créatrices confondues.
 - **La conversation**, façon messagerie : Élise à gauche, soi à droite,
   lisible sur téléphone, mode sombre compris. Élise se présente d'elle-même
   au premier passage.
@@ -42,8 +42,8 @@ refuse.
 - **Le résumé** : quand plus de 40 messages ne sont pas encore résumés, les
   plus anciens (tous sauf les 20 derniers) rejoignent le résumé (vérifié en
   même temps que la fiche, tous les 3 messages).
-- **Alertes de l'équipe** : une contre-offre, un plafond du mois dépensé à
-  80 %, ou une personne qui a besoin d'un humain (elle le demande, dit avoir
+- **Alertes de l'équipe** : une contre-offre, ou une personne qui a besoin
+  d'un humain (elle le demande, dit avoir
   moins de 18 ans, parle d'un problème de paiement, ou son message inquiète
   l'IA) préviennent l'équipe : bandeau « flash » dans l'espace de l'équipe,
   pastille sur l'onglet Messages, et, si on le branche, un message sur Discord
@@ -234,8 +234,7 @@ fiche de la personne :
   qu'on choisit, ou aucun ;
 - **comment se comporter avec elle** : 5 000 caractères de notes pour l'IA
   (communes à toutes les créatrices) ;
-- **script de vente** suivi (ceux de cette créatrice ou de toutes), et
-  **plafond de dépenses** mensuel propre ;
+- **script de vente** suivi (ceux de cette créatrice ou de toutes) ;
 - ce que l'IA sait d'elle (sa fiche), sa LTV, et la **vente** : l'étape
   suivante du script, l'offre en attente (qu'on peut retirer), et l'envoi de
   l'étape suivante par l'équipe, avec un message écrit à la main ou rédigé par
@@ -243,15 +242,11 @@ fiche de la personne :
 
 ### Alertes
 
-Trois situations préviennent l'équipe, pour qu'elle intervienne au bon moment :
+Deux situations préviennent l'équipe, pour qu'elle intervienne au bon moment :
 
 - **Contre-offre** : une personne propose un autre prix pour un contenu
   payant (une alerte par offre, mise à jour à chaque nouvelle proposition,
   acceptée ou refusée).
-- **Plafond bientôt atteint** : après un achat, 80 % ou plus de son plafond du
-  mois est dépensé (une fois par mois). L'IA ne lui propose alors plus aucun
-  contenu payant : c'est l'équipe qui décide, et la base refuse toujours tout
-  achat au-delà du plafond.
 - **Urgence** : la personne demande à parler à un humain, dit avoir moins de
   18 ans, parle d'un remboursement ou d'un problème de paiement, ou son
   message demande de l'attention (détresse, danger) ; l'IA peut aussi
@@ -263,8 +258,7 @@ Trois situations préviennent l'équipe, pour qu'elle intervienne au bon moment 
 Où les voir : un **bandeau** en haut de chaque page de l'espace de l'équipe
 (avec « Prendre la main » et « Ouvrir »), une **pastille** sur l'onglet
 Messages, la liste **À traiter** du tableau de bord, et dans Messages des
-**filtres** (À traiter, Urgences, Contre-offres, Plafond proche, Non lus, Main
-prise), une étiquette par conversation, et les alertes en haut de la
+**filtres** (À traiter, Urgences, Contre-offres, Non lus, Main prise), une étiquette par conversation, et les alertes en haut de la
 conversation avec « Traité ».
 
 **Prendre la main** (un clic, depuis le bandeau, le tableau de bord ou la
@@ -333,13 +327,12 @@ physiques dans un registre sexuel.
 - **Réglages de l'IA** : nombre de messages relus, consignes
   supplémentaires. La créativité est réglée au maximum fiable (1,0) et l'IA
   choisit elle-même la longueur de chaque réponse : rien à régler.
-- **Garde-fous de la vente** : plafond mensuel par personne, nombre de
-  messages avant la première offre et entre deux offres, **pause après un
-  achat** (24 h par défaut : aucune offre payante pendant ce temps) et **offres
-  payantes par l'IA sur 24 h** (1 par défaut). L'IA ne propose jamais un prix
-  au-delà de ce qui reste du plafond du mois (la base le refuse aussi, même
-  pour l'équipe) ; un cadeau gratuit n'est freiné ni par le plafond, ni par la
-  pause, ni par le nombre par jour. Dans la fiche d'une personne (onglet
+- **Garde-fous de la vente** : nombre de messages avant la première offre et
+  entre deux offres, **pause après un achat** (24 h par défaut : aucune offre
+  payante pendant ce temps) et **offres payantes par l'IA sur 24 h** (1 par
+  défaut). Il n'y a pas de plafond de dépenses : chaque personne achète
+  librement. Un cadeau gratuit n'est freiné ni par la pause, ni par le nombre
+  par jour. Dans la fiche d'une personne (onglet
   Messages), une ligne dit où en est la vente et pourquoi l'IA ne propose pas
   (« Prochaine offre dans 3 messages », « Pause après son dernier achat :
   encore 12 heures »…).
@@ -399,7 +392,6 @@ Les règles, vérifiées par la base de données elle-même :
 - **rien du contenu** (ni fichier, ni aperçu, ni texte) n'est transmis avant
   l'achat ; les fichiers sont dans un dossier privé et ne sortent que par un
   lien valable cinq minutes ;
-- un achat au-delà du **plafond du mois** est refusé ;
 - l'IA ne vend jamais par la solitude, l'attachement, la culpabilité ou
   l'urgence, ne propose rien si la personne va mal ou parle de difficultés
   d'argent, et il n'y a jamais de contenu sexuel.

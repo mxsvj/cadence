@@ -742,9 +742,7 @@ await sam.screenshot({ path: `${SHOTS}18-offre-verrouillee.png` });
 step("offre payante : verrouillée, aucune image chargée, prix personnalisé affiché, minimum jamais transmis ; l'IA ne la propose que sur le sujet qu'elle illustre");
 
 // 32. Contre-offres : refusée sous le minimum, acceptée au-dessus, puis achat.
-// Le plafond de Sam est de 7 € ce mois-ci : l'achat de 6 € en dépasse 80 %.
 const samUser = state().users.find((u) => u.email === "sam@example.com").id;
-await sql("update public.contacts set spending_cap_cents = 700 where user_id = $1", [samUser]);
 await sam.getByRole("button", { name: "Faire une offre" }).click();
 await sam.getByLabel("Montant de votre offre en euros").fill("3");
 await sam.getByRole("button", { name: "Proposer", exact: true }).click();
@@ -770,34 +768,32 @@ const bought = s.tables.purchases.find((p) => p.kind === "contenu");
 assert.deepEqual([bought.amount_cents, bought.is_demo], [600, true]);
 step("contre-offre à 3 € refusée, à 6 € acceptée ; achat (paiement de démo) ; les 2 photos et la légende s'affichent");
 
-// 32b. L'équipe est prévenue : la contre-offre, puis le plafond presque atteint.
-await until(() => (state().tables.team_alerts ?? []).length >= 2, "alertes créées");
+// 32b. L'équipe est prévenue de la contre-offre (une seule alerte, mise à jour à chaque proposition).
+await until(() => (state().tables.team_alerts ?? []).some((a) => a.detail.statut === "acceptee"), "alerte créée");
 s = state();
-const counter = s.tables.team_alerts.find((a) => a.kind === "contre_offre");
+assert.equal(s.tables.team_alerts.length, 1);
+const counter = s.tables.team_alerts[0];
 assert.deepEqual(
-  [counter.user_id, Number(counter.creator_id), counter.detail.statut, counter.detail.montant_cents],
-  [samUser, CHLOE, "acceptee", 600],
+  [counter.kind, counter.user_id, Number(counter.creator_id), counter.detail.statut, counter.detail.montant_cents],
+  ["contre_offre", samUser, CHLOE, "acceptee", 600],
 );
-assert.deepEqual(s.tables.team_alerts.find((a) => a.kind === "plafond").detail, { depense_cents: 600, plafond_cents: 700 });
-await sql("update public.contacts set spending_cap_cents = null where user_id = $1", [samUser]);
 await until(() => state().webhooks.length >= 2, "alertes envoyées sur Discord");
 const hooks = state().webhooks;
-assert.ok(hooks.some((h) => h.content.startsWith("💬 Contre-offre · conversation avec Chloé")));
-assert.ok(hooks.some((h) => h.content.startsWith("🟠 Plafond bientôt atteint · conversation avec Chloé")));
+assert.ok(hooks.every((h) => h.content.startsWith("💬 Contre-offre · conversation avec Chloé")));
 for (const h of hooks) {
   assert.ok(!h.content.includes("Sam") && !h.content.includes("sam@"), "ni prénom ni e-mail sur Discord");
   assert.ok(h.content.includes(`/admin/messages?u=${samUser}&c=${CHLOE}`));
   assert.deepEqual(h.allowed_mentions, { parse: [] });
 }
-step("contre-offre et plafond presque atteint : alertes en base, envoyées sur Discord sans prénom ni message, avec le lien");
+step("contre-offre : alerte en base, envoyée sur Discord à chaque proposition, sans prénom ni message, avec le lien");
 
 // (Next.js a aussi son propre role="alert", vide : on cherche le bandeau par son bouton.)
 const banner = (p) => p.getByRole("alert").filter({ has: p.getByRole("button", { name: "Fermer l'alerte" }) });
 const flash = banner(admin);
 await flash.waitFor({ timeout: 15000 });
-assert.match(plain(await flash.textContent()), /Plafond bientôt atteint · Sam avec Chloé/);
-assert.match(await flash.textContent(), /et 1 autre alerte/);
-await admin.getByRole("link", { name: "Messages (2 alertes à traiter)" }).waitFor();
+assert.match(plain(await flash.textContent()), /Contre-offre · Sam avec Chloé/);
+assert.match(plain(await flash.textContent()), /Propose 6,00 € pour un prix de 9,00 € \(acceptée\)/);
+await admin.getByRole("link", { name: "Messages (1 alerte à traiter)" }).waitFor();
 await admin.getByRole("button", { name: "Marquer traitée : Contre-offre" }).waitFor({ timeout: 12000 });
 await admin.screenshot({ path: `${SHOTS}19c-alerte-flash.png` });
 await admin.getByRole("button", { name: "Fermer l'alerte" }).click();
@@ -805,10 +801,10 @@ await flash.waitFor({ state: "detached" });
 await admin.getByRole("button", { name: /^Contre-offres/ }).click();
 await admin.getByRole("button", { name: /Sam · avec Chloé/ }).waitFor();
 assert.equal(await admin.getByRole("button", { name: /Karim · avec/ }).count(), 0);
-assert.match(await admin.getByRole("button", { name: /Sam · avec Chloé/ }).textContent(), /Contre-offre.*Plafond/);
+assert.match(await admin.getByRole("button", { name: /Sam · avec Chloé/ }).textContent(), /Contre-offre/);
+assert.equal(await admin.getByRole("button", { name: /^Plafond/ }).count(), 0); // plus de filtre « Plafond proche »
 await admin.getByRole("button", { name: /^Toutes/ }).click();
 await admin.getByRole("button", { name: "Marquer traitée : Contre-offre" }).click();
-await admin.getByRole("button", { name: "Marquer traitée : Plafond bientôt atteint" }).click();
 await until(() => state().tables.team_alerts.every((a) => a.handled_at), "alertes traitées");
 await admin.getByRole("link", { name: "Messages", exact: true }).waitFor();
 step("bandeau flash, pastille de l'onglet Messages, filtre « Contre-offres », et « Traité » en un clic");
@@ -830,14 +826,17 @@ await letter.waitFor({ timeout: 12000 });
 assert.match(plain(await letter.textContent()), /5,00 €/);
 step("l'équipe propose l'étape suivante avec un message rédigé par l'IA ; Sam la reçoit en direct");
 
-// 34. Le plafond du mois : 8 € pour Sam, qui a déjà dépensé 6 €.
-await admin.getByLabel("Plafond de dépenses par mois (€)").fill("8");
-await admin.getByRole("button", { name: "Enregistrer la fiche" }).click();
-await admin.getByText("Fiche enregistrée.").waitFor();
+// 34. Plus de plafond de dépenses : la fiche n'en parle plus, et Sam achète la lettre sans limite.
+assert.equal(await admin.getByLabel("Plafond de dépenses par mois (€)").count(), 0);
 await sam.getByRole("button", { name: /Débloquer pour 5,00/ }).click();
 await sam.getByRole("button", { name: "Confirmer" }).click();
-await sam.getByText("Vous avez atteint le plafond de dépenses de ce mois-ci.").waitFor();
-step("plafond mensuel : l'achat au-delà est refusé, avec un message clair");
+await sam.getByText("Débloqué · 5,00 €").waitFor();
+assert.deepEqual(
+  state().tables.purchases.filter((p) => p.kind === "contenu").map((p) => p.amount_cents).sort((a, b) => a - b),
+  [500, 600],
+);
+await until(() => state().tables.team_alerts.every((a) => a.handled_at), "aucune nouvelle alerte après un achat");
+step("plus de plafond : aucun champ dans la fiche, le 2e achat passe (11 € dans le mois), sans alerte");
 
 // 34b. Prendre des nouvelles : l'équipe l'active (après 24 h d'absence).
 await admin.goto(`${BASE}/admin/parametres`);
@@ -934,7 +933,7 @@ step("mode manuel : plus aucune réponse de l'IA, tout passe par l'équipe");
 await admin.goto(`${BASE}/admin`);
 await admin.getByText("LTV · valeur d'un client").waitFor();
 const contentTile = admin.locator("div", { has: admin.getByText("Contenus vendus", { exact: true }) }).last();
-assert.match(plain(await contentTile.textContent()), /6,00 €/);
+assert.match(plain(await contentTile.textContent()), /11,00 €/);
 await admin.screenshot({ path: `${SHOTS}20-tableau-ltv.png`, fullPage: true });
 step("tableau de bord : contenus vendus et section LTV");
 
