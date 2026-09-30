@@ -45,9 +45,9 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   refuse (410) une créatrice hors ligne ; la règle RLS d'écriture des
   messages exige `creatrice_disponible(creator_id)`. Toutes les lectures
   (`lib/memory.ts`, `lib/sales.ts`, `lib/relances.ts`, `lib/team.ts`)
-  prennent la créatrice. Seuls la pause après achat, les offres payantes par
-  jour et « une offre en attente à la fois » valent pour la personne entière.
-  `ai_settings.creator_id` ne sert plus (repli de la migration). La base neuve crée une créatrice « Élise » en ligne ;
+  prennent la créatrice. Seule « une offre en attente à la fois » vaut pour la
+  personne entière. `ai_settings.creator_id` ne sert plus (repli de la
+  migration). La base neuve crée une créatrice « Élise » en ligne ;
   `supabase/katherine.sql` crée Katherine (profil + `persona.ton`).
 - Personnage, messagerie et vente : `ai_settings` (mode auto/hybride/manuel),
   `creators` (persona jsonb dont `ton` = personnalité et façon d'écrire,
@@ -65,9 +65,9 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   personnes n'écrivent que des messages `role='user'`. L'IA propose une offre
   par la balise `[[PROPOSER prix=…]]`, seulement si `lib/sales.ts` l'a permis
   (`saleBlock` : fin du script, étape de l'équipe, offre en attente, premiers
-  messages, espacement, prise de nouvelles, urgence, pause après achat
-  `sales_pause_hours`, offres payantes sur 24 h `sales_max_per_day` ; un
-  cadeau gratuit n'est soumis qu'aux premiers) ; `describeBlock` en fait la
+  messages, espacement, prise de nouvelles, urgence ; la pause après achat
+  et le quota par jour ont été retirés à la demande du porteur du projet,
+  colonnes supprimées par `schema.sql`) ; `describeBlock` en fait la
   phrase de la fiche. La consigne donne la place de l'étape (« le 2e sur 5 »)
   et la fourchette de prix. `proposer_etape` (SQL) impose l'ordre et borne le
   prix entre le minimum et le maximum. Pas de plafond de dépenses (retiré à la
@@ -79,6 +79,11 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   (même « dans la même région »), jamais de vente par solitude/attachement,
   prix personnalisé toujours affiché, jamais sous le minimum, rien de visible
   avant achat, aucun contenu sexuel, 18 ans minimum.
+  Claude a refusé de retirer (demande d'octobre 2026) : le blocage des ventes
+  pendant une urgence ouverte (détresse, mineur, demande d'un humain,
+  réclamation ; l'équipe le lève d'un clic avec « Traité ») et les règles
+  anti-manipulation de la consigne (`SALE_RULES` dans `lib/prompts.ts`,
+  `NO_SALE_AFTER_RELANCE`). Ne pas les enlever sans en reparler.
 - Essais : `npm test` (logique + `supabase/schema.sql` sur PGlite) et
   `npm run test:e2e` (build, serveur Next avec `tests/e2e/faux-services.mjs`
   chargé par `NODE_OPTIONS=--import` : faux Supabase adossé à PGlite avec le

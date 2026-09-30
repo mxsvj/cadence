@@ -23,8 +23,6 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
   const [extra, setExtra] = useState(initial.extra_instructions);
   const [minMessages, setMinMessages] = useState(initial.sales_min_messages);
   const [gapMessages, setGapMessages] = useState(initial.sales_gap_messages);
-  const [pauseHours, setPauseHours] = useState(initial.sales_pause_hours);
-  const [maxPerDay, setMaxPerDay] = useState(initial.sales_max_per_day);
   const [relanceActive, setRelanceActive] = useState(initial.relance_active);
   const [relanceHours, setRelanceHours] = useState(initial.relance_heures);
   const [notice, setNotice] = useState<string | null>(null);
@@ -39,11 +37,6 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
       extra_instructions: extra,
       sales_min_messages: minMessages,
       sales_gap_messages: gapMessages,
-      // Seulement si ça a changé : le reste s'enregistre même avant la mise à jour de la base.
-      guards:
-        pauseHours !== initial.sales_pause_hours || maxPerDay !== initial.sales_max_per_day
-          ? { pause_hours: pauseHours, max_per_day: maxPerDay }
-          : undefined,
       // Seulement si ça a changé : le reste s'enregistre même avant la mise à jour de la base.
       relance:
         relanceActive !== initial.relance_active || relanceHours !== initial.relance_heures
@@ -78,9 +71,8 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
         </h2>
         <p className="text-sm text-muted">
           En plus des règles fixes : jamais de vente par la solitude, l&apos;attachement ou la pression, rien si la
-          personne va mal, jamais sous le prix minimum, une seule offre en attente à la fois. La pause et le nombre
-          d&apos;offres par jour valent pour la personne, toutes créatrices confondues ; un cadeau gratuit n&apos;y est
-          pas soumis.
+          personne va mal ou pendant une urgence à traiter, jamais sous le prix minimum, une seule offre en attente à
+          la fois. Pour le reste, l&apos;équipe décide conversation par conversation (onglet Messages).
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Messages avant la première offre">
@@ -88,12 +80,6 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
           </Field>
           <Field label="Messages entre deux offres">
             <input type="number" min={0} value={gapMessages} onChange={(e) => setGapMessages(Number(e.target.value))} className={input} />
-          </Field>
-          <Field label="Pause après un achat (heures)" hint="Aucune offre payante pendant ce temps. 0 : pas de pause.">
-            <input type="number" min={0} max={720} value={pauseHours} onChange={(e) => setPauseHours(Number(e.target.value))} className={input} />
-          </Field>
-          <Field label="Offres payantes par l'IA sur 24 h, au plus">
-            <input type="number" min={1} max={20} value={maxPerDay} onChange={(e) => setMaxPerDay(Number(e.target.value))} className={input} />
           </Field>
         </div>
       </section>

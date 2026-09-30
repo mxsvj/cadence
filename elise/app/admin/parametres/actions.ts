@@ -14,8 +14,6 @@ export type ParametersForm = {
   extra_instructions: string;
   sales_min_messages: number;
   sales_gap_messages: number;
-  /** Pause après un achat et offres payantes par jour : envoyés seulement s'ils ont changé. */
-  guards?: { pause_hours: number; max_per_day: number };
   /** Prendre des nouvelles : envoyé seulement si le réglage a changé. */
   relance?: { active: boolean; hours: number };
 };
@@ -32,8 +30,6 @@ export async function saveParameters(form: ParametersForm): Promise<Result> {
     }
     if (form.extra_instructions.length > 5000) return { ok: false, error: "Consignes trop longues (5 000 caractères)." };
     if (form.relance && !between(form.relance.hours, 24, 336)) return { ok: false, error: "Délai d'absence : entre 24 heures et 2 semaines." };
-    if (form.guards && !between(form.guards.pause_hours, 0, 720)) return { ok: false, error: "Pause après un achat : entre 0 et 720 heures." };
-    if (form.guards && !between(form.guards.max_per_day, 1, 20)) return { ok: false, error: "Offres payantes par jour : entre 1 et 20." };
 
     const { error } = await supabase
       .from("ai_settings")
@@ -43,9 +39,6 @@ export async function saveParameters(form: ParametersForm): Promise<Result> {
         sales_min_messages: Math.round(form.sales_min_messages),
         sales_gap_messages: Math.round(form.sales_gap_messages),
         ...(form.relance ? { relance_active: Boolean(form.relance.active), relance_heures: Math.round(form.relance.hours) } : {}),
-        ...(form.guards
-          ? { sales_pause_hours: Math.round(form.guards.pause_hours), sales_max_per_day: Math.round(form.guards.max_per_day) }
-          : {}),
         updated_at: new Date().toISOString(),
       })
       .eq("id", 1);

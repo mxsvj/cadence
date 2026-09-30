@@ -17,10 +17,6 @@ export type AiSettings = {
   extra_instructions: string;
   sales_min_messages: number;
   sales_gap_messages: number;
-  /** Pause après un achat, en heures (0 : aucune). */
-  sales_pause_hours: number;
-  /** Offres payantes proposées par l'IA sur 24 heures, au plus. */
-  sales_max_per_day: number;
   /** Prendre des nouvelles après une absence (onglet Paramètres), et au bout de combien d'heures. */
   relance_active: boolean;
   relance_heures: number;
@@ -51,8 +47,6 @@ export const DEFAULT_SETTINGS: AiSettings = {
   extra_instructions: "",
   sales_min_messages: 10,
   sales_gap_messages: 12,
-  sales_pause_hours: 24,
-  sales_max_per_day: 1,
   relance_active: false,
   relance_heures: 48,
 };
@@ -80,8 +74,6 @@ export async function loadSettings(admin: SupabaseClient): Promise<AiSettings> {
     extra_instructions: data.extra_instructions ?? "",
     sales_min_messages: data.sales_min_messages ?? DEFAULT_SETTINGS.sales_min_messages,
     sales_gap_messages: data.sales_gap_messages ?? DEFAULT_SETTINGS.sales_gap_messages,
-    sales_pause_hours: data.sales_pause_hours ?? DEFAULT_SETTINGS.sales_pause_hours,
-    sales_max_per_day: data.sales_max_per_day ?? DEFAULT_SETTINGS.sales_max_per_day,
     relance_active: data.relance_active === true,
     relance_heures: data.relance_heures ?? DEFAULT_SETTINGS.relance_heures,
   };

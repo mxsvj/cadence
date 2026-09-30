@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { NO_SALE_AFTER_RELANCE, describeBlock, mayPropose, saleBlock, type SaleInput } from "../lib/sales";
 
-const rules = { sales_min_messages: 10, sales_gap_messages: 12, sales_pause_hours: 24, sales_max_per_day: 1 };
+const rules = { sales_min_messages: 10, sales_gap_messages: 12 };
 const paid = { trigger_mode: "ia" as const, is_paid: true, min_price_cents: 500 };
 const free = { ...paid, is_paid: false, min_price_cents: 0 };
 const ok: SaleInput = {
@@ -13,8 +13,6 @@ const ok: SaleInput = {
   userMessages: 20,
   sinceLastOffer: Infinity,
   sinceRelance: null,
-  hoursSincePurchase: null,
-  paidOffersToday: 0,
 };
 const reason = (input: Partial<SaleInput>) => saleBlock({ ...ok, ...input }, rules)?.reason ?? null;
 
@@ -46,22 +44,10 @@ describe("l'avancement du script", () => {
   });
 });
 
-describe("le rythme des offres payantes", () => {
-  it("une pause après chaque achat", () => {
-    assert.deepEqual(saleBlock({ ...ok, hoursSincePurchase: 5.5 }, rules), { reason: "pause", hours: 19 });
-    assert.equal(reason({ hoursSincePurchase: 30 }), null);
-    assert.equal(saleBlock({ ...ok, hoursSincePurchase: 1 }, { ...rules, sales_pause_hours: 0 }), null);
-    assert.equal(describeBlock({ reason: "pause", hours: 19 }, null), "Pause après son dernier achat : encore 19 heures.");
-  });
-
-  it("au plus N offres payantes proposées par l'IA sur 24 heures", () => {
-    assert.equal(reason({ paidOffersToday: 1 }), "quota");
-    assert.equal(saleBlock({ ...ok, paidOffersToday: 1 }, { ...rules, sales_max_per_day: 2 }), null);
-  });
-
-  it("un cadeau (gratuit) n'est freiné ni par la pause, ni par le nombre par jour", () => {
-    assert.equal(reason({ next: free, hoursSincePurchase: 1, paidOffersToday: 5 }), null);
-    // Mais il attend quand même son tour dans la conversation.
+describe("le rythme des offres", () => {
+  it("ni pause après un achat, ni nombre maximum par jour : seulement l'espacement réglé par l'équipe", () => {
+    assert.equal(reason({}), null);
     assert.equal(reason({ next: free, sinceLastOffer: 1 }), "espacement");
+    assert.equal(saleBlock({ ...ok, sinceLastOffer: 0 }, { ...rules, sales_gap_messages: 0 }), null);
   });
 });

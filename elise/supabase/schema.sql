@@ -564,16 +564,6 @@ create table if not exists public.creator_contacts (
 
 alter table public.ai_settings add column if not exists creator_id bigint references public.creators (id) on delete set null;
 
--- Garde-fous de la vente : une pause après chaque achat
--- (en heures, 0 = pas de pause) et au plus N offres payantes proposées par
--- l'IA sur 24 heures, toutes créatrices confondues.
-alter table public.ai_settings add column if not exists sales_pause_hours integer not null default 24;
-alter table public.ai_settings add column if not exists sales_max_per_day integer not null default 1;
-alter table public.ai_settings drop constraint if exists ai_settings_sales_pause_hours_check;
-alter table public.ai_settings add constraint ai_settings_sales_pause_hours_check check (sales_pause_hours between 0 and 720);
-alter table public.ai_settings drop constraint if exists ai_settings_sales_max_per_day_check;
-alter table public.ai_settings add constraint ai_settings_sales_max_per_day_check check (sales_max_per_day between 1 and 20);
-
 -- Les emojis de la créatrice avec chaque personne : au choix de l'IA selon la
 -- discussion (libre), seulement ceux de la liste (choisis), ou aucun. À
 -- l'arrivée de ce réglage, une liste déjà remplie devient « choisis ».
@@ -1507,14 +1497,17 @@ as $$
 $$;
 
 
--- ─── Plus de plafond de dépenses ───────────────────────────────────────────
--- Le plafond mensuel par personne a été retiré : plus de limite d'achat.
--- Restent les garde-fous de rythme de la vente (messages avant la première
--- offre et entre deux offres, une offre en attente à la fois, pause après un
--- achat, offres payantes de l'IA par jour).
+-- ─── Plus de plafond de dépenses, de pause après un achat ni de quota ──────
+-- Retirés à la demande du porteur du projet : plus de limite d'achat, plus
+-- de pause après un achat, plus de nombre maximum d'offres payantes par
+-- jour. Restent le rythme réglable (messages avant la première offre et
+-- entre deux offres), une offre en attente à la fois, et aucune vente
+-- pendant une urgence à traiter.
 drop function if exists public.plafond_de(uuid);
 alter table public.contacts    drop column if exists spending_cap_cents;
 alter table public.ai_settings drop column if exists spending_cap_cents;
+alter table public.ai_settings drop column if exists sales_pause_hours;
+alter table public.ai_settings drop column if exists sales_max_per_day;
 delete from public.team_alerts where kind not in ('contre_offre', 'urgence');
 alter table public.team_alerts drop constraint if exists team_alerts_kind_check;
 alter table public.team_alerts add constraint team_alerts_kind_check check (kind in ('contre_offre', 'urgence'));
