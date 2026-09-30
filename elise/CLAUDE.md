@@ -147,8 +147,10 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `app/chat.tsx`, `validTimeZone` : seulement ceux de la liste de la fiche,
   pas « UTC ») remplace celui de la fiche pour la consigne (« Repères » et
   « La personne ») et est enregistré dans `contacts.timezone`. Rythme
-  humain : `lib/typing.ts` (`typingDelayMs` : 1 à 2,5 s de lecture + 7
-  caractères/s, entre 2 et 20 s) renvoyé en `typingMs` par `/api/chat` ; la
+  humain : `lib/typing.ts` (`typingDelayMs(reply, { incoming })` : lire le
+  message reçu à 20 caractères/s (1 à 6 s) + réfléchir 1 à 3 s + taper à
+  3,5 caractères/s ± 15 %, entre 3 et 90 s ; demande du porteur du projet :
+  7 caractères/s plafonné à 20 s était trop rapide) renvoyé en `typingMs` par `/api/chat` ; la
   page montre « … écrit » jusque-là (temps du modèle compris), puis la
   réponse ; `HUMAN_TYPING=off` le coupe (essais e2e). Les limites (IA, pas
   de romance, pas de rencontre, 3114, vente) n'ont pas bougé.

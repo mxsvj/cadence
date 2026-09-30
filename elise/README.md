@@ -455,10 +455,13 @@ qui suit le Flash le plus récent).
 
 ## Limites connues de cette version
 
-- **Rythme des réponses** : comme une personne qui tape sur son téléphone,
-  la réponse s'affiche après « Katherine écrit… » (entre 2 et 20 secondes
-  selon sa longueur, temps de l'IA compris). `HUMAN_TYPING=off` dans Vercel
-  l'affiche dès qu'elle arrive.
+- **Rythme des réponses** : comme une personne qui répond sur son téléphone,
+  la réponse s'affiche après « Katherine écrit… » : le temps de lire le
+  message (1 à 6 s), de réfléchir (1 à 3 s), puis de taper la réponse à une
+  quarantaine de mots par minute (environ 25 s pour deux phrases), entre 3 et
+  90 secondes au total, temps de l'IA compris. On peut écrire son message
+  suivant pendant ce temps. `HUMAN_TYPING=off` dans Vercel affiche la
+  réponse dès qu'elle arrive.
 - **Heure de la personne** : l'IA vit à l'heure du téléphone de la personne
   (bonjour, bonsoir, « tu es encore debout ? »), et la fiche de l'équipe
   reprend ce fuseau.
