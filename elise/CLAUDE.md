@@ -110,6 +110,19 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `/api/offres/[id]/contenu` signe chaque fichier pour 5 minutes. En mode
   `ia`, `message_text` est la consigne de l'équipe (reformulée par l'IA) ;
   en mode `fixe`, le texte envoyé mot pour mot.
+- Gemini qui ne répond pas (09/2026, « Pas de réponse cette fois-ci » en
+  production, cause invisible sans les journaux Vercel) : `lib/llm.ts` a un
+  budget de 50 s (30 s pour le modèle principal, un 2e essai sur 5xx s'il
+  reste le temps), puis `fallbackModel()` (`gemini-flash-lite-latest`,
+  `GEMINI_FALLBACK_MODEL`, « aucun » pour couper) sur surcharge, délai,
+  réseau, 404 ou 429 ; jamais sur clé refusée (400/401/403) ni contenu
+  bloqué. `LlmError.status` garde le code HTTP ; `onModel` dit quel modèle a
+  répondu. `/api/chat` explique l'échec par cause (`whyNoReply`) ; la page
+  ajoute le code HTTP si la réponse n'est pas du JSON. Paramètres → « Tester
+  l'IA » (`testAi` dans `app/admin/parametres/actions.ts`) fait
+  `buildReply` + `generate` pour chaque créatrice en ligne sans rien
+  enregistrer et montre l'erreur exacte. Faux Gemini des essais : « SURCHARGE »
+  → 503 sur le modèle principal seulement.
 - Réponses : créativité fixe `CHAT_TEMPERATURE = 1` (`lib/llm.ts`, valeur
   recommandée par Google pour ses modèles récents), pas de plafond de
   longueur (Gemini n'en reçoit pas, Claude 4096 jetons) : la persona dit à

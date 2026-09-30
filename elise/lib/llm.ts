@@ -26,6 +26,8 @@ export type GenerateOptions = {
   temperature?: number;
   /** Demande une réponse en JSON seul, sans texte autour. */
   json?: boolean;
+  /** Appelé avec le modèle qui a vraiment répondu (le principal ou celui de secours). */
+  onModel?: (model: string) => void;
 };
 
 export class LlmError extends Error {
@@ -33,6 +35,8 @@ export class LlmError extends Error {
     message: string,
     /** `rate_limited` : quota gratuit atteint pour la minute ou la journée. */
     readonly kind: "rate_limited" | "blocked" | "config" | "failed",
+    /** Le code HTTP du fournisseur, s'il a répondu. */
+    readonly status?: number,
   ) {
     super(message);
     this.name = "LlmError";
@@ -44,7 +48,18 @@ const DEFAULTS = {
   claude: "claude-haiku-4-5-20251001",
 };
 
-const TIMEOUT_MS = 45_000;
+/**
+ * Le modèle de secours de Gemini, quand le principal ne répond pas
+ * (surchargé, quota de la minute atteint, retiré par Google) : un autre
+ * modèle Flash, dont le quota gratuit est séparé. GEMINI_FALLBACK_MODEL le
+ * change ; « aucun » le désactive.
+ */
+const GEMINI_FALLBACK = "gemini-flash-lite-latest";
+
+/** Tout doit tenir avant que Vercel coupe la fonction (60 s), secours compris. */
+const BUDGET_MS = 50_000;
+/** Le temps laissé au modèle principal avant de passer au secours. */
+const PRIMARY_MS = 30_000;
 
 /**
  * La créativité des réponses : la plus haute qui reste fiable. C'est aussi
@@ -58,6 +73,12 @@ export function currentModel(): { provider: string; model: string } {
   const provider = (process.env.LLM_PROVIDER ?? "gemini").trim().toLowerCase();
   if (provider === "claude") return { provider, model: process.env.CLAUDE_MODEL?.trim() || DEFAULTS.claude };
   return { provider, model: process.env.GEMINI_MODEL?.trim() || DEFAULTS.gemini };
+}
+
+/** Le modèle de secours de Gemini, ou null s'il est désactivé. */
+export function fallbackModel(): string | null {
+  const model = process.env.GEMINI_FALLBACK_MODEL?.trim() || GEMINI_FALLBACK;
+  return model.toLowerCase() === "aucun" ? null : model;
 }
 
 export async function generate(options: GenerateOptions): Promise<string> {
@@ -97,28 +118,30 @@ function requireEnv(name: string): string {
   return value;
 }
 
-async function post(url: string, headers: Record<string, string>, body: unknown, retry = true) {
+/** `deadline` : l'heure (Date.now()) à laquelle on abandonne. */
+async function post(url: string, headers: Record<string, string>, body: unknown, deadline: number, retry = true) {
   let res: Response;
   try {
     res = await fetch(url, {
       method: "POST",
       headers: { "content-type": "application/json", ...headers },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(Math.max(1000, deadline - Date.now())),
       cache: "no-store",
     });
   } catch (err) {
-    throw new LlmError(`Le modèle n'a pas répondu : ${(err as Error).message}`, "failed");
+    const late = (err as Error).name === "TimeoutError";
+    throw new LlmError(late ? "Le modèle a mis trop longtemps à répondre." : `Le modèle n'a pas répondu : ${(err as Error).message}`, "failed");
   }
   const text = await res.text();
-  if (res.status === 429) throw new LlmError("Quota du modèle atteint.", "rate_limited");
-  // Surcharge passagère du côté du fournisseur : une seconde chance.
-  if (res.status >= 500 && retry) {
+  if (res.status === 429) throw new LlmError(`Quota du modèle atteint : ${text.slice(0, 300)}`, "rate_limited", 429);
+  // Surcharge passagère du côté du fournisseur : une seconde chance, s'il reste le temps.
+  if (res.status >= 500 && retry && deadline - Date.now() > 8000) {
     await new Promise((r) => setTimeout(r, 1500));
-    return post(url, headers, body, false);
+    return post(url, headers, body, deadline, false);
   }
   if (!res.ok) {
-    throw new LlmError(`Le modèle a répondu ${res.status} : ${text.slice(0, 500)}`, "failed");
+    throw new LlmError(`Le modèle a répondu ${res.status} : ${text.slice(0, 500)}`, "failed", res.status);
   }
   try {
     return JSON.parse(text);
@@ -141,9 +164,36 @@ type GeminiResponse = {
 
 async function callGemini(o: Ready): Promise<string> {
   const key = requireEnv("GEMINI_API_KEY");
-  const model = process.env.GEMINI_MODEL?.trim() || DEFAULTS.gemini;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const primary = process.env.GEMINI_MODEL?.trim() || DEFAULTS.gemini;
+  const backup = fallbackModel();
+  const start = Date.now();
+  try {
+    const text = await askGemini(key, primary, o, backup ? start + PRIMARY_MS : start + BUDGET_MS);
+    o.onModel?.(primary);
+    return text;
+  } catch (err) {
+    if (!backup || backup === primary || !worthFallback(err)) throw err;
+    console.error(`Gemini ${primary} : ${(err as Error).message} Essai avec ${backup}.`);
+    const text = await askGemini(key, backup, o, start + BUDGET_MS);
+    o.onModel?.(backup);
+    return text;
+  }
+}
 
+/**
+ * Un autre modèle a sa chance quand le principal est surchargé, lent,
+ * introuvable ou à court de quota ; pas quand la clé manque ou que le
+ * contenu est refusé (un autre modèle n'y changerait rien).
+ */
+function worthFallback(err: unknown): boolean {
+  if (!(err instanceof LlmError)) return false;
+  if (err.kind === "rate_limited") return true;
+  if (err.kind !== "failed") return false;
+  return err.status === undefined || err.status === 404 || err.status >= 500;
+}
+
+async function askGemini(key: string, model: string, o: Ready, deadline: number): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   const data: GeminiResponse = await post(
     url,
     { "x-goog-api-key": key },
@@ -161,6 +211,7 @@ async function callGemini(o: Ready): Promise<string> {
         ...(o.json && { responseMimeType: "application/json" }),
       },
     },
+    deadline,
   );
 
   if (data.promptFeedback?.blockReason) {
@@ -202,6 +253,7 @@ async function callClaude(o: Ready): Promise<string> {
       messages: o.messages,
       ...(o.temperature !== undefined && { temperature: o.temperature }),
     },
+    Date.now() + BUDGET_MS,
   );
 
   const text = (data.content ?? [])
@@ -213,5 +265,6 @@ async function callClaude(o: Ready): Promise<string> {
     const kind = data.stop_reason === "refusal" ? "blocked" : "failed";
     throw new LlmError(`Claude n'a rien renvoyé (${data.stop_reason ?? "réponse vide"}).`, kind);
   }
+  o.onModel?.(model);
   return text;
 }

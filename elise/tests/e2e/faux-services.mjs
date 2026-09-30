@@ -468,11 +468,11 @@ async function handleStorage(url, method, headers, rawBody) {
 }
 
 // ─── Faux Gemini ─────────────────────────────────────────────────────────
-function gemini(body) {
+function gemini(body, model) {
   const system = body.systemInstruction.parts[0].text;
   const contents = body.contents;
   const last = contents[contents.length - 1].parts[0].text;
-  llmLog.push({ system, contents, json: body.generationConfig?.responseMimeType === "application/json" });
+  llmLog.push({ model, system, contents, json: body.generationConfig?.responseMimeType === "application/json" });
   const reply = (text) => json(200, { candidates: [{ content: { parts: [{ text }] }, finishReason: "STOP" }] });
 
   if (system.includes("fiche mémoire")) {
@@ -494,6 +494,10 @@ function gemini(body) {
   }
   const userText = contents.filter((c) => c.role === "user").at(-1).parts[0].text;
   if (userText.includes("QUOTA")) return json(429, { error: { code: 429, message: "Resource exhausted" } });
+  // Le modèle principal surchargé : le modèle de secours doit prendre le relais.
+  if (userText.includes("SURCHARGE") && model === "gemini-flash-latest") {
+    return json(503, { error: { code: 503, message: "The model is overloaded. Please try again later." } });
+  }
   // L'IA juge qu'un humain doit lire la conversation.
   if (userText.includes("ALERTE-IA")) return reply("Je préviens l'équipe, elle te répondra ici.\n[[EQUIPE]]");
   if (userText.includes("PROPOSE-MOI") && system.includes("termine ta réponse par une ligne contenant uniquement")) {
@@ -501,7 +505,14 @@ function gemini(body) {
       ? reply("Je t'ai préparé quelque chose.\n[[PROPOSER prix=9]]")
       : reply("Un petit cadeau pour toi.\n[[PROPOSER]]");
   }
-  const n = llmLog.filter((r) => !r.system.includes("fiche mémoire") && !r.system.includes("carnet de mémoire") && !r.system.includes("## Ta tâche")).length;
+  // Les réponses numérotées : une par message (les essais refusés et le secours ne comptent pas).
+  const n = llmLog.filter(
+    (r) =>
+      !r.system.includes("fiche mémoire") &&
+      !r.system.includes("carnet de mémoire") &&
+      !r.system.includes("## Ta tâche") &&
+      !/QUOTA|SURCHARGE/.test(r.contents.filter((c) => c.role === "user").at(-1).parts[0].text),
+  ).length;
   return reply(`C'est noté. **Merci** de me le dire. (réponse de test n° ${n})`);
 }
 
@@ -526,7 +537,7 @@ globalThis.fetch = async function fakeFetch(input, init = {}) {
     return new Response(null, { status: 204 });
   }
   if (url.hostname === "generativelanguage.googleapis.com" && process.env.GEMINI_API_KEY === "fake") {
-    const res = gemini(body);
+    const res = gemini(body, url.pathname.match(/models\/([^:]+):/)?.[1] ?? "");
     await exclusive(saveState);
     return res;
   }
