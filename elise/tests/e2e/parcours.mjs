@@ -103,6 +103,14 @@ for (const asset of ["/manifest.webmanifest", "/icon-192.png", "/icon.png", "/ap
 }
 step("icônes et manifeste accessibles sans connexion (installation sur l'écran d'accueil)");
 
+const pageHeaders = (await page.request.get(`${BASE}/connexion`)).headers();
+assert.equal(pageHeaders["x-frame-options"], "DENY");
+assert.equal(pageHeaders["x-content-type-options"], "nosniff");
+assert.equal(pageHeaders["referrer-policy"], "strict-origin-when-cross-origin");
+assert.match(pageHeaders["content-security-policy"], /frame-ancestors 'none'/);
+assert.equal(pageHeaders["x-powered-by"], undefined);
+step("en-têtes de sécurité : pas d'affichage dans un autre site, adresse jamais transmise ailleurs, « Next.js » non annoncé");
+
 // 2. Mauvais identifiants.
 await page.fill('input[name="email"]', "karim@example.com");
 await page.fill('input[name="password"]', "mauvais");
@@ -144,13 +152,12 @@ assert.equal(await page.getByText("Élise · IA").count(), 2);
 await page.screenshot({ path: `${SHOTS}3-echange.png` });
 step("message envoyé, réponse à gauche marquée « Élise · IA », sans le gras Markdown");
 
-// 6. La fiche : nouveaux faits, sans doublon ni donnée sensible.
-await until(() => state().tables.user_facts.length >= 3, "faits enregistrés");
+// 6. La fiche ne se met à jour que tous les 3 messages : pas encore après le premier.
 await sleep(500);
 s = state();
-const facts = s.tables.user_facts.map((f) => f.fact);
-assert.deepEqual(facts.sort(), ["A un chat, Filou.", "Préfère le tutoiement.", "Se prénomme Karim."]);
-step(`fiche : ${facts.join(" / ")} — l'antidépresseur a été écarté, le doublon aussi`);
+assert.equal(s.llm.filter((r) => r.system.includes("fiche mémoire")).length, 0);
+assert.equal(s.tables.user_facts.length, 0);
+step("un seul appel au modèle pour ce message : la fiche attend le 3e message");
 
 // 7. Ce que le modèle a reçu pour répondre.
 const firstChat = s.llm.find((r) => !r.json);
@@ -181,7 +188,14 @@ for (let i = 1; i <= 20; i++) {
   await sleep(250);
 }
 await until(() => state().tables.summaries.length === 1, "résumé créé", 15000);
+await sleep(500);
 s = state();
+// La fiche : relevée au 3e message dans les 3 derniers échanges, sans doublon ni donnée sensible.
+const facts = s.tables.user_facts.map((f) => f.fact);
+assert.deepEqual(facts.sort(), ["A un chat, Filou.", "Préfère le tutoiement.", "Se prénomme Karim."]);
+const factCalls = s.llm.filter((r) => r.system.includes("fiche mémoire")).length;
+assert.equal(factCalls, 7); // messages 3, 6, 9… 21 de Karim : 7 mises à jour pour 21 messages
+step(`fiche : ${facts.join(" / ")} — l'antidépresseur a été écarté, le doublon aussi ; ${factCalls} mises à jour pour 21 messages`);
 const msgs = s.tables.messages;
 const summary = s.tables.summaries[0];
 const unsummarized = msgs.filter((m) => m.id > summary.last_message_id).length;
@@ -207,8 +221,28 @@ assert.equal(sent.length, 20);
 assert.equal(sent.at(-1).parts[0].text, "Tu te souviens de moi ?");
 step("la réponse suivante reçoit la fiche, le résumé et les 20 derniers messages");
 
+// 10b. La charge d'un message : requêtes à la base et appels au modèle.
+// La page de conversation est fermée pendant la mesure : sa relecture régulière ne compte pas.
+await page.goto(`${BASE}/manifest.webmanifest`);
+await sleep(1500); // une relecture encore en route se termine
+async function measure(content) {
+  const before = state();
+  const res = await ctx.request.post(`${BASE}/api/chat`, { data: { content, creator: 1 } });
+  assert.equal(res.status(), 200);
+  await sleep(800); // la mémoire se met à jour après la réponse
+  const after = state();
+  return { db: after.restCalls - before.restCalls, llm: after.llm.length - before.llm.length };
+}
+const plain1 = await measure("Une journée tranquille."); // 23e message de Karim
+const plain2 = await measure("Et toi, ta journée ?"); // 24e : mise à jour de la mémoire
+assert.equal(plain1.llm, 1);
+assert.equal(plain2.llm, 2);
+assert.ok(plain1.db <= 22, `requêtes pour un message : ${plain1.db}`);
+assert.ok(plain2.db <= 26, `requêtes avec la mémoire : ${plain2.db}`);
+step(`charge d'un message : ${plain1.db} requêtes rapides à la base et 1 appel au modèle ; tous les 3 messages, ${plain2.db} requêtes et 2 appels (fiche) ; le résumé, seulement au-delà de 40 messages`);
+
 // 11. La page affiche l'historique, dans l'ordre.
-await page.reload();
+await page.goto(`${BASE}/c/1`);
 await page.getByText("Tu te souviens de moi ?").waitFor();
 await page.screenshot({ path: `${SHOTS}5-historique.png` });
 step("l'historique s'affiche au rechargement");
@@ -708,6 +742,9 @@ await sam.screenshot({ path: `${SHOTS}18-offre-verrouillee.png` });
 step("offre payante : verrouillée, aucune image chargée, prix personnalisé affiché, minimum jamais transmis ; l'IA ne la propose que sur le sujet qu'elle illustre");
 
 // 32. Contre-offres : refusée sous le minimum, acceptée au-dessus, puis achat.
+// Le plafond de Sam est de 7 € ce mois-ci : l'achat de 6 € en dépasse 80 %.
+const samUser = state().users.find((u) => u.email === "sam@example.com").id;
+await sql("update public.contacts set spending_cap_cents = 700 where user_id = $1", [samUser]);
 await sam.getByRole("button", { name: "Faire une offre" }).click();
 await sam.getByLabel("Montant de votre offre en euros").fill("3");
 await sam.getByRole("button", { name: "Proposer", exact: true }).click();
@@ -732,6 +769,49 @@ s = state();
 const bought = s.tables.purchases.find((p) => p.kind === "contenu");
 assert.deepEqual([bought.amount_cents, bought.is_demo], [600, true]);
 step("contre-offre à 3 € refusée, à 6 € acceptée ; achat (paiement de démo) ; les 2 photos et la légende s'affichent");
+
+// 32b. L'équipe est prévenue : la contre-offre, puis le plafond presque atteint.
+await until(() => (state().tables.team_alerts ?? []).length >= 2, "alertes créées");
+s = state();
+const counter = s.tables.team_alerts.find((a) => a.kind === "contre_offre");
+assert.deepEqual(
+  [counter.user_id, Number(counter.creator_id), counter.detail.statut, counter.detail.montant_cents],
+  [samUser, CHLOE, "acceptee", 600],
+);
+assert.deepEqual(s.tables.team_alerts.find((a) => a.kind === "plafond").detail, { depense_cents: 600, plafond_cents: 700 });
+await sql("update public.contacts set spending_cap_cents = null where user_id = $1", [samUser]);
+await until(() => state().webhooks.length >= 2, "alertes envoyées sur Discord");
+const hooks = state().webhooks;
+assert.ok(hooks.some((h) => h.content.startsWith("💬 Contre-offre · conversation avec Chloé")));
+assert.ok(hooks.some((h) => h.content.startsWith("🟠 Plafond bientôt atteint · conversation avec Chloé")));
+for (const h of hooks) {
+  assert.ok(!h.content.includes("Sam") && !h.content.includes("sam@"), "ni prénom ni e-mail sur Discord");
+  assert.ok(h.content.includes(`/admin/messages?u=${samUser}&c=${CHLOE}`));
+  assert.deepEqual(h.allowed_mentions, { parse: [] });
+}
+step("contre-offre et plafond presque atteint : alertes en base, envoyées sur Discord sans prénom ni message, avec le lien");
+
+// (Next.js a aussi son propre role="alert", vide : on cherche le bandeau par son bouton.)
+const banner = (p) => p.getByRole("alert").filter({ has: p.getByRole("button", { name: "Fermer l'alerte" }) });
+const flash = banner(admin);
+await flash.waitFor({ timeout: 15000 });
+assert.match(plain(await flash.textContent()), /Plafond bientôt atteint · Sam avec Chloé/);
+assert.match(await flash.textContent(), /et 1 autre alerte/);
+await admin.getByRole("link", { name: "Messages (2 alertes à traiter)" }).waitFor();
+await admin.getByRole("button", { name: "Marquer traitée : Contre-offre" }).waitFor({ timeout: 12000 });
+await admin.screenshot({ path: `${SHOTS}19c-alerte-flash.png` });
+await admin.getByRole("button", { name: "Fermer l'alerte" }).click();
+await flash.waitFor({ state: "detached" });
+await admin.getByRole("button", { name: /^Contre-offres/ }).click();
+await admin.getByRole("button", { name: /Sam · avec Chloé/ }).waitFor();
+assert.equal(await admin.getByRole("button", { name: /Karim · avec/ }).count(), 0);
+assert.match(await admin.getByRole("button", { name: /Sam · avec Chloé/ }).textContent(), /Contre-offre.*Plafond/);
+await admin.getByRole("button", { name: /^Toutes/ }).click();
+await admin.getByRole("button", { name: "Marquer traitée : Contre-offre" }).click();
+await admin.getByRole("button", { name: "Marquer traitée : Plafond bientôt atteint" }).click();
+await until(() => state().tables.team_alerts.every((a) => a.handled_at), "alertes traitées");
+await admin.getByRole("link", { name: "Messages", exact: true }).waitFor();
+step("bandeau flash, pastille de l'onglet Messages, filtre « Contre-offres », et « Traité » en un clic");
 
 // 33. L'étape 3 se propose par l'équipe : message écrit par l'IA, relu, envoyé.
 await admin.reload();
@@ -877,6 +957,100 @@ await deskPage.getByLabel("Votre message").press("Enter");
 await deskPage.getByText(/réponse de test/).waitFor();
 await deskPage.screenshot({ path: `${SHOTS}9-ordinateur-sombre.png` });
 step("sur ordinateur, Entrée envoie le message ; mode sombre");
+
+// 38. Urgence : Léa demande un humain. L'IA lui répond, l'équipe est
+// prévenue (bandeau, Discord) et prend la main en un clic.
+await page2.goto(`${BASE}/c/1`);
+const leaInput = page2.getByLabel("Votre message");
+const repliesBefore = await page2.getByText(/réponse de test/).count();
+await leaInput.fill("Je voudrais parler à un humain s'il te plaît");
+await page2.getByLabel("Envoyer").click();
+await page2.getByText(/réponse de test/).nth(repliesBefore).waitFor();
+await until(() => (state().tables.team_alerts ?? []).some((a) => a.user_id === lea && a.kind === "urgence"), "alerte d'urgence");
+s = state();
+assert.deepEqual(s.tables.team_alerts.find((a) => a.user_id === lea).detail, { raison: "humain", source: "mots" });
+const urgentPrompt = s.llm.filter((r) => !r.json && r.system.includes("## Prévenir l'équipe")).at(-1).system;
+assert.match(urgentPrompt, /L'équipe vient d'être prévenue pour ce message/);
+assert.match(urgentPrompt, /Ne propose aucun contenu dans cette réponse/);
+await until(() => state().webhooks.some((w) => w.content.startsWith("🔴 Urgence · conversation avec Élise")), "urgence sur Discord");
+assert.ok(!state().webhooks.at(-1).content.includes("Léa"));
+step("« parler à un humain » : l'IA répond quand même, sans rien vendre ; alerte d'urgence en base et sur Discord");
+
+await admin.goto(`${BASE}/admin`);
+const urgentFlash = banner(admin);
+await urgentFlash.waitFor({ timeout: 15000 });
+assert.match(plain(await urgentFlash.textContent()), /Urgence · Léa avec Élise/);
+assert.match(await urgentFlash.textContent(), /Demande à parler à un humain/);
+await admin.getByRole("heading", { name: /À traiter/ }).waitFor();
+await admin.screenshot({ path: `${SHOTS}21-urgence.png` });
+await urgentFlash.getByRole("button", { name: "Prendre la main" }).click();
+await admin.waitForURL(`${BASE}/admin/messages?u=${lea}&c=1`);
+await admin.getByRole("button", { name: "Rendre la main à l'IA" }).waitFor();
+await until(
+  () => state().tables.creator_contacts.some((c) => c.user_id === lea && Number(c.creator_id) === 1 && c.manual),
+  "main prise",
+);
+const leaAi = await page2.getByText("Élise · IA").count();
+await leaInput.fill("Merci, j'attends");
+await page2.getByLabel("Envoyer").click();
+await page2.getByText("Message envoyé. La réponse arrivera ici dès que possible.").waitFor();
+assert.equal(await page2.getByText("Élise · IA").count(), leaAi);
+step("depuis le bandeau du tableau de bord, « Prendre la main » en un clic : l'IA se tait dans cette conversation");
+
+// Pendant ce temps, un message inquiétant reçoit tout de suite les numéros d'aide.
+await leaInput.fill("En fait je n'ai plus envie de vivre");
+await page2.getByLabel("Envoyer").click();
+await page2.getByText(/appelez le 3114 \(gratuit, 24 h\/24\)/).waitFor();
+assert.equal(await page2.getByText("Élise · IA").count(), leaAi);
+assert.equal(state().tables.team_alerts.filter((a) => a.user_id === lea && !a.handled_at).length, 1); // toujours une seule urgence
+step("l'équipe a la main et la personne écrit un message inquiétant : le 3114 s'affiche sans attendre personne");
+
+await admin.getByRole("button", { name: /^Urgences/ }).click();
+const leaRow = admin.getByRole("button", { name: /Léa · avec Élise/ });
+await leaRow.waitFor();
+assert.match(await leaRow.textContent(), /Urgence/);
+assert.match(await leaRow.textContent(), /Main prise/);
+assert.equal(await admin.getByRole("button", { name: /Sam · avec/ }).count(), 0);
+await admin.screenshot({ path: `${SHOTS}22-filtre-urgences.png` });
+await admin.getByLabel("Réponse de l'équipe").fill("Bonjour Léa, ici l'équipe. Nous sommes là.");
+await admin.getByRole("button", { name: "Envoyer", exact: true }).click();
+await page2.getByText("Bonjour Léa, ici l'équipe. Nous sommes là.").waitFor({ timeout: 12000 });
+await admin.getByRole("button", { name: "Marquer traitée : Urgence" }).click();
+await admin.getByRole("button", { name: "Rendre la main à l'IA" }).click();
+await admin.getByRole("button", { name: "Prendre la main" }).waitFor();
+await until(() => {
+  const st = state();
+  return (
+    st.tables.team_alerts.filter((a) => a.user_id === lea).every((a) => a.handled_at) &&
+    st.tables.creator_contacts.some((c) => c.user_id === lea && Number(c.creator_id) === 1 && !c.manual)
+  );
+}, "urgence traitée, main rendue");
+await admin.getByRole("button", { name: /^Toutes/ }).click();
+step("filtre « Urgences », réponse de l'équipe, « Traité » puis « Rendre la main à l'IA »");
+
+// 38b. L'IA juge elle-même qu'un humain doit lire : la balise ne s'affiche jamais.
+await leaInput.fill("ALERTE-IA ça ne va pas trop en ce moment");
+await page2.getByLabel("Envoyer").click();
+await page2.getByText("Je préviens l'équipe, elle te répondra ici.").waitFor();
+assert.equal(await page2.getByText("EQUIPE", { exact: false }).count(), 0);
+await until(
+  () => state().tables.team_alerts.some((a) => a.user_id === lea && !a.handled_at && a.detail.source === "ia"),
+  "alerte de l'IA",
+);
+assert.equal(state().tables.team_alerts.find((a) => a.user_id === lea && !a.handled_at).detail.raison, "attention");
+step("l'IA peut aussi prévenir l'équipe (balise [[EQUIPE]], retirée du message) : alerte « à lire en priorité »");
+
+// 39. Une rafale de messages est freinée (40 par minute pendant l'essai, 12 en vrai).
+const statuses = await page2.evaluate(async () => {
+  const out = [];
+  for (let i = 0; i < 45; i++) {
+    const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+    out.push(r.status);
+  }
+  return out;
+});
+assert.ok(statuses.includes(400) && statuses.at(-1) === 429, statuses.join(","));
+step(`rafale de 45 messages : ${statuses.filter((x) => x === 429).length} refusés (« Vous écrivez très vite »)`);
 
 // Les 429 (quota simulé) et 404 (pages réservées) sont voulus.
 assert.deepEqual(consoleErrors.filter((e) => !/status of (429|404)/.test(e)), []);

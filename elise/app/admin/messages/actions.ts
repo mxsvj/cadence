@@ -43,6 +43,37 @@ export async function sendTeamMessage(userId: string, creatorId: number, text: s
   }
 }
 
+/**
+ * « Prendre la main » : l'IA se tait dans cette conversation, quel que soit
+ * le mode, et l'équipe répond. « Rendre la main » la laisse répondre à nouveau.
+ */
+export async function setManual(userId: string, creatorId: number, manual: boolean): Promise<Result> {
+  try {
+    const supabase = await adminClient();
+    const { error } = await supabase.rpc("admin_prendre_la_main", { p_user: userId, p_creator: creatorId, p_manuel: manual });
+    if (error) throw error;
+    return { ok: true };
+  } catch (err) {
+    return failure(err, manual ? "La main n'a pas été prise." : "La main n'a pas été rendue à l'IA.");
+  }
+}
+
+/** Marquer traitée une alerte, ou toutes celles de la conversation (alertId absent). */
+export async function handleAlerts(userId: string, creatorId: number, alertId?: number): Promise<Result> {
+  try {
+    const supabase = await adminClient();
+    const { error } = await supabase.rpc("admin_traiter_alertes", {
+      p_user: userId,
+      p_creator: creatorId,
+      p_alerte: alertId ?? null,
+    });
+    if (error) throw error;
+    return { ok: true };
+  } catch (err) {
+    return failure(err, "L'alerte n'a pas été marquée traitée.");
+  }
+}
+
 export async function markRead(userId: string, creatorId: number): Promise<void> {
   try {
     const supabase = await adminClient();

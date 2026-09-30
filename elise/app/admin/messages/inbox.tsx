@@ -1,22 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import { ALERT_ORDER, ALERT_TITLE, alertSummary, type AlertKind } from "@/lib/alerts";
 import { formatEuros, timeAgo } from "@/lib/dashboard";
 import type { Message } from "@/lib/memory";
 import { contentLabel, mediaCounts, type Step } from "@/lib/offers";
 import type { AiMode } from "@/lib/settings";
 import type { InboxItem, TeamOffer, Thread } from "@/lib/team";
+import { ALERT_STYLE } from "../alert-flash";
+import { dropAlerts, refreshAlerts } from "../alerts-store";
 import { EmojiChoice } from "../emoji-picker";
 import {
   draftOfferMessage,
+  handleAlerts,
   markRead,
   proposeNext,
   saveContact,
   sendTeamMessage,
+  setManual,
   withdrawOffer,
   type ContactForm,
 } from "./actions";
+import { OPEN_CONVERSATION } from "./events";
 
 const REFRESH_MS = 4000;
 
@@ -28,6 +34,22 @@ function parseKey(key: string): { user: string; creator: number } {
 }
 
 const MODE_LABEL: Record<AiMode, string> = { auto: "Automatique", hybride: "Hybride", manuel: "Manuel" };
+
+/** Les filtres de la liste : ce qui demande l'équipe en premier. */
+type Filter = "toutes" | "a_traiter" | AlertKind | "non_lus" | "manuel";
+const has = (c: InboxItem, kind: AlertKind) => c.alertes?.includes(kind) ?? false;
+const FILTERS: { id: Filter; label: string; match: (c: InboxItem) => boolean }[] = [
+  { id: "toutes", label: "Toutes", match: () => true },
+  { id: "a_traiter", label: "À traiter", match: (c) => (c.alertes?.length ?? 0) > 0 },
+  { id: "urgence", label: "Urgences", match: (c) => has(c, "urgence") },
+  { id: "contre_offre", label: "Contre-offres", match: (c) => has(c, "contre_offre") },
+  { id: "plafond", label: "Plafond proche", match: (c) => has(c, "plafond") },
+  { id: "non_lus", label: "Non lus", match: (c) => c.non_lus > 0 },
+  { id: "manuel", label: "Main prise", match: (c) => c.manuel === true },
+];
+const SHORT: Record<AlertKind, string> = { urgence: "Urgence", contre_offre: "Contre-offre", plafond: "Plafond" };
+/** Pour « À traiter » : les urgences d'abord. */
+const rank = (c: InboxItem) => Math.min(...(c.alertes ?? []).map((k) => ALERT_ORDER.indexOf(k)), ALERT_ORDER.length);
 const STATUS_LABEL: Record<TeamOffer["status"], string> = {
   proposee: "En attente",
   achetee: "Acheté",
@@ -86,6 +108,8 @@ export function Inbox({
   const [offerMessage, setOfferMessage] = useState("");
   const [offerNotice, setOfferNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [filter, setFilter] = useState<Filter>("toutes");
+  const [alertNotice, setAlertNotice] = useState<string | null>(null);
   const selectedRef = useRef(selected);
   const formFor = useRef<string | null>(null);
   const reloadForm = useRef(false);
@@ -136,9 +160,21 @@ export function Inbox({
     setThread(null);
     setShowPanel(false);
     setError(null);
+    setAlertNotice(null);
     window.history.replaceState(null, "", `/admin/messages?u=${user}&c=${creator}`);
     void loadThread(key);
   }
+
+  // Le bandeau d'alerte ouvre une conversation sans recharger la page.
+  const openFromBanner = useEffectEvent((key: string) => open(key));
+  useEffect(() => {
+    const listener = (e: Event) => {
+      const key = (e as CustomEvent<string>).detail;
+      if (typeof key === "string" && key.includes(":")) openFromBanner(key);
+    };
+    window.addEventListener(OPEN_CONVERSATION, listener);
+    return () => window.removeEventListener(OPEN_CONVERSATION, listener);
+  }, []);
 
   // Au premier affichage, et ensuite toutes les quelques secondes.
   useEffect(() => {
@@ -175,6 +211,38 @@ export function Inbox({
     setReply("");
     setThread((t) => (t ? { ...t, messages: [...t.messages, result.message] } : t));
     void loadList();
+  }
+
+  /** « Prendre la main » (l'IA se tait ici) ou la rendre à l'IA, en un clic. */
+  async function toggleManual() {
+    if (!selected || !thread) return;
+    const manual = !thread.contact.manual;
+    setBusy(true);
+    setAlertNotice(null);
+    const { user, creator } = parseKey(selected);
+    const result = await setManual(user, creator, manual);
+    setBusy(false);
+    if (!result.ok) return setAlertNotice(result.error);
+    setThread((t) => (t ? { ...t, contact: { ...t.contact, manual } } : t));
+    setAlertNotice(manual ? "Vous avez la main : répondez ci-dessous." : "L'IA répond de nouveau dans cette conversation.");
+    void loadList();
+  }
+
+  /** Marquer traitée une alerte, ou toutes celles de la conversation. */
+  async function resolve(alertId?: number) {
+    if (!selected) return;
+    setBusy(true);
+    setAlertNotice(null);
+    const { user, creator } = parseKey(selected);
+    const result = await handleAlerts(user, creator, alertId);
+    setBusy(false);
+    if (!result.ok) return setAlertNotice(result.error);
+    const done = (a: { id: number; user_id: string; creator_id: number }) =>
+      a.user_id === user && a.creator_id === creator && (alertId === undefined || a.id === alertId);
+    dropAlerts(done);
+    setThread((t) => (t ? { ...t, alerts: t.alerts.filter((a) => !done(a)) } : t));
+    void loadList();
+    void refreshAlerts();
   }
 
   async function save(e: React.FormEvent) {
@@ -234,6 +302,17 @@ export function Inbox({
   const next = person?.prochaine_etape ?? null;
   const pending = thread?.offers.find((o) => o.status === "proposee") ?? null;
   const offersById = Object.fromEntries((thread?.offers ?? []).map((o) => [o.id, o]));
+  const shown = list.filter(FILTERS.find((f) => f.id === filter)?.match ?? (() => true));
+  if (filter === "a_traiter") shown.sort((a, b) => rank(a) - rank(b));
+  const manualLine = !thread
+    ? ""
+    : thread.contact.manual
+      ? "Vous avez la main : l'IA ne répond plus ici, les messages vous attendent."
+      : mode === "manuel"
+        ? "Mode manuel : l'IA ne répond à personne."
+        : mode === "hybride" && !thread.contact.ai_enabled
+          ? "Mode hybride : l'IA ne répond pas à cette personne."
+          : "L'IA répond dans cette conversation.";
   const aiLine =
     mode === "manuel"
       ? "Mode manuel : l'IA ne répond à personne, l'équipe répond à tout."
@@ -254,10 +333,34 @@ export function Inbox({
             Mode {MODE_LABEL[mode]}
           </Link>
         </div>
+        <div role="group" aria-label="Filtrer les conversations" className="flex gap-2 overflow-x-auto border-b border-line px-4 py-2">
+          {FILTERS.map((f) => {
+            const count = f.id === "toutes" ? list.length : list.filter(f.match).length;
+            const urgent = f.id === "urgence" && count > 0;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                aria-pressed={filter === f.id}
+                onClick={() => setFilter(f.id)}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${
+                  filter === f.id
+                    ? "border-accent bg-accent text-white"
+                    : urgent
+                      ? "border-bad text-bad"
+                      : "border-line text-muted hover:text-foreground"
+                }`}
+              >
+                {f.label} {count > 0 && <span className="opacity-80">{count}</span>}
+              </button>
+            );
+          })}
+        </div>
         <ul className="min-h-0 flex-1 overflow-y-auto">
           {list.length === 0 && <li className="p-4 text-sm text-muted">Personne n&apos;a encore écrit.</li>}
-          {list.map((c) => {
-            const aiOff = mode === "manuel" || (mode === "hybride" && !c.ia_autorisee);
+          {list.length > 0 && shown.length === 0 && <li className="p-4 text-sm text-muted">Aucune conversation ici.</li>}
+          {shown.map((c) => {
+            const aiOff = mode === "manuel" || c.manuel || (mode === "hybride" && !c.ia_autorisee);
             const prefix =
               c.dernier.type === "relance"
                 ? "IA (nouvelles) : "
@@ -301,8 +404,17 @@ export function Inbox({
                         </span>
                       )}
                     </span>
-                    <span className="mt-0.5 flex gap-2 text-xs text-muted">
-                      {aiOff && <span className="rounded bg-background px-1.5">IA coupée</span>}
+                    <span className="mt-0.5 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted">
+                      {ALERT_ORDER.filter((k) => has(c, k)).map((k) => (
+                        <span key={k} className={`rounded px-1.5 font-semibold ${ALERT_STYLE[k]}`}>
+                          {SHORT[k]}
+                        </span>
+                      ))}
+                      {c.manuel ? (
+                        <span className="rounded bg-background px-1.5 font-semibold text-foreground">Main prise</span>
+                      ) : (
+                        aiOff && <span className="rounded bg-background px-1.5">IA coupée</span>
+                      )}
                       {c.depense_cents > 0 && <span>LTV {formatEuros(c.depense_cents)}</span>}
                     </span>
                   </span>
@@ -355,6 +467,48 @@ export function Inbox({
                   Fiche
                 </button>
               </header>
+
+              <div className="flex flex-col gap-2 border-b border-line px-4 py-2">
+                {thread.alerts.map((a) => (
+                  <div key={a.id} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${ALERT_STYLE[a.kind]}`}>
+                    <span className="min-w-0 flex-1">
+                      <strong>{ALERT_TITLE[a.kind]}</strong> · {alertSummary(a)}
+                      <span className="opacity-80" suppressHydrationWarning>
+                        {" "}
+                        · {timeAgo(a.created_at ?? a.date ?? "", now)}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => resolve(a.id)}
+                      aria-label={`Marquer traitée : ${ALERT_TITLE[a.kind]}`}
+                      className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-black disabled:opacity-60"
+                    >
+                      Traité
+                    </button>
+                  </div>
+                ))}
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="min-w-0 flex-1 text-muted">{alertNotice ?? manualLine}</span>
+                  {thread.alerts.length > 1 && (
+                    <button type="button" disabled={busy} onClick={() => resolve()} className="text-sm text-muted underline">
+                      Tout marquer traité
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={toggleManual}
+                    aria-pressed={thread.contact.manual}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-bold disabled:opacity-60 ${
+                      thread.contact.manual ? "border border-line" : "bg-accent text-white"
+                    }`}
+                  >
+                    {thread.contact.manual ? "Rendre la main à l'IA" : "Prendre la main"}
+                  </button>
+                </div>
+              </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
                 <ol className="flex flex-col gap-2">

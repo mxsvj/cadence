@@ -1,5 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { schemaOutdated } from "./admin";
+import type { AlertKind, TeamAlert } from "./alerts";
 import { MESSAGE_COLUMNS, type Message } from "./memory";
 import type { Script, Step } from "./offers";
 import { displayName } from "./persona-profile";
@@ -22,6 +24,10 @@ export type InboxItem = {
   dernier: { id: number; auteur: "user" | "ai" | "team"; type: "text" | "offer" | "relance"; texte: string; date: string };
   non_lus: number;
   ia_autorisee: boolean;
+  /** L'équipe a pris la main : l'IA se tait dans cette conversation (absent avant schema.sql relancé). */
+  manuel?: boolean;
+  /** Les alertes à traiter dans cette conversation (absent avant schema.sql relancé). */
+  alertes?: AlertKind[];
   depense_cents: number;
 };
 
@@ -65,6 +71,8 @@ export type Thread = {
   creatorActive: boolean;
   /** Où en est la vente : « Prochaine offre dans 3 messages. », etc. */
   sale: string;
+  /** Les alertes à traiter dans cette conversation, les plus récentes d'abord. */
+  alerts: TeamAlert[];
   messages: Message[];
   offers: TeamOffer[];
   steps: Record<number, Pick<Step, "id" | "title" | "content_type">>;
@@ -75,6 +83,16 @@ export type Thread = {
 function check<T>(r: { data: T | null; error: { message: string } | null }, what: string): T {
   if (r.error) throw new Error(`${what} : ${r.error.message}`);
   return r.data as T;
+}
+
+/** Les alertes à traiter, pour le bandeau de l'espace de l'équipe (null : schema.sql pas encore relancé). */
+export async function loadAlerts(supabase: SupabaseClient): Promise<TeamAlert[] | null> {
+  const { data, error } = await supabase.rpc("admin_alertes");
+  if (error) {
+    if (schemaOutdated(error)) return null;
+    throw new Error(`Alertes illisibles : ${error.message}`);
+  }
+  return ((data ?? []) as TeamAlert[]).map((a) => ({ ...a, creator_id: Number(a.creator_id) }));
 }
 
 export async function loadInbox(supabase: SupabaseClient): Promise<{ mode: AiMode; conversations: InboxItem[] }> {
@@ -89,7 +107,7 @@ export async function loadInbox(supabase: SupabaseClient): Promise<{ mode: AiMod
 }
 
 export async function loadThread(supabase: SupabaseClient, userId: string, creatorId: number): Promise<Thread | null> {
-  const [person, settings, creator, messages, offers, scripts, facts, contact] = await Promise.all([
+  const [person, settings, creator, messages, offers, scripts, facts, contact, alerts] = await Promise.all([
     supabase.rpc("admin_personne", { p_user: userId, p_creator: creatorId }),
     loadSettings(supabase),
     loadCreator(supabase, creatorId),
@@ -106,7 +124,16 @@ export async function loadThread(supabase: SupabaseClient, userId: string, creat
     supabase.from("user_facts").select("fact").eq("user_id", userId).eq("creator_id", creatorId).order("id"),
     // La fiche, avec ce que cette créatrice fait avec cette personne.
     loadContact(supabase, userId, creatorId),
+    supabase
+      .from("team_alerts")
+      .select("id, kind, user_id, creator_id, offer_id, detail, created_at")
+      .eq("user_id", userId)
+      .eq("creator_id", creatorId)
+      .is("handled_at", null)
+      .order("created_at", { ascending: false }),
   ]);
+  // Tant que schema.sql n'est pas relancé, la table des alertes n'existe pas.
+  if (alerts.error) console.error("Alertes illisibles :", alerts.error.message);
   const p = check(person, "Personne introuvable") as Person | null;
   if (!p || !creator) return null;
   // Où en est la vente, et pourquoi l'IA ne propose pas (lu avec la clé
@@ -137,6 +164,11 @@ export async function loadThread(supabase: SupabaseClient, userId: string, creat
     creatorName: displayName(creator.persona),
     creatorActive: creator.active,
     sale,
+    alerts: ((alerts.data ?? []) as Omit<TeamAlert, "creatrice">[]).map((a) => ({
+      ...a,
+      creator_id: Number(a.creator_id),
+      creatrice: displayName(creator.persona),
+    })),
     messages: (check(messages, "Messages illisibles") as Message[]).reverse(),
     offers: offerRows,
     steps,

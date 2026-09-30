@@ -2,15 +2,20 @@ import { after, NextResponse, type NextRequest } from "next/server";
 import { buildReply, saveReply } from "@/lib/conversation";
 import { MAX_MESSAGE_LENGTH } from "@/lib/limits";
 import { CHAT_TEMPERATURE, LlmError, generate } from "@/lib/llm";
-import { MESSAGE_COLUMNS, MemoryError, rememberFacts, summarizeIfNeeded, type Message } from "@/lib/memory";
+import { MESSAGE_COLUMNS, MemoryError, memoryDue, rememberFacts, summarizeIfNeeded, type Message } from "@/lib/memory";
+import { flushAlerts, raiseUrgency } from "@/lib/notify";
 import { OFFER_COLUMNS, parseProposal, type Offer } from "@/lib/offers";
 import { cleanReply } from "@/lib/prompts";
+import { RateLimiter, chatMessagesPerMinute } from "@/lib/rate-limit";
 import { aiMayReply, loadContact, loadCreator, loadProfile, loadSettings } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient, currentUserId } from "@/lib/supabase/server";
+import { CRISIS_NOTICE, detectUrgency, parseTeamFlag, type UrgencyReason } from "@/lib/urgency";
 
 // Laisse le temps à la mise à jour de la mémoire, qui tourne après la réponse.
 export const maxDuration = 60;
+
+const limiter = new RateLimiter(chatMessagesPerMinute(), 60_000);
 
 function problem(status: number, error: string) {
   return NextResponse.json({ error }, { status });
@@ -58,6 +63,7 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
   if (!userId) return problem(401, "Votre session a expiré. Reconnectez-vous.");
+  if (!limiter.allow(userId)) return problem(429, "Vous écrivez très vite : attendez quelques secondes avant le prochain message.");
 
   const body = (await request.json().catch(() => null)) as { content?: unknown; creator?: unknown } | null;
   const content = typeof body?.content === "string" ? body.content.trim() : "";
@@ -77,6 +83,13 @@ export async function POST(request: Request) {
   }
 
   const receivedAt = new Date();
+  const origin = new URL(request.url).origin;
+  // Demande d'un humain, détresse, âge, paiement : l'équipe est prévenue.
+  const urgency = detectUrgency(content);
+  const alertTeam = (reason: UrgencyReason, source: "mots" | "ia") =>
+    after(async () => {
+      if (await raiseUrgency(admin, userId, creatorId, reason, source)) await flushAlerts(admin, origin);
+    });
   const saveUserMessage = () =>
     supabase
       .from("messages")
@@ -104,10 +117,24 @@ export async function POST(request: Request) {
     if (!aiMayReply(settings, contact)) {
       const { data, error } = await saveUserMessage();
       if (error) throw new MemoryError(`Message non enregistré : ${error.message}`);
-      return NextResponse.json({ messages: [data as Message], offers: [], waiting: true });
+      if (urgency) alertTeam(urgency, "mots");
+      // Personne ne répond tout de suite : un message inquiétant reçoit les numéros d'aide sans attendre.
+      const notice = urgency === "attention" ? CRISIS_NOTICE : undefined;
+      return NextResponse.json({ messages: [data as Message], offers: [], waiting: true, notice });
     }
 
-    context = await buildReply({ supabase, admin, userId, creator, newMessage: content, now: receivedAt, settings, contact, profile });
+    context = await buildReply({
+      supabase,
+      admin,
+      userId,
+      creator,
+      newMessage: content,
+      now: receivedAt,
+      settings,
+      contact,
+      profile,
+      teamAlerted: urgency !== null,
+    });
     reply = cleanReply(
       await generate({
         system: context.system,
@@ -127,7 +154,12 @@ export async function POST(request: Request) {
   // Le message et la réponse ne sont enregistrés qu'une fois la réponse
   // obtenue : en cas d'échec, rien n'est gardé et le texte revient dans la
   // zone de saisie.
-  const { text, proposal } = parseProposal(reply);
+  // [[EQUIPE]] : l'IA juge qu'un humain doit lire la conversation.
+  const flag = parseTeamFlag(reply);
+  const parsed = parseProposal(flag.text);
+  const text = parsed.text;
+  // Jamais d'offre dans une réponse qui prévient l'équipe.
+  const proposal = urgency || flag.flagged ? null : parsed.proposal;
   const saved: Message[] = [];
   let offers: Offer[] = [];
   try {
@@ -145,19 +177,24 @@ export async function POST(request: Request) {
     return problem(500, "La conversation n'a pas pu être enregistrée. Réessayez dans un instant.");
   }
 
-  after(async () => {
-    const now = new Date();
-    try {
-      await rememberFacts(supabase, userId, creatorId, context.facts, [...context.messages, { role: "assistant", content: text }], now);
-    } catch (err) {
-      console.error("Mise à jour de la fiche impossible :", err);
-    }
-    try {
-      await summarizeIfNeeded(supabase, userId, creatorId, now, settings.context_messages);
-    } catch (err) {
-      console.error("Résumé impossible :", err);
-    }
-  });
+  if (urgency || flag.flagged) alertTeam(urgency ?? "attention", urgency ? "mots" : "ia");
+
+  // La fiche et le résumé : tous les MEMORY_EVERY messages de la personne.
+  if (memoryDue(context.sale.userMessages)) {
+    after(async () => {
+      const now = new Date();
+      try {
+        await rememberFacts(supabase, userId, creatorId, context.facts, [...context.messages, { role: "assistant", content: text }], now);
+      } catch (err) {
+        console.error("Mise à jour de la fiche impossible :", err);
+      }
+      try {
+        await summarizeIfNeeded(supabase, userId, creatorId, now, settings.context_messages, context.summary);
+      } catch (err) {
+        console.error("Résumé impossible :", err);
+      }
+    });
+  }
 
   return NextResponse.json({ messages: saved, offers });
 }

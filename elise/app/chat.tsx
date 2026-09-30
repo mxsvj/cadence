@@ -182,7 +182,7 @@ export function Chat({
       if (!res.ok) throw new Error(data.error ?? "Pas de réponse cette fois-ci. Réessayez dans un instant.");
       setMessages((m) => merge(m.filter((x) => x.id !== pending.id), data.messages as Message[]));
       if (data.offers?.length) setOffers((o) => ({ ...o, ...byId(data.offers as Offer[]) }));
-      if (data.waiting) setNotice("Message envoyé. La réponse arrivera ici dès que possible.");
+      if (data.waiting) setNotice(data.notice ?? "Message envoyé. La réponse arrivera ici dès que possible.");
     } catch (err) {
       // Rien n'a été enregistré : le message revient dans la zone de saisie.
       setMessages((m) => m.filter((x) => x.id !== pending.id));

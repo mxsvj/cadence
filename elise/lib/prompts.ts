@@ -201,6 +201,24 @@ export function salesSection(sale: SalePrompt | null): string {
   return `## Vente de contenus\n\n${parts.join("\n\n")}`;
 }
 
+/**
+ * Prévenir l'équipe humaine : l'IA termine sa réponse par [[EQUIPE]] quand un
+ * humain doit lire la conversation (lib/urgency.ts retire la balise et crée
+ * l'alerte). `alerted` : le message vient déjà de déclencher une alerte.
+ */
+export function teamSection(alerted: boolean): string {
+  const lines = [
+    "Une équipe humaine lit les conversations et peut répondre ici (ses messages sont signés « Équipe »). Termine ta réponse par une ligne contenant uniquement [[EQUIPE]] si la personne :",
+    "- demande à parler à un humain ;",
+    "- semble en danger ou en grande détresse ;",
+    "- dit avoir moins de 18 ans ;",
+    "- signale un problème de paiement ou demande un remboursement.",
+    "Dans ces cas-là, dis-lui simplement que l'équipe est prévenue et lui répondra ici dès que possible, sans promettre de délai, et continue de lui répondre avec attention. Sinon, n'écris jamais cette balise.",
+  ];
+  if (alerted) lines.push("L'équipe vient d'être prévenue pour ce message : tu peux le lui dire, sans promettre de délai.");
+  return `## Prévenir l'équipe\n\n${lines.join("\n")}`;
+}
+
 /** L'instruction système complète : règles, personnage, personne, mémoire, vente, date. */
 export function chatSystemPrompt(input: {
   base: string;
@@ -209,6 +227,8 @@ export function chatSystemPrompt(input: {
   facts: string[];
   summary: string | null;
   sale?: SalePrompt | null;
+  /** Dans la conversation (pas pour une prise de nouvelles) : l'IA peut prévenir l'équipe. */
+  team?: { alerted: boolean };
   extra?: string;
   now: Date;
 }): string {
@@ -227,6 +247,7 @@ export function chatSystemPrompt(input: {
     `## Résumé de vos conversations plus anciennes\n\n${summary}`,
     salesSection(input.sale ?? null),
   ];
+  if (input.team) sections.push(teamSection(input.team.alerted));
   if (input.extra?.trim()) sections.push(`## Consignes de l'équipe\n\n${input.extra.trim()}`);
   sections.push(`## Repères\n\nNous sommes le ${formatNow(input.now)} (heure de Paris).`);
   return sections.join("\n\n");
@@ -238,7 +259,7 @@ const FORBIDDEN = `JAMAIS rien sur : la santé (physique ou mentale, traitements
 export function factsSystemPrompt(now: Date): string {
   return `Tu tiens la fiche mémoire d'une personne qui discute avec Élise, une IA de conversation. Nous sommes le ${formatNow(now)}.
 
-On te donne la fiche actuelle et la fin de leur conversation. Relève les NOUVEAUX faits utiles pour les prochaines conversations, tirés de ce que la personne dit d'elle-même dans son dernier message (les messages précédents ne servent qu'à le comprendre) :
+On te donne la fiche actuelle et la fin de leur conversation. Relève les NOUVEAUX faits utiles pour les prochaines conversations, tirés de ce que la personne dit d'elle-même dans ses derniers messages (ceux d'Élise ne servent qu'à les comprendre) :
 - son prénom ou la façon dont elle veut être appelée, et si elle préfère le tutoiement ;
 - son entourage : enfants (prénoms, âges, garde), proches, amis, animaux ;
 - son travail et son rythme de vie ;
