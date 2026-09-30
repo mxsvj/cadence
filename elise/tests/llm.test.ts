@@ -26,6 +26,7 @@ beforeEach(() => {
   process.env = { ...savedEnv, GEMINI_API_KEY: "cle-gemini", ANTHROPIC_API_KEY: "cle-claude" };
   delete process.env.LLM_PROVIDER;
   delete process.env.GEMINI_MODEL;
+  delete process.env.GEMINI_FALLBACK_MODEL;
   delete process.env.CLAUDE_MODEL;
 });
 afterEach(() => {
@@ -91,6 +92,64 @@ describe("Gemini (par défaut)", () => {
     }) as typeof fetch;
     assert.equal(await generate(conversation), "Me revoilà.");
     assert.equal(calls, 2);
+  });
+});
+
+describe("Gemini : le modèle de secours", () => {
+  const ok = (text: string) => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text }] } }] }), { status: 200 });
+  /** Répond selon le modèle demandé ; garde la liste des modèles appelés. */
+  function byModel(responses: Record<string, (() => Response) | "réseau">) {
+    const models: string[] = [];
+    globalThis.fetch = (async (url: string) => {
+      const model = String(url).match(/models\/([^:]+):/)?.[1] ?? "";
+      models.push(model);
+      const r = responses[model];
+      if (r === "réseau") throw new TypeError("fetch failed");
+      return r ? r() : new Response("{}", { status: 500 });
+    }) as typeof fetch;
+    return models;
+  }
+
+  it("le principal surchargé deux fois : le secours répond, et on sait lequel", async () => {
+    const models = byModel({ "gemini-flash-latest": () => new Response("{}", { status: 503 }), "gemini-flash-lite-latest": () => ok("Coucou !") });
+    let served = "";
+    assert.equal(await generate({ ...conversation, onModel: (m) => (served = m) }), "Coucou !");
+    assert.deepEqual(models, ["gemini-flash-latest", "gemini-flash-latest", "gemini-flash-lite-latest"]);
+    assert.equal(served, "gemini-flash-lite-latest");
+  });
+
+  it("un modèle retiré (404), un réseau coupé ou un quota de la minute : le secours prend le relais", async () => {
+    for (const trouble of [() => new Response("{}", { status: 404 }), "réseau" as const, () => new Response("{}", { status: 429 })]) {
+      const models = byModel({ "gemini-flash-latest": trouble, "gemini-flash-lite-latest": () => ok("Présente !") });
+      assert.equal(await generate(conversation), "Présente !");
+      assert.deepEqual(models, ["gemini-flash-latest", "gemini-flash-lite-latest"]);
+    }
+  });
+
+  it("les deux à court de quota : « réessayez dans une minute »", async () => {
+    const models = byModel({ "gemini-flash-latest": () => new Response("{}", { status: 429 }), "gemini-flash-lite-latest": () => new Response("{}", { status: 429 }) });
+    await assert.rejects(generate(conversation), (err: unknown) => err instanceof LlmError && err.kind === "rate_limited");
+    assert.equal(models.length, 2);
+  });
+
+  it("pas de secours quand un autre modèle n'y changerait rien : clé refusée, contenu bloqué", async () => {
+    let models = byModel({ "gemini-flash-latest": () => new Response('{"error":"API key not valid"}', { status: 400 }) });
+    await assert.rejects(generate(conversation), (err: unknown) => err instanceof LlmError && err.kind === "failed" && err.status === 400);
+    assert.deepEqual(models, ["gemini-flash-latest"]);
+    models = byModel({ "gemini-flash-latest": () => new Response(JSON.stringify({ promptFeedback: { blockReason: "SAFETY" } }), { status: 200 }) });
+    await assert.rejects(generate(conversation), (err: unknown) => err instanceof LlmError && err.kind === "blocked");
+    assert.deepEqual(models, ["gemini-flash-latest"]);
+  });
+
+  it("GEMINI_FALLBACK_MODEL choisit le secours ; « aucun » le désactive", async () => {
+    process.env.GEMINI_FALLBACK_MODEL = "gemini-autre";
+    let models = byModel({ "gemini-flash-latest": () => new Response("{}", { status: 404 }), "gemini-autre": () => ok("Oui ?") });
+    assert.equal(await generate(conversation), "Oui ?");
+    assert.deepEqual(models, ["gemini-flash-latest", "gemini-autre"]);
+    process.env.GEMINI_FALLBACK_MODEL = "aucun";
+    models = byModel({ "gemini-flash-latest": () => new Response("{}", { status: 404 }) });
+    await assert.rejects(generate(conversation), (err: unknown) => err instanceof LlmError && err.status === 404);
+    assert.deepEqual(models, ["gemini-flash-latest"]);
   });
 });
 

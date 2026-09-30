@@ -384,6 +384,10 @@ physiques dans un registre sexuel.
   (« Recevoir des nouvelles de … »). Le message attend dans la conversation
   (pas encore de notification sur le téléphone) ; l'équipe le voit marqué
   « prise de nouvelles ».
+- **Tester l'IA** (dans « Le site ») : demande une vraie réponse à chaque
+  créatrice en ligne, sans rien enregistrer, et affiche le modèle qui a
+  répondu et le temps mis, ou l'erreur exacte. À utiliser dès que la
+  conversation affiche « L'IA ne répond pas ».
 - **Le site** : le modèle d'IA en service, si le lien de l'équipe est
   activé, si les alertes partent sur Discord ou Telegram, et si la prise de
   nouvelles peut tourner (`CRON_SECRET`).
@@ -451,6 +455,10 @@ qui suit le Flash le plus récent).
 
 ## Limites connues de cette version
 
+- **Modèle de secours** : si Gemini ne répond pas (surchargé, trop lent,
+  quota de la minute atteint, modèle retiré), la réponse est demandée à
+  `gemini-flash-lite-latest` (quota gratuit séparé, un peu moins fin).
+  `GEMINI_FALLBACK_MODEL` dans Vercel le change ; `aucun` le désactive.
 - **Quota Gemini gratuit** : environ 10 demandes par minute et un plafond par
   jour. Chaque message en coûte un, plus un tous les 3 messages pour la fiche
   (et de temps en temps un pour le résumé) ; au-delà, Élise demande poliment

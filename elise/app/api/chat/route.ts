@@ -21,6 +21,30 @@ function problem(status: number, error: string) {
   return NextResponse.json({ error }, { status });
 }
 
+/**
+ * Ce qui a empêché la réponse, en une phrase : assez précis pour savoir où
+ * chercher (l'onglet Paramètres → « Tester l'IA » donne le détail), sans
+ * rien de technique ni de secret.
+ */
+function whyNoReply(err: unknown): string {
+  if (!(err instanceof LlmError)) {
+    return "Pas de réponse cette fois-ci : la conversation n'a pas pu être préparée (base de données). Réessayez dans un instant.";
+  }
+  switch (err.kind) {
+    case "rate_limited":
+      return "Beaucoup de messages en ce moment (quota gratuit de l'IA atteint). Réessayez dans une minute.";
+    case "config":
+      return "L'IA n'est pas branchée (clé du modèle absente dans Vercel). L'équipe peut vérifier dans Paramètres → « Tester l'IA ».";
+    case "blocked":
+      return "L'IA n'a pas pu répondre à ce message. Essayez de le formuler autrement.";
+    default:
+      if (err.status === 400 || err.status === 401 || err.status === 403) {
+        return "L'IA refuse la connexion (clé du modèle refusée ?). L'équipe peut vérifier dans Paramètres → « Tester l'IA ».";
+      }
+      return "L'IA ne répond pas pour le moment (service surchargé ou trop lent). Réessayez dans un instant.";
+  }
+}
+
 /** La créatrice de la conversation, telle que la page l'envoie. */
 function creatorParam(value: unknown): number | null {
   const id = Number(value);
@@ -144,11 +168,8 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     console.error("Réponse impossible :", err);
-    if (err instanceof LlmError && err.kind === "rate_limited") {
-      return problem(429, "Beaucoup de messages en ce moment. Réessayez dans une minute.");
-    }
     if (err instanceof MemoryError) return problem(500, err.message);
-    return problem(502, "Pas de réponse cette fois-ci. Réessayez dans un instant.");
+    return problem(err instanceof LlmError && err.kind === "rate_limited" ? 429 : 502, whyNoReply(err));
   }
 
   // Le message et la réponse ne sont enregistrés qu'une fois la réponse

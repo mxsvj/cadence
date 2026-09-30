@@ -184,7 +184,7 @@ step("le modèle a reçu : persona + fiche + résumé + conversation");
 // 8. Quota atteint : rien n'est perdu.
 await input.fill("Test QUOTA");
 await page.getByLabel("Envoyer").click();
-await page.getByText("Beaucoup de messages en ce moment. Réessayez dans une minute.").waitFor();
+await page.getByText("Beaucoup de messages en ce moment (quota gratuit de l'IA atteint). Réessayez dans une minute.").waitFor();
 assert.equal(await input.inputValue(), "Test QUOTA");
 assert.equal(state().tables.messages.length, 3);
 await page.screenshot({ path: `${SHOTS}4-quota.png` });
@@ -1174,6 +1174,29 @@ assert.equal(nadiaUser.password, undefined);
 assert.ok(s.tables.profiles.some((p) => p.user_id === nadiaUser.id && p.display_name === "Nadia"));
 assert.ok(s.tables.messages.some((m) => m.user_id === nadiaUser.id && m.content === "Salut, c'est Nadia !"));
 step("avec le lien : prénom, date de naissance, « Entrer », et on parle à l'IA (ni e-mail, ni mot de passe, ni autre écran)");
+
+// Le modèle principal de Gemini est surchargé : le modèle de secours répond à sa place.
+await nadiaPage.getByLabel("Votre message").fill("SURCHARGE tu es là ?");
+await nadiaPage.getByLabel("Envoyer").click();
+await until(() => state().tables.messages.some((m) => m.user_id === nadiaUser.id && m.content === "SURCHARGE tu es là ?"), "message gardé");
+await until(() => state().tables.messages.filter((m) => m.user_id === nadiaUser.id && m.role === "assistant").length === 3, "réponse du secours");
+const tried = state().llm.filter((r) => !r.json && r.contents.at(-1).parts[0].text.includes("SURCHARGE")).map((r) => r.model);
+assert.deepEqual(tried, ["gemini-flash-latest", "gemini-flash-latest", "gemini-flash-lite-latest"]);
+assert.equal(await nadiaPage.getByRole("alert").filter({ hasText: /réponse|IA/ }).count(), 0);
+step("Gemini surchargé : un 2e essai, puis le modèle de secours répond ; la personne ne voit rien");
+
+// « Tester l'IA » (Paramètres) : une vraie réponse de chaque créatrice en ligne, rien d'enregistré.
+const messagesBefore = state().tables.messages.length;
+await admin.getByRole("button", { name: "Tester l'IA" }).click();
+const results = admin.getByRole("list", { name: "Résultat du test" });
+await results.waitFor();
+assert.ok((await results.getByRole("listitem").count()) >= 1);
+assert.equal(await results.getByText("✗", { exact: false }).count(), 0);
+await results.getByText(/réponse de test/).first().waitFor();
+await results.getByText("gemini-flash-latest", { exact: false }).first().waitFor();
+assert.equal(state().tables.messages.length, messagesBefore);
+await admin.getByText("gemini-flash-lite-latest (secours automatique)", { exact: false }).waitFor();
+step("« Tester l'IA » : chaque créatrice en ligne répond (modèle et durée affichés), rien n'est enregistré");
 
 // Une deuxième personne, même code : un autre compte, une autre conversation.
 const { c: omarCtx, p: omarPage } = await visitor();

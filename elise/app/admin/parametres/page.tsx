@@ -4,17 +4,20 @@ import { signOut } from "@/app/actions";
 import { Notice } from "@/app/notice";
 import { newCode } from "@/lib/access-code";
 import { schemaOutdated } from "@/lib/admin";
-import { currentModel } from "@/lib/llm";
+import { currentModel, fallbackModel } from "@/lib/llm";
 import { channelStatus } from "@/lib/notify";
 import { cronSecret } from "@/lib/relances";
 import { DEFAULT_SETTINGS, type AiSettings } from "@/lib/settings";
 import { accessKey } from "@/lib/team-access";
 import { adminGate } from "../gate";
+import { AiCheckButton } from "./ai-check";
 import type { EntryCode } from "./code-actions";
 import { EntryCodeCard } from "./entry-code";
 import { ParametersForm } from "./parameters-form";
 
 export const metadata: Metadata = { title: "Paramètres · Élise" };
+// « Tester l'IA » attend la réponse du modèle (et de son secours).
+export const maxDuration = 60;
 
 const card = "flex flex-col gap-3 rounded-3xl border border-line bg-surface p-5";
 
@@ -40,6 +43,7 @@ export default async function ParametersPage() {
   }
   const current: AiSettings = { ...DEFAULT_SETTINGS, ...(settings.data ?? {}) };
   const model = currentModel();
+  const backup = fallbackModel();
   const email = claims.data?.claims?.email as string | undefined;
   const linkReady = accessKey() !== null;
   const cronReady = cronSecret() !== null;
@@ -78,6 +82,9 @@ export default async function ParametersPage() {
           <dt className="text-muted">Modèle d&apos;IA</dt>
           <dd className="min-w-0 break-words">
             {model.provider === "claude" ? "Claude" : "Gemini"} · {model.model}
+            {model.provider !== "claude" && backup && (
+              <span className="block text-xs text-muted">S&apos;il ne répond pas : {backup} (secours automatique)</span>
+            )}
             {model.provider !== "claude" && (
               <span className="block text-xs text-muted">
                 Offre gratuite : Google peut réutiliser les messages, conversations fictives uniquement.
@@ -117,6 +124,7 @@ export default async function ParametersPage() {
             )}
           </dd>
         </dl>
+        <AiCheckButton />
       </section>
 
       <section className={card} aria-labelledby="titre-compte">

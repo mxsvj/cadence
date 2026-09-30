@@ -179,7 +179,8 @@ export function Chat({
         router.replace("/");
         return;
       }
-      if (!res.ok) throw new Error(data.error ?? "Pas de réponse cette fois-ci. Réessayez dans un instant.");
+      // Sans message du serveur (coupé en route, délai dépassé) : au moins le code, pour savoir où chercher.
+      if (!res.ok) throw new Error(data.error ?? `Pas de réponse cette fois-ci (erreur ${res.status}). Réessayez dans un instant.`);
       setMessages((m) => merge(m.filter((x) => x.id !== pending.id), data.messages as Message[]));
       if (data.offers?.length) setOffers((o) => ({ ...o, ...byId(data.offers as Offer[]) }));
       if (data.waiting) setNotice(data.notice ?? "Message envoyé. La réponse arrivera ici dès que possible.");
