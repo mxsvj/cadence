@@ -2,7 +2,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 
 // Les réponses des routes /api/offres : la base explique elle-même, en
-// français, pourquoi une action est refusée (plafond, offre expirée…).
+// français, pourquoi une action est refusée (offre expirée, déjà achetée…).
 
 export function offerError(error: { code?: string; message?: string }) {
   const status = error.code === "P0002" ? 404 : error.code === "42501" ? 403 : error.code === "P0001" ? 400 : 500;

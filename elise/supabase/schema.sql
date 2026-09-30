@@ -513,8 +513,6 @@ create table if not exists public.contacts (
   city                 text not null default '' check (char_length(city) <= 120),
   timezone             text not null default 'Europe/Paris' check (char_length(timezone) <= 64),
   script_id            bigint references public.scripts (id) on delete set null,
-  -- Plafond de dépenses par mois propre à cette personne (sinon celui des réglages).
-  spending_cap_cents   integer check (spending_cap_cents is null or spending_cap_cents >= 0),
   last_read_message_id bigint not null default 0,
   updated_at           timestamptz not null default now()
 );
@@ -534,7 +532,6 @@ create table if not exists public.ai_settings (
   first_message      text not null default '' check (char_length(first_message) <= 2000),
   extra_instructions text not null default '' check (char_length(extra_instructions) <= 5000),
   -- Garde-fous de la vente.
-  spending_cap_cents integer not null default 10000 check (spending_cap_cents >= 0),
   sales_min_messages integer not null default 10 check (sales_min_messages >= 0),
   sales_gap_messages integer not null default 12 check (sales_gap_messages >= 0),
   updated_at         timestamptz not null default now()
@@ -567,7 +564,7 @@ create table if not exists public.creator_contacts (
 
 alter table public.ai_settings add column if not exists creator_id bigint references public.creators (id) on delete set null;
 
--- Garde-fous de la vente, en plus du plafond : une pause après chaque achat
+-- Garde-fous de la vente : une pause après chaque achat
 -- (en heures, 0 = pas de pause) et au plus N offres payantes proposées par
 -- l'IA sur 24 heures, toutes créatrices confondues.
 alter table public.ai_settings add column if not exists sales_pause_hours integer not null default 24;
@@ -659,9 +656,7 @@ alter table public.purchases add column if not exists offer_id bigint references
 -- ─── Plusieurs créatrices en ligne, une conversation avec chacune ─────────
 -- Chaque personne choisit avec quelle créatrice parler (celles « en ligne »).
 -- Chaque conversation (personne, créatrice) a ses messages, sa mémoire, son
--- résumé et ses offres, sans rien partager avec les autres. Le plafond de
--- dépenses, lui, reste un seul plafond par personne, toutes créatrices
--- confondues.
+-- résumé et ses offres, sans rien partager avec les autres.
 do $$
 begin
   if not exists (select 1 from information_schema.columns
@@ -761,15 +756,15 @@ $$;
 
 -- ─── Les alertes de l'équipe ───────────────────────────────────────────────
 -- Ce qui mérite qu'un humain regarde une conversation tout de suite : une
--- contre-offre sur un contenu payant, un plafond du mois presque atteint
--- (80 %), une personne qui demande un humain ou dont le message demande de
--- l'attention. On ne garde que le type d'alerte, la raison en un mot et des
--- montants : jamais le texte des messages, jamais rien sur la santé.
+-- contre-offre sur un contenu payant, une personne qui demande un humain ou
+-- dont le message demande de l'attention. On ne garde que le type d'alerte,
+-- la raison en un mot et des montants : jamais le texte des messages, jamais
+-- rien sur la santé.
 create table if not exists public.team_alerts (
   id          bigint generated always as identity primary key,
   user_id     uuid not null references auth.users (id) on delete cascade,
   creator_id  bigint not null references public.creators (id) on delete cascade,
-  kind        text not null check (kind in ('contre_offre', 'plafond', 'urgence')),
+  kind        text not null check (kind in ('contre_offre', 'urgence')),
   offer_id    bigint references public.offers (id) on delete set null,
   detail      jsonb not null default '{}'::jsonb check (octet_length(detail::text) <= 1000),
   created_at  timestamptz not null default now(),
@@ -925,23 +920,10 @@ as $$
       = date_trunc('month', now() at time zone 'Europe/Paris');
 $$;
 
-create or replace function public.plafond_de(p_user uuid)
-returns integer
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select coalesce(
-    (select c.spending_cap_cents from public.contacts c where c.user_id = p_user),
-    (select s.spending_cap_cents from public.ai_settings s where s.id = 1));
-$$;
-
 -- Proposer un contenu dans une conversation : uniquement l'étape suivante,
 -- une seule offre en attente à la fois (toutes créatrices confondues), prix
--- ramené entre le minimum et le maximum, et jamais au-delà de ce qui reste
--- du plafond du mois. Une étape gratuite est offerte tout de suite. Usage
--- interne (IA ou équipe).
+-- ramené entre le minimum et le maximum. Une étape gratuite est offerte tout
+-- de suite. Usage interne (IA ou équipe).
 create or replace function public.proposer_etape(p_user uuid, p_creator bigint, p_step bigint, p_prix_cents integer,
                                                  p_message text, p_par text, p_auteur uuid)
 returns jsonb
@@ -953,7 +935,6 @@ as $$
 declare
   suivante public.script_steps;
   prix     integer;
-  reste    integer;
   offre    public.offers;
   message  bigint;
 begin
@@ -969,13 +950,6 @@ begin
   end if;
   if suivante.is_paid then
     prix := least(greatest(coalesce(p_prix_cents, suivante.price_cents), suivante.min_price_cents), suivante.max_price_cents);
-    reste := public.plafond_de(p_user) - public.depense_du_mois(p_user);
-    if reste is not null then
-      if reste < suivante.min_price_cents then
-        raise exception 'Le plafond de dépenses du mois de cette personne ne permet pas ce contenu.' using errcode = 'P0001';
-      end if;
-      prix := least(prix, reste);
-    end if;
   else
     prix := 0;
   end if;
@@ -1033,7 +1007,7 @@ $$;
 
 
 -- ─── Côté personne : acheter, faire une offre, voir ce qu'on a acheté ─────
--- Acheter une offre à son prix affiché, dans la limite du plafond du mois.
+-- Acheter une offre à son prix affiché.
 -- Tant qu'aucun service de paiement n'est branché, l'achat est marqué
 -- « démo » : aucun argent ne circule.
 create or replace function public.acheter_offre(p_offre bigint)
@@ -1044,9 +1018,8 @@ security definer
 set search_path = ''
 as $$
 declare
-  o       public.offers;
-  plafond integer;
-  achat   bigint;
+  o     public.offers;
+  achat bigint;
 begin
   select * into o from public.offers where id = p_offre and user_id = (select auth.uid()) for update;
   if not found then
@@ -1055,20 +1028,11 @@ begin
   if o.status <> 'proposee' then
     raise exception 'Cette offre n''est plus disponible.' using errcode = 'P0001';
   end if;
-  plafond := public.plafond_de(o.user_id);
-  if plafond is not null and public.depense_du_mois(o.user_id) + o.price_cents > plafond then
-    raise exception 'Vous avez atteint le plafond de dépenses de ce mois-ci.' using errcode = 'P0001';
-  end if;
 
   insert into public.purchases (user_id, kind, amount_cents, is_demo, offer_id)
   values (o.user_id, 'contenu', o.price_cents, true, o.id)
   returning id into achat;
   update public.offers set status = 'achetee', purchased_at = now() where id = o.id;
-  -- 80 % du plafond du mois dépensés : l'équipe est prévenue (une fois par mois).
-  if plafond is not null and plafond > 0 and public.depense_du_mois(o.user_id) * 100 >= plafond * 80 then
-    perform public.alerter_equipe(o.user_id, o.creator_id, 'plafond', o.id,
-      jsonb_build_object('depense_cents', public.depense_du_mois(o.user_id), 'plafond_cents', plafond));
-  end if;
   return jsonb_build_object('offre', o.id, 'achat', achat, 'cents', o.price_cents);
 end;
 $$;
@@ -1191,7 +1155,7 @@ begin
            'ia_autorisee', coalesce(cc.ai_enabled, true),
            -- L'équipe a pris la main : l'IA se tait dans cette conversation.
            'manuel', coalesce(cc.manual, false),
-           -- Les alertes à traiter : urgence, contre_offre, plafond.
+           -- Les alertes à traiter : urgence, contre_offre.
            'alertes', (select coalesce(jsonb_agg(distinct a.kind), '[]'::jsonb) from public.team_alerts a
                        where a.user_id = d.user_id and a.creator_id = d.creator_id and a.handled_at is null),
            'depense_cents', (select coalesce(sum(pu.amount_cents), 0) from public.purchases pu where pu.user_id = d.user_id))
@@ -1230,7 +1194,6 @@ begin
     'inscrit_le', u.created_at,
     'depense_cents', (select coalesce(sum(amount_cents), 0) from public.purchases where user_id = u.id),
     'depense_mois_cents', public.depense_du_mois(u.id),
-    'plafond_cents', public.plafond_de(u.id),
     'script_id', public.script_de(u.id, p_creator),
     'prochaine_etape', (select to_jsonb(e) from public.prochaine_etape(u.id, p_creator) e where e.id is not null))
   into resultat
@@ -1288,10 +1251,10 @@ $$;
 
 
 -- ─── Les alertes : prévenir, envoyer, traiter ─────────────────────────────
--- Prévenir l'équipe (usage interne : contre-offres et achats ci-dessus, et le
--- serveur pour les urgences). Une contre-offre met à jour l'alerte encore
+-- Prévenir l'équipe (usage interne : contre-offres ci-dessus, et le serveur
+-- pour les urgences). Une contre-offre met à jour l'alerte encore
 -- ouverte de la même offre ; une urgence n'est créée que si la conversation
--- n'en a pas déjà une à traiter ; le plafond ne prévient qu'une fois par mois.
+-- n'en a pas déjà une à traiter.
 -- Renvoie l'alerte créée ou mise à jour (null : rien de nouveau).
 create or replace function public.alerter_equipe(p_user uuid, p_creator bigint, p_kind text, p_offer bigint, p_detail jsonb)
 returns bigint
@@ -1314,13 +1277,6 @@ begin
   elsif p_kind = 'urgence' then
     if exists (select 1 from public.team_alerts
                where kind = 'urgence' and user_id = p_user and creator_id = p_creator and handled_at is null) then
-      return null;
-    end if;
-  elsif p_kind = 'plafond' then
-    if exists (select 1 from public.team_alerts
-               where kind = 'plafond' and user_id = p_user
-                 and date_trunc('month', created_at at time zone 'Europe/Paris')
-                   = date_trunc('month', now() at time zone 'Europe/Paris')) then
       return null;
     end if;
   end if;
@@ -1551,13 +1507,26 @@ as $$
 $$;
 
 
+-- ─── Plus de plafond de dépenses ───────────────────────────────────────────
+-- Le plafond mensuel par personne a été retiré : plus de limite d'achat.
+-- Restent les garde-fous de rythme de la vente (messages avant la première
+-- offre et entre deux offres, une offre en attente à la fois, pause après un
+-- achat, offres payantes de l'IA par jour).
+drop function if exists public.plafond_de(uuid);
+alter table public.contacts    drop column if exists spending_cap_cents;
+alter table public.ai_settings drop column if exists spending_cap_cents;
+delete from public.team_alerts where kind not in ('contre_offre', 'urgence');
+alter table public.team_alerts drop constraint if exists team_alerts_kind_check;
+alter table public.team_alerts add constraint team_alerts_kind_check check (kind in ('contre_offre', 'urgence'));
+
+
 -- ─── Les droits sur les fonctions ──────────────────────────────────────────
 -- Par défaut, tout le monde peut appeler une fonction : on referme tout,
 -- puis on rouvre ce qui doit l'être. Les fonctions internes ne sont
 -- appelables que par le serveur (rôle service_role, clé secrète).
 revoke execute on function
   public.enregistrer_profil(text, date), public.script_de(uuid, bigint), public.prochaine_etape(uuid, bigint),
-  public.depense_du_mois(uuid), public.plafond_de(uuid),
+  public.depense_du_mois(uuid),
   public.proposer_etape(uuid, bigint, bigint, integer, text, text, uuid),
   public.admin_proposer(uuid, bigint, bigint, integer, text), public.admin_retirer_offre(bigint),
   public.acheter_offre(bigint), public.faire_une_offre(bigint, integer), public.mon_contenu(bigint),
@@ -1578,7 +1547,7 @@ grant execute on function
   public.admin_alertes(), public.admin_traiter_alertes(uuid, bigint, bigint), public.admin_prendre_la_main(uuid, bigint, boolean)
   to authenticated;
 grant execute on function
-  public.script_de(uuid, bigint), public.prochaine_etape(uuid, bigint), public.depense_du_mois(uuid), public.plafond_de(uuid),
+  public.script_de(uuid, bigint), public.prochaine_etape(uuid, bigint), public.depense_du_mois(uuid),
   public.proposer_etape(uuid, bigint, bigint, integer, text, text, uuid), public.a_relancer(integer, integer),
   public.alerter_equipe(uuid, bigint, text, bigint, jsonb), public.alertes_a_envoyer(integer)
   to service_role;

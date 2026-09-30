@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { alertMessage, alertSummary, nearCap } from "../lib/alerts";
+import { alertMessage, alertSummary } from "../lib/alerts";
 import { memoryDue } from "../lib/memory";
 import { alertChannels, channelStatus, flushAlerts } from "../lib/notify";
 import { chatSystemPrompt } from "../lib/prompts";
@@ -102,7 +102,6 @@ describe("le texte des alertes", () => {
       summary({ kind: "contre_offre", detail: { montant_cents: 600, prix_cents: 800, statut: "acceptee", essais_restants: null } }),
       "Propose 6,00 € pour un prix de 8,00 € (acceptée)",
     );
-    assert.match(summary({ kind: "plafond", detail: { depense_cents: 8500, plafond_cents: 10000 } }), /^85,00 € dépensés sur 100,00 €/);
   });
 
   it("le message Discord/Telegram : ni prénom, ni texte de la conversation, un lien", () => {
@@ -111,13 +110,6 @@ describe("le texte des alertes", () => {
       text,
       "🔴 Urgence · conversation avec Katherine\nDemande à parler à un humain\nOuvrir : https://elise.example/admin/messages?u=u-1&c=2",
     );
-  });
-
-  it("le plafond est presque atteint à partir de 80 %", () => {
-    assert.equal(nearCap(7999, 10000), false);
-    assert.equal(nearCap(8000, 10000), true);
-    assert.equal(nearCap(5000, null), false);
-    assert.equal(nearCap(0, 0), false);
   });
 });
 
@@ -130,7 +122,6 @@ describe("les garde-fous qui suivent les alertes", () => {
     userMessages: 20,
     sinceLastOffer: Infinity,
     sinceRelance: null,
-    remainingCents: 5000,
     hoursSincePurchase: null,
     paidOffersToday: 0,
   };
@@ -139,12 +130,6 @@ describe("les garde-fous qui suivent les alertes", () => {
     assert.equal(saleBlock({ ...ok, urgent: true }, rules)?.reason, "urgence");
     assert.equal(saleBlock({ ...ok, urgent: true, next: { ...paid, is_paid: false, min_price_cents: 0 } }, rules)?.reason, "urgence");
     assert.match(describeBlock({ reason: "urgence" }, null), /urgence est à traiter/);
-  });
-
-  it("près du plafond, l'IA ne propose plus de contenu payant ; un cadeau reste possible", () => {
-    assert.equal(saleBlock({ ...ok, nearCap: true }, rules)?.reason, "plafond_proche");
-    assert.equal(saleBlock({ ...ok, nearCap: true, next: { ...paid, is_paid: false, min_price_cents: 0 } }, rules), null);
-    assert.match(describeBlock({ reason: "plafond_proche" }, null), /80 %/);
   });
 
   it("« Prendre la main » fait taire l'IA dans tous les modes", () => {

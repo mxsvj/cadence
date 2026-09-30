@@ -91,7 +91,6 @@ export type ContactForm = {
   emojis: string;
   notes: string;
   script_id: number | null;
-  spending_cap: string; // en euros, vide = plafond général
 };
 
 /**
@@ -104,8 +103,6 @@ export async function saveContact(userId: string, creatorId: number, form: Conta
     const supabase = await adminClient();
     if (form.notes.length > 5000) return { ok: false, error: "Les notes dépassent 5 000 caractères." };
     if (!timeZones().includes(form.timezone)) return { ok: false, error: "Fuseau horaire inconnu." };
-    const cap = form.spending_cap.trim() ? parseEuros(form.spending_cap) : null;
-    if (form.spending_cap.trim() && cap === null) return { ok: false, error: "Plafond illisible : indiquez un montant en euros." };
     const now = new Date().toISOString();
     const { error } = await supabase.from("contacts").upsert(
       {
@@ -114,7 +111,6 @@ export async function saveContact(userId: string, creatorId: number, form: Conta
         timezone: form.timezone,
         notes: form.notes,
         script_id: form.script_id,
-        spending_cap_cents: cap,
         updated_at: now,
       },
       { onConflict: "user_id" },

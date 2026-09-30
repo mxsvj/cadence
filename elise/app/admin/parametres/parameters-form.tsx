@@ -21,7 +21,6 @@ function Field({ label, children, hint }: { label: string; children: React.React
 export function ParametersForm({ initial }: { initial: AiSettings }) {
   const [contextMessages, setContextMessages] = useState(initial.context_messages);
   const [extra, setExtra] = useState(initial.extra_instructions);
-  const [cap, setCap] = useState((initial.spending_cap_cents / 100).toFixed(2).replace(".", ","));
   const [minMessages, setMinMessages] = useState(initial.sales_min_messages);
   const [gapMessages, setGapMessages] = useState(initial.sales_gap_messages);
   const [pauseHours, setPauseHours] = useState(initial.sales_pause_hours);
@@ -38,7 +37,6 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
     const result = await saveParameters({
       context_messages: contextMessages,
       extra_instructions: extra,
-      spending_cap: cap,
       sales_min_messages: minMessages,
       sales_gap_messages: gapMessages,
       // Seulement si ça a changé : le reste s'enregistre même avant la mise à jour de la base.
@@ -80,14 +78,11 @@ export function ParametersForm({ initial }: { initial: AiSettings }) {
         </h2>
         <p className="text-sm text-muted">
           En plus des règles fixes : jamais de vente par la solitude, l&apos;attachement ou la pression, rien si la
-          personne va mal, jamais sous le prix minimum, une seule offre en attente à la fois. Le plafond, la pause et
-          le nombre d&apos;offres par jour valent pour la personne, toutes créatrices confondues ; un cadeau gratuit
-          n&apos;y est pas soumis.
+          personne va mal, jamais sous le prix minimum, une seule offre en attente à la fois. La pause et le nombre
+          d&apos;offres par jour valent pour la personne, toutes créatrices confondues ; un cadeau gratuit n&apos;y est
+          pas soumis.
         </p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Plafond par personne et par mois (€)" hint="Réglable personne par personne dans sa fiche.">
-            <input value={cap} inputMode="decimal" onChange={(e) => setCap(e.target.value)} className={input} />
-          </Field>
+        <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Messages avant la première offre">
             <input type="number" min={0} value={minMessages} onChange={(e) => setMinMessages(Number(e.target.value))} className={input} />
           </Field>

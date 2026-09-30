@@ -1,7 +1,6 @@
 "use server";
 
 import { SCHEMA_HINT, requireAdmin, schemaOutdated } from "@/lib/admin";
-import { parseEuros } from "@/lib/offers";
 import { createClient } from "@/lib/supabase/server";
 
 // L'onglet Paramètres : les réglages fins de l'IA (mémoire, consignes) et les
@@ -13,7 +12,6 @@ type Result = { ok: true } | { ok: false; error: string };
 export type ParametersForm = {
   context_messages: number;
   extra_instructions: string;
-  spending_cap: string; // en euros
   sales_min_messages: number;
   sales_gap_messages: number;
   /** Pause après un achat et offres payantes par jour : envoyés seulement s'ils ont changé. */
@@ -33,8 +31,6 @@ export async function saveParameters(form: ParametersForm): Promise<Result> {
       return { ok: false, error: "Nombres de messages invalides." };
     }
     if (form.extra_instructions.length > 5000) return { ok: false, error: "Consignes trop longues (5 000 caractères)." };
-    const cap = parseEuros(form.spending_cap || "0");
-    if (cap === null) return { ok: false, error: "Plafond illisible : indiquez un montant en euros." };
     if (form.relance && !between(form.relance.hours, 24, 336)) return { ok: false, error: "Délai d'absence : entre 24 heures et 2 semaines." };
     if (form.guards && !between(form.guards.pause_hours, 0, 720)) return { ok: false, error: "Pause après un achat : entre 0 et 720 heures." };
     if (form.guards && !between(form.guards.max_per_day, 1, 20)) return { ok: false, error: "Offres payantes par jour : entre 1 et 20." };
@@ -44,7 +40,6 @@ export async function saveParameters(form: ParametersForm): Promise<Result> {
       .update({
         context_messages: Math.round(form.context_messages),
         extra_instructions: form.extra_instructions.trim(),
-        spending_cap_cents: cap,
         sales_min_messages: Math.round(form.sales_min_messages),
         sales_gap_messages: Math.round(form.sales_gap_messages),
         ...(form.relance ? { relance_active: Boolean(form.relance.active), relance_heures: Math.round(form.relance.hours) } : {}),

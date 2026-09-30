@@ -15,7 +15,6 @@ export type AiSettings = {
   mode: AiMode;
   context_messages: number;
   extra_instructions: string;
-  spending_cap_cents: number;
   sales_min_messages: number;
   sales_gap_messages: number;
   /** Pause après un achat, en heures (0 : aucune). */
@@ -40,7 +39,6 @@ export type Contact = {
   city: string;
   timezone: string;
   script_id: number | null;
-  spending_cap_cents: number | null;
   last_read_message_id: number;
 };
 
@@ -51,7 +49,6 @@ export const DEFAULT_SETTINGS: AiSettings = {
   mode: "auto",
   context_messages: 20,
   extra_instructions: "",
-  spending_cap_cents: 10000,
   sales_min_messages: 10,
   sales_gap_messages: 12,
   sales_pause_hours: 24,
@@ -81,7 +78,6 @@ export async function loadSettings(admin: SupabaseClient): Promise<AiSettings> {
     mode: data.mode ?? DEFAULT_SETTINGS.mode,
     context_messages: data.context_messages ?? DEFAULT_SETTINGS.context_messages,
     extra_instructions: data.extra_instructions ?? "",
-    spending_cap_cents: data.spending_cap_cents ?? DEFAULT_SETTINGS.spending_cap_cents,
     sales_min_messages: data.sales_min_messages ?? DEFAULT_SETTINGS.sales_min_messages,
     sales_gap_messages: data.sales_gap_messages ?? DEFAULT_SETTINGS.sales_gap_messages,
     sales_pause_hours: data.sales_pause_hours ?? DEFAULT_SETTINGS.sales_pause_hours,
@@ -102,7 +98,6 @@ export function defaultContact(userId: string): Contact {
     city: "",
     timezone: "Europe/Paris",
     script_id: null,
-    spending_cap_cents: null,
     last_read_message_id: 0,
   };
 }

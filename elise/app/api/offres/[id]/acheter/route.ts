@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { flushAlertsLater } from "@/lib/notify";
 import { offerError, offerId } from "@/lib/offer-api";
 import { OFFER_COLUMNS, type Offer } from "@/lib/offers";
 import { createClient, currentUserId } from "@/lib/supabase/server";
 
 // Acheter une offre à son prix affiché. Aucun service de paiement n'est
 // encore branché : l'achat est enregistré comme « démo », sans débit.
-export async function POST(request: Request, ctx: RouteContext<"/api/offres/[id]/acheter">) {
+export async function POST(_request: Request, ctx: RouteContext<"/api/offres/[id]/acheter">) {
   const id = offerId((await ctx.params).id);
   if (!id) return NextResponse.json({ error: "Offre introuvable." }, { status: 404 });
   const supabase = await createClient();
@@ -14,8 +13,6 @@ export async function POST(request: Request, ctx: RouteContext<"/api/offres/[id]
 
   const { error } = await supabase.rpc("acheter_offre", { p_offre: id });
   if (error) return offerError(error);
-  // Plafond du mois presque atteint : la base a prévenu l'équipe.
-  flushAlertsLater(new URL(request.url).origin);
   const { data } = await supabase.from("offers").select(OFFER_COLUMNS).eq("id", id).single();
   return NextResponse.json({ offer: data as Offer });
 }
