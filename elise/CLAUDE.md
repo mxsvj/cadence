@@ -123,6 +123,15 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `buildReply` + `generate` pour chaque créatrice en ligne sans rien
   enregistrer et montre l'erreur exacte. Faux Gemini des essais : « SURCHARGE »
   → 503 sur le modèle principal seulement.
+- Ton des réponses (demande du porteur du projet, 09/2026 : « trop appris
+  par cœur », « elle doit se comporter comme une femme ») : `genderRule`
+  (`lib/prompts.ts`) dit à l'IA de parler d'elle au féminin sans exception
+  (défaut quand `persona.genre` est vide : une créatrice est une femme) ;
+  « Ta façon de parler » d'`elise-persona.md` vise une vraie messagerie
+  (messages courts, pas d'interrogatoire, jamais deux questions, parle
+  d'elle, liste de tics d'assistant à éviter, deux exemples « trop
+  assistant » / « naturel » à ne pas recopier). Les limites (IA, pas de
+  romance, pas de rencontre, 3114, vente) n'ont pas bougé.
 - Réponses : créativité fixe `CHAT_TEMPERATURE = 1` (`lib/llm.ts`, valeur
   recommandée par Google pour ses modèles récents), pas de plafond de
   longueur (Gemini n'en reçoit pas, Claude 4096 jetons) : la persona dit à

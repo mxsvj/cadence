@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { parseEuros, parseProposal } from "../lib/offers";
 import { sanitizePersona } from "../lib/persona-profile";
-import { chatSystemPrompt, personSection, personaSection, salesSection, type SalePrompt } from "../lib/prompts";
+import { readFileSync } from "node:fs";
+import { chatSystemPrompt, genderRule, personSection, personaSection, salesSection, type SalePrompt } from "../lib/prompts";
 
 const now = new Date("2026-09-28T19:14:00Z");
 
@@ -43,6 +44,29 @@ describe("le personnage", () => {
     assert.match(text, /Tu ne proposes jamais de la rencontrer/);
     // Sans ville connue pour la personne, on garde la ville du personnage.
     assert.match(personaSection({ ...persona, pres_de_la_personne: true }, {}), /Lieu de vie : Annecy/);
+  });
+
+  it("parle d'elle au féminin (une créatrice sans genre réglé aussi), d'un homme au masculin", () => {
+    for (const genre of ["Femme", undefined, " femme "]) {
+      assert.match(genderRule(genre), /Ton personnage est une femme\. Tu parles de toi au féminin, dans chaque message et sans exception/);
+    }
+    assert.match(genderRule("Homme"), /Tu parles de toi au masculin/);
+    assert.match(genderRule("Non binaire"), /tournures qui ne marquent pas le genre/);
+    assert.match(genderRule("Femme trans"), /une femme/);
+    assert.match(genderRule("Autre"), /Le genre de ton personnage : Autre/);
+    assert.match(personaSection(persona, {}), /Tu parles de toi au féminin/);
+    assert.match(personaSection({}, {}), /Tu parles de toi au féminin/);
+  });
+
+  it("les règles de base : une vraie messagerie, pas un assistant, et les limites intactes", () => {
+    const base = readFileSync(new URL("../elise-persona.md", import.meta.url), "utf8");
+    assert.match(base, /pas comme un assistant/);
+    assert.match(base, /jamais deux questions dans le même/);
+    assert.match(base, /Tu ne caches jamais que tu es une IA/);
+    assert.match(base, /jamais de contenu ni\s+de sous-entendu sexuel/);
+    assert.match(base, /Tu ne proposes jamais de rencontre/);
+    assert.match(base, /le 3114/);
+    assert.doesNotMatch(base, /Tu reformules avec tes mots/);
   });
 
   it("par défaut, le personnage s'appelle Élise", () => {
