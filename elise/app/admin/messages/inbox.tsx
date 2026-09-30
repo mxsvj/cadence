@@ -331,28 +331,22 @@ export function Inbox({
             Mode {MODE_LABEL[mode]}
           </Link>
         </div>
-        <div role="group" aria-label="Filtrer les conversations" className="flex gap-2 overflow-x-auto border-b border-line px-4 py-2">
-          {FILTERS.map((f) => {
-            const count = f.id === "toutes" ? list.length : list.filter(f.match).length;
-            const urgent = f.id === "urgence" && count > 0;
-            return (
-              <button
-                key={f.id}
-                type="button"
-                aria-pressed={filter === f.id}
-                onClick={() => setFilter(f.id)}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${
-                  filter === f.id
-                    ? "border-accent bg-accent text-white"
-                    : urgent
-                      ? "border-bad text-bad"
-                      : "border-line text-muted hover:text-foreground"
-                }`}
-              >
-                {f.label} {count > 0 && <span className="opacity-80">{count}</span>}
-              </button>
-            );
-          })}
+        <div className="border-b border-line px-4 py-2">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as Filter)}
+            aria-label="Afficher"
+            className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
+          >
+            {FILTERS.map((f) => {
+              const count = f.id === "toutes" ? list.length : list.filter(f.match).length;
+              return (
+                <option key={f.id} value={f.id}>
+                  {f.label} ({count})
+                </option>
+              );
+            })}
+          </select>
         </div>
         <ul className="min-h-0 flex-1 overflow-y-auto">
           {list.length === 0 && <li className="p-4 text-sm text-muted">Personne n&apos;a encore écrit.</li>}

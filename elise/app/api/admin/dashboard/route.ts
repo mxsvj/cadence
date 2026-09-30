@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminStatus, loadDashboard, parsePeriod } from "@/lib/admin";
+import { adminStatus, loadDashboard } from "@/lib/admin";
+import { filtersFromParams } from "@/lib/dashboard";
 import { createClient, currentUserId } from "@/lib/supabase/server";
 
 // Les chiffres du tableau de bord, que la page redemande toutes les quelques
@@ -13,9 +14,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Introuvable." }, { status: 404 });
   }
 
-  const params = request.nextUrl.searchParams;
   try {
-    const data = await loadDashboard(supabase, params.get("client") || null, parsePeriod(params.get("jours")));
+    const data = await loadDashboard(supabase, filtersFromParams(request.nextUrl.searchParams));
     return NextResponse.json(data, { headers: { "cache-control": "no-store" } });
   } catch (err) {
     console.error(err);

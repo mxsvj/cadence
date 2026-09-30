@@ -377,18 +377,30 @@ await page.getByText("Achat fictif ajouté.").waitFor();
 await until(() => state().tables.purchases.length === before + 1, "achat simulé");
 step("« Simuler un achat » ajoute un achat fictif");
 
-// 20. Une personne à la fois.
-await page.locator("#filtre-personne").selectOption({ label: "lea@example.com" });
-await page.getByText("Gains · 30 derniers jours · lea@example.com").waitFor();
-await page.getByText("1 pourboire", { exact: true }).waitFor();
-assert.equal(await page.getByText("7,00 €").count() > 0, true);
-await page.screenshot({ path: `${SHOTS}12-une-personne.png`, fullPage: true });
-await page.getByRole("button", { name: "Voir tout le monde" }).click();
+// 20. Brut ou net, une créatrice ou toutes (plus de filtre par personne).
+assert.equal(await page.locator("#filtre-personne").count(), 0);
+const hero = page.locator("p.text-5xl").first();
+const gross = Number(plain(await hero.textContent()).replace(/[^0-9,]/g, "").replace(",", "."));
+await page.getByRole("button", { name: "Net", exact: true }).click();
+await page.getByText("Gains · 30 derniers jours · net", { exact: true }).waitFor();
+await page.getByText(/Net : après les frais de paiement estimés, 1,5 % \+ 0,25 €/).waitFor();
+await page.waitForFunction(
+  (g) => Number((document.querySelector("p.text-5xl")?.textContent ?? "").replace(/[^0-9,]/g, "").replace(",", ".")) < g,
+  gross,
+);
+assert.match(page.url(), /net=1/);
+await page.getByLabel("Créatrice", { exact: true }).selectOption({ label: "Élise" });
+await page.getByText("Gains · 30 derniers jours · Élise · net", { exact: true }).waitFor();
+await page.screenshot({ path: `${SHOTS}12-net-creatrice.png`, fullPage: true });
+await page.reload(); // les filtres restent dans l'adresse
+await page.getByText("Gains · 30 derniers jours · Élise · net", { exact: true }).waitFor();
+await page.getByLabel("Créatrice", { exact: true }).selectOption({ label: "Toutes les créatrices" });
+await page.getByRole("button", { name: "Brut", exact: true }).click();
 await page.getByText("Gains · 30 derniers jours", { exact: true }).waitFor();
-step("filtre sur une personne : ses pourboires, ses messages, son abonnement");
+step("brut ou net (frais de paiement estimés), une créatrice ou toutes ; les filtres restent au rechargement");
 
 // 21. Sept jours, l'infobulle, et le tableau des valeurs.
-await page.getByRole("button", { name: "7 jours" }).click();
+await page.getByLabel("Période", { exact: true }).selectOption("7j");
 const chart = page.locator('svg[aria-label*="sur 7 jours"]');
 await chart.waitFor();
 await chart.scrollIntoViewIfNeeded(); // le doigt ne touche que ce qui est à l'écran
@@ -401,6 +413,30 @@ assert.equal(await page.locator("figure table tbody tr").count(), 7);
 await page.getByRole("button", { name: "Voir la courbe" }).click();
 await chart.waitFor();
 step("7 jours : courbe, infobulle au toucher, tableau de 7 lignes");
+
+// 21b. Plus de périodes : aujourd'hui, 6 mois (par semaine), depuis le début, des dates précises.
+await page.getByLabel("Période", { exact: true }).selectOption("aujourdhui");
+await page.getByText("Gains · Aujourd'hui", { exact: true }).waitFor();
+await page.getByText("par rapport à hier", { exact: false }).or(page.getByText("Rien à comparer", { exact: false })).first().waitFor();
+await page.getByLabel("Période", { exact: true }).selectOption("6m");
+await page.locator('svg[aria-label*="par semaine"]').waitFor();
+await page.getByText("Gains par semaine").waitFor();
+await page.getByLabel("Période", { exact: true }).selectOption("tout");
+await page.getByText("Depuis le premier achat").waitFor();
+await page.getByLabel("Période", { exact: true }).selectOption("dates");
+const parisDay = (offset) => {
+  const d = new Date(Date.now() + offset * 86_400_000);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(d);
+};
+await page.getByLabel("Du", { exact: true }).fill(parisDay(-10));
+await page.getByLabel("au", { exact: true }).fill(parisDay(-4));
+await page.locator('svg[aria-label*="sur 7 jours"]').waitFor();
+await page.getByText(/^Gains · du .* au .*$/).waitFor();
+assert.match(page.url(), /periode=dates&du=\d{4}-\d{2}-\d{2}&au=\d{4}-\d{2}-\d{2}/);
+await page.screenshot({ path: `${SHOTS}12c-dates-precises.png`, fullPage: true });
+await page.getByLabel("Période", { exact: true }).selectOption("30j");
+await page.getByText("Gains · 30 derniers jours", { exact: true }).waitFor();
+step("périodes : aujourd'hui, 6 mois (un point par semaine), depuis le début, dates précises au calendrier");
 
 // 22. Sur ordinateur, clair puis sombre.
 for (const colorScheme of ["light", "dark"]) {
@@ -797,12 +833,12 @@ await admin.getByRole("button", { name: "Marquer traitée : Contre-offre" }).wai
 await admin.screenshot({ path: `${SHOTS}19c-alerte-flash.png` });
 await admin.getByRole("button", { name: "Fermer l'alerte" }).click();
 await flash.waitFor({ state: "detached" });
-await admin.getByRole("button", { name: /^Contre-offres/ }).click();
+await admin.getByLabel("Afficher", { exact: true }).selectOption("contre_offre");
 await admin.getByRole("button", { name: /Sam · avec Chloé/ }).waitFor();
 assert.equal(await admin.getByRole("button", { name: /Karim · avec/ }).count(), 0);
 assert.match(await admin.getByRole("button", { name: /Sam · avec Chloé/ }).textContent(), /Contre-offre/);
 assert.equal(await admin.getByRole("button", { name: /^Plafond/ }).count(), 0); // plus de filtre « Plafond proche »
-await admin.getByRole("button", { name: /^Toutes/ }).click();
+await admin.getByLabel("Afficher", { exact: true }).selectOption("toutes");
 await admin.getByRole("button", { name: "Marquer traitée : Contre-offre" }).click();
 await until(() => state().tables.team_alerts.every((a) => a.handled_at), "alertes traitées");
 await admin.getByRole("link", { name: "Messages", exact: true }).waitFor();
@@ -930,7 +966,11 @@ step("mode manuel : plus aucune réponse de l'IA, tout passe par l'équipe");
 
 // 36. Le tableau de bord compte les contenus et calcule la LTV.
 await admin.goto(`${BASE}/admin`);
-await admin.getByText("LTV · valeur d'un client").waitFor();
+await admin.getByRole("heading", { name: "LTV", exact: true }).waitFor();
+await admin.getByText("Clients par LTV").waitFor();
+assert.equal(await admin.getByText("Inscrits qui ont payé").count(), 0);
+assert.equal(await admin.getByText("valeur d'un client", { exact: false }).count(), 0);
+await admin.locator('li[aria-label^="10 à 25 €"]').waitFor();
 const contentTile = admin.locator("div", { has: admin.getByText("Contenus vendus", { exact: true }) }).last();
 assert.match(plain(await contentTile.textContent()), /11,00 €/);
 await admin.screenshot({ path: `${SHOTS}20-tableau-ltv.png`, fullPage: true });
@@ -1003,7 +1043,11 @@ assert.equal(await page2.getByText("Élise · IA").count(), leaAi);
 assert.equal(state().tables.team_alerts.filter((a) => a.user_id === lea && !a.handled_at).length, 1); // toujours une seule urgence
 step("l'équipe a la main et la personne écrit un message inquiétant : le 3114 s'affiche sans attendre personne");
 
-await admin.getByRole("button", { name: /^Urgences/ }).click();
+assert.deepEqual(
+  (await admin.getByLabel("Afficher", { exact: true }).locator("option").allTextContents()).map((t) => t.replace(/ \(\d+\)$/, "")),
+  ["Toutes", "À traiter", "Urgences", "Contre-offres", "Non lus", "Main prise"],
+);
+await admin.getByLabel("Afficher", { exact: true }).selectOption("urgence");
 const leaRow = admin.getByRole("button", { name: /Léa · avec Élise/ });
 await leaRow.waitFor();
 assert.match(await leaRow.textContent(), /Urgence/);
@@ -1023,8 +1067,8 @@ await until(() => {
     st.tables.creator_contacts.some((c) => c.user_id === lea && Number(c.creator_id) === 1 && !c.manual)
   );
 }, "urgence traitée, main rendue");
-await admin.getByRole("button", { name: /^Toutes/ }).click();
-step("filtre « Urgences », réponse de l'équipe, « Traité » puis « Rendre la main à l'IA »");
+await admin.getByLabel("Afficher", { exact: true }).selectOption("toutes");
+step("liste « Afficher » : Urgences, réponse de l'équipe, « Traité » puis « Rendre la main à l'IA »");
 
 // 38b. L'IA juge elle-même qu'un humain doit lire : la balise ne s'affiche jamais.
 await leaInput.fill("ALERTE-IA ça ne va pas trop en ce moment");

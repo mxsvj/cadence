@@ -180,15 +180,29 @@ personne. « Tester la conversation », dans l'onglet Paramètres, ouvre
 `/?vue=conversation` pour voir ce que voient les personnes ; le menu `⋯` y
 ramène au tableau de bord.
 
+- **Filtres**, en haut à gauche, pour toute la page (ils restent dans
+  l'adresse : recharger la page les garde) :
+  - **Période** : Aujourd'hui, Hier, 7, 30 ou 90 derniers jours, 6 ou
+    12 derniers mois, Depuis le début, ou **Dates précises** (du … au …, au
+    calendrier) ;
+  - **Brut / Net** : le net retire les frais de paiement estimés (1,5 % +
+    0,25 € par achat, tarif Stripe des cartes européennes) ;
+  - **Créatrice** : toutes, ou une seule (chaque achat d'un contenu est
+    rattaché à la créatrice de l'offre).
 - **Chiffres clés** sur la période choisie : gains (et évolution par rapport à
-  la période précédente, total depuis le début), pourboires, messages achetés,
-  abonnements actifs (dernier paiement il y a moins de 31 jours).
-- **Courbe des gains par jour**, avec le détail d'un jour au survol ou au
-  toucher, et un tableau des valeurs.
+  la même durée juste avant, total depuis le début), pourboires, messages
+  achetés, contenus vendus, abonnements actifs.
+- **Courbe des gains** : un point par jour jusqu'à 3 mois, par semaine
+  jusqu'à 2 ans, par mois au-delà ; le détail au survol ou au toucher, et un
+  tableau des valeurs.
 - **Dernier achat en direct** : la page redemande les chiffres toutes les
   4 secondes ; un nouvel achat s'affiche sans recharger.
-- **Par personne** : pourboires, messages achetés, abonnement, total, dernier
-  achat. Toucher un nom filtre toute la page sur cette personne.
+- **LTV** (ce qu'un client a dépensé au total) : la moyenne en grand, la
+  médiane, la meilleure, le panier moyen, et un graphique simple « Clients
+  par LTV » : combien de clients dans chaque tranche (moins de 10 €, 10 à
+  25 €, 25 à 50 €, 50 à 100 €, 100 € et plus).
+- **Par personne** : pourboires, messages achetés, contenus, abonnement, LTV,
+  dernier achat.
 
 Aucun paiement n'est encore branché. En attendant, la section
 « Démonstration » crée des achats fictifs (marqués « démo ») et les efface
@@ -197,6 +211,11 @@ comptable : « Effacer toutes mes données » ne les supprime pas.
 
 Les calculs sont faits dans la base (fonction `admin_dashboard`), qui vérifie
 elle-même que la personne connectée est administratrice.
+
+Dans l'onglet **Messages**, la liste **Afficher** (en haut de la liste des
+conversations) choisit ce qu'on voit : Toutes, À traiter, Urgences,
+Contre-offres, Non lus, Main prise, avec le nombre de conversations de
+chacune.
 
 ## L'espace de l'équipe
 
