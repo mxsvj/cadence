@@ -22,10 +22,12 @@ refuse.
 
 ## Ce que fait cette version
 
-- **Entrée par code** (`/connexion`) : chaque client reçoit de l'équipe un
-  code personnel (comme une carte de médiathèque, `ABCD-EFGH`) et entre avec
-  ce seul code, sans e-mail ni mot de passe. L'équipe garde son accès par
-  e-mail et mot de passe (replié sous « Accès de l'équipe »).
+- **Entrée par code** (`/connexion`) : un seul code d'accès, le même pour
+  tout le monde (`ABCD-EFGH`). On le tape avec son prénom et sa date de
+  naissance (18 ans minimum), on clique « Entrer », et on parle à l'IA :
+  ni e-mail, ni mot de passe. Chaque personne qui entre a son propre compte
+  de test et sa propre conversation. L'équipe garde son accès par e-mail et
+  mot de passe (replié sous « Accès de l'équipe »).
 - **Plusieurs créatrices en ligne** : la personne choisit avec laquelle
   parler (`/`, ou directement `/c/<numéro>` ; une seule en ligne : on arrive
   chez elle). Chaque conversation est totalement séparée : ses messages, ce
@@ -239,7 +241,7 @@ l'appareil ; le lien peut resservir à tout moment.
   l'ancien lien cesse de marcher.
 - Tant qu'aucun administrateur n'existe (`supabase/admin.sql`), le lien
   l'explique au lieu d'ouvrir la session.
-- Les clients, eux, entrent avec leur code d'accès (onglet Paramètres).
+- Les personnes qui testent l'IA, elles, entrent avec le code d'accès (onglet Paramètres).
 
 ### Messages
 
@@ -346,24 +348,17 @@ physiques dans un registre sexuel.
 
 ### Paramètres
 
-- **Codes d'accès des clients** : taper le prénom ou le surnom du client
-  (facultatif, il sera proposé à sa première entrée), puis « Créer un code ».
-  Le code s'affiche une seule fois, avec un lien qui le remplit tout seul
-  (`https://<adresse du site>/connexion?code=ABCD-EFGH`) : l'envoyer au client.
-  À sa première entrée, il donne sa date de naissance (18 ans minimum), puis
-  il arrive dans la conversation. La liste montre la fin de chaque code
-  (« …EFGH »), sa date de création et sa dernière utilisation.
-  - **Nouveau code** : l'ancien cesse aussitôt de marcher (code perdu ou
-    envoyé à la mauvaise personne) ; le client garde ses conversations.
-  - **Désactiver** : le client ne peut plus entrer, et un téléphone déjà
-    connecté est déconnecté au plus tard dans l'heure. Ses conversations et
-    achats restent dans la base.
-  - Un code vaut une clé : ne l'envoyer qu'à la personne concernée. La base
-    n'en garde qu'une empreinte (calculée avec la clé secrète Supabase) :
-    personne, pas même l'équipe, ne peut relire un code. Si la clé secrète
-    Supabase change un jour, tous les codes cessent de marcher (en créer de
-    nouveaux avec « Nouveau code »).
-  - Au plus 10 essais de code toutes les 10 minutes par connexion internet.
+- **Code d'accès** : le code unique pour entrer, créé tout seul à la
+  première visite de l'onglet. « Copier le lien » donne
+  `https://<adresse du site>/connexion?code=ABCD-EFGH`, qui remplit le code :
+  il ne reste qu'à taper son prénom et sa date de naissance. L'envoyer à
+  toutes les personnes qui testent.
+  - **Changer le code** : l'ancien cesse aussitôt de marcher pour entrer ;
+    les personnes déjà entrées restent connectées, avec leurs conversations.
+  - Chaque entrée crée un compte de test : sur le même téléphone, la session
+    reste ouverte ; après « Se déconnecter », entrer à nouveau ouvre un
+    nouveau compte (une conversation neuve).
+  - Au plus 10 entrées toutes les 10 minutes par connexion internet.
 - **Réglages de l'IA** : nombre de messages relus, consignes
   supplémentaires. La créativité est réglée au maximum fiable (1,0) et l'IA
   choisit elle-même la longueur de chaque réponse : rien à régler.
@@ -466,7 +461,9 @@ qui suit le Flash le plus récent).
 - **Supabase gratuit** met le projet en pause après 7 jours sans visite ; on le
   relance d'un clic depuis le tableau de bord.
 - **Mot de passe oublié** (équipe) : pas encore prévu (il faudrait un service
-  d'e-mail). Un client qui a perdu son code en reçoit un nouveau de l'équipe.
+  d'e-mail).
+- **Comptes de test** : entrer par le code crée un compte à chaque fois (une
+  personne qui se déconnecte puis revient repart d'une conversation neuve).
 - **Mémoire à mi-distance** : entre deux résumés, les messages plus anciens
   que les 20 derniers mais pas encore résumés (jusqu'à 20) ne sont plus relus
   mot à mot ; la fiche garde l'essentiel. Pour l'éviter, on peut envoyer au
