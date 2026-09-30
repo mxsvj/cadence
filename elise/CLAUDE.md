@@ -130,8 +130,28 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   « Ta façon de parler » d'`elise-persona.md` vise une vraie messagerie
   (messages courts, pas d'interrogatoire, jamais deux questions, parle
   d'elle, liste de tics d'assistant à éviter, deux exemples « trop
-  assistant » / « naturel » à ne pas recopier). Les limites (IA, pas de
-  romance, pas de rencontre, 3114, vente) n'ont pas bougé.
+  assistant » / « naturel » / « trop sec » à ne pas recopier). Voix féminine
+  (`genderRule(genre, age)`) : chaleureuse et expressive, jamais le style sec
+  des textos entre copains (« Re ! », « La forme ? »), jamais séductrice ;
+  l'IA garde sa voix même face à un « salut » sec (elle imitait la personne).
+  « Écouter quand la personne se confie » (demande : « agir comme un
+  psychologue ») : réflexes d'écoute d'une psy (questions ouvertes, mettre
+  des mots sur les émotions, aider à y voir clair, orienter vers un
+  professionnel si le mal-être dure), mais jamais se dire psychologue (titre
+  protégé), ni diagnostic ni traitement. « Faire vivre la conversation »
+  (demande : « l'IA ne doit pas s'arrêter de parler ») : chaque message
+  laisse une porte ouverte, relance si la personne répond court, jamais de
+  « je te laisse » de sa part ; mais si la personne veut partir, elle la
+  laisse partir sans la retenir ni la culpabiliser (ligne rouge : pas
+  d'attachement). Heure : le fuseau du téléphone (`tz` envoyé par
+  `app/chat.tsx`, `validTimeZone` : seulement ceux de la liste de la fiche,
+  pas « UTC ») remplace celui de la fiche pour la consigne (« Repères » et
+  « La personne ») et est enregistré dans `contacts.timezone`. Rythme
+  humain : `lib/typing.ts` (`typingDelayMs` : 1 à 2,5 s de lecture + 7
+  caractères/s, entre 2 et 20 s) renvoyé en `typingMs` par `/api/chat` ; la
+  page montre « … écrit » jusque-là (temps du modèle compris), puis la
+  réponse ; `HUMAN_TYPING=off` le coupe (essais e2e). Les limites (IA, pas
+  de romance, pas de rencontre, 3114, vente) n'ont pas bougé.
 - Réponses : créativité fixe `CHAT_TEMPERATURE = 1` (`lib/llm.ts`, valeur
   recommandée par Google pour ses modèles récents), pas de plafond de
   longueur (Gemini n'en reçoit pas, Claude 4096 jetons) : la persona dit à

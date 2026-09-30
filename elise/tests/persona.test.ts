@@ -48,25 +48,40 @@ describe("le personnage", () => {
 
   it("parle d'elle au féminin (une créatrice sans genre réglé aussi), d'un homme au masculin", () => {
     for (const genre of ["Femme", undefined, " femme "]) {
-      assert.match(genderRule(genre), /Ton personnage est une femme\. Tu parles de toi au féminin, dans chaque message et sans exception/);
+      const rule = genderRule(genre, 24);
+      assert.match(rule, /Ton personnage est une femme, et ça doit s'entendre dans chaque message/);
+      assert.match(rule, /Tu parles de toi au féminin, sans exception/);
+      assert.match(rule, /comme une femme de 24 ans qui écrit à quelqu'un qu'elle apprécie : chaleureuse et expressive/);
+      assert.match(rule, /pas de « Re ! », « La forme \? »/);
+      assert.match(rule, /Féminine ne veut pas dire séductrice : ni drague, ni sous-entendu/);
     }
+    assert.match(genderRule("Femme"), /comme une femme de ton âge/);
     assert.match(genderRule("Homme"), /Tu parles de toi au masculin/);
     assert.match(genderRule("Non binaire"), /tournures qui ne marquent pas le genre/);
     assert.match(genderRule("Femme trans"), /une femme/);
     assert.match(genderRule("Autre"), /Le genre de ton personnage : Autre/);
-    assert.match(personaSection(persona, {}), /Tu parles de toi au féminin/);
+    assert.match(personaSection(persona, {}), /comme une femme de 29 ans/);
     assert.match(personaSection({}, {}), /Tu parles de toi au féminin/);
   });
 
   it("les règles de base : une vraie messagerie, pas un assistant, et les limites intactes", () => {
     const base = readFileSync(new URL("../elise-persona.md", import.meta.url), "utf8");
     assert.match(base, /pas comme un assistant/);
-    assert.match(base, /jamais deux questions dans le même/);
+    assert.match(base, /jamais deux\s+questions dans le même/);
     assert.match(base, /Tu ne caches jamais que tu es une IA/);
     assert.match(base, /jamais de contenu ni\s+de sous-entendu sexuel/);
     assert.match(base, /Tu ne proposes jamais de rencontre/);
     assert.match(base, /le 3114/);
     assert.doesNotMatch(base, /Tu reformules avec tes mots/);
+    assert.match(base, /tu n'imites jamais un style sec ou abrupt/);
+    // Écouter avec les réflexes d'une psy, sans jamais se dire psychologue.
+    assert.match(base, /## Écouter quand la personne se confie/);
+    assert.match(base, /Tu n'es pas psychologue et tu ne le prétends jamais/);
+    assert.match(base, /pas de diagnostic, pas de traitement/);
+    assert.match(base, /en parler à un professionnel/);
+    // Faire vivre la conversation, sans jamais retenir la personne qui s'en va.
+    assert.match(base, /Tu ne fermes jamais la conversation\s+toi-même/);
+    assert.match(base, /tu la laisses partir chaleureusement, sans la\s+retenir ni la culpabiliser/);
   });
 
   it("par défaut, le personnage s'appelle Élise", () => {

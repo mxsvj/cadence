@@ -30,6 +30,9 @@ const env = {
   DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/123456789/jeton-de-test_0123",
   // Le parcours envoie des rafales de messages : la limite normale est de 12 par minute.
   CHAT_RATE_LIMIT: "40",
+  // Le rythme « humain » des réponses (lib/typing.ts, qui a ses propres essais) : coupé ici,
+  // sinon chaque réponse du parcours attendrait plusieurs secondes.
+  HUMAN_TYPING: "off",
 };
 
 const build = spawnSync("npx", ["next", "build"], { cwd: root, env, stdio: "inherit" });

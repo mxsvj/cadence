@@ -1125,8 +1125,8 @@ assert.equal(await admin.evaluate(() => navigator.clipboard.readText()), `${BASE
 await admin.screenshot({ path: `${SHOTS}40-code.png` });
 step("Paramètres : le code d'accès (XXXX-XXXX) créé tout seul, et le lien copié en un clic");
 
-const visitor = async () => {
-  const c = await newContext(phone);
+const visitor = async (options = {}) => {
+  const c = await newContext({ ...phone, ...options });
   const p = await c.newPage();
   p.on("pageerror", (e) => consoleErrors.push(String(e)));
   return { c, p };
@@ -1138,7 +1138,8 @@ const enterWith = async (p, code, name, birthdate) => {
   await p.getByRole("button", { name: "Entrer" }).click();
 };
 const usersBefore = state().users.length;
-const { c: nadiaCtx, p: nadiaPage } = await visitor();
+// Nadia est au Québec : l'IA vit à son heure à elle (celle de son téléphone).
+const { c: nadiaCtx, p: nadiaPage } = await visitor({ timezoneId: "America/Toronto" });
 await nadiaPage.goto(`${BASE}/connexion`);
 await nadiaPage.screenshot({ path: `${SHOTS}40b-entree.png` });
 assert.equal(await nadiaPage.locator('details input[name="email"]').isVisible(), false); // l'e-mail de l'équipe est replié
@@ -1173,7 +1174,10 @@ assert.match(nadiaUser.email, /^client-[0-9a-f-]{36}@code\.elise\.invalid$/);
 assert.equal(nadiaUser.password, undefined);
 assert.ok(s.tables.profiles.some((p) => p.user_id === nadiaUser.id && p.display_name === "Nadia"));
 assert.ok(s.tables.messages.some((m) => m.user_id === nadiaUser.id && m.content === "Salut, c'est Nadia !"));
-step("avec le lien : prénom, date de naissance, « Entrer », et on parle à l'IA (ni e-mail, ni mot de passe, ni autre écran)");
+const nadiaPrompt = s.llm.filter((r) => !r.json && r.contents.at(-1).parts[0].text.includes("c'est Nadia")).at(-1).system;
+assert.match(nadiaPrompt, /Chez la personne, nous sommes le .+ \(America\/Toronto\)\./);
+await until(() => state().tables.contacts.some((c) => c.user_id === nadiaUser.id && c.timezone === "America/Toronto"), "fuseau de Nadia enregistré");
+step("avec le lien : prénom, date de naissance, « Entrer », et on parle à l'IA, à l'heure de Nadia (Québec) ; ni e-mail, ni mot de passe");
 
 // Le modèle principal de Gemini est surchargé : le modèle de secours répond à sa place.
 await nadiaPage.getByLabel("Votre message").fill("SURCHARGE tu es là ?");

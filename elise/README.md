@@ -455,6 +455,13 @@ qui suit le Flash le plus récent).
 
 ## Limites connues de cette version
 
+- **Rythme des réponses** : comme une personne qui tape sur son téléphone,
+  la réponse s'affiche après « Katherine écrit… » (entre 2 et 20 secondes
+  selon sa longueur, temps de l'IA compris). `HUMAN_TYPING=off` dans Vercel
+  l'affiche dès qu'elle arrive.
+- **Heure de la personne** : l'IA vit à l'heure du téléphone de la personne
+  (bonjour, bonsoir, « tu es encore debout ? »), et la fiche de l'équipe
+  reprend ce fuseau.
 - **Modèle de secours** : si Gemini ne répond pas (surchargé, trop lent,
   quota de la minute atteint, modèle retiré), la réponse est demandée à
   `gemini-flash-lite-latest` (quota gratuit séparé, un peu moins fin).
