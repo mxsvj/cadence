@@ -533,16 +533,15 @@ assert.equal(await admin.getByText(/^Créativité/).count(), 0);
 assert.equal(await admin.getByLabel("Longueur maximale d'une réponse").count(), 0);
 await admin.getByLabel("Messages avant la première offre").fill("0");
 await admin.getByLabel("Messages entre deux offres").fill("0");
-await admin.getByLabel("Pause après un achat (heures)").fill("12");
-await admin.getByLabel("Offres payantes par l'IA sur 24 h, au plus").fill("2");
+// Ni pause après un achat, ni nombre maximum d'offres par jour : l'équipe décide.
+assert.equal(await admin.getByLabel("Pause après un achat (heures)").count(), 0);
+assert.equal(await admin.getByLabel("Offres payantes par l'IA sur 24 h, au plus").count(), 0);
 await admin.getByRole("button", { name: "Enregistrer les paramètres" }).click();
 await admin.getByText("Paramètres enregistrés.").waitFor();
 s = state();
 const guards = s.tables.ai_settings[0];
-assert.deepEqual(
-  [guards.sales_min_messages, guards.sales_gap_messages, guards.sales_pause_hours, guards.sales_max_per_day],
-  [0, 0, 12, 2],
-);
+assert.deepEqual([guards.sales_min_messages, guards.sales_gap_messages], [0, 0]);
+assert.ok(!("sales_pause_hours" in guards) && !("sales_max_per_day" in guards));
 assert.equal(chloeRow().persona.nom, "Chloé"); // la créatrice n'a pas bougé
 await admin.screenshot({ path: `${SHOTS}14b-parametres.png`, fullPage: true });
 step("onglet Paramètres : sans créativité ni longueur à régler ; garde-fous enregistrés, créatrice intacte");

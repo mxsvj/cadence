@@ -114,7 +114,7 @@ describe("le texte des alertes", () => {
 });
 
 describe("les garde-fous qui suivent les alertes", () => {
-  const rules = { sales_min_messages: 10, sales_gap_messages: 12, sales_pause_hours: 24, sales_max_per_day: 1 };
+  const rules = { sales_min_messages: 10, sales_gap_messages: 12 };
   const paid = { trigger_mode: "ia" as const, is_paid: true, min_price_cents: 500 };
   const ok: SaleInput = {
     next: paid,
@@ -122,8 +122,6 @@ describe("les garde-fous qui suivent les alertes", () => {
     userMessages: 20,
     sinceLastOffer: Infinity,
     sinceRelance: null,
-    hoursSincePurchase: null,
-    paidOffersToday: 0,
   };
 
   it("une urgence à traiter bloque toute offre, même un cadeau", () => {

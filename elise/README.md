@@ -26,9 +26,9 @@ refuse.
 - **Plusieurs créatrices en ligne** : la personne choisit avec laquelle
   parler (`/`, ou directement `/c/<numéro>` ; une seule en ligne : on arrive
   chez elle). Chaque conversation est totalement séparée : ses messages, ce
-  que l'IA sait de la personne, son résumé, son script et ses offres. Seuls la
-  pause après un achat et le nombre d'offres payantes par jour valent pour la
-  personne, toutes créatrices confondues.
+  que l'IA sait de la personne, son résumé, son script et ses offres. Seule
+  « une offre en attente à la fois » vaut pour la personne, toutes créatrices
+  confondues.
 - **La conversation**, façon messagerie : Élise à gauche, soi à droite,
   lisible sur téléphone, mode sombre compris. Élise se présente d'elle-même
   au premier passage.
@@ -327,15 +327,15 @@ physiques dans un registre sexuel.
 - **Réglages de l'IA** : nombre de messages relus, consignes
   supplémentaires. La créativité est réglée au maximum fiable (1,0) et l'IA
   choisit elle-même la longueur de chaque réponse : rien à régler.
-- **Garde-fous de la vente** : nombre de messages avant la première offre et
-  entre deux offres, **pause après un achat** (24 h par défaut : aucune offre
-  payante pendant ce temps) et **offres payantes par l'IA sur 24 h** (1 par
-  défaut). Il n'y a pas de plafond de dépenses : chaque personne achète
-  librement. Un cadeau gratuit n'est freiné ni par la pause, ni par le nombre
-  par jour. Dans la fiche d'une personne (onglet
+- **Rythme de la vente** : nombre de messages avant la première offre et
+  entre deux offres (0 : aucune attente). Pas de plafond de dépenses, pas de
+  pause après un achat, pas de nombre maximum d'offres par jour : l'équipe
+  décide au cas par cas depuis la messagerie. Restent toujours : une offre en
+  attente à la fois, aucune offre pendant une urgence à traiter, et les règles
+  de la persona (jamais de vente par la solitude, l'attachement ou la
+  pression, rien si la personne va mal). Dans la fiche d'une personne (onglet
   Messages), une ligne dit où en est la vente et pourquoi l'IA ne propose pas
-  (« Prochaine offre dans 3 messages », « Pause après son dernier achat :
-  encore 12 heures »…).
+  (« Prochaine offre dans 3 messages »…).
 - **Prendre des nouvelles** (coupé par défaut) : quand une personne ne vient
   plus depuis le délai choisi (24 h à 2 semaines, sans visite ni message),
   l'IA lui écrit un court message amical pour prendre de ses nouvelles. Une
