@@ -47,12 +47,18 @@ function dayLabel(iso: string): string {
 }
 
 export function Chat({
+  creatorId,
+  others = false,
   initialMessages,
   initialOffers,
   name,
   isAdmin = false,
   relances = null,
 }: {
+  /** La créatrice de cette conversation. */
+  creatorId: number;
+  /** D'autres créatrices sont en ligne : lien vers le choix. */
+  others?: boolean;
   initialMessages: Message[];
   initialOffers: Offer[];
   name: string;
@@ -68,6 +74,7 @@ export function Chat({
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [confirming, setConfirming] = useState(false);
   const [relancesOk, setRelancesOk] = useState(relances?.ok ?? true);
   const [erasing, startErasing] = useTransition();
@@ -87,7 +94,7 @@ export function Chat({
     if (sending.current || document.visibilityState !== "visible") return;
     const lastId = Math.max(0, ...messagesRef.current.map((m) => m.id));
     try {
-      const res = await fetch(`/api/chat?apres=${lastId}`, { cache: "no-store" });
+      const res = await fetch(`/api/chat?apres=${lastId}&c=${creatorId}`, { cache: "no-store" });
       if (!res.ok) return;
       const data = (await res.json()) as { messages: Message[]; offers: Offer[] };
       if (sending.current) return;
@@ -97,12 +104,28 @@ export function Chat({
     } catch {
       // Réseau coupé : on réessaiera au prochain tour.
     }
-  }, []);
+  }, [creatorId]);
 
   useEffect(() => {
     const timer = window.setInterval(() => void poll(), POLL_MS);
     return () => window.clearInterval(timer);
   }, [poll]);
+
+  // Le menu se referme dès qu'on touche ailleurs, ou avec Échap. (Un voile
+  // en plein écran ne suffit pas : le flou de l'en-tête le confine à l'en-tête.)
+  useEffect(() => {
+    if (!menuOpen) return;
+    const outside = (e: PointerEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const escape = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [menuOpen]);
 
   // Toujours voir le dernier message, et l'indicateur « … écrit ».
   useEffect(() => {
@@ -140,7 +163,7 @@ export function Chat({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, creator: creatorId }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 401) {
@@ -149,6 +172,11 @@ export function Chat({
       }
       if (res.status === 403) {
         router.replace("/bienvenue");
+        return;
+      }
+      if (res.status === 410) {
+        // Plus en ligne : retour au choix des créatrices.
+        router.replace("/");
         return;
       }
       if (!res.ok) throw new Error(data.error ?? "Pas de réponse cette fois-ci. Réessayez dans un instant.");
@@ -197,6 +225,15 @@ export function Chat({
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-line bg-background/90 px-4 py-3 backdrop-blur pt-[max(0.75rem,env(safe-area-inset-top))]">
+        {others && (
+          <Link
+            href="/"
+            aria-label="Toutes les créatrices"
+            className="-ml-2 flex size-9 shrink-0 items-center justify-center rounded-full text-2xl text-muted hover:bg-accent-soft"
+          >
+            ‹
+          </Link>
+        )}
         <div
           aria-hidden
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-serif text-xl text-accent"
@@ -207,7 +244,7 @@ export function Chat({
           <h1 className="font-serif text-xl">{name}</h1>
           <p className="text-xs text-muted">Intelligence artificielle · prototype</p>
         </div>
-        <div className="relative">
+        <div ref={menuRef} className="relative">
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
@@ -223,7 +260,6 @@ export function Chat({
           </button>
           {menuOpen && (
             <>
-              <div className="fixed inset-0" onClick={() => setMenuOpen(false)} aria-hidden />
               <div className="absolute right-0 top-12 z-20 w-64 overflow-hidden rounded-2xl border border-line bg-surface shadow-lg">
                 {isAdmin && (
                   <Link href="/admin" className="block border-b border-line px-4 py-3 hover:bg-accent-soft">

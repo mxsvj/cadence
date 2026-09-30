@@ -230,21 +230,26 @@ const ident = (name) => {
 const OPS = { eq: "=", neq: "<>", gt: ">", gte: ">=", lt: "<", lte: "<=" };
 const RESERVED = new Set(["select", "order", "limit", "offset", "columns", "on_conflict"]);
 
+function condition(key, raw, values) {
+  const [op, ...rest] = raw.split(".");
+  const operand = rest.join(".");
+  if (op === "not") return `not (${condition(key, operand, values)})`;
+  if (op === "is") return `${ident(key)} is ${operand === "null" ? "null" : operand === "true" ? "true" : "false"}`;
+  if (op === "in") {
+    values.push(operand.replace(/^\(|\)$/g, "").split(",").map((v) => v.replace(/^"|"$/g, "")));
+    return `${ident(key)} = any($${values.length})`;
+  }
+  if (OPS[op]) {
+    values.push(operand);
+    return `${ident(key)} ${OPS[op]} $${values.length}`;
+  }
+  throw Object.assign(new Error(`opérateur non géré : ${op}`), { code: "PGRST100" });
+}
 function whereClause(params, values) {
   const parts = [];
   for (const [key, raw] of params) {
     if (RESERVED.has(key)) continue;
-    const [op, ...rest] = raw.split(".");
-    const operand = rest.join(".");
-    if (op === "is") parts.push(`${ident(key)} is ${operand === "null" ? "null" : operand === "true" ? "true" : "false"}`);
-    else if (op === "in") {
-      values.push(operand.replace(/^\(|\)$/g, "").split(",").map((v) => v.replace(/^"|"$/g, "")));
-      parts.push(`${ident(key)} = any($${values.length})`);
-    }
-    else if (OPS[op]) {
-      values.push(operand);
-      parts.push(`${ident(key)} ${OPS[op]} $${values.length}`);
-    } else throw Object.assign(new Error(`opérateur non géré : ${op}`), { code: "PGRST100" });
+    parts.push(condition(key, raw, values));
   }
   return parts.length ? ` where ${parts.join(" and ")}` : "";
 }

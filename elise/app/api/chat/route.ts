@@ -5,7 +5,7 @@ import { CHAT_TEMPERATURE, LlmError, generate } from "@/lib/llm";
 import { MESSAGE_COLUMNS, MemoryError, rememberFacts, summarizeIfNeeded, type Message } from "@/lib/memory";
 import { OFFER_COLUMNS, parseProposal, type Offer } from "@/lib/offers";
 import { cleanReply } from "@/lib/prompts";
-import { aiMayReply, loadContact, loadProfile, loadSettings } from "@/lib/settings";
+import { aiMayReply, loadContact, loadCreator, loadProfile, loadSettings } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient, currentUserId } from "@/lib/supabase/server";
 
@@ -16,17 +16,33 @@ function problem(status: number, error: string) {
   return NextResponse.json({ error }, { status });
 }
 
+/** La créatrice de la conversation, telle que la page l'envoie. */
+function creatorParam(value: unknown): number | null {
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
 // Les nouveaux messages depuis `apres` (réponses de l'équipe, offres) et
-// l'état de toutes les offres : la page les redemande régulièrement.
+// l'état des offres, dans la conversation avec la créatrice `c` : la page
+// les redemande régulièrement.
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const userId = await currentUserId(supabase);
   if (!userId) return problem(401, "Votre session a expiré. Reconnectez-vous.");
   const after = Number(request.nextUrl.searchParams.get("apres") ?? 0) || 0;
+  const creatorId = creatorParam(request.nextUrl.searchParams.get("c"));
+  if (creatorId === null) return problem(400, "Conversation inconnue.");
 
   const [messages, offers] = await Promise.all([
-    supabase.from("messages").select(MESSAGE_COLUMNS).eq("user_id", userId).gt("id", after).order("id").limit(100),
-    supabase.from("offers").select(OFFER_COLUMNS).eq("user_id", userId).order("id"),
+    supabase
+      .from("messages")
+      .select(MESSAGE_COLUMNS)
+      .eq("user_id", userId)
+      .eq("creator_id", creatorId)
+      .gt("id", after)
+      .order("id")
+      .limit(100),
+    supabase.from("offers").select(OFFER_COLUMNS).eq("user_id", userId).eq("creator_id", creatorId).order("id"),
   ]);
   if (messages.error || offers.error) return problem(500, "La conversation n'a pas pu être chargée.");
   return NextResponse.json(
@@ -43,8 +59,10 @@ export async function POST(request: Request) {
   const userId = await currentUserId(supabase);
   if (!userId) return problem(401, "Votre session a expiré. Reconnectez-vous.");
 
-  const body = (await request.json().catch(() => null)) as { content?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as { content?: unknown; creator?: unknown } | null;
   const content = typeof body?.content === "string" ? body.content.trim() : "";
+  const creatorId = creatorParam(body?.creator);
+  if (creatorId === null) return problem(400, "Conversation inconnue.");
   if (!content) return problem(400, "Le message est vide.");
   if (content.length > MAX_MESSAGE_LENGTH) {
     return problem(400, `Le message est trop long (${MAX_MESSAGE_LENGTH} caractères au plus).`);
@@ -62,7 +80,7 @@ export async function POST(request: Request) {
   const saveUserMessage = () =>
     supabase
       .from("messages")
-      .insert({ user_id: userId, role: "user", content, created_at: receivedAt.toISOString() })
+      .insert({ user_id: userId, creator_id: creatorId, role: "user", content, created_at: receivedAt.toISOString() })
       .select(MESSAGE_COLUMNS)
       .single();
 
@@ -70,9 +88,16 @@ export async function POST(request: Request) {
   let reply: string;
   let settings: Awaited<ReturnType<typeof loadSettings>>;
   try {
-    const [profile, loadedSettings] = await Promise.all([loadProfile(supabase, userId), loadSettings(admin)]);
-    const contact = await loadContact(admin, userId, loadedSettings.creator_id);
+    const [profile, loadedSettings, creator, contact] = await Promise.all([
+      loadProfile(supabase, userId),
+      loadSettings(admin),
+      loadCreator(admin, creatorId),
+      loadContact(admin, userId, creatorId),
+    ]);
     if (!profile) return problem(403, "Complétez d'abord votre profil.");
+    // Seulement avec une créatrice en ligne : la base le revérifie en
+    // enregistrant le message.
+    if (!creator?.active) return problem(410, "Cette créatrice n'est plus disponible. Choisissez-en une autre.");
     settings = loadedSettings;
 
     // Mode manuel, ou personne non cochée en mode hybride : l'équipe répondra.
@@ -82,7 +107,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ messages: [data as Message], offers: [], waiting: true });
     }
 
-    context = await buildReply({ supabase, admin, userId, newMessage: content, now: receivedAt, settings, contact, profile });
+    context = await buildReply({ supabase, admin, userId, creator, newMessage: content, now: receivedAt, settings, contact, profile });
     reply = cleanReply(
       await generate({
         system: context.system,
@@ -109,7 +134,7 @@ export async function POST(request: Request) {
     const { data, error } = await saveUserMessage();
     if (error) throw error;
     saved.push(data as Message);
-    const result = await saveReply({ admin, userId, text, proposal, sale: context.sale });
+    const result = await saveReply({ admin, userId, creatorId, text, proposal, sale: context.sale });
     saved.push(...result.messages);
     if (result.offerIds.length) {
       const { data: rows } = await supabase.from("offers").select(OFFER_COLUMNS).in("id", result.offerIds);
@@ -123,12 +148,12 @@ export async function POST(request: Request) {
   after(async () => {
     const now = new Date();
     try {
-      await rememberFacts(supabase, userId, context.facts, [...context.messages, { role: "assistant", content: text }], now);
+      await rememberFacts(supabase, userId, creatorId, context.facts, [...context.messages, { role: "assistant", content: text }], now);
     } catch (err) {
       console.error("Mise à jour de la fiche impossible :", err);
     }
     try {
-      await summarizeIfNeeded(supabase, userId, now, settings.context_messages);
+      await summarizeIfNeeded(supabase, userId, creatorId, now, settings.context_messages);
     } catch (err) {
       console.error("Résumé impossible :", err);
     }

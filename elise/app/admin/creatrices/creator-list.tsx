@@ -54,7 +54,7 @@ export function CreatorList({ creators }: { creators: CreatorCard[] }) {
                 <span className="min-w-0 flex-1">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{name}</span>
-                    {c.active && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-bold text-accent">Incarnée par l&apos;IA</span>}
+                    {c.active && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-bold text-accent">En ligne</span>}
                     {!c.name && <span className="rounded-full border border-line px-2 py-0.5 text-xs text-muted">À compléter</span>}
                   </span>
                   {c.details && <span className="block text-sm text-muted">{c.details}</span>}
@@ -70,7 +70,7 @@ export function CreatorList({ creators }: { creators: CreatorCard[] }) {
                 {confirm === c.id ? (
                   <>
                     <button type="button" onClick={() => remove(c.id)} className="rounded-lg bg-bad px-3 py-1 text-sm font-semibold text-white">
-                      Oui, supprimer {name}
+                      Oui, supprimer {name} et ses conversations
                     </button>
                     <button type="button" onClick={() => setConfirm(null)} className="px-2 text-sm text-muted">
                       Annuler

@@ -459,6 +459,19 @@ export function CreatorForm({
             className={input}
           />
         </Field>
+        <Field
+          label={`Personnalité et façon d'écrire (${text("ton").length} / ${MAX_TEXT})`}
+          hint="Les consignes de ton pour l'IA : son énergie, son humour, ses expressions, la longueur de ses messages. Les règles de base (IA assumée, rien d'amoureux ni de sexuel, pas de rencontre) passent toujours avant."
+        >
+          <textarea
+            value={text("ton")}
+            maxLength={MAX_TEXT}
+            rows={8}
+            onChange={(e) => set("ton", e.target.value)}
+            placeholder="Solaire et taquine, elle écrit comme elle parle…"
+            className={input}
+          />
+        </Field>
         <datalist id="genres">
           {GENRES.map((g) => (
             <option key={g} value={g} />

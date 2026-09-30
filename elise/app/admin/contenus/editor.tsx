@@ -66,17 +66,15 @@ export function ContentEditor({
   scripts,
   steps,
   creators,
-  activeCreator,
 }: {
   scripts: Script[];
   steps: Step[];
   creators: CreatorOption[];
-  activeCreator: number | null;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<number | null>(scripts[0]?.id ?? null);
   const [newName, setNewName] = useState("");
-  const [newFor, setNewFor] = useState<number | null>(activeCreator);
+  const [newFor, setNewFor] = useState<number | null>(null);
   const [editing, setEditing] = useState<number | "new" | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -84,10 +82,9 @@ export function ContentEditor({
   const script = scripts.find((s) => s.id === selected) ?? scripts[0] ?? null;
   const scriptSteps = steps.filter((s) => s.script_id === script?.id);
   const creatorName = (id: number | null | undefined) => creators.find((c) => c.id === id)?.name ?? null;
-  // Le script suivi par défaut (sans script dans la fiche) : le premier de la
-  // créatrice active, sinon le premier qui sert à toutes.
-  const defaultScript =
-    (activeCreator !== null && scripts.find((s) => s.creator_id === activeCreator)) || scripts.find((s) => s.creator_id == null) || null;
+  // Le script suivi par défaut dans une conversation (sans script dans la
+  // fiche) : le premier de sa créatrice, sinon le premier qui sert à toutes.
+  const isDefault = (s: Script) => scripts.find((x) => (x.creator_id ?? null) === (s.creator_id ?? null))?.id === s.id;
 
   async function run(action: Promise<{ ok: boolean; error?: string }>, done?: string) {
     const result = await action;
@@ -142,7 +139,7 @@ export function ContentEditor({
                 {creators.length > 0 && (
                   <span className="ml-1 font-normal opacity-80">· {creatorName(s.creator_id) ?? "toutes"}</span>
                 )}
-                {s.id === defaultScript?.id && <span className="ml-1 font-normal opacity-80">· par défaut</span>}
+                {isDefault(s) && <span className="ml-1 font-normal opacity-80">· par défaut</span>}
               </button>
             ))}
           </div>
@@ -203,8 +200,9 @@ export function ContentEditor({
           </label>
         )}
         <p className="text-xs text-muted">
-          L&apos;IA ne propose que les scripts de la créatrice qu&apos;elle incarne, ou ceux qui servent à toutes.
-          Chaque personne suit le script choisi dans sa fiche (onglet Messages), sinon celui marqué « par défaut ».
+          Dans une conversation, l&apos;IA ne propose que les scripts de cette créatrice, ou ceux qui servent à
+          toutes : le script choisi dans la fiche de la personne (onglet Messages), sinon le premier de la
+          créatrice (« par défaut »), sinon le premier pour toutes.
         </p>
       </section>
 

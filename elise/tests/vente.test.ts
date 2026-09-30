@@ -18,7 +18,8 @@ const one = async <T>(user: string | null, sql: string, params: unknown[] = []) 
   (await as<{ r: T }>(user, sql, params))[0].r;
 
 async function propose(by: "service" | typeof ADMIN, user: string, step: number, price: number | null, message = "Regarde") {
-  const fn = by === "service" ? "public.proposer_etape($1, $2, $3, $4, 'ai', null)" : "public.admin_proposer($1, $2, $3, $4)";
+  // La conversation avec la créatrice n° 1 (celle de la base neuve).
+  const fn = by === "service" ? "public.proposer_etape($1, 1, $2, $3, $4, 'ai', null)" : "public.admin_proposer($1, 1, $2, $3, $4)";
   return one<{ offre: Offer; message_id: number }>(by, `select ${fn} as r`, [user, step, price, message]);
 }
 
@@ -77,8 +78,8 @@ describe("ce qui reste caché aux personnes", () => {
     assert.equal((await as(KARIM, "select * from public.script_steps")).length, 0);
     assert.equal((await as(KARIM, "select * from public.contacts")).length, 0);
     assert.equal((await as(KARIM, "select * from public.ai_settings")).length, 0);
-    await assert.rejects(as(KARIM, "select public.prochaine_etape($1)", [KARIM]));
-    await assert.rejects(as(KARIM, "select public.proposer_etape($1, $2, 100, 'x', 'ai', null)", [KARIM, steps[1]]));
+    await assert.rejects(as(KARIM, "select public.prochaine_etape($1, 1)", [KARIM]));
+    await assert.rejects(as(KARIM, "select public.proposer_etape($1, 1, $2, 100, 'x', 'ai', null)", [KARIM, steps[1]]));
     // Une modification des réglages ne touche aucune ligne.
     await as(KARIM, "update public.ai_settings set mode = 'manuel'");
     assert.equal((await as<{ mode: string }>(ADMIN, "select mode from public.ai_settings"))[0].mode, "auto");
@@ -169,25 +170,29 @@ describe("vente : contre-offres, achat, contenu", () => {
     assert.deepEqual([p.kind, p.is_demo], ["contenu", true]);
   });
 
-  it("l'étape suivante est la troisième, et le plafond du mois est respecté", async () => {
+  it("l'étape suivante est la troisième, jamais proposée au-delà du plafond du mois", async () => {
+    // 6 € déjà dépensés, plafond 10 € : il reste 4 €, sous le minimum de 10 €.
     await as(ADMIN, `update public.contacts set spending_cap_cents = 1000 where user_id = '${KARIM}'`);
+    await assert.rejects(propose("service", KARIM, steps[2], 1500), /plafond de dépenses du mois/);
+    // Plafond 17 € : il reste 11 €, le prix est ramené à 11 € (entre 10 et 20 €).
+    await as(ADMIN, `update public.contacts set spending_cap_cents = 1700 where user_id = '${KARIM}'`);
     const { offre } = await propose("service", KARIM, steps[2], 1500);
-    await assert.rejects(as(KARIM, "select public.acheter_offre($1)", [offre.id]), /plafond/);
-    await as(ADMIN, `update public.contacts set spending_cap_cents = null where user_id = '${KARIM}'`);
+    assert.deepEqual([offre.price_cents, offre.personalized], [1100, true]);
     await as(KARIM, "select public.acheter_offre($1)", [offre.id]);
+    await as(ADMIN, `update public.contacts set spending_cap_cents = null where user_id = '${KARIM}'`);
     await assert.rejects(propose("service", KARIM, steps[2], 1500), /plus rien à proposer/);
   });
 });
 
 describe("messagerie de l'équipe", () => {
   it("la liste des conversations, les non-lus, et une réponse signée « Équipe »", async () => {
-    await as(LEA, "insert into public.messages (role, content) values ('user', 'Bonjour ?')");
+    await as(LEA, "insert into public.messages (creator_id, role, content) values (1, 'user', 'Bonjour ?')");
     let inbox = await one<{ user_id: string; nom: string; non_lus: number }[]>(ADMIN, "select public.admin_boite() as r");
     const lea = inbox.find((c) => c.user_id === LEA)!;
     assert.equal(lea.nom, "Léa B.");
     assert.equal(lea.non_lus, 1);
 
-    await as(ADMIN, "select public.admin_envoyer($1, 'Bonjour Léa, ici l''équipe.')", [LEA]);
+    await as(ADMIN, "select public.admin_envoyer($1, 1, 'Bonjour Léa, ici l''équipe.')", [LEA]);
     inbox = await one(ADMIN, "select public.admin_boite() as r");
     assert.equal(inbox.find((c) => c.user_id === LEA)!.non_lus, 0);
     const [m] = await as<{ author: string; content: string }>(LEA, "select author, content from public.messages order by id desc limit 1");
@@ -197,7 +202,7 @@ describe("messagerie de l'équipe", () => {
   it("la fiche d'une personne : âge, dépenses, prochaine étape", async () => {
     const p = await one<{ age: number; depense_cents: number; prochaine_etape: { title: string } | null }>(
       ADMIN,
-      "select public.admin_personne($1) as r",
+      "select public.admin_personne($1, 1) as r",
       [LEA],
     );
     assert.ok(p.age >= 40);
@@ -207,9 +212,9 @@ describe("messagerie de l'équipe", () => {
 
   it("tout cela est fermé aux personnes", async () => {
     await assert.rejects(as(KARIM, "select public.admin_boite()"), /Réservé/);
-    await assert.rejects(as(KARIM, "select public.admin_personne($1)", [LEA]), /Réservé/);
-    await assert.rejects(as(KARIM, "select public.admin_envoyer($1, 'x')", [LEA]), /Réservé/);
-    await assert.rejects(as(KARIM, "select public.admin_proposer($1, $2, 100, 'x')", [LEA, steps[0]]), /Réservé/);
+    await assert.rejects(as(KARIM, "select public.admin_personne($1, 1)", [LEA]), /Réservé/);
+    await assert.rejects(as(KARIM, "select public.admin_envoyer($1, 1, 'x')", [LEA]), /Réservé/);
+    await assert.rejects(as(KARIM, "select public.admin_proposer($1, 1, $2, 100, 'x')", [LEA, steps[0]]), /Réservé/);
   });
 
   it("« Effacer toutes mes données » efface aussi les notes de l'équipe, pas les achats", async () => {
@@ -227,12 +232,12 @@ describe("tableau de bord : contenus et LTV", () => {
       ltv: { clients: number; moyenne_cents: number; payants: number; inscrits: number };
       clients: { nom: string; contenus_cents: number; achats: number }[];
     }>(ADMIN, "select public.admin_dashboard() as r");
-    assert.deepEqual(d.totaux.contenus, { nombre: 2, cents: 2100 });
+    assert.deepEqual(d.totaux.contenus, { nombre: 2, cents: 1700 }); // 6 € + 11 € (prix ramené au plafond)
     assert.equal(d.ltv.clients, 1);
-    assert.equal(d.ltv.moyenne_cents, 2100);
+    assert.equal(d.ltv.moyenne_cents, 1700);
     assert.equal(d.ltv.inscrits, 3);
     assert.equal(d.ltv.payants, 0); // achats « démo » : pas encore de vrai client payant
-    assert.equal(d.clients[0].contenus_cents, 2100);
+    assert.equal(d.clients[0].contenus_cents, 1700);
     assert.equal(d.clients[0].achats, 2);
   });
 });
@@ -267,7 +272,7 @@ describe("message du script avec plusieurs photos et vidéos", () => {
   it("l'offre annonce 2 photos et 1 vidéo, sans rien montrer", async () => {
     const [{ r }] = await base.as<{ r: { offre: { id: number } } }>(
       "service",
-      "select public.proposer_etape($1, $2, null, 'Regarde', 'ai', null) as r",
+      "select public.proposer_etape($1, 1, $2, null, 'Regarde', 'ai', null) as r",
       [SAM, pack],
     );
     const [offer] = await base.as<{ photo_count: number; video_count: number }>(

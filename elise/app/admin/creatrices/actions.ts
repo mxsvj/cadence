@@ -20,7 +20,7 @@ export type CreatorPayload = {
   first_message: string;
   /** Seulement les personnes dont le réglage a changé. */
   people: PersonSetting[];
-  /** « Valider » : le prénom devient obligatoire, et la première créatrice validée devient active. */
+  /** « Valider » : le prénom devient obligatoire, et la créatrice passe en ligne. */
   validate: boolean;
 };
 
@@ -84,14 +84,9 @@ export async function saveCreator(form: CreatorPayload): Promise<Result<{ id: nu
       if (error) throw error;
     }
 
-    // Tant qu'aucune créatrice n'est choisie dans l'onglet IA, c'est la
-    // première validée.
+    // « Valider » : elle passe en ligne (les personnes peuvent la choisir).
     if (form.validate) {
-      const { error } = await supabase
-        .from("ai_settings")
-        .update({ creator_id: id, updated_at: now })
-        .eq("id", 1)
-        .is("creator_id", null);
+      const { error } = await supabase.from("creators").update({ active: true }).eq("id", id);
       if (error) throw error;
     }
     // La liste (et l'onglet IA) à jour, même en revenant avec « retour ».

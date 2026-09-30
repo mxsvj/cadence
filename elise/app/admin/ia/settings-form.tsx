@@ -13,19 +13,11 @@ const MODES: { value: AiMode; title: string; text: string }[] = [
 
 const card = "flex flex-col gap-4 rounded-3xl border border-line bg-surface p-5";
 
-export type CreatorChoice = { id: number; name: string; details: string };
+export type CreatorChoice = { id: number; name: string; details: string; active: boolean };
 
-export function AiSettingsForm({
-  mode: initialMode,
-  creatorId: initialCreator,
-  creators,
-}: {
-  mode: AiMode;
-  creatorId: number | null;
-  creators: CreatorChoice[];
-}) {
+export function AiSettingsForm({ mode: initialMode, creators }: { mode: AiMode; creators: CreatorChoice[] }) {
   const [mode, setMode] = useState<AiMode>(initialMode);
-  const [creatorId, setCreatorId] = useState<number | null>(initialCreator);
+  const [online, setOnline] = useState<number[]>(creators.filter((c) => c.active).map((c) => c.id));
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -33,7 +25,7 @@ export function AiSettingsForm({
     e.preventDefault();
     setSaving(true);
     setNotice(null);
-    const result = await saveSettings({ mode, creator_id: creatorId });
+    const result = await saveSettings({ mode, online });
     setSaving(false);
     setNotice(result.ok ? "Réglages enregistrés. Ils valent dès le prochain message." : result.error);
   }
@@ -42,7 +34,7 @@ export function AiSettingsForm({
     <form onSubmit={submit} className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 pb-28 sm:px-6">
       <header>
         <h1 className="font-serif text-3xl">IA</h1>
-        <p className="text-sm text-muted">Qui répond, et quelle créatrice l&apos;IA incarne.</p>
+        <p className="text-sm text-muted">Qui répond, et quelles créatrices sont en ligne.</p>
       </header>
 
       {/* Le mode */}
@@ -78,58 +70,48 @@ export function AiSettingsForm({
         </p>
       </section>
 
-      {/* La créatrice */}
-      <section className={card} aria-labelledby="titre-creatrice">
+      {/* Les créatrices en ligne */}
+      <section className={card} aria-labelledby="titre-creatrices">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="titre-creatrice" className="font-bold">
-            La créatrice que l&apos;IA incarne
+          <h2 id="titre-creatrices" className="font-bold">
+            Créatrices en ligne
           </h2>
           <Link href="/admin/creatrices/nouvelle" className="rounded-full border border-line px-4 py-1.5 text-sm font-semibold">
             Créer une créatrice
           </Link>
         </div>
-        <div className="flex flex-col gap-2" role="radiogroup" aria-labelledby="titre-creatrice">
-          {creators.map((c) => (
-            <label
-              key={c.id}
-              className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 ${
-                creatorId === c.id ? "border-accent bg-accent-soft" : "border-line"
-              }`}
-            >
-              <input
-                type="radio"
-                name="creatrice"
-                checked={creatorId === c.id}
-                onChange={() => setCreatorId(c.id)}
-                className="accent-[var(--accent)]"
-              />
-              <span className="min-w-0">
-                <span className="block font-semibold">{c.name}</span>
-                {c.details && <span className="block text-sm text-muted">{c.details}</span>}
-              </span>
-            </label>
-          ))}
-          <label
-            className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 ${
-              creatorId === null ? "border-accent bg-accent-soft" : "border-line"
-            }`}
-          >
-            <input
-              type="radio"
-              name="creatrice"
-              checked={creatorId === null}
-              onChange={() => setCreatorId(null)}
-              className="accent-[var(--accent)]"
-            />
-            <span className="min-w-0">
-              <span className="block font-semibold">Aucune</span>
-              <span className="block text-sm text-muted">Le personnage par défaut, « Élise », sans profil.</span>
-            </span>
-          </label>
+        <p className="text-sm text-muted">
+          Les personnes choisissent avec laquelle parler. Chaque conversation est séparée des autres : ses messages,
+          ce que l&apos;IA sait de la personne, son script et ses offres. Une seule en ligne : on arrive directement
+          chez elle.
+        </p>
+        <div className="flex flex-col gap-2">
+          {creators.map((c) => {
+            const on = online.includes(c.id);
+            return (
+              <label
+                key={c.id}
+                className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 ${on ? "border-accent bg-accent-soft" : "border-line"}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={() => setOnline((list) => (on ? list.filter((id) => id !== c.id) : [...list, c.id]))}
+                  className="size-4 accent-[var(--accent)]"
+                  aria-label={`${c.name} en ligne`}
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold">{c.name}</span>
+                  {c.details && <span className="block text-sm text-muted">{c.details}</span>}
+                </span>
+                <span className={`shrink-0 text-xs font-bold ${on ? "text-accent" : "text-muted"}`}>{on ? "En ligne" : "Hors ligne"}</span>
+              </label>
+            );
+          })}
         </div>
         <p className="text-xs text-muted">
-          Les créatrices se créent et se modifient dans l&apos;onglet Créatrices : profil, premier message, et ce
-          qu&apos;elles font avec chaque personne.
+          Hors ligne, une créatrice ne répond plus et n&apos;apparaît plus dans le choix ; ses conversations restent
+          lisibles par l&apos;équipe. Profil, premier message et réglages par personne : onglet Créatrices.
         </p>
       </section>
 

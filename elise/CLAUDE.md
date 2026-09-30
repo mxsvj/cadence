@@ -31,20 +31,43 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `security definer` qui vérifient `is_admin()` (`admin_dashboard`,
   `admin_simuler_achat`, `admin_remplir_demo`, `admin_vider_demo`). Le
   « direct » est un rafraîchissement toutes les 4 s. Pas encore de paiement.
-- Personnage, messagerie et vente : `ai_settings` (mode auto/hybride/manuel,
-  `creator_id` = la créatrice incarnée), `creators` (persona jsonb, premier
-  message), `creator_contacts` (IA autorisée et emojis de chaque créatrice
+- Plusieurs créatrices en ligne (`creators.active`) : une conversation par
+  (personne, créatrice). `creator_id` NOT NULL sur `messages`, `user_facts`,
+  `summaries` (clé primaire (user_id, creator_id)), `offers` ; lu par
+  conversation dans `creator_contacts.last_read_message_id`. `/` choisit
+  (`creatrices_disponibles()`, redirige s'il n'y en a qu'une), `/c/[id]` est
+  la conversation ; `/api/chat` reçoit `creator` (POST) ou `c` (GET) et
+  refuse (410) une créatrice hors ligne ; la règle RLS d'écriture des
+  messages exige `creatrice_disponible(creator_id)`. Toutes les lectures
+  (`lib/memory.ts`, `lib/sales.ts`, `lib/relances.ts`, `lib/team.ts`)
+  prennent la créatrice. Seuls le plafond, la pause après achat, les offres
+  payantes par jour et « une offre en attente à la fois » valent pour la
+  personne entière. `ai_settings.creator_id` ne sert plus (repli de la
+  migration). La base neuve crée une créatrice « Élise » en ligne ;
+  `supabase/katherine.sql` crée Katherine (profil + `persona.ton`).
+- Personnage, messagerie et vente : `ai_settings` (mode auto/hybride/manuel),
+  `creators` (persona jsonb dont `ton` = personnalité et façon d'écrire,
+  ajoutée sous « Ta personnalité et ta façon d'écrire », premier message,
+  `active`), `creator_contacts` (IA autorisée et emojis de chaque créatrice
   avec chaque personne : `emoji_mode` libre/choisis/aucun + `emojis`,
   nettoyés par `lib/emojis.ts` ; les colonnes `persona`, `first_message`,
   `temperature`, `max_tokens` d'`ai_settings` et `ai_enabled`, `emojis` de
   `contacts` ne servent plus), `contacts` (fiche par personne), `scripts`/`script_steps`
   (étapes ordonnées, prix min/max ; `scripts.creator_id` null = pour toutes,
-  `script_de` ne prend que ceux de la créatrice active ou de toutes), `offers` (prix personnalisé,
+  `script_de(personne, créatrice)` ne prend que ceux de la créatrice ou de
+  toutes), `offers` (prix personnalisé,
   contre-offres), `profiles` (18 ans minimum). La clé secrète
   (`SUPABASE_SECRET_KEY`, `lib/supabase/admin.ts`) ne sert qu'au serveur ; les
   personnes n'écrivent que des messages `role='user'`. L'IA propose une offre
-  par la balise `[[PROPOSER prix=…]]`, seulement si `lib/sales.ts` l'a permis ;
-  `proposer_etape` (SQL) impose l'ordre et borne le prix. Les achats sont
+  par la balise `[[PROPOSER prix=…]]`, seulement si `lib/sales.ts` l'a permis
+  (`saleBlock` : fin du script, étape de l'équipe, offre en attente, premiers
+  messages, espacement, prise de nouvelles, plafond, pause après achat
+  `sales_pause_hours`, offres payantes sur 24 h `sales_max_per_day` ; un
+  cadeau gratuit n'est soumis qu'aux premiers) ; `describeBlock` en fait la
+  phrase de la fiche. La consigne donne la place de l'étape (« le 2e sur 5 »)
+  et un prix maximum ramené au reste du plafond. `proposer_etape` (SQL)
+  impose l'ordre, borne le prix, et refuse un contenu payant au-delà du
+  plafond du mois. Les achats sont
   « démo » tant qu'aucun paiement n'est branché.
 - Lignes rouges posées par le porteur du projet et par Claude : l'IA se dit
   toujours IA, chaque réponse est marquée IA ou Équipe, jamais de rencontre
@@ -80,7 +103,7 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   marge de l'iPhone, réservés par `app/admin/layout.tsx`). Tout élément fixé
   en bas d'une page admin se pose au-dessus
   (`bottom-[calc(4rem+env(safe-area-inset-bottom))]`). L'onglet IA enregistre
-  le mode et la créatrice incarnée (`saveSettings`) ; l'onglet Créatrices,
+  le mode et les créatrices en ligne (`saveSettings`, au moins une) ; l'onglet Créatrices,
   chaque créatrice (`saveCreator`, page unique Personnes → Profil → Premier
   message → Valider) ; l'onglet Paramètres, les réglages fins et les
   garde-fous (`saveParameters`).
@@ -89,7 +112,7 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   seules les personnes modifiées sont envoyées). `saveCreator` appelle
   `revalidatePath("/admin", "layout")` : sans ça, le bouton « retour » du
   navigateur remontre la liste gardée en cache (sans la créatrice). « Valider »
-  exige le prénom et rend la créatrice active s'il n'y en a pas. Les
+  exige le prénom et met la créatrice en ligne. Les
   lectures des colonnes récentes passent par `select("*")` pour que le site
   marche encore tant que `schema.sql` n'est pas relancé ; les erreurs de
   colonne absente affichent « relancez supabase/schema.sql » (`schemaOutdated`).
@@ -97,7 +120,8 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   quotidienne `0 16 * * *` dans `vercel.json`, Hobby = une fois par jour à
   l'heure près ; `Authorization: Bearer CRON_SECRET`). `a_relancer()` (SQL,
   service_role) choisit les absents : `ai_settings.relance_active` /
-  `relance_heures`, `profiles.relances_ok` (menu de la personne,
+  `relance_heures`, une seule par personne dans sa dernière conversation, avec
+  une créatrice en ligne, `profiles.relances_ok` (menu de la personne,
   `regler_relances`), `profiles.vu_le` (`marquer_visite` à chaque ouverture
   de la conversation), dernier message pas déjà une `kind='relance'`, pas
   d'offre en attente, jamais un administrateur. Le message est écrit avec la

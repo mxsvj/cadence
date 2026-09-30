@@ -62,43 +62,48 @@ function fail(what: string, error: { code?: string; message?: string }): never {
   );
 }
 
-/** Les derniers messages, du plus ancien au plus récent. */
-export async function loadMessages(supabase: SupabaseClient, userId: string, limit: number): Promise<Message[]> {
+/** Les derniers messages d'une conversation (personne + créatrice), du plus ancien au plus récent. */
+export async function loadMessages(supabase: SupabaseClient, userId: string, creatorId: number, limit: number): Promise<Message[]> {
   const { data, error } = await supabase
     .from("messages")
     .select(MESSAGE_COLUMNS)
     .eq("user_id", userId)
+    .eq("creator_id", creatorId)
     .order("id", { ascending: false })
     .limit(limit);
   if (error) fail("Lecture des messages impossible", error);
   return (data as Message[]).reverse();
 }
 
-/** Premier passage (ou tout vient d'être effacé) : l'IA dit bonjour. */
+/** Première visite à cette créatrice (ou tout vient d'être effacé) : elle dit bonjour. */
 export async function ensureFirstMessage(
   supabase: SupabaseClient,
   admin: SupabaseClient,
   userId: string,
+  creatorId: number,
   text: string,
 ): Promise<void> {
   const { count, error } = await supabase
     .from("messages")
     .select("id", { count: "exact", head: true })
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .eq("creator_id", creatorId);
   if (error) fail("Lecture des messages impossible", error);
   if (count) return;
 
   const { error: insertError } = await admin
     .from("messages")
-    .insert({ user_id: userId, role: "assistant", author: "ai", content: text });
+    .insert({ user_id: userId, creator_id: creatorId, role: "assistant", author: "ai", content: text });
   if (insertError) fail("Impossible d'enregistrer le premier message", insertError);
 }
 
-export async function loadFacts(supabase: SupabaseClient, userId: string): Promise<string[]> {
+/** Ce que cette créatrice sait de la personne (rien de ce qu'elle a dit aux autres). */
+export async function loadFacts(supabase: SupabaseClient, userId: string, creatorId: number): Promise<string[]> {
   const { data, error } = await supabase
     .from("user_facts")
     .select("fact")
     .eq("user_id", userId)
+    .eq("creator_id", creatorId)
     .order("id", { ascending: false })
     .limit(MAX_FACTS_IN_PROMPT);
   if (error) fail("Lecture de la fiche impossible", error);
@@ -107,11 +112,12 @@ export async function loadFacts(supabase: SupabaseClient, userId: string): Promi
 
 type SummaryRow = { summary: string; last_message_id: number };
 
-export async function loadSummary(supabase: SupabaseClient, userId: string): Promise<SummaryRow | null> {
+export async function loadSummary(supabase: SupabaseClient, userId: string, creatorId: number): Promise<SummaryRow | null> {
   const { data, error } = await supabase
     .from("summaries")
     .select("summary, last_message_id")
     .eq("user_id", userId)
+    .eq("creator_id", creatorId)
     .maybeSingle();
   if (error) fail("Lecture du résumé impossible", error);
   return data as SummaryRow | null;
@@ -124,6 +130,7 @@ export async function loadSummary(supabase: SupabaseClient, userId: string): Pro
 export async function rememberFacts(
   supabase: SupabaseClient,
   userId: string,
+  creatorId: number,
   existing: string[],
   recent: Turn[],
   now: Date,
@@ -138,7 +145,7 @@ export async function rememberFacts(
   const fresh = selectNewFacts(parseFactsResponse(raw), existing);
   const saved: string[] = [];
   for (const fact of fresh) {
-    const { error } = await supabase.from("user_facts").insert({ user_id: userId, fact });
+    const { error } = await supabase.from("user_facts").insert({ user_id: userId, creator_id: creatorId, fact });
     if (!error) saved.push(fact);
     else if (error.code !== "23505") fail("Impossible d'enregistrer un fait", error); // 23505 = déjà connu
   }
@@ -153,16 +160,18 @@ export async function rememberFacts(
 export async function summarizeIfNeeded(
   supabase: SupabaseClient,
   userId: string,
+  creatorId: number,
   now: Date,
   contextMessages = CONTEXT_MESSAGES,
 ): Promise<boolean> {
-  const previous = await loadSummary(supabase, userId);
+  const previous = await loadSummary(supabase, userId, creatorId);
   const after = previous?.last_message_id ?? 0;
 
   const { count, error } = await supabase
     .from("messages")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
+    .eq("creator_id", creatorId)
     .gt("id", after);
   if (error) fail("Lecture des messages impossible", error);
   if ((count ?? 0) <= contextMessages * 2) return false;
@@ -171,6 +180,7 @@ export async function summarizeIfNeeded(
     .from("messages")
     .select(MESSAGE_COLUMNS)
     .eq("user_id", userId)
+    .eq("creator_id", creatorId)
     .gt("id", after)
     .order("id", { ascending: true });
   if (readError) fail("Lecture des messages impossible", readError);
@@ -197,10 +207,11 @@ export async function summarizeIfNeeded(
       .from("summaries")
       .update(row)
       .eq("user_id", userId)
+      .eq("creator_id", creatorId)
       .eq("last_message_id", previous.last_message_id);
     if (updateError) fail("Impossible d'enregistrer le résumé", updateError);
   } else {
-    const { error: insertError } = await supabase.from("summaries").insert({ user_id: userId, ...row });
+    const { error: insertError } = await supabase.from("summaries").insert({ user_id: userId, creator_id: creatorId, ...row });
     if (insertError && insertError.code !== "23505") fail("Impossible d'enregistrer le résumé", insertError);
   }
   return true;

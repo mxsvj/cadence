@@ -42,9 +42,8 @@ create table if not exists public.user_facts (
   fact       text not null check (char_length(fact) between 1 and 300),
   created_at timestamptz not null default now()
 );
--- Pas deux fois le même fait (majuscules comprises).
-create unique index if not exists user_facts_user_id_fact_key
-  on public.user_facts (user_id, lower(fact));
+-- Pas deux fois le même fait (majuscules comprises) dans une même
+-- conversation : voir « une conversation par créatrice », plus bas.
 
 
 -- ─── Le résumé des anciennes conversations ─────────────────────────────────
@@ -75,6 +74,7 @@ drop policy if exists "Écrire ses messages"    on public.messages;
 drop policy if exists "Effacer ses messages"   on public.messages;
 create policy "Lire ses messages"    on public.messages for select to authenticated
   using ((select auth.uid()) = user_id);
+-- (Renforcée plus bas : seulement avec une créatrice en ligne.)
 create policy "Écrire ses messages"  on public.messages for insert to authenticated
   with check ((select auth.uid()) = user_id and role = 'user' and author = 'user' and kind = 'text');
 create policy "Effacer ses messages" on public.messages for delete to authenticated
@@ -567,6 +567,16 @@ create table if not exists public.creator_contacts (
 
 alter table public.ai_settings add column if not exists creator_id bigint references public.creators (id) on delete set null;
 
+-- Garde-fous de la vente, en plus du plafond : une pause après chaque achat
+-- (en heures, 0 = pas de pause) et au plus N offres payantes proposées par
+-- l'IA sur 24 heures, toutes créatrices confondues.
+alter table public.ai_settings add column if not exists sales_pause_hours integer not null default 24;
+alter table public.ai_settings add column if not exists sales_max_per_day integer not null default 1;
+alter table public.ai_settings drop constraint if exists ai_settings_sales_pause_hours_check;
+alter table public.ai_settings add constraint ai_settings_sales_pause_hours_check check (sales_pause_hours between 0 and 720);
+alter table public.ai_settings drop constraint if exists ai_settings_sales_max_per_day_check;
+alter table public.ai_settings add constraint ai_settings_sales_max_per_day_check check (sales_max_per_day between 1 and 20);
+
 -- Les emojis de la créatrice avec chaque personne : au choix de l'IA selon la
 -- discussion (libre), seulement ceux de la liste (choisis), ou aucun. À
 -- l'arrivée de ce réglage, une liste déjà remplie devient « choisis ».
@@ -601,6 +611,10 @@ begin
   insert into public.creators (persona, first_message)
   values (reglages.persona, reglages.first_message)
   returning id into nouvelle;
+  if exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'creators' and column_name = 'active') then
+    update public.creators set active = true where id = nouvelle;
+  end if;
   update public.ai_settings set creator_id = nouvelle where id = 1;
   insert into public.creator_contacts (creator_id, user_id, ai_enabled, emojis, emoji_mode)
   select nouvelle, c.user_id, c.ai_enabled, c.emojis, case when c.emojis <> '' then 'choisis' else 'libre' end
@@ -640,6 +654,109 @@ update public.offers set video_count = 1 where content_type = 'video' and photo_
 
 alter table public.messages  add column if not exists offer_id bigint references public.offers (id) on delete set null;
 alter table public.purchases add column if not exists offer_id bigint references public.offers (id) on delete set null;
+
+
+-- ─── Plusieurs créatrices en ligne, une conversation avec chacune ─────────
+-- Chaque personne choisit avec quelle créatrice parler (celles « en ligne »).
+-- Chaque conversation (personne, créatrice) a ses messages, sa mémoire, son
+-- résumé et ses offres, sans rien partager avec les autres. Le plafond de
+-- dépenses, lui, reste un seul plafond par personne, toutes créatrices
+-- confondues.
+do $$
+begin
+  if not exists (select 1 from information_schema.columns
+                 where table_schema = 'public' and table_name = 'creators' and column_name = 'active') then
+    alter table public.creators add column active boolean not null default false;
+    -- La première fois : celle que l'IA incarnait jusqu'ici passe en ligne.
+    update public.creators set active = true where id = (select creator_id from public.ai_settings where id = 1);
+    if not exists (select 1 from public.creators where active) then
+      update public.creators set active = true where id = (select min(id) from public.creators);
+    end if;
+  end if;
+  -- Sans aucune créatrice, le personnage par défaut (« Élise ») en devient une.
+  if not exists (select 1 from public.creators) then
+    insert into public.creators (persona, first_message, active) values ('{"nom": "Élise"}'::jsonb, '', true);
+  end if;
+end;
+$$;
+
+-- La créatrice de chaque conversation. Ce qui existait avant revient à celle
+-- que l'IA incarnait (sinon à la première en ligne).
+alter table public.messages   add column if not exists creator_id bigint references public.creators (id) on delete cascade;
+alter table public.user_facts add column if not exists creator_id bigint references public.creators (id) on delete cascade;
+alter table public.summaries  add column if not exists creator_id bigint references public.creators (id) on delete cascade;
+alter table public.offers     add column if not exists creator_id bigint references public.creators (id) on delete cascade;
+alter table public.creator_contacts add column if not exists last_read_message_id bigint not null default 0;
+do $$
+declare
+  repli bigint := coalesce(
+    (select s.creator_id from public.ai_settings s where s.id = 1 and s.creator_id is not null),
+    (select min(c.id) from public.creators c where c.active),
+    (select min(c.id) from public.creators c));
+begin
+  if exists (select 1 from public.messages where creator_id is null) then
+    -- Ce que l'équipe avait déjà lu reste lu.
+    insert into public.creator_contacts (creator_id, user_id, last_read_message_id)
+    select repli, c.user_id, c.last_read_message_id from public.contacts c where c.last_read_message_id > 0
+    on conflict (creator_id, user_id) do update set last_read_message_id = excluded.last_read_message_id;
+  end if;
+  update public.messages   set creator_id = repli where creator_id is null;
+  update public.user_facts set creator_id = repli where creator_id is null;
+  update public.summaries  set creator_id = repli where creator_id is null;
+  update public.offers     set creator_id = repli where creator_id is null;
+end;
+$$;
+alter table public.messages   alter column creator_id set not null;
+alter table public.user_facts alter column creator_id set not null;
+alter table public.summaries  alter column creator_id set not null;
+alter table public.offers     alter column creator_id set not null;
+
+create index if not exists messages_conversation_idx on public.messages (user_id, creator_id, id);
+create index if not exists offers_conversation_idx on public.offers (user_id, creator_id);
+drop index if exists public.user_facts_user_id_fact_key;
+create unique index if not exists user_facts_conversation_fact_key
+  on public.user_facts (user_id, creator_id, lower(fact));
+-- Un résumé par conversation.
+do $$
+begin
+  if exists (select 1 from pg_constraint
+             where conname = 'summaries_pkey' and conrelid = 'public.summaries'::regclass and cardinality(conkey) = 1) then
+    alter table public.summaries drop constraint summaries_pkey;
+    alter table public.summaries add constraint summaries_pkey primary key (user_id, creator_id);
+  end if;
+end;
+$$;
+
+-- Une créatrice que les personnes peuvent choisir.
+create or replace function public.creatrice_disponible(p_creator bigint)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (select 1 from public.creators where id = p_creator and active);
+$$;
+
+-- Ce que les personnes voient des créatrices en ligne, pour choisir : jamais
+-- le reste du profil ni les consignes de l'équipe.
+create or replace function public.creatrices_disponibles()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'id', c.id,
+           'nom', coalesce(nullif(trim(c.persona ->> 'nom'), ''), nullif(trim(c.persona ->> 'pseudo'), ''), 'Élise'),
+           'age', case when (c.persona ->> 'age') ~ '^[0-9]{1,2}$' then (c.persona ->> 'age')::integer end,
+           'ville', nullif(trim(c.persona ->> 'ville'), ''),
+           'profession', nullif(trim(c.persona ->> 'profession'), ''))
+         order by c.id), '[]'::jsonb)
+  from public.creators c
+  where c.active;
+$$;
 
 
 -- ─── Qui voit quoi ─────────────────────────────────────────────────────────
@@ -696,6 +813,12 @@ drop policy if exists "L'équipe règle l'IA" on public.ai_settings;
 create policy "L'équipe règle l'IA" on public.ai_settings for all to authenticated
   using ((select public.is_admin())) with check ((select public.is_admin()));
 
+-- Une personne n'écrit qu'à une créatrice en ligne.
+drop policy if exists "Écrire ses messages" on public.messages;
+create policy "Écrire ses messages" on public.messages for insert to authenticated
+  with check ((select auth.uid()) = user_id and role = 'user' and author = 'user' and kind = 'text'
+              and public.creatrice_disponible(creator_id));
+
 -- L'équipe lit toutes les conversations et ce que l'IA sait de chacun.
 drop policy if exists "L'équipe lit les messages" on public.messages;
 create policy "L'équipe lit les messages" on public.messages for select to authenticated
@@ -709,30 +832,36 @@ create policy "L'équipe voit les achats" on public.purchases for select to auth
 
 
 -- ─── La vente : l'étape suivante, toujours dans l'ordre ────────────────────
--- Le script d'une personne : celui de sa fiche (s'il est à la créatrice
--- active ou à toutes), sinon le premier de la créatrice active, sinon le
+-- Les anciennes versions, d'avant les conversations par créatrice.
+drop function if exists public.script_de(uuid);
+drop function if exists public.prochaine_etape(uuid);
+drop function if exists public.proposer_etape(uuid, bigint, integer, text, text, uuid);
+drop function if exists public.admin_proposer(uuid, bigint, integer, text);
+drop function if exists public.admin_personne(uuid);
+drop function if exists public.admin_envoyer(uuid, text);
+drop function if exists public.admin_marquer_lu(uuid);
+
+-- Le script d'une conversation : celui de la fiche de la personne (s'il est
+-- à cette créatrice ou à toutes), sinon le premier de la créatrice, sinon le
 -- premier qui sert à toutes.
-create or replace function public.script_de(p_user uuid)
+create or replace function public.script_de(p_user uuid, p_creator bigint)
 returns bigint
 language sql
 stable
 security definer
 set search_path = ''
 as $$
-  with active as (select creator_id from public.ai_settings where id = 1)
   select coalesce(
     (select c.script_id from public.contacts c
        join public.scripts s on s.id = c.script_id
-      where c.user_id = p_user
-        and (s.creator_id is null or s.creator_id = (select creator_id from active))),
-    (select s.id from public.scripts s
-      where s.creator_id = (select creator_id from active)
-      order by s.position, s.id limit 1),
+      where c.user_id = p_user and (s.creator_id is null or s.creator_id = p_creator)),
+    (select s.id from public.scripts s where s.creator_id = p_creator order by s.position, s.id limit 1),
     (select s.id from public.scripts s where s.creator_id is null order by s.position, s.id limit 1));
 $$;
 
--- La première étape du script ni vendue, ni offerte, ni en cours d'offre.
-create or replace function public.prochaine_etape(p_user uuid)
+-- La première étape du script ni vendue, ni offerte, ni en cours d'offre
+-- (un contenu déjà obtenu avec une créatrice ne se revend pas avec une autre).
+create or replace function public.prochaine_etape(p_user uuid, p_creator bigint)
 returns public.script_steps
 language sql
 stable
@@ -740,7 +869,7 @@ security definer
 set search_path = ''
 as $$
   select st.* from public.script_steps st
-  where st.script_id = public.script_de(p_user)
+  where st.script_id = public.script_de(p_user, p_creator)
     and not exists (
       select 1 from public.offers o
       where o.user_id = p_user and o.step_id = st.id and o.status in ('proposee', 'achetee', 'offerte'))
@@ -774,10 +903,12 @@ as $$
     (select s.spending_cap_cents from public.ai_settings s where s.id = 1));
 $$;
 
--- Proposer un contenu : uniquement l'étape suivante, une seule offre en
--- attente à la fois, prix ramené entre le minimum et le maximum. Une étape
--- gratuite est offerte tout de suite. Usage interne (IA ou équipe).
-create or replace function public.proposer_etape(p_user uuid, p_step bigint, p_prix_cents integer,
+-- Proposer un contenu dans une conversation : uniquement l'étape suivante,
+-- une seule offre en attente à la fois (toutes créatrices confondues), prix
+-- ramené entre le minimum et le maximum, et jamais au-delà de ce qui reste
+-- du plafond du mois. Une étape gratuite est offerte tout de suite. Usage
+-- interne (IA ou équipe).
+create or replace function public.proposer_etape(p_user uuid, p_creator bigint, p_step bigint, p_prix_cents integer,
                                                  p_message text, p_par text, p_auteur uuid)
 returns jsonb
 language plpgsql
@@ -788,10 +919,11 @@ as $$
 declare
   suivante public.script_steps;
   prix     integer;
+  reste    integer;
   offre    public.offers;
   message  bigint;
 begin
-  suivante := public.prochaine_etape(p_user);
+  suivante := public.prochaine_etape(p_user, p_creator);
   if suivante.id is null then
     raise exception 'Il n''y a plus rien à proposer à cette personne dans son script.' using errcode = 'P0001';
   end if;
@@ -803,13 +935,20 @@ begin
   end if;
   if suivante.is_paid then
     prix := least(greatest(coalesce(p_prix_cents, suivante.price_cents), suivante.min_price_cents), suivante.max_price_cents);
+    reste := public.plafond_de(p_user) - public.depense_du_mois(p_user);
+    if reste is not null then
+      if reste < suivante.min_price_cents then
+        raise exception 'Le plafond de dépenses du mois de cette personne ne permet pas ce contenu.' using errcode = 'P0001';
+      end if;
+      prix := least(prix, reste);
+    end if;
   else
     prix := 0;
   end if;
 
-  insert into public.offers (user_id, step_id, content_type, photo_count, video_count,
+  insert into public.offers (user_id, creator_id, step_id, content_type, photo_count, video_count,
                              price_cents, personalized, status, proposed_by)
-  values (p_user, suivante.id, suivante.content_type,
+  values (p_user, p_creator, suivante.id, suivante.content_type,
           (select count(*) from jsonb_array_elements(suivante.media) m where m ->> 'kind' = 'image')::integer,
           (select count(*) from jsonb_array_elements(suivante.media) m where m ->> 'kind' = 'video')::integer,
           prix,
@@ -817,8 +956,8 @@ begin
           case when suivante.is_paid then 'proposee' else 'offerte' end, p_par)
   returning * into offre;
 
-  insert into public.messages (user_id, role, author, author_id, kind, offer_id, content)
-  values (p_user, 'assistant', p_par, case when p_par = 'team' then p_auteur end, 'offer', offre.id,
+  insert into public.messages (user_id, creator_id, role, author, author_id, kind, offer_id, content)
+  values (p_user, p_creator, 'assistant', p_par, case when p_par = 'team' then p_auteur end, 'offer', offre.id,
           coalesce(nullif(trim(p_message), ''), case when suivante.is_paid then 'Un contenu pour vous.' else 'Un petit cadeau pour vous.' end))
   returning id into message;
 
@@ -826,8 +965,8 @@ begin
 end;
 $$;
 
--- L'équipe propose depuis la messagerie.
-create or replace function public.admin_proposer(p_user uuid, p_step bigint, p_prix_cents integer, p_message text)
+-- L'équipe propose depuis la messagerie, dans une conversation.
+create or replace function public.admin_proposer(p_user uuid, p_creator bigint, p_step bigint, p_prix_cents integer, p_message text)
 returns jsonb
 language plpgsql
 volatile
@@ -838,7 +977,7 @@ begin
   if not public.is_admin() then
     raise exception 'Réservé aux administrateurs.' using errcode = '42501';
   end if;
-  return public.proposer_etape(p_user, p_step, p_prix_cents, p_message, 'team', (select auth.uid()));
+  return public.proposer_etape(p_user, p_creator, p_step, p_prix_cents, p_message, 'team', (select auth.uid()));
 end;
 $$;
 
@@ -970,7 +1109,8 @@ $$;
 
 
 -- ─── La messagerie de l'équipe ─────────────────────────────────────────────
--- La liste des conversations, la plus récente d'abord.
+-- La liste des conversations (une par personne et par créatrice), la plus
+-- récente d'abord.
 create or replace function public.admin_boite()
 returns jsonb
 language plpgsql
@@ -985,36 +1125,38 @@ begin
     raise exception 'Réservé aux administrateurs.' using errcode = '42501';
   end if;
   with dernier as (
-    select distinct on (m.user_id) m.user_id, m.id, m.author, m.kind, m.content, m.created_at
+    select distinct on (m.user_id, m.creator_id) m.user_id, m.creator_id, m.id, m.author, m.kind, m.content, m.created_at
     from public.messages m
-    order by m.user_id, m.id desc
+    order by m.user_id, m.creator_id, m.id desc
   )
   select coalesce(jsonb_agg(jsonb_build_object(
            'user_id', d.user_id,
+           'creator_id', d.creator_id,
+           'creatrice', coalesce(nullif(trim(cr.persona ->> 'nom'), ''), nullif(trim(cr.persona ->> 'pseudo'), ''), 'Élise'),
            'email', u.email,
            'nom', coalesce(p.display_name, split_part(u.email, '@', 1)),
            'dernier', jsonb_build_object('id', d.id, 'auteur', d.author, 'type', d.kind,
                                          'texte', left(d.content, 160), 'date', d.created_at),
            'non_lus', (select count(*) from public.messages m
-                       where m.user_id = d.user_id and m.role = 'user' and m.id > coalesce(c.last_read_message_id, 0)),
-           -- En mode hybride, ce que la créatrice active a le droit de faire.
-           'ia_autorisee', coalesce((select cc.ai_enabled
-                                     from public.creator_contacts cc
-                                     join public.ai_settings s on s.id = 1 and s.creator_id = cc.creator_id
-                                     where cc.user_id = d.user_id), true),
+                       where m.user_id = d.user_id and m.creator_id = d.creator_id and m.role = 'user'
+                         and m.id > coalesce(cc.last_read_message_id, 0)),
+           -- En mode hybride : cette créatrice a-t-elle le droit de lui répondre ?
+           'ia_autorisee', coalesce(cc.ai_enabled, true),
            'depense_cents', (select coalesce(sum(pu.amount_cents), 0) from public.purchases pu where pu.user_id = d.user_id))
          order by d.id desc), '[]'::jsonb)
   into resultat
   from dernier d
   join auth.users u on u.id = d.user_id
+  join public.creators cr on cr.id = d.creator_id
   left join public.profiles p on p.user_id = d.user_id
-  left join public.contacts c on c.user_id = d.user_id;
+  left join public.creator_contacts cc on cc.creator_id = d.creator_id and cc.user_id = d.user_id;
   return resultat;
 end;
 $$;
 
--- Qui est cette personne (l'adresse e-mail n'est lisible que d'ici).
-create or replace function public.admin_personne(p_user uuid)
+-- Qui est cette personne (l'adresse e-mail n'est lisible que d'ici), et où
+-- en est la vente dans sa conversation avec cette créatrice.
+create or replace function public.admin_personne(p_user uuid, p_creator bigint)
 returns jsonb
 language plpgsql
 stable
@@ -1029,6 +1171,7 @@ begin
   end if;
   select jsonb_build_object(
     'user_id', u.id,
+    'creator_id', p_creator,
     'email', u.email,
     'nom', coalesce(p.display_name, split_part(u.email, '@', 1)),
     'age', case when p.birthdate is null then null else extract(year from age(p.birthdate))::integer end,
@@ -1036,8 +1179,8 @@ begin
     'depense_cents', (select coalesce(sum(amount_cents), 0) from public.purchases where user_id = u.id),
     'depense_mois_cents', public.depense_du_mois(u.id),
     'plafond_cents', public.plafond_de(u.id),
-    'script_id', public.script_de(u.id),
-    'prochaine_etape', (select to_jsonb(e) from public.prochaine_etape(u.id) e where e.id is not null))
+    'script_id', public.script_de(u.id, p_creator),
+    'prochaine_etape', (select to_jsonb(e) from public.prochaine_etape(u.id, p_creator) e where e.id is not null))
   into resultat
   from auth.users u
   left join public.profiles p on p.user_id = u.id
@@ -1046,8 +1189,9 @@ begin
 end;
 $$;
 
--- Écrire à une personne au nom de l'équipe ; le message est signé « Équipe ».
-create or replace function public.admin_envoyer(p_user uuid, p_texte text)
+-- Écrire dans une conversation au nom de l'équipe ; le message est signé
+-- « Équipe ».
+create or replace function public.admin_envoyer(p_user uuid, p_creator bigint, p_texte text)
 returns bigint
 language plpgsql
 volatile
@@ -1063,15 +1207,16 @@ begin
   if coalesce(trim(p_texte), '') = '' then
     raise exception 'Le message est vide.' using errcode = 'P0001';
   end if;
-  insert into public.messages (user_id, role, author, author_id, kind, content)
-  values (p_user, 'assistant', 'team', (select auth.uid()), 'text', trim(p_texte))
+  insert into public.messages (user_id, creator_id, role, author, author_id, kind, content)
+  values (p_user, p_creator, 'assistant', 'team', (select auth.uid()), 'text', trim(p_texte))
   returning id into nouveau;
-  perform public.admin_marquer_lu(p_user);
+  perform public.admin_marquer_lu(p_user, p_creator);
   return nouveau;
 end;
 $$;
 
-create or replace function public.admin_marquer_lu(p_user uuid)
+-- Ce que l'équipe a lu, conversation par conversation.
+create or replace function public.admin_marquer_lu(p_user uuid, p_creator bigint)
 returns void
 language plpgsql
 volatile
@@ -1082,9 +1227,10 @@ begin
   if not public.is_admin() then
     raise exception 'Réservé aux administrateurs.' using errcode = '42501';
   end if;
-  insert into public.contacts (user_id, last_read_message_id)
-  values (p_user, coalesce((select max(id) from public.messages where user_id = p_user), 0))
-  on conflict (user_id) do update set last_read_message_id = excluded.last_read_message_id;
+  insert into public.creator_contacts (creator_id, user_id, last_read_message_id)
+  values (p_creator, p_user,
+          coalesce((select max(id) from public.messages where user_id = p_user and creator_id = p_creator), 0))
+  on conflict (creator_id, user_id) do update set last_read_message_id = excluded.last_read_message_id;
 end;
 $$;
 
@@ -1110,7 +1256,7 @@ begin
   delete from public.user_facts where user_id = moi;
   delete from public.summaries  where user_id = moi;
   update public.contacts set notes = '', emojis = '', city = '', last_read_message_id = 0 where user_id = moi;
-  update public.creator_contacts set emojis = '', emoji_mode = 'libre' where user_id = moi;
+  update public.creator_contacts set emojis = '', emoji_mode = 'libre', last_read_message_id = 0 where user_id = moi;
 end;
 $$;
 
@@ -1155,23 +1301,25 @@ as $$
   where user_id = (select auth.uid()) and (vu_le is null or vu_le < now() - interval '10 minutes');
 $$;
 
--- Les personnes à qui prendre des nouvelles : absentes depuis p_heures (ni
--- visite ni message), qui ont déjà écrit au moins une fois, qui acceptent
--- ces messages, à qui l'IA a le droit d'écrire (pas en mode manuel ; en
--- hybride, seulement si elle est cochée), et dont le dernier message n'est
--- ni une prise de nouvelles ni une offre en attente. Les plus anciennes
--- absences d'abord.
+-- Les conversations où prendre des nouvelles : la dernière conversation de
+-- chaque personne absente depuis p_heures (ni visite ni message), qui a déjà
+-- écrit au moins une fois, qui accepte ces messages, avec une créatrice en
+-- ligne qui a le droit de lui écrire (pas en mode manuel ; en hybride,
+-- seulement si elle est cochée), et dont le dernier message n'est ni une
+-- prise de nouvelles ni une offre en attente. Une seule par personne. Les
+-- plus anciennes absences d'abord.
+drop function if exists public.a_relancer(integer, integer);
 create or replace function public.a_relancer(p_heures integer, p_limite integer default 50)
-returns table (user_id uuid)
+returns table (user_id uuid, creator_id bigint)
 language sql
 stable
 security definer
 set search_path = ''
 as $$
-  select p.user_id
+  select p.user_id, dernier.creator_id
   from public.profiles p
   join lateral (
-    select m.kind, m.created_at from public.messages m
+    select m.kind, m.created_at, m.creator_id from public.messages m
     where m.user_id = p.user_id
     order by m.id desc
     limit 1
@@ -1182,10 +1330,11 @@ as $$
     and exists (select 1 from public.messages m where m.user_id = p.user_id and m.role = 'user')
     and not exists (select 1 from public.offers o where o.user_id = p.user_id and o.status = 'proposee')
     and not exists (select 1 from public.admins a where a.user_id = p.user_id)
+    and public.creatrice_disponible(dernier.creator_id)
     and not exists (select 1 from public.ai_settings s where s.id = 1 and s.mode = 'manuel')
     and not exists (select 1 from public.creator_contacts cc
-                    join public.ai_settings s on s.id = 1 and s.mode = 'hybride' and s.creator_id = cc.creator_id
-                    where cc.user_id = p.user_id and not cc.ai_enabled)
+                    join public.ai_settings s on s.id = 1 and s.mode = 'hybride'
+                    where cc.creator_id = dernier.creator_id and cc.user_id = p.user_id and not cc.ai_enabled)
   order by dernier.created_at
   limit greatest(p_limite, 0);
 $$;
@@ -1196,25 +1345,27 @@ $$;
 -- puis on rouvre ce qui doit l'être. Les fonctions internes ne sont
 -- appelables que par le serveur (rôle service_role, clé secrète).
 revoke execute on function
-  public.enregistrer_profil(text, date), public.script_de(uuid), public.prochaine_etape(uuid),
+  public.enregistrer_profil(text, date), public.script_de(uuid, bigint), public.prochaine_etape(uuid, bigint),
   public.depense_du_mois(uuid), public.plafond_de(uuid),
-  public.proposer_etape(uuid, bigint, integer, text, text, uuid),
-  public.admin_proposer(uuid, bigint, integer, text), public.admin_retirer_offre(bigint),
+  public.proposer_etape(uuid, bigint, bigint, integer, text, text, uuid),
+  public.admin_proposer(uuid, bigint, bigint, integer, text), public.admin_retirer_offre(bigint),
   public.acheter_offre(bigint), public.faire_une_offre(bigint, integer), public.mon_contenu(bigint),
-  public.admin_boite(), public.admin_personne(uuid), public.admin_envoyer(uuid, text),
-  public.admin_marquer_lu(uuid), public.effacer_mes_donnees(),
-  public.regler_relances(boolean), public.marquer_visite(), public.a_relancer(integer, integer)
+  public.admin_boite(), public.admin_personne(uuid, bigint), public.admin_envoyer(uuid, bigint, text),
+  public.admin_marquer_lu(uuid, bigint), public.effacer_mes_donnees(),
+  public.regler_relances(boolean), public.marquer_visite(), public.a_relancer(integer, integer),
+  public.creatrice_disponible(bigint), public.creatrices_disponibles()
   from public, anon, authenticated;
 grant execute on function
   public.enregistrer_profil(text, date), public.acheter_offre(bigint),
   public.faire_une_offre(bigint, integer), public.mon_contenu(bigint), public.effacer_mes_donnees(),
-  public.admin_proposer(uuid, bigint, integer, text), public.admin_retirer_offre(bigint),
-  public.admin_boite(), public.admin_personne(uuid), public.admin_envoyer(uuid, text),
-  public.admin_marquer_lu(uuid), public.regler_relances(boolean), public.marquer_visite()
+  public.admin_proposer(uuid, bigint, bigint, integer, text), public.admin_retirer_offre(bigint),
+  public.admin_boite(), public.admin_personne(uuid, bigint), public.admin_envoyer(uuid, bigint, text),
+  public.admin_marquer_lu(uuid, bigint), public.regler_relances(boolean), public.marquer_visite(),
+  public.creatrice_disponible(bigint), public.creatrices_disponibles()
   to authenticated;
 grant execute on function
-  public.script_de(uuid), public.prochaine_etape(uuid), public.depense_du_mois(uuid), public.plafond_de(uuid),
-  public.proposer_etape(uuid, bigint, integer, text, text, uuid), public.a_relancer(integer, integer)
+  public.script_de(uuid, bigint), public.prochaine_etape(uuid, bigint), public.depense_du_mois(uuid), public.plafond_de(uuid),
+  public.proposer_etape(uuid, bigint, bigint, integer, text, text, uuid), public.a_relancer(integer, integer)
   to service_role;
 
 
