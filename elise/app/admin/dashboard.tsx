@@ -3,25 +3,40 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import {
-  PERIODS,
+  NET_FEES,
+  PERIOD_OPTIONS,
+  addDays,
   change,
+  comparisonLabel,
   describePurchase,
+  filtersToParams,
   formatEuros,
+  isIsoDate,
+  parisToday,
+  periodLabel,
   timeAgo,
   type DashboardData,
+  type DashboardFilters,
+  type PeriodKey,
 } from "@/lib/dashboard";
 import { clearDemo, fillDemo, simulatePurchase } from "./actions";
 import { EarningsChart } from "./chart";
+import { LtvChart } from "./ltv-chart";
 import { OpenAlerts } from "./open-alerts";
 
 /** Toutes les combien de secondes les chiffres sont redemandés. */
 const REFRESH_MS = 4000;
 
-type Filters = { period: number; client: string | null };
+type Filters = DashboardFilters;
 
-export function Dashboard({ initial }: { initial: DashboardData }) {
+const control = "rounded-full border border-line bg-surface px-3 py-1.5 text-sm";
+
+export function Dashboard({ initial, initialFilters }: { initial: DashboardData; initialFilters: DashboardFilters }) {
   const [data, setData] = useState(initial);
-  const [filters, setFilters] = useState<Filters>({ period: initial.jours, client: null });
+  const [filters, setFilters] = useState<Filters>(initialFilters);
+  // Les dates précises en cours de saisie (appliquées dès qu'elles sont valables).
+  const [from, setFrom] = useState(initialFilters.from ?? initial.debut ?? "");
+  const [to, setTo] = useState(initialFilters.to ?? initial.fin ?? "");
   const [dimmed, setDimmed] = useState(false);
   const [offline, setOffline] = useState(false);
   const [updatedAt, setUpdatedAt] = useState(() => Date.parse(initial.genere_le));
@@ -39,8 +54,7 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
   const refresh = useCallback(async (next?: Filters) => {
     const f = next ?? filtersRef.current;
     const id = ++requestId.current;
-    const params = new URLSearchParams({ jours: String(f.period) });
-    if (f.client) params.set("client", f.client);
+    const params = filtersToParams(f);
     try {
       const res = await fetch(`/api/admin/dashboard?${params}`, { cache: "no-store" });
       if (res.status === 401 || res.status === 404) {
@@ -83,7 +97,28 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
     filtersRef.current = next;
     setFilters(next);
     setDimmed(true); // l'ancien rendu reste visible, atténué, le temps du rechargement
+    // Les filtres restent dans l'adresse : recharger la page les garde.
+    window.history.replaceState(null, "", `/admin?${filtersToParams(next)}`);
     void refresh(next);
+  }
+
+  function choosePeriod(period: PeriodKey) {
+    if (period !== "dates") return applyFilters({ ...filters, period, from: undefined, to: undefined });
+    // Dates précises : on part de la période affichée, modifiable au calendrier.
+    const today = parisToday();
+    const start = isIsoDate(data.debut) ? data.debut : addDays(today, -6);
+    const end = isIsoDate(data.fin) ? data.fin : today;
+    setFrom(start);
+    setTo(end);
+    applyFilters({ ...filters, period, from: start, to: end });
+  }
+
+  function chooseDates(nextFrom: string, nextTo: string) {
+    setFrom(nextFrom);
+    setTo(nextTo);
+    if (isIsoDate(nextFrom) && isIsoDate(nextTo) && nextFrom <= nextTo) {
+      applyFilters({ ...filters, period: "dates", from: nextFrom, to: nextTo });
+    }
   }
 
   function demo(action: () => Promise<{ error?: string }>, done: string) {
@@ -98,8 +133,11 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
   const t = data.totaux;
   const delta = change(t.periode, t.periode_precedente);
   const latest = data.derniers[0] ?? null;
-  const selected = data.clients.find((c) => c.client === filters.client) ?? null;
+  const creators = data.createurs ?? [];
+  const creatorName = creators.find((c) => c.id === filters.creator)?.nom ?? null;
   const secondsAgo = Math.max(0, Math.round((now - updatedAt) / 1000));
+  const datesInvalid = filters.period === "dates" && (!isIsoDate(from) || !isIsoDate(to) || from > to);
+  const heading = [periodLabel(filters), creatorName, filters.net ? "net" : null].filter(Boolean).join(" · ");
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6">
@@ -129,47 +167,84 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
       )}
 
       {/* Les filtres : ils valent pour tout ce qui suit. */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div role="group" aria-label="Période" className="flex rounded-full border border-line bg-surface p-1">
-          {PERIODS.map((p) => (
-            <button
-              key={p}
-              type="button"
-              aria-pressed={filters.period === p}
-              onClick={() => applyFilters({ ...filters, period: p })}
-              className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                filters.period === p ? "bg-accent text-white" : "text-muted hover:text-foreground"
-              }`}
-            >
-              {p} jours
-            </button>
-          ))}
-        </div>
-        <label className="flex items-center gap-2 text-sm">
-          <span className="text-muted">Personne</span>
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <select
-            id="filtre-personne"
-            value={filters.client ?? ""}
-            onChange={(e) => applyFilters({ ...filters, client: e.target.value || null })}
-            className="max-w-64 rounded-full border border-line bg-surface px-3 py-1.5"
+            value={filters.period}
+            onChange={(e) => choosePeriod(e.target.value as PeriodKey)}
+            aria-label="Période"
+            className={control}
           >
-            <option value="">Toutes les personnes</option>
-            {data.clients.map((c) => (
-              <option key={c.client} value={c.client}>
-                {c.nom}
-                {c.demo ? " (démo)" : ""}
+            {PERIOD_OPTIONS.map((o) => (
+              <option key={o.key} value={o.key}>
+                {o.label}
               </option>
             ))}
           </select>
-        </label>
-        {filters.client && (
-          <button
-            type="button"
-            onClick={() => applyFilters({ ...filters, client: null })}
-            className="text-sm text-muted underline underline-offset-4"
+          {filters.period === "dates" && (
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <label className="flex items-center gap-1.5">
+                <span className="text-muted">Du</span>
+                <input
+                  type="date"
+                  value={from}
+                  max={to || undefined}
+                  onChange={(e) => chooseDates(e.target.value, to)}
+                  className={control}
+                />
+              </label>
+              <label className="flex items-center gap-1.5">
+                <span className="text-muted">au</span>
+                <input
+                  type="date"
+                  value={to}
+                  min={from || undefined}
+                  max={parisToday()}
+                  onChange={(e) => chooseDates(from, e.target.value)}
+                  className={control}
+                />
+              </label>
+            </div>
+          )}
+          <div role="group" aria-label="Montants" className="flex rounded-full border border-line bg-surface p-1">
+            {([false, true] as const).map((net) => (
+              <button
+                key={String(net)}
+                type="button"
+                aria-pressed={filters.net === net}
+                disabled={data.outdated}
+                onClick={() => applyFilters({ ...filters, net })}
+                className={`rounded-full px-3 py-1 text-sm font-semibold disabled:opacity-50 ${
+                  filters.net === net ? "bg-accent text-white" : "text-muted hover:text-foreground"
+                }`}
+              >
+                {net ? "Net" : "Brut"}
+              </button>
+            ))}
+          </div>
+          <select
+            value={filters.creator ?? ""}
+            onChange={(e) => applyFilters({ ...filters, creator: e.target.value ? Number(e.target.value) : null })}
+            aria-label="Créatrice"
+            disabled={data.outdated}
+            className={`${control} max-w-64 disabled:opacity-50`}
           >
-            Voir tout le monde
-          </button>
+            <option value="">Toutes les créatrices</option>
+            {creators.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nom}
+              </option>
+            ))}
+          </select>
+        </div>
+        {datesInvalid && <p className="text-sm text-bad">Choisissez une date de début avant la date de fin.</p>}
+        {filters.net && !data.outdated && (
+          <p className="text-xs text-muted">Net : après les frais de paiement estimés, {NET_FEES}.</p>
+        )}
+        {data.outdated && (
+          <p className="text-sm text-muted">
+            Les filtres Net et Créatrice arrivent quand la base est à jour : relancez supabase/schema.sql dans Supabase.
+          </p>
         )}
       </div>
 
@@ -180,12 +255,12 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
         style={{ opacity: dimmed ? 0.45 : 1 }}
       >
         <div className="flex flex-col justify-center gap-1 rounded-3xl border border-line bg-surface p-5 sm:col-span-2 lg:row-span-2">
-          <p className="text-sm text-muted">
-            Gains · {filters.period} derniers jours{selected ? ` · ${selected.nom}` : ""}
-          </p>
+          <p className="text-sm text-muted first-letter:uppercase">Gains · {heading}</p>
           <p className="text-5xl font-bold tracking-tight">{formatEuros(t.periode)}</p>
           <p className="text-sm">
-            {delta === null ? (
+            {filters.period === "tout" ? (
+              <span className="text-muted">Depuis le premier achat</span>
+            ) : delta === null ? (
               <span className="text-muted">Rien à comparer sur la période précédente</span>
             ) : (
               <>
@@ -193,7 +268,7 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
                   {delta >= 0 ? "▲" : "▼"} {delta >= 0 ? "+" : "−"}
                   {Math.abs(delta)} %
                 </span>{" "}
-                <span className="text-muted">par rapport aux {filters.period} jours d&apos;avant</span>
+                <span className="text-muted">{comparisonLabel(filters.period, data.jours)}</span>
               </>
             )}
           </p>
@@ -219,7 +294,12 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <section className="min-w-0 rounded-3xl border border-line bg-surface p-5 lg:col-span-2">
-          <EarningsChart serie={data.serie} dimmed={dimmed} />
+          <EarningsChart
+            serie={data.serie}
+            pas={data.pas ?? "jour"}
+            endsToday={(data.fin ?? parisToday()) === parisToday()}
+            dimmed={dimmed}
+          />
         </section>
 
         {/* Le dernier achat, en direct */}
@@ -231,7 +311,10 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
               className={`rounded-2xl p-4 transition-colors ${flashId === latest.id ? "animate-pulse bg-accent-soft" : "bg-background"}`}
             >
               <p className="font-bold break-words">{latest.nom}</p>
-              <p>{describePurchase(latest)}</p>
+              <p>
+                {describePurchase(latest)}
+                {latest.createur ? <span className="text-muted"> · {latest.createur}</span> : null}
+              </p>
               <p className="text-sm text-muted" suppressHydrationWarning>
                 {timeAgo(latest.date, now)}
                 {latest.demo ? " · démo" : ""}
@@ -262,40 +345,44 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
       </div>
 
       {/* La LTV : ce qu'un client rapporte sur toute sa vie */}
-      <section aria-label="LTV" className="flex flex-col gap-4 rounded-3xl border border-line bg-surface p-5">
-        <div>
-          <h2 className="font-bold">LTV · valeur d&apos;un client</h2>
-          <p className="text-sm text-muted">
-            Ce qu&apos;un client a dépensé au total, depuis son premier achat. Calculée sur tout l&apos;historique
-            {selected ? `, pour ${selected.nom}` : ""}.
-          </p>
-        </div>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-          <Figure label={selected ? "LTV" : "LTV moyenne"} value={formatEuros(data.ltv.moyenne_cents)} />
-          {!selected && <Figure label="LTV médiane" value={formatEuros(data.ltv.mediane_cents)} />}
-          {!selected && <Figure label="Meilleure LTV" value={formatEuros(data.ltv.max_cents)} />}
-          <Figure label="Panier moyen" value={formatEuros(data.ltv.panier_moyen_cents)} />
-          <Figure
-            label="Achats par client"
-            value={Number(data.ltv.achats_par_client).toLocaleString("fr-FR", { maximumFractionDigits: 1 })}
-          />
-          <Figure label="Durée de vie moyenne" value={plural(data.ltv.duree_moyenne_jours, "jour")} />
-          {!selected && <Figure label="Clients" value={data.ltv.clients.toLocaleString("fr-FR")} />}
-          {!selected && (
+      <section
+        aria-label="LTV"
+        className="grid grid-cols-1 gap-6 rounded-3xl border border-line bg-surface p-5 transition-opacity lg:grid-cols-2"
+        style={{ opacity: dimmed ? 0.45 : 1 }}
+      >
+        <div className="flex flex-col gap-4">
+          <div>
+            <h2 className="font-bold">LTV</h2>
+            <p className="text-sm text-muted">
+              Ce qu&apos;un client a dépensé au total, depuis son premier achat (tout l&apos;historique
+              {creatorName ? `, avec ${creatorName}` : ""}
+              {filters.net ? ", net" : ""}).
+            </p>
+          </div>
+          <p className="text-5xl font-bold tracking-tight">{formatEuros(data.ltv.moyenne_cents)}</p>
+          <p className="-mt-3 text-sm text-muted">en moyenne par client</p>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+            <Figure label="LTV médiane" value={formatEuros(data.ltv.mediane_cents)} />
+            <Figure label="Meilleure LTV" value={formatEuros(data.ltv.max_cents)} />
+            <Figure label="Clients" value={data.ltv.clients.toLocaleString("fr-FR")} />
+            <Figure label="Panier moyen" value={formatEuros(data.ltv.panier_moyen_cents)} />
             <Figure
-              label="Inscrits qui ont payé"
-              value={`${data.ltv.payants} / ${data.ltv.inscrits}`}
-              hint="achats réels, hors démo"
+              label="Achats par client"
+              value={Number(data.ltv.achats_par_client).toLocaleString("fr-FR", { maximumFractionDigits: 1 })}
             />
-          )}
-        </dl>
+            <Figure label="Durée de vie moyenne" value={plural(data.ltv.duree_moyenne_jours, "jour")} />
+          </dl>
+        </div>
+        <LtvChart buckets={data.repartition ?? []} />
       </section>
 
       {/* Par personne */}
       <section className="flex min-w-0 flex-col gap-3 rounded-3xl border border-line bg-surface p-5">
         <div>
           <h2 className="font-bold">Par personne</h2>
-          <p className="text-sm text-muted">Depuis le début. Touchez un nom pour ne voir que cette personne.</p>
+          <p className="text-sm text-muted">
+            Depuis le début{creatorName ? `, avec ${creatorName}` : ""}{filters.net ? ", net" : ""}.
+          </p>
         </div>
         {data.clients.length === 0 ? (
           <p className="text-muted">Personne n&apos;a encore rien acheté.</p>
@@ -315,15 +402,9 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
               </thead>
               <tbody className="tabular-nums">
                 {data.clients.map((c) => (
-                  <tr key={c.client} className={`border-b border-line last:border-0 ${c.client === filters.client ? "bg-accent-soft" : ""}`}>
+                  <tr key={c.client} className="border-b border-line last:border-0">
                     <td className="py-2 pr-3">
-                      <button
-                        type="button"
-                        onClick={() => applyFilters({ ...filters, client: c.client })}
-                        className="text-left font-semibold underline-offset-4 hover:underline"
-                      >
-                        {c.nom}
-                      </button>
+                      <span className="font-semibold">{c.nom}</span>
                       {c.demo && <span className="ml-2 text-xs text-muted">démo</span>}
                     </td>
                     <td className="py-2 pr-3 text-right">
@@ -428,12 +509,11 @@ function plural(n: number, word: string, many = `${word}s`): string {
   return `${Number(n).toLocaleString("fr-FR")} ${n > 1 ? many : word}`;
 }
 
-function Figure({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function Figure({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
       <dt className="text-sm text-muted">{label}</dt>
-      <dd className="text-2xl font-bold tracking-tight">{value}</dd>
-      {hint && <dd className="text-xs text-muted">{hint}</dd>}
+      <dd className="text-xl font-bold tracking-tight">{value}</dd>
     </div>
   );
 }

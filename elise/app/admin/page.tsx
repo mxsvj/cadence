@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Notice } from "@/app/notice";
 import { loadDashboard } from "@/lib/admin";
-import type { DashboardData } from "@/lib/dashboard";
+import { filtersFromParams, type DashboardData } from "@/lib/dashboard";
 import { Dashboard } from "./dashboard";
 import { adminGate } from "./gate";
 
@@ -9,13 +9,17 @@ export const metadata: Metadata = { title: "Tableau de bord · Élise" };
 
 // Le tableau de bord des gains, réservé aux administrateurs : pour les
 // autres, la page n'existe pas.
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   const gate = await adminGate();
   if ("node" in gate) return gate.node;
+  // Les filtres choisis restent dans l'adresse : recharger la page les garde.
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(await searchParams)) if (typeof value === "string") params.set(key, value);
+  const filters = filtersFromParams(params);
 
   let data: DashboardData | null = null;
   try {
-    data = await loadDashboard(gate.supabase, null, 30);
+    data = await loadDashboard(gate.supabase, filters);
   } catch (err) {
     console.error(err);
   }
@@ -26,5 +30,5 @@ export default async function AdminPage() {
       </Notice>
     );
   }
-  return <Dashboard initial={data} />;
+  return <Dashboard initial={data} initialFilters={filters} />;
 }

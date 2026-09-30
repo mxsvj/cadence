@@ -9,18 +9,25 @@ const KARIM = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
 const LEA = "cccccccc-cccc-cccc-cccc-cccccccccccc";
 
 type Dashboard = {
+  debut: string;
+  fin: string;
   jours: number;
+  pas: "jour" | "semaine" | "mois";
+  net: boolean;
+  createurs: { id: number; nom: string }[];
   demo: boolean;
   totaux: {
     depuis_le_debut: number;
     periode: number;
-    periode_precedente: number;
+    periode_precedente: number | null;
     pourboires: { nombre: number; cents: number };
     messages: { nombre: number; achats: number; cents: number };
     abonnements: { actifs: number; nombre: number; cents: number };
   };
   serie: { jour: string; total: number; pourboires: number; messages: number; abonnements: number }[];
-  derniers: { id: number; client: string; nom: string; type: string; quantite: number; cents: number }[];
+  derniers: { id: number; client: string; nom: string; type: string; quantite: number; cents: number; createur: string | null }[];
+  ltv: { clients: number; moyenne_cents: number } & Record<string, number>;
+  repartition: { min_cents: number; max_cents: number | null; clients: number }[];
   clients: {
     client: string;
     nom: string;
@@ -34,8 +41,18 @@ type Dashboard = {
 let db: Awaited<ReturnType<typeof freshDatabase>>["db"];
 let as: Awaited<ReturnType<typeof freshDatabase>>["as"];
 
-async function dashboard(user: string, client: string | null = null, jours = 30): Promise<Dashboard> {
-  const [row] = await as<{ d: Dashboard }>(user, "select public.admin_dashboard($1, $2) as d", [client, jours]);
+type Options = { jours?: number | null; debut?: string; fin?: string; creator?: number | null; net?: boolean };
+
+/** jours : les N derniers jours ; jours: null sans debut = depuis le début. */
+async function dashboard(user: string, o: Options = {}): Promise<Dashboard> {
+  const jours = o.jours === undefined ? 30 : o.jours;
+  const [row] = await as<{ d: Dashboard }>(
+    user,
+    `select public.admin_dashboard(
+       case when $1::integer is null then $2::date else (now() at time zone 'Europe/Paris')::date - ($1::integer - 1) end,
+       $3::date, $4::bigint, $5::boolean) as d`,
+    [o.debut ? null : jours, o.debut ?? null, o.fin ?? null, o.creator ?? null, o.net ?? false],
+  );
   return row.d;
 }
 
@@ -106,7 +123,8 @@ describe("tableau de bord : les chiffres", () => {
   });
 
   it("donne un point par jour, aujourd'hui compris, et les bons totaux", async () => {
-    const d = await dashboard(ADMIN, null, 7);
+    const d = await dashboard(ADMIN, { jours: 7 });
+    assert.equal(d.pas, "jour");
     assert.equal(d.serie.length, 7);
     assert.equal(d.serie.reduce((s, p) => s + p.total, 0), 500 + 349 + 999 + 200);
     const today = d.serie[6];
@@ -134,16 +152,67 @@ describe("tableau de bord : les chiffres", () => {
     assert.deepEqual([lea.pourboires_cents, lea.messages_nombre, lea.abonne, lea.total_cents], [200, 5, false, 1398]);
   });
 
-  it("filtre sur une personne", async () => {
-    const tout = await dashboard(ADMIN);
-    const lea = tout.clients.find((c) => c.nom === "lea@example.com")!;
-    const d = await dashboard(ADMIN, lea.client, 90);
-    assert.equal(d.totaux.depuis_le_debut, 1398);
-    assert.equal(d.totaux.periode, 1398);
-    assert.deepEqual(d.totaux.pourboires, { nombre: 1, cents: 200 });
+  it("aujourd'hui, hier, et des dates précises", async () => {
+    const today = await dashboard(ADMIN, { jours: 1 });
+    assert.equal(today.totaux.periode, 500);
+    assert.equal(today.totaux.periode_precedente, 349); // hier
+    const [{ hier }] = await as<{ hier: string }>(ADMIN, "select ((now() at time zone 'Europe/Paris')::date - 1)::text as hier");
+    const yesterday = await dashboard(ADMIN, { debut: hier, fin: hier });
+    assert.deepEqual([yesterday.debut, yesterday.fin, yesterday.jours], [hier, hier, 1]);
+    assert.equal(yesterday.totaux.periode, 349);
+    assert.equal(yesterday.serie.length, 1);
+  });
+
+  it("depuis le début : à partir du premier achat, sans période à comparer", async () => {
+    const d = await dashboard(ADMIN, { jours: null });
+    assert.equal(d.totaux.periode, d.totaux.depuis_le_debut);
+    assert.equal(d.totaux.periode_precedente, null);
+    assert.equal(d.jours, 46); // le premier achat date d'il y a 45 jours
+  });
+
+  it("sur plus de 3 mois, un point par semaine ; au-delà de 2 ans, par mois", async () => {
+    const six = await dashboard(ADMIN, { jours: 183 });
+    assert.equal(six.pas, "semaine");
+    assert.ok(six.serie.length >= 26 && six.serie.length <= 28, String(six.serie.length));
+    assert.equal(six.serie.reduce((t, p) => t + p.total, 0), six.totaux.periode);
+    const trois = await dashboard(ADMIN, { jours: 1100 });
+    assert.equal(trois.pas, "mois");
+  });
+
+  it("net : chaque achat moins les frais de paiement estimés (1,5 % + 0,25 €)", async () => {
+    const brut = await dashboard(ADMIN, { jours: 7 });
+    const net = await dashboard(ADMIN, { jours: 7, net: true });
+    assert.equal(net.net, true);
+    // 500 → 467 (0,075 € arrondis à 8 centimes + 25) ; 349 → 319 ; 999 → 959 ; 200 → 172
+    assert.equal(net.totaux.periode, 467 + 319 + 959 + 172);
+    assert.ok(net.totaux.periode < brut.totaux.periode);
+    assert.ok(net.ltv.moyenne_cents < brut.ltv.moyenne_cents);
+  });
+
+  it("une créatrice à la fois ; la liste des créatrices est fournie", async () => {
+    const [{ id: kath }] = await as<{ id: number }>(ADMIN, "insert into public.creators (persona) values ('{\"nom\": \"Katherine\"}') returning id");
+    await db.query("update public.purchases set creator_id = $1 where kind = 'tip'", [kath]);
+    await db.query("update public.purchases set creator_id = 1 where kind <> 'tip'");
+    const d = await dashboard(ADMIN, { creator: kath, jours: 90 });
+    assert.deepEqual(d.createurs.map((c) => c.nom), ["Élise", "Katherine"]);
+    assert.equal(d.totaux.depuis_le_debut, 700);
+    assert.deepEqual(d.totaux.pourboires, { nombre: 2, cents: 700 });
     assert.equal(d.totaux.abonnements.actifs, 0);
-    assert.ok(d.derniers.every((a) => a.nom === "lea@example.com"));
-    assert.equal(d.clients.length, 2); // la liste des clients reste complète
+    assert.ok(d.derniers.every((a) => a.type === "tip" && a.createur === "Katherine"));
+    const elise = await dashboard(ADMIN, { creator: 1, jours: 90 });
+    assert.equal(elise.totaux.depuis_le_debut, 349 + 999 + 999 + 199);
+  });
+
+  it("la LTV, et combien de clients dans chaque tranche", async () => {
+    const d = await dashboard(ADMIN);
+    assert.equal(d.ltv.clients, 2);
+    assert.equal("inscrits" in d.ltv, false);
+    assert.equal("payants" in d.ltv, false);
+    // Karim : 18,48 € ; Léa : 13,98 € → tous les deux entre 10 et 25 €.
+    assert.deepEqual(
+      d.repartition.map((t) => [t.min_cents, t.max_cents, t.clients]),
+      [[0, 1000, 0], [1000, 2500, 2], [2500, 5000, 0], [5000, 10000, 0], [10000, null, 0]],
+    );
   });
 });
 

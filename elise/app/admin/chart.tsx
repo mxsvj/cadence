@@ -12,7 +12,23 @@ const PAD = { top: 14, right: 64, left: 56 }; // à droite : la place de l'étiq
 
 const dayShort = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", day: "numeric", month: "short" });
 const dayLong = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
+const monthShort = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", month: "short", year: "2-digit" });
+const monthLong = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", month: "long", year: "numeric" });
+const dayMonth = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", day: "numeric", month: "long" });
 const asDate = (jour: string) => new Date(`${jour}T12:00:00Z`);
+
+type Step = "jour" | "semaine" | "mois";
+const UNIT: Record<Step, [string, string]> = { jour: ["jour", "jours"], semaine: ["semaine", "semaines"], mois: ["mois", "mois"] };
+
+/** Sous l'axe et dans le tableau : « 3 sept. », « sept. 26 ». */
+const shortLabel = (jour: string, pas: Step) => (pas === "mois" ? monthShort : dayShort).format(asDate(jour));
+/** Dans l'infobulle : « lundi 3 septembre », « semaine du 3 septembre », « septembre 2026 ». */
+const longLabel = (jour: string, pas: Step) =>
+  pas === "mois"
+    ? monthLong.format(asDate(jour))
+    : pas === "semaine"
+      ? `semaine du ${dayMonth.format(asDate(jour))}`
+      : dayLong.format(asDate(jour));
 
 /** Un pas d'axe « rond » (1, 2, 2,5 ou 5 × 10ⁿ) pour environ `count` graduations. */
 function niceStep(max: number, count = 4): number {
@@ -65,7 +81,19 @@ function smoothPath(pts: [number, number][]): string {
   return d;
 }
 
-export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boolean }) {
+export function EarningsChart({
+  serie,
+  pas,
+  endsToday,
+  dimmed,
+}: {
+  serie: Point[];
+  /** Un point par jour, semaine ou mois. */
+  pas: Step;
+  /** La période finit aujourd'hui : le dernier point s'appelle « Aujourd'hui ». */
+  endsToday: boolean;
+  dimmed: boolean;
+}) {
   const boxRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
@@ -95,6 +123,8 @@ export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boole
   const area = n ? `${line} L${x(n - 1)},${baseline} L${x(0)},${baseline} Z` : "";
 
   const last = n - 1;
+  const [unit, units] = UNIT[pas];
+  const todayLabel = pas === "jour" && endsToday;
 
   // Des dates sous l'axe, en partant d'aujourd'hui, assez espacées pour ne
   // jamais se chevaucher (et pas collées à « Aujourd'hui », plus large).
@@ -138,9 +168,9 @@ export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boole
     <figure className="flex min-w-0 flex-col gap-3">
       <figcaption className="flex items-baseline justify-between gap-3">
         <span>
-          <span className="block font-bold">Gains par jour</span>
+          <span className="block font-bold">Gains par {unit}</span>
           <span className="text-sm text-muted">
-            {n} derniers jours · {formatEuros(total)} au total
+            {n} {n > 1 ? units : unit} · {formatEuros(total)} au total
           </span>
         </span>
         <button
@@ -158,7 +188,7 @@ export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boole
           <table className="w-full text-sm tabular-nums">
             <thead className="sticky top-0 bg-surface text-left text-xs uppercase tracking-wide text-muted">
               <tr>
-                <th className="px-3 py-2 font-bold">Jour</th>
+                <th className="px-3 py-2 font-bold first-letter:uppercase">{unit}</th>
                 <th className="px-3 py-2 text-right font-bold">Total</th>
                 <th className="px-3 py-2 text-right font-bold">Pourboires</th>
                 <th className="px-3 py-2 text-right font-bold">Messages</th>
@@ -169,7 +199,7 @@ export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boole
             <tbody>
               {[...serie].reverse().map((p) => (
                 <tr key={p.jour} className="border-t border-line">
-                  <td className="px-3 py-1.5 whitespace-nowrap">{dayShort.format(asDate(p.jour))}</td>
+                  <td className="px-3 py-1.5 whitespace-nowrap">{shortLabel(p.jour, pas)}</td>
                   <td className="px-3 py-1.5 text-right font-semibold">{formatEuros(p.total)}</td>
                   <td className="px-3 py-1.5 text-right">{formatEuros(p.pourboires)}</td>
                   <td className="px-3 py-1.5 text-right">{formatEuros(p.messages)}</td>
@@ -191,7 +221,7 @@ export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boole
               width={width}
               height={PAD.top + plotH + AXIS_BAND}
               role="img"
-              aria-label={`Courbe des gains par jour sur ${n} jours, ${formatEuros(total)} au total. Flèches gauche et droite pour lire chaque jour.`}
+              aria-label={`Courbe des gains par ${unit} sur ${n} ${n > 1 ? units : unit}, ${formatEuros(total)} au total. Flèches gauche et droite pour lire chaque ${unit}.`}
               tabIndex={0}
               onKeyDown={onKey}
               onFocus={() => setActive((a) => a ?? last)}
@@ -229,7 +259,7 @@ export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boole
                   fill="var(--muted)"
                   fontSize={12}
                 >
-                  {i === last ? "Aujourd'hui" : dayShort.format(asDate(serie[i].jour))}
+                  {i === last && todayLabel ? "Aujourd'hui" : shortLabel(serie[i].jour, pas)}
                 </text>
               ))}
 
@@ -277,7 +307,7 @@ export function EarningsChart({ serie, dimmed }: { serie: Point[]; dimmed: boole
                 ...(tipLow ? { bottom: AXIS_BAND + 4 } : { top: PAD.top }),
               }}
             >
-              <p className="text-xs text-muted first-letter:uppercase">{dayLong.format(asDate(tip.jour))}</p>
+              <p className="text-xs text-muted first-letter:uppercase">{longLabel(tip.jour, pas)}</p>
               <p className="text-lg font-bold">{formatEuros(tip.total)}</p>
               <dl className="mt-1 grid grid-cols-[1fr_auto] gap-x-3 tabular-nums">
                 <dt className="text-muted">Pourboires</dt>

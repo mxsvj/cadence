@@ -1,7 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { DashboardData } from "./dashboard";
-import { PERIODS } from "./dashboard";
+import { parisToday, periodRange, type DashboardData, type DashboardFilters } from "./dashboard";
 
 // Accès au tableau de bord. La base vérifie elle-même, dans chaque fonction,
 // que la personne connectée est administratrice (table public.admins).
@@ -27,19 +26,30 @@ export async function adminStatus(supabase: SupabaseClient): Promise<AdminStatus
   return data === true ? "admin" : "not_admin";
 }
 
-export function parsePeriod(value: string | null | undefined): number {
-  const days = Number(value);
-  return (PERIODS as readonly number[]).includes(days) ? days : 30;
-}
-
+/**
+ * Les chiffres pour les filtres choisis. Des dates précises incomplètes
+ * retombent sur les 30 derniers jours. Tant que schema.sql n'est pas relancé,
+ * l'ancienne fonction répond (sans créatrice ni net), marquée « outdated ».
+ */
 export async function loadDashboard(
   supabase: SupabaseClient,
-  client: string | null,
-  days: number,
+  filters: DashboardFilters,
+  today: string = parisToday(),
 ): Promise<DashboardData> {
-  const { data, error } = await supabase.rpc("admin_dashboard", { p_client: client, p_jours: days });
-  if (error) throw new Error(`Tableau de bord indisponible : ${error.message}`);
-  return data as DashboardData;
+  const range = periodRange(filters, today) ?? periodRange({ period: "30j" }, today)!;
+  const { data, error } = await supabase.rpc("admin_dashboard", {
+    p_debut: range.debut,
+    p_fin: range.fin,
+    p_creator: filters.creator,
+    p_net: filters.net,
+  });
+  if (!error) return data as DashboardData;
+  if (!schemaOutdated(error)) throw new Error(`Tableau de bord indisponible : ${error.message}`);
+
+  const days = range.debut === null ? 365 : Math.round((Date.parse(range.fin) - Date.parse(range.debut)) / 86_400_000) + 1;
+  const old = await supabase.rpc("admin_dashboard", { p_client: null, p_jours: Math.min(Math.max(days, 1), 365) });
+  if (old.error) throw new Error(`Tableau de bord indisponible : ${old.error.message}`);
+  return { ...(old.data as DashboardData), outdated: true };
 }
 
 /** Pour les routes et actions de l'équipe : refuse net si on n'est pas administrateur. */

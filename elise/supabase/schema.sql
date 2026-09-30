@@ -171,10 +171,15 @@ $$;
 
 
 -- ─── Les chiffres du tableau de bord ───────────────────────────────────────
--- p_client : un client précis (valeur « client » renvoyée dans la liste), ou
--- null pour tout le monde. p_jours : la période, en jours, jusqu'à aujourd'hui.
--- Les jours sont comptés à l'heure de Paris.
-create or replace function public.admin_dashboard(p_client text default null, p_jours integer default 30)
+-- p_debut, p_fin : la période, en dates (heure de Paris) ; p_debut vide =
+-- depuis le premier achat, p_fin vide = aujourd'hui. p_creator : une
+-- créatrice (vide : toutes). p_net : les montants après les frais de
+-- paiement estimés (1,5 % + 0,25 € par achat, tarif Stripe des cartes
+-- européennes), sinon les montants payés (brut). La courbe compte par jour
+-- jusqu'à 3 mois, par semaine jusqu'à 2 ans, par mois au-delà.
+drop function if exists public.admin_dashboard(text, integer);
+create or replace function public.admin_dashboard(p_debut date default null, p_fin date default null,
+                                                  p_creator bigint default null, p_net boolean default false)
 returns jsonb
 language plpgsql
 stable
@@ -182,31 +187,45 @@ security definer
 set search_path = ''
 as $$
 declare
-  jours       integer := least(greatest(coalesce(p_jours, 30), 1), 365);
-  aujourdhui  date    := (now() at time zone 'Europe/Paris')::date;
-  debut       date    := aujourdhui - (jours - 1);
-  resultat    jsonb;
+  aujourdhui date    := (now() at time zone 'Europe/Paris')::date;
+  fin        date    := least(coalesce(p_fin, aujourdhui), aujourdhui);
+  debut      date;
+  tout       boolean := p_debut is null;
+  duree      integer;
+  pas        text;
+  resultat   jsonb;
 begin
   if not public.is_admin() then
     raise exception 'Réservé aux administrateurs.' using errcode = '42501';
   end if;
+  -- « Depuis le début » : à partir du premier achat de la sélection.
+  debut := coalesce(p_debut,
+                    (select min((p.created_at at time zone 'Europe/Paris')::date) from public.purchases p
+                     where p_creator is null or p.creator_id = p_creator),
+                    fin);
+  if debut > fin then
+    debut := fin;
+  end if;
+  duree := fin - debut + 1;
+  pas := case when duree <= 92 then 'day' when duree <= 731 then 'week' else 'month' end;
 
   with achats as (
-    select p.id, p.kind, p.quantity, p.amount_cents, p.created_at, p.is_demo,
+    select p.id, p.kind, p.quantity, p.created_at, p.is_demo, p.creator_id,
+           case when p_net then greatest(p.amount_cents - round(p.amount_cents * 0.015)::integer - 25, 0)
+                else p.amount_cents end                                        as amount_cents,
            coalesce(p.user_id::text, 'demo:' || p.customer_label, 'supprime') as client,
            coalesce(u.email, p.customer_label, 'Compte supprimé')             as nom,
            (p.created_at at time zone 'Europe/Paris')::date                   as jour
     from public.purchases p
     left join auth.users u on u.id = p.user_id
-  ),
-  choix as (
-    select * from achats where p_client is null or client = p_client
+    where p_creator is null or p.creator_id = p_creator
   ),
   periode as (
-    select * from choix where jour between debut and aujourdhui
+    select * from achats where jour between debut and fin
   ),
-  jours_de_la_periode as (
-    select d::date as jour from generate_series(debut, aujourdhui, interval '1 day') as d
+  pas_de_la_periode as (
+    select d::date as jour
+    from generate_series(date_trunc(pas, debut::timestamp), fin::timestamp, ('1 ' || pas)::interval) as d
   ),
   clients as (
     select client,
@@ -228,14 +247,25 @@ begin
   )
   select jsonb_build_object(
     'genere_le', now(),
-    'jours', jours,
-    'client', p_client,
-    'demo', exists (select 1 from achats where is_demo),
+    'debut', debut,
+    'fin', fin,
+    'jours', duree,
+    'pas', case pas when 'day' then 'jour' when 'week' then 'semaine' else 'mois' end,
+    'net', coalesce(p_net, false),
+    'createur', p_creator,
+    'createurs', (select coalesce(jsonb_agg(jsonb_build_object(
+                    'id', c.id,
+                    'nom', coalesce(nullif(trim(c.persona ->> 'nom'), ''), nullif(trim(c.persona ->> 'pseudo'), ''), 'Élise'))
+                    order by c.id), '[]'::jsonb)
+                  from public.creators c),
+    'demo', exists (select 1 from public.purchases where is_demo),
     'totaux', jsonb_build_object(
-      'depuis_le_debut',   (select coalesce(sum(amount_cents), 0) from choix),
+      'depuis_le_debut',   (select coalesce(sum(amount_cents), 0) from achats),
       'periode',           (select coalesce(sum(amount_cents), 0) from periode),
-      'periode_precedente',(select coalesce(sum(amount_cents), 0) from choix
-                              where jour between debut - jours and debut - 1),
+      -- La même durée juste avant (rien à comparer pour « depuis le début »).
+      'periode_precedente', case when tout then null else
+                              (select coalesce(sum(amount_cents), 0) from achats
+                               where jour between debut - duree and debut - 1) end,
       'pourboires', (select jsonb_build_object('nombre', count(*), 'cents', coalesce(sum(amount_cents), 0))
                        from periode where kind = 'tip'),
       'messages',   (select jsonb_build_object('nombre', coalesce(sum(quantity), 0), 'achats', count(*),
@@ -244,12 +274,13 @@ begin
       'contenus',   (select jsonb_build_object('nombre', count(*), 'cents', coalesce(sum(amount_cents), 0))
                        from periode where kind = 'contenu'),
       'abonnements', (select jsonb_build_object(
-                         'actifs', (select count(distinct client) from choix
+                         'actifs', (select count(distinct client) from achats
                                      where kind = 'abonnement' and created_at > now() - interval '31 days'),
                          'nombre', count(*),
                          'cents',  coalesce(sum(amount_cents), 0))
                        from periode where kind = 'abonnement')
     ),
+    -- Un point par jour, semaine ou mois (la date de son début).
     'serie', (
       select jsonb_agg(to_jsonb(s) order by s.jour)
       from (
@@ -259,20 +290,21 @@ begin
                coalesce(sum(p.amount_cents) filter (where p.kind = 'message'), 0)    as messages,
                coalesce(sum(p.amount_cents) filter (where p.kind = 'abonnement'), 0) as abonnements,
                coalesce(sum(p.amount_cents) filter (where p.kind = 'contenu'), 0)    as contenus
-        from jours_de_la_periode j
-        left join periode p on p.jour = j.jour
+        from pas_de_la_periode j
+        left join periode p on date_trunc(pas, p.jour::timestamp)::date = j.jour
         group by j.jour
       ) s
     ),
     'derniers', coalesce((
       select jsonb_agg(jsonb_build_object(
-               'id', id, 'client', client, 'nom', nom, 'type', kind,
-               'quantite', quantity, 'cents', amount_cents, 'date', created_at, 'demo', is_demo)
-             order by created_at desc, id desc)
-      from (select * from choix order by created_at desc, id desc limit 12) d
+               'id', d.id, 'client', d.client, 'nom', d.nom, 'type', d.kind,
+               'quantite', d.quantity, 'cents', d.amount_cents, 'date', d.created_at, 'demo', d.is_demo,
+               'createur', (select coalesce(nullif(trim(c.persona ->> 'nom'), ''), nullif(trim(c.persona ->> 'pseudo'), ''), 'Élise')
+                            from public.creators c where c.id = d.creator_id))
+             order by d.created_at desc, d.id desc)
+      from (select * from achats order by created_at desc, id desc limit 12) d
     ), '[]'::jsonb),
-    -- La LTV (valeur d'un client sur toute sa vie) : ce qu'il a dépensé au
-    -- total. On la calcule sur tout l'historique, pas seulement la période.
+    -- La LTV : ce qu'un client a dépensé au total, sur tout l'historique.
     'ltv', (
       select jsonb_build_object(
         'clients',            count(*),
@@ -281,12 +313,18 @@ begin
         'max_cents',          coalesce(max(total_cents), 0),
         'achats_par_client',  coalesce(round(avg(achats), 1), 0),
         'panier_moyen_cents', coalesce(round(sum(total_cents)::numeric / nullif(sum(achats), 0)), 0),
-        'duree_moyenne_jours', coalesce(round(avg(extract(epoch from dernier_achat - premier_achat) / 86400 + 1)), 0),
-        'inscrits',           (select count(*) from auth.users),
-        'payants',            (select count(distinct user_id) from public.purchases where user_id is not null and not is_demo)
+        'duree_moyenne_jours', coalesce(round(avg(extract(epoch from dernier_achat - premier_achat) / 86400 + 1)), 0)
       )
       from clients
-      where p_client is null or client = p_client
+    ),
+    -- Combien de clients dans chaque tranche de LTV.
+    'repartition', (
+      select jsonb_agg(jsonb_build_object(
+               'min_cents', t.min_cents, 'max_cents', t.max_cents,
+               'clients', (select count(*) from clients c
+                           where c.total_cents >= t.min_cents and (t.max_cents is null or c.total_cents < t.max_cents)))
+             order by t.min_cents)
+      from (values (0, 1000), (1000, 2500), (2500, 5000), (5000, 10000), (10000, null::integer)) as t(min_cents, max_cents)
     ),
     'clients', coalesce((
       select jsonb_agg(to_jsonb(c) order by c.total_cents desc, c.nom)
@@ -318,7 +356,7 @@ declare
   pack   integer := floor(random() * 3)::integer;
   achat  public.purchases;
 begin
-  insert into public.purchases (customer_label, kind, quantity, amount_cents, is_demo, created_at)
+  insert into public.purchases (customer_label, kind, quantity, amount_cents, is_demo, created_at, creator_id)
   values (
     noms[1 + floor(random() * array_length(noms, 1))::integer],
     case when tirage < 0.35 then 'tip' when tirage < 0.65 then 'message'
@@ -329,7 +367,8 @@ begin
          when tirage < 0.9  then (array[490, 790, 1290, 1990])[1 + floor(random() * 4)::integer]
          else 999 end,
     true,
-    p_quand
+    p_quand,
+    (select c.id from public.creators c order by random() limit 1)
   )
   returning * into achat;
   return achat;
@@ -404,10 +443,10 @@ begin
 end;
 $$;
 
-revoke execute on function public.is_admin(), public.admin_dashboard(text, integer),
+revoke execute on function public.is_admin(), public.admin_dashboard(date, date, bigint, boolean),
   public.admin_simuler_achat(), public.admin_remplir_demo(integer), public.admin_vider_demo()
   from public, anon;
-grant execute on function public.is_admin(), public.admin_dashboard(text, integer),
+grant execute on function public.is_admin(), public.admin_dashboard(date, date, bigint, boolean),
   public.admin_simuler_achat(), public.admin_remplir_demo(integer), public.admin_vider_demo()
   to authenticated;
 
@@ -711,6 +750,17 @@ begin
   end if;
 end;
 $$;
+
+-- Chaque achat est rattaché à une créatrice (pour le tableau de bord) : celle
+-- de l'offre achetée ; les achats de démonstration d'avant, à une au hasard.
+alter table public.purchases add column if not exists creator_id bigint references public.creators (id) on delete set null;
+create index if not exists purchases_creator_idx on public.purchases (creator_id, created_at);
+update public.purchases p set creator_id = o.creator_id
+from public.offers o
+where p.offer_id = o.id and p.creator_id is null;
+update public.purchases p
+set creator_id = (select c.id from public.creators c where p.id is not null order by random() limit 1)
+where p.is_demo and p.creator_id is null;
 
 -- Une créatrice que les personnes peuvent choisir.
 create or replace function public.creatrice_disponible(p_creator bigint)
@@ -1019,8 +1069,8 @@ begin
     raise exception 'Cette offre n''est plus disponible.' using errcode = 'P0001';
   end if;
 
-  insert into public.purchases (user_id, kind, amount_cents, is_demo, offer_id)
-  values (o.user_id, 'contenu', o.price_cents, true, o.id)
+  insert into public.purchases (user_id, kind, amount_cents, is_demo, offer_id, creator_id)
+  values (o.user_id, 'contenu', o.price_cents, true, o.id, o.creator_id)
   returning id into achat;
   update public.offers set status = 'achetee', purchased_at = now() where id = o.id;
   return jsonb_build_object('offre', o.id, 'achat', achat, 'cents', o.price_cents);

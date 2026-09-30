@@ -31,11 +31,21 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `restCalls`) et 1 appel au modèle (2 tous les 3 messages). Tout passe par
   le client Supabase de la personne connectée (RLS), jamais par une clé
   secrète.
-- Tableau de bord `/admin` : table `purchases` (tip / message / abonnement,
-  `is_demo` pour les achats fictifs), table `admins`, fonctions SQL
-  `security definer` qui vérifient `is_admin()` (`admin_dashboard`,
-  `admin_simuler_achat`, `admin_remplir_demo`, `admin_vider_demo`). Le
-  « direct » est un rafraîchissement toutes les 4 s. Pas encore de paiement.
+- Tableau de bord `/admin` : table `purchases` (tip / message / abonnement /
+  contenu, `is_demo` pour les achats fictifs, `creator_id` : la créatrice de
+  l'offre, au hasard pour la démo), table `admins`, fonctions SQL
+  `security definer` qui vérifient `is_admin()` (`admin_dashboard(p_debut,
+  p_fin, p_creator, p_net)`, `admin_simuler_achat`, `admin_remplir_demo`,
+  `admin_vider_demo`). Filtres (`DashboardFilters` dans `lib/dashboard.ts`,
+  gardés dans l'adresse `?periode=…&du=…&au=…&createur=…&net=1`) : période
+  (`PERIOD_OPTIONS`, `periodRange` à l'heure de Paris ; `debut` null = depuis
+  le premier achat), créatrice, brut/net (net = montant − 1,5 % − 0,25 € par
+  achat, calculé en SQL). Plus de filtre par personne. Courbe par jour
+  (≤ 92 jours), semaine (≤ 731) ou mois (`pas`). LTV sans inscrits/payants,
+  avec `repartition` (tranches 10/25/50/100 €, `app/admin/ltv-chart.tsx`).
+  Tant que schema.sql n'est pas relancé, `loadDashboard` retombe sur
+  l'ancienne fonction (`outdated`). Le « direct » est un rafraîchissement
+  toutes les 4 s. Pas encore de paiement.
 - Plusieurs créatrices en ligne (`creators.active`) : une conversation par
   (personne, créatrice). `creator_id` NOT NULL sur `messages`, `user_facts`,
   `summaries` (clé primaire (user_id, creator_id)), `offers` ; lu par

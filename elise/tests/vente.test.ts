@@ -233,16 +233,19 @@ describe("tableau de bord : contenus et LTV", () => {
   it("compte les contenus vendus et calcule la LTV", async () => {
     const d = await one<{
       totaux: { contenus: { nombre: number; cents: number } };
-      ltv: { clients: number; moyenne_cents: number; payants: number; inscrits: number };
+      ltv: { clients: number; moyenne_cents: number };
       clients: { nom: string; contenus_cents: number; achats: number }[];
+      derniers: { createur: string | null }[];
     }>(ADMIN, "select public.admin_dashboard() as r");
     assert.deepEqual(d.totaux.contenus, { nombre: 2, cents: 1700 }); // 6 € + 11 €
     assert.equal(d.ltv.clients, 1);
     assert.equal(d.ltv.moyenne_cents, 1700);
-    assert.equal(d.ltv.inscrits, 3);
-    assert.equal(d.ltv.payants, 0); // achats « démo » : pas encore de vrai client payant
     assert.equal(d.clients[0].contenus_cents, 1700);
     assert.equal(d.clients[0].achats, 2);
+    // Chaque achat d'un contenu est rattaché à la créatrice de l'offre.
+    assert.deepEqual(d.derniers.map((a) => a.createur), ["Élise", "Élise"]);
+    const other = await one<{ totaux: { contenus: { nombre: number } } }>(ADMIN, "select public.admin_dashboard(null, null, 999) as r");
+    assert.equal(other.totaux.contenus.nombre, 0);
   });
 });
 
