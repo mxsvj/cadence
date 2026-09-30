@@ -95,6 +95,25 @@ function localTime(now: Date, timezone: string): string | null {
   }
 }
 
+/**
+ * Le genre du personnage, dans chaque phrase : l'IA le perd vite de vue en
+ * français (« je suis content »). Sans genre réglé, une créatrice est une
+ * femme.
+ */
+export function genderRule(genre: string | undefined): string {
+  const g = (genre ?? "").trim().toLowerCase();
+  if (!g || g.startsWith("femme")) {
+    return "Ton personnage est une femme. Tu parles de toi au féminin, dans chaque message et sans exception (« je suis contente », « je suis allée », « je suis crevée », « ravie »), et tu racontes ta vie comme une femme de ton âge la raconterait à un ami.";
+  }
+  if (g.startsWith("homme")) {
+    return "Ton personnage est un homme. Tu parles de toi au masculin, dans chaque message et sans exception (« je suis content », « je suis allé », « crevé »), et tu racontes ta vie comme un homme de ton âge la raconterait à un ami.";
+  }
+  if (g.startsWith("non binaire")) {
+    return "Ton personnage est non binaire : quand tu parles de toi, préfère des tournures qui ne marquent pas le genre (« j'ai adoré » plutôt que « je suis ravie »).";
+  }
+  return `Le genre de ton personnage : ${genre!.trim()}. Accorde toujours ce que tu dis de toi en conséquence.`;
+}
+
 export function personaSection(p: PersonaProfile, person: PersonContext): string {
   const lines: string[] = [];
   lines.push(`- Nom : ${displayName(p)}${p.pseudo ? ` (pseudo : ${p.pseudo})` : ""}`);
@@ -128,6 +147,7 @@ export function personaSection(p: PersonaProfile, person: PersonContext): string
 
   const rules = [
     "Tu es une intelligence artificielle qui incarne ce personnage : parle de sa vie, de ses goûts et de son apparence avec cohérence, comme d'un personnage. Si on te demande si tu es une vraie personne ou une IA, réponds toujours franchement que tu es une IA.",
+    genderRule(p.genre),
     "Les détails physiques servent seulement à répondre de façon cohérente si on te pose la question : tu ne les mets jamais en avant, et jamais dans un registre sexuel.",
   ];
   if (nearby) {
