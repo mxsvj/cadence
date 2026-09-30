@@ -18,7 +18,7 @@ import path from "node:path";
 
 const SUPABASE = "http://fake-supabase.test";
 const realFetch = globalThis.fetch;
-const users = []; // { id, email, password }
+const users = []; // { id, email, password, metadata }
 const llmLog = []; // requêtes reçues par le faux Gemini
 const webhooks = []; // messages envoyés au faux Discord
 let restCalls = 0; // requêtes reçues par le faux Supabase (base de données)
@@ -67,7 +67,8 @@ async function saveState() {
   const db = await database();
   const tables = {};
   for (const t of ["messages", "user_facts", "summaries", "purchases", "admins", "profiles", "contacts",
-                   "ai_settings", "scripts", "script_steps", "offers", "creators", "creator_contacts", "team_alerts"]) {
+                   "ai_settings", "scripts", "script_steps", "offers", "creators", "creator_contacts", "team_alerts",
+                   "access_codes"]) {
     try {
       tables[t] = (await db.query(`select * from public.${t}`)).rows;
     } catch {
@@ -130,7 +131,7 @@ function userJson(u) {
   return {
     id: u.id, aud: "authenticated", role: "authenticated", email: u.email,
     email_confirmed_at: new Date().toISOString(), created_at: new Date().toISOString(),
-    app_metadata: { provider: "email" }, user_metadata: {},
+    app_metadata: { provider: "email" }, user_metadata: u.metadata ?? {},
     identities: [{ id: u.id, user_id: u.id, provider: "email", identity_data: { sub: u.id, email: u.email } }],
   };
 }
@@ -189,11 +190,45 @@ async function handleAuth(url, method, headers, body) {
   if (route === "/token" && url.searchParams.get("grant_type") === "refresh_token") {
     const id = String(body.refresh_token ?? "").split("-").slice(1, 6).join("-");
     const u = users.find((x) => x.id === id);
+    if (u?.banned) return authError(400, "user_banned", "User is banned");
     return u ? json(200, session(u)) : authError(400, "refresh_token_not_found", "Invalid Refresh Token");
   }
   if (route === "/user" && method === "GET") {
     const u = currentUser(headers);
+    if (u?.banned) return authError(403, "user_banned", "User is banned");
     return u ? json(200, userJson(u)) : authError(403, "bad_jwt", "invalid JWT");
+  }
+  // Les comptes des clients à code : créés par l'API d'administration, sans mot de passe.
+  if (route === "/admin/users" && method === "POST") {
+    if (!isService(headers)) return authError(401, "no_authorization", "service role required");
+    if (users.some((u) => u.email === body.email)) return authError(422, "email_exists", "A user with this email address has already been registered");
+    const u = { id: randomUUID(), email: body.email, metadata: body.user_metadata ?? {} };
+    users.push(u);
+    await exclusive(async () => {
+      await (await database()).query("insert into auth.users (id, email) values ($1, $2)", [u.id, u.email]);
+      await saveState();
+    });
+    return json(200, userJson(u));
+  }
+  if (route.startsWith("/admin/users/") && method === "PUT") {
+    if (!isService(headers)) return authError(401, "no_authorization", "service role required");
+    const u = users.find((x) => x.id === route.split("/")[3]);
+    if (!u) return authError(404, "user_not_found", "User not found");
+    if (body.ban_duration) u.banned = body.ban_duration !== "none";
+    await exclusive(saveState);
+    return json(200, userJson(u));
+  }
+  if (route.startsWith("/admin/users/") && method === "DELETE") {
+    if (!isService(headers)) return authError(401, "no_authorization", "service role required");
+    const id = route.split("/")[3];
+    const i = users.findIndex((x) => x.id === id);
+    if (i < 0) return authError(404, "user_not_found", "User not found");
+    users.splice(i, 1);
+    await exclusive(async () => {
+      await (await database()).query("delete from auth.users where id = $1", [id]);
+      await saveState();
+    });
+    return json(200, {});
   }
   // Le lien secret de l'équipe : l'API d'administration (clé secrète) crée un
   // lien de connexion à usage unique, que le serveur échange aussitôt.
@@ -217,6 +252,7 @@ async function handleAuth(url, method, headers, body) {
     const id = oneTimeTokens.get(body.token_hash);
     oneTimeTokens.delete(body.token_hash);
     const u = users.find((x) => x.id === id);
+    if (u?.banned) return authError(400, "user_banned", "User is banned");
     return u ? json(200, session(u)) : authError(403, "otp_expired", "Email link is invalid or has expired");
   }
   if (route === "/logout") return new Response(null, { status: 204 });

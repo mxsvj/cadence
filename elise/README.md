@@ -22,7 +22,10 @@ refuse.
 
 ## Ce que fait cette version
 
-- **Connexion / inscription** par e-mail et mot de passe (`/connexion`).
+- **Entrée par code** (`/connexion`) : chaque client reçoit de l'équipe un
+  code personnel (comme une carte de médiathèque, `ABCD-EFGH`) et entre avec
+  ce seul code, sans e-mail ni mot de passe. L'équipe garde son accès par
+  e-mail et mot de passe (replié sous « Accès de l'équipe »).
 - **Plusieurs créatrices en ligne** : la personne choisit avec laquelle
   parler (`/`, ou directement `/c/<numéro>` ; une seule en ligne : on arrive
   chez elle). Chaque conversation est totalement séparée : ses messages, ce
@@ -236,7 +239,7 @@ l'appareil ; le lien peut resservir à tout moment.
   l'ancien lien cesse de marcher.
 - Tant qu'aucun administrateur n'existe (`supabase/admin.sql`), le lien
   l'explique au lieu d'ouvrir la session.
-- Les personnes qui parlent à Élise, elles, gardent leur compte par e-mail.
+- Les clients, eux, entrent avec leur code d'accès (onglet Paramètres).
 
 ### Messages
 
@@ -343,6 +346,24 @@ physiques dans un registre sexuel.
 
 ### Paramètres
 
+- **Codes d'accès des clients** : taper le prénom ou le surnom du client
+  (facultatif, il sera proposé à sa première entrée), puis « Créer un code ».
+  Le code s'affiche une seule fois, avec un lien qui le remplit tout seul
+  (`https://<adresse du site>/connexion?code=ABCD-EFGH`) : l'envoyer au client.
+  À sa première entrée, il donne sa date de naissance (18 ans minimum), puis
+  il arrive dans la conversation. La liste montre la fin de chaque code
+  (« …EFGH »), sa date de création et sa dernière utilisation.
+  - **Nouveau code** : l'ancien cesse aussitôt de marcher (code perdu ou
+    envoyé à la mauvaise personne) ; le client garde ses conversations.
+  - **Désactiver** : le client ne peut plus entrer, et un téléphone déjà
+    connecté est déconnecté au plus tard dans l'heure. Ses conversations et
+    achats restent dans la base.
+  - Un code vaut une clé : ne l'envoyer qu'à la personne concernée. La base
+    n'en garde qu'une empreinte (calculée avec la clé secrète Supabase) :
+    personne, pas même l'équipe, ne peut relire un code. Si la clé secrète
+    Supabase change un jour, tous les codes cessent de marcher (en créer de
+    nouveaux avec « Nouveau code »).
+  - Au plus 10 essais de code toutes les 10 minutes par connexion internet.
 - **Réglages de l'IA** : nombre de messages relus, consignes
   supplémentaires. La créativité est réglée au maximum fiable (1,0) et l'IA
   choisit elle-même la longueur de chaque réponse : rien à régler.
@@ -444,7 +465,8 @@ qui suit le Flash le plus récent).
   l'alléger (pagination).
 - **Supabase gratuit** met le projet en pause après 7 jours sans visite ; on le
   relance d'un clic depuis le tableau de bord.
-- **Mot de passe oublié** : pas encore prévu (il faudrait un service d'e-mail).
+- **Mot de passe oublié** (équipe) : pas encore prévu (il faudrait un service
+  d'e-mail). Un client qui a perdu son code en reçoit un nouveau de l'équipe.
 - **Mémoire à mi-distance** : entre deux résumés, les messages plus anciens
   que les 20 derniers mais pas encore résumés (jusqu'à 20) ne sont plus relus
   mot à mot ; la fiche garde l'essentiel. Pour l'éviter, on peut envoyer au

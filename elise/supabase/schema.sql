@@ -1436,6 +1436,59 @@ end;
 $$;
 
 
+-- ─── Les codes d'accès des clients ─────────────────────────────────────────
+-- Comme une carte de médiathèque : l'équipe crée un code pour chaque client,
+-- qui entre avec ce seul code (ni e-mail, ni mot de passe). Un code par
+-- personne. On ne garde qu'une empreinte du code (calculée par le serveur
+-- avec une clé secrète) et ses 4 derniers caractères, pour que l'équipe s'y
+-- retrouve : un code perdu se remplace, il ne se relit pas.
+create table if not exists public.access_codes (
+  user_id      uuid primary key references auth.users (id) on delete cascade,
+  code_hash    text not null unique check (char_length(code_hash) = 64),
+  hint         text not null default '' check (char_length(hint) <= 4),
+  label        text not null default '' check (char_length(label) <= 60),
+  created_at   timestamptz not null default now(),
+  created_by   uuid references auth.users (id) on delete set null,
+  last_used_at timestamptz
+);
+-- Personne ne lit la table depuis le navigateur, pas même l'équipe : seul le
+-- serveur (clé secrète) vérifie un code ; l'équipe voit la liste par
+-- admin_codes(), sans les empreintes.
+alter table public.access_codes enable row level security;
+revoke all on public.access_codes from anon, authenticated;
+
+-- La liste des codes pour l'équipe : à qui, créé quand, utilisé quand.
+create or replace function public.admin_codes()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  resultat jsonb;
+begin
+  if not public.is_admin() then
+    raise exception 'Réservé aux administrateurs.' using errcode = '42501';
+  end if;
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'user_id', c.user_id,
+           'label', c.label,
+           'nom', coalesce(p.display_name, nullif(c.label, ''), 'Sans prénom'),
+           'hint', c.hint,
+           'cree_le', c.created_at,
+           'utilise_le', c.last_used_at)
+         order by c.created_at desc), '[]'::jsonb)
+  into resultat
+  from (select * from public.access_codes order by created_at desc limit 500) c
+  left join public.profiles p on p.user_id = c.user_id;
+  return resultat;
+end;
+$$;
+revoke execute on function public.admin_codes() from public, anon;
+grant execute on function public.admin_codes() to authenticated;
+
+
 -- ─── Le bouton « Effacer toutes mes données » ──────────────────────────────
 -- Efface d'un seul coup, et seulement pour la personne connectée, ses
 -- messages, sa fiche, son résumé, et les notes de l'équipe à son sujet. Le

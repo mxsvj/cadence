@@ -20,7 +20,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function until(check, what, timeout = 8000) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
-    if (check()) return;
+    if (await check()) return;
     await sleep(150);
   }
   throw new Error(`Délai dépassé : ${what}`);
@@ -65,14 +65,25 @@ async function newContext(options) {
   return context;
 }
 
+// Les clients entrent avec un code ; l'e-mail et le mot de passe (l'équipe)
+// sont repliés sous « Accès de l'équipe ».
+async function emailForm(p) {
+  const details = p.locator("details").filter({ hasText: "Accès de l'équipe" });
+  if (!(await details.evaluate((d) => d.open))) await details.getByText("Accès de l'équipe (e-mail et mot de passe)").click();
+}
+async function submitEmail(p) {
+  await p.locator("details").getByRole("button", { name: /Me connecter|Créer mon compte/ }).click();
+}
+
 async function signUp(p, email, name, birthdate = "1982-03-14") {
   await p.goto(`${BASE}/connexion`);
+  await emailForm(p);
   await p.getByText("Première visite ? Créer un compte").click();
   await p.fill('input[name="email"]', email);
   await p.fill('input[name="password"]', "motdepasse");
   await p.fill('input[name="nom"]', name);
   await p.fill('input[name="naissance"]', birthdate);
-  await p.click('button[type="submit"]');
+  await submitEmail(p);
 }
 
 // Après la connexion, une personne arrive sur le choix des créatrices (ou
@@ -80,9 +91,10 @@ async function signUp(p, email, name, birthdate = "1982-03-14") {
 // l'équipe sur son tableau de bord.
 async function logIn(p, email, landing = "/") {
   await p.goto(`${BASE}/connexion`);
+  await emailForm(p);
   await p.fill('input[name="email"]', email);
   await p.fill('input[name="password"]', "motdepasse");
-  await p.click('button[type="submit"]');
+  await submitEmail(p);
   await p.waitForURL(`${BASE}${landing}`);
 }
 
@@ -112,9 +124,10 @@ assert.equal(pageHeaders["x-powered-by"], undefined);
 step("en-têtes de sécurité : pas d'affichage dans un autre site, adresse jamais transmise ailleurs, « Next.js » non annoncé");
 
 // 2. Mauvais identifiants.
+await emailForm(page);
 await page.fill('input[name="email"]', "karim@example.com");
 await page.fill('input[name="password"]', "mauvais");
-await page.click('button[type="submit"]');
+await submitEmail(page);
 await page.getByText("Adresse e-mail ou mot de passe incorrect.").waitFor();
 step("mauvais identifiants : message clair");
 
@@ -127,7 +140,7 @@ assert.equal(new URL(page.url()).pathname, "/connexion");
 assert.equal(state().users.length, 0);
 step("une personne de moins de 18 ans ne peut pas s'inscrire");
 await page.fill('input[name="naissance"]', "1982-03-14");
-await page.click('button[type="submit"]');
+await submitEmail(page);
 await page.waitForURL(`${BASE}/c/1`);
 await page.getByText("Bonjour, je suis Élise.").waitFor();
 await page.screenshot({ path: `${SHOTS}2-premier-message.png` });
@@ -283,9 +296,10 @@ await page.getByText("Se déconnecter").click();
 await page.waitForURL(`${BASE}/connexion`);
 await page.goto(BASE);
 await page.waitForURL(`${BASE}/connexion`);
+await emailForm(page);
 await page.fill('input[name="email"]', "karim@example.com");
 await page.fill('input[name="password"]', "motdepasse");
-await page.click('button[type="submit"]');
+await submitEmail(page);
 await page.waitForURL(`${BASE}/c/1`);
 step("déconnexion puis reconnexion");
 
@@ -444,9 +458,10 @@ for (const colorScheme of ["light", "dark"]) {
   const desk = await deskCtx.newPage();
   desk.on("pageerror", (e) => consoleErrors.push(String(e)));
   await desk.goto(`${BASE}/connexion`);
+  await emailForm(desk);
   await desk.fill('input[name="email"]', "karim@example.com");
   await desk.fill('input[name="password"]', "motdepasse");
-  await desk.click('button[type="submit"]');
+  await submitEmail(desk);
   await desk.waitForURL(`${BASE}/admin`);
   const svg = desk.locator("svg[role=img]");
   await svg.waitFor();
@@ -984,9 +999,10 @@ await admin.getByText("Réglages enregistrés.").waitFor();
 const desk = await newContext({ viewport: { width: 1280, height: 800 }, colorScheme: "dark", locale: "fr-FR" });
 const deskPage = await desk.newPage();
 await deskPage.goto(`${BASE}/connexion`);
+await emailForm(deskPage);
 await deskPage.fill('input[name="email"]', "lea@example.com");
 await deskPage.fill('input[name="password"]', "motdepasse");
-await deskPage.click('button[type="submit"]');
+await submitEmail(deskPage);
 await deskPage.waitForURL(`${BASE}/`);
 await deskPage.getByRole("link", { name: "Parler avec Élise" }).click();
 await deskPage.waitForURL(`${BASE}/c/1`);
@@ -1093,6 +1109,98 @@ const statuses = await page2.evaluate(async () => {
 });
 assert.ok(statuses.includes(400) && statuses.at(-1) === 429, statuses.join(","));
 step(`rafale de 45 messages : ${statuses.filter((x) => x === 429).length} refusés (« Vous écrivez très vite »)`);
+
+// 40. Codes d'accès des clients, comme une carte de médiathèque : l'équipe crée
+// un code dans Paramètres, le client entre avec ce seul code.
+await adminCtx.grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
+await admin.goto(`${BASE}/admin/parametres`);
+await admin.getByLabel("Prénom ou surnom du client").fill("Nadia");
+await admin.getByRole("button", { name: "Créer un code" }).click();
+await admin.locator("output[data-code]").waitFor();
+const nadiaCode = await admin.locator("output[data-code]").getAttribute("data-code");
+assert.match(nadiaCode, /^[A-HJKMNP-Z2-9]{4}-[A-HJKMNP-Z2-9]{4}$/);
+await admin.getByRole("button", { name: "Copier le lien" }).click();
+await admin.getByRole("button", { name: "Lien copié" }).waitFor();
+assert.equal(await admin.evaluate(() => navigator.clipboard.readText()), `${BASE}/connexion?code=${nadiaCode}`);
+await admin.getByText(`code …${nadiaCode.slice(-4)}`).waitFor();
+await admin.screenshot({ path: `${SHOTS}40-codes.png`, fullPage: true });
+s = state();
+const nadiaRow = () => state().tables.access_codes.find((r) => r.label === "Nadia");
+const nadiaUser = s.users.find((u) => u.id === nadiaRow().user_id);
+assert.match(nadiaUser.email, /^client-[0-9a-f-]{36}@code\.elise\.invalid$/);
+assert.equal(nadiaUser.password, undefined);
+assert.equal(nadiaRow().hint, nadiaCode.slice(-4));
+assert.match(nadiaRow().code_hash, /^[0-9a-f]{64}$/);
+assert.ok(!JSON.stringify(s).includes(nadiaCode.replace("-", "")), "le code n'est gardé nulle part en clair");
+assert.equal(nadiaRow().last_used_at, null);
+step("Paramètres : un code par client (XXXX-XXXX), montré une fois, lien copié ; la base n'en garde qu'une empreinte et 4 caractères");
+
+const nadiaCtx = await newContext(phone);
+const nadiaPage = await nadiaCtx.newPage();
+nadiaPage.on("pageerror", (e) => consoleErrors.push(String(e)));
+const codeInput = nadiaPage.getByLabel("Votre code d'accès");
+const enter = nadiaPage.getByRole("button", { name: "Entrer" });
+await nadiaPage.goto(`${BASE}/connexion`);
+assert.equal(await nadiaPage.locator('input[name="email"]').isVisible(), false); // l'e-mail est replié
+await codeInput.fill("abc");
+await enter.click();
+await nadiaPage.getByText("Le code fait 8 lettres et chiffres, par exemple ABCD-EFGH.").waitFor();
+await codeInput.fill(nadiaCode === "WXYZ-2345" ? "WXYZ-2346" : "WXYZ-2345");
+await enter.click();
+await nadiaPage.getByText("Ce code n'existe pas. Vérifiez-le, ou demandez un nouveau code.").waitFor();
+step("code trop court ou inconnu : message clair, rien d'ouvert");
+
+// Le lien remplit le code ; minuscules et espaces sont acceptés à la main.
+await nadiaPage.goto(`${BASE}/connexion?code=${nadiaCode}`);
+assert.equal(await codeInput.inputValue(), nadiaCode);
+await codeInput.fill(` ${nadiaCode.toLowerCase().replace("-", " ")} `);
+await enter.click();
+await nadiaPage.waitForURL(`${BASE}/bienvenue`);
+assert.equal(await nadiaPage.locator('input[name="nom"]').inputValue(), "Nadia");
+await nadiaPage.fill('input[name="naissance"]', "1979-06-02");
+await nadiaPage.getByRole("button", { name: "Continuer" }).click();
+await nadiaPage.waitForURL((u) => u.pathname === "/" || u.pathname.startsWith("/c/"));
+await until(() => state().tables.profiles.some((p) => p.user_id === nadiaUser.id && p.display_name === "Nadia"), "profil de Nadia");
+assert.ok(nadiaRow().last_used_at);
+step("le client entre avec son seul code (lien ou saisie), prénom déjà rempli, date de naissance (18 ans), puis la conversation");
+
+// Un membre de l'équipe déjà connecté peut ouvrir un lien de code : il est prévenu, rien ne change tant qu'il n'entre pas.
+await admin.goto(`${BASE}/connexion?code=${nadiaCode}`);
+await admin.getByText("Vous êtes déjà connecté.", { exact: false }).waitFor();
+await admin.goto(`${BASE}/admin/parametres`);
+await admin.getByText("Nadia", { exact: true }).waitFor();
+await admin.getByText(/utilisé à l'instant|utilisé il y a/).waitFor();
+
+// Nouveau code : l'ancien ne marche plus, le nouveau ouvre le même compte.
+await admin.getByRole("button", { name: "Nouveau code pour Nadia" }).click();
+await until(async () => (await admin.locator("output[data-code]").getAttribute("data-code")) !== nadiaCode, "nouveau code affiché");
+const nadiaCode2 = await admin.locator("output[data-code]").getAttribute("data-code");
+assert.equal(state().tables.access_codes.filter((r) => r.user_id === nadiaUser.id).length, 1);
+const other = await newContext(phone);
+const otherPage = await other.newPage();
+await otherPage.goto(`${BASE}/connexion?code=${nadiaCode}`);
+await otherPage.getByRole("button", { name: "Entrer" }).click();
+await otherPage.getByText("Ce code n'existe pas.", { exact: false }).waitFor();
+await otherPage.getByLabel("Votre code d'accès").fill(nadiaCode2);
+await otherPage.getByRole("button", { name: "Entrer" }).click();
+await otherPage.waitForURL((u) => u.pathname === "/" || u.pathname.startsWith("/c/"));
+await other.close();
+step("« Nouveau code » : l'ancien est refusé, le nouveau ouvre le même compte (sans redemander l'âge)");
+
+// Désactiver : le code ne marche plus et le compte est bloqué ; ses données restent.
+await admin.getByRole("button", { name: "Désactiver le code de Nadia" }).click();
+await admin.getByRole("button", { name: "Confirmer : désactiver le code de Nadia" }).click();
+await until(() => !nadiaRow(), "code désactivé");
+await until(async () => (await admin.getByRole("button", { name: "Nouveau code pour Nadia" }).count()) === 0, "Nadia retirée de la liste");
+assert.ok(state().users.find((u) => u.id === nadiaUser.id).banned);
+assert.ok(state().tables.profiles.some((p) => p.user_id === nadiaUser.id));
+await nadiaPage.goto(BASE);
+await nadiaPage.waitForURL(`${BASE}/connexion`);
+await codeInput.fill(nadiaCode2);
+await enter.click();
+await nadiaPage.getByText("Ce code n'existe pas.", { exact: false }).waitFor();
+await nadiaCtx.close();
+step("« Désactiver » : le code est refusé, le client est déconnecté (au plus une heure en vrai), ses conversations restent");
 
 // Les 429 (quota simulé) et 404 (pages réservées) sont voulus.
 assert.deepEqual(consoleErrors.filter((e) => !/status of (429|404)/.test(e)), []);
