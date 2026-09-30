@@ -15,7 +15,7 @@ export default async function ConnexionPage({ searchParams }: PageProps<"/connex
   if (!supabaseEnv()) return <SetupNotice />;
   const { erreur, code } = await searchParams;
   const message = typeof erreur === "string" && Object.hasOwn(ERRORS, erreur) ? ERRORS[erreur] : null;
-  // Déjà connecté (seulement possible avec un lien ?code=…) : le code ouvre un autre compte.
+  // Déjà connecté (seulement possible avec un lien ?code=…) : entrer ouvre un autre compte.
   const signedIn = typeof code === "string" && (await currentUserId(await createClient())) !== null;
 
   return (
@@ -33,11 +33,11 @@ export default async function ConnexionPage({ searchParams }: PageProps<"/connex
 
       {signedIn && (
         <p role="status" className="rounded-2xl border border-line px-4 py-3 text-sm">
-          Vous êtes déjà connecté. Entrer avec ce code vous fait changer de compte : vous serez déconnecté du vôtre.
+          Vous êtes déjà connecté. Entrer ici ouvre un nouveau compte de test : vous serez déconnecté du vôtre.
         </p>
       )}
 
-      {/* Les clients entrent avec leur code ; l'équipe, avec son e-mail. */}
+      {/* Tout le monde entre avec le code unique ; l'équipe peut aussi utiliser son e-mail. */}
       <CodeForm initialCode={typeof code === "string" ? code.slice(0, 20) : undefined} />
 
       <details className="group rounded-2xl border border-line px-4 py-3">

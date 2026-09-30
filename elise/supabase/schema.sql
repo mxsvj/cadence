@@ -1436,12 +1436,10 @@ end;
 $$;
 
 
--- ─── Les codes d'accès des clients ─────────────────────────────────────────
--- Comme une carte de médiathèque : l'équipe crée un code pour chaque client,
--- qui entre avec ce seul code (ni e-mail, ni mot de passe). Un code par
--- personne. On ne garde qu'une empreinte du code (calculée par le serveur
--- avec une clé secrète) et ses 4 derniers caractères, pour que l'équipe s'y
--- retrouve : un code perdu se remplace, il ne se relit pas.
+-- ─── Les codes d'accès par client (ne servent plus) ─────────────────────────
+-- Première version de l'entrée par code (un code par client). Remplacée par
+-- le code d'entrée unique ci-dessous : la table et sa fonction restent, sans
+-- effet, pour ne rien effacer d'une base déjà à jour.
 create table if not exists public.access_codes (
   user_id      uuid primary key references auth.users (id) on delete cascade,
   code_hash    text not null unique check (char_length(code_hash) = 64),
@@ -1487,6 +1485,68 @@ end;
 $$;
 revoke execute on function public.admin_codes() from public, anon;
 grant execute on function public.admin_codes() to authenticated;
+
+
+-- ─── Le code d'entrée ─────────────────────────────────────────────────────
+-- Un seul code, le même pour tout le monde (prototype de test) : on le tape
+-- sur /connexion avec son prénom et sa date de naissance, et on parle à
+-- l'IA. Chaque entrée crée un compte de test à part, avec sa propre
+-- conversation. L'équipe voit le code et le change dans Paramètres.
+create table if not exists public.entry_code (
+  id         integer primary key default 1 check (id = 1),
+  code       text not null check (code ~ '^[A-HJKMNP-Z2-9]{4}-[A-HJKMNP-Z2-9]{4}$'),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users (id) on delete set null
+);
+-- Personne ne lit la table depuis le navigateur : le serveur (clé secrète)
+-- vérifie le code, l'équipe le voit par admin_code_entree().
+alter table public.entry_code enable row level security;
+revoke all on public.entry_code from anon, authenticated;
+
+-- Le code actuel ; s'il n'y en a pas encore, p_nouveau le devient.
+create or replace function public.admin_code_entree(p_nouveau text)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  actuel public.entry_code;
+begin
+  if not public.is_admin() then
+    raise exception 'Réservé aux administrateurs.' using errcode = '42501';
+  end if;
+  insert into public.entry_code (id, code, updated_by)
+  values (1, p_nouveau, (select auth.uid()))
+  on conflict (id) do nothing;
+  select * into actuel from public.entry_code where id = 1;
+  return jsonb_build_object('code', actuel.code, 'change_le', actuel.updated_at);
+end;
+$$;
+
+-- Un nouveau code : l'ancien ne marche plus (les personnes déjà entrées le restent).
+create or replace function public.admin_changer_code_entree(p_code text)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Réservé aux administrateurs.' using errcode = '42501';
+  end if;
+  insert into public.entry_code (id, code, updated_by)
+  values (1, p_code, (select auth.uid()))
+  on conflict (id) do update set code = excluded.code, updated_at = now(), updated_by = excluded.updated_by;
+  return jsonb_build_object('code', p_code, 'change_le', now());
+end;
+$$;
+revoke execute on function public.admin_code_entree(text) from public, anon;
+revoke execute on function public.admin_changer_code_entree(text) from public, anon;
+grant execute on function public.admin_code_entree(text) to authenticated;
+grant execute on function public.admin_changer_code_entree(text) to authenticated;
 
 
 -- ─── Le bouton « Effacer toutes mes données » ──────────────────────────────

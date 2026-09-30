@@ -1,9 +1,9 @@
-// Les codes d'accès des clients (comme une carte de médiathèque) : leur forme,
-// leur empreinte, et qui peut les lire dans la base.
+// Le code d'entrée unique : sa forme, sa comparaison, et qui peut le lire ou
+// le changer dans la base.
 import assert from "node:assert/strict";
 import { before, describe, it } from "node:test";
 import { CODE_ALPHABET, formatCode, newCode, normalizeCode } from "../lib/access-code";
-import { codeEmail, codeHash } from "../lib/code-login";
+import { codeEmail, sameCode } from "../lib/code-login";
 import { freshDatabase } from "./db";
 
 describe("la forme d'un code", () => {
@@ -33,21 +33,16 @@ describe("la forme d'un code", () => {
   });
 });
 
-describe("l'empreinte d'un code", () => {
-  it("dépend du code et de la clé secrète, sans jamais contenir le code", () => {
-    const h = codeHash("ABCDEFGH", "cle-1");
-    assert.match(h, /^[0-9a-f]{64}$/);
-    assert.equal(codeHash("ABCDEFGH", "cle-1"), h);
-    assert.notEqual(codeHash("ABCDEFGJ", "cle-1"), h);
-    assert.notEqual(codeHash("ABCDEFGH", "cle-2"), h); // changer la clé secrète invalide les codes
-    assert.ok(!h.includes("ABCDEFGH"));
+describe("vérifier le code", () => {
+  it("le même code passe, tout autre est refusé", () => {
+    assert.equal(sameCode("ABCDEFGH", normalizeCode("abcd-efgh")), true);
+    assert.equal(sameCode("ABCDEFGH", "ABCDEFGJ"), false);
+    assert.equal(sameCode("ABCDEFGH", "ABCD"), false);
+    assert.equal(sameCode(null, "ABCDEFGH"), false); // pas encore de code : personne n'entre
+    assert.equal(sameCode(null, null), false);
   });
 
-  it("sans clé secrète, rien n'est vérifié", () => {
-    assert.throws(() => codeHash("ABCDEFGH", ""), /SUPABASE_SECRET_KEY/);
-  });
-
-  it("un compte de client n'a pas d'adresse e-mail réelle", () => {
+  it("un compte de test n'a pas d'adresse e-mail réelle", () => {
     const a = codeEmail();
     assert.match(a, /^client-[0-9a-f-]{36}@code\.elise\.invalid$/);
     assert.notEqual(codeEmail(), a);
@@ -56,62 +51,46 @@ describe("l'empreinte d'un code", () => {
 
 const ADMIN = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 const NADIA = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
-const HASH = "a".repeat(64);
 
-describe("les codes dans la base", () => {
+describe("le code dans la base", () => {
   let base: Awaited<ReturnType<typeof freshDatabase>>;
+  const one = async <T>(user: string | null, sql: string, params: unknown[] = []) =>
+    (await base.as<{ r: T }>(user, sql, params))[0].r;
   before(async () => {
     base = await freshDatabase([
       { id: ADMIN, email: "admin@example.com" },
       { id: NADIA, email: "client-1@code.elise.invalid" },
     ]);
     await base.db.query("insert into public.admins (user_id) values ($1)", [ADMIN]);
-    await base.as("service", "insert into public.access_codes (user_id, code_hash, hint, label, created_by) values ($1, $2, 'EFGH', 'Nadia', $3)", [
-      NADIA,
-      HASH,
-      ADMIN,
-    ]);
   });
 
-  it("un client ne lit ni n'écrit aucun code, pas même le sien", async () => {
-    await assert.rejects(base.as(NADIA, "select * from public.access_codes"), /permission denied/);
-    await assert.rejects(base.as(null, "select 1 from public.access_codes"), /permission denied/);
-    await assert.rejects(base.as(NADIA, "update public.access_codes set code_hash = $1", ["b".repeat(64)]), /permission denied/);
-    await assert.rejects(
-      base.as(NADIA, "insert into public.access_codes (user_id, code_hash) values ($1, $2)", [NADIA, "c".repeat(64)]),
-      /permission denied/,
-    );
-    await assert.rejects(base.as(NADIA, "select public.admin_codes()"), /Réservé/);
+  it("à la première visite de l'équipe, le code proposé devient le code, puis ne bouge plus", async () => {
+    const first = await one<{ code: string }>(ADMIN, "select public.admin_code_entree('ABCD-EFGH') as r");
+    assert.equal(first.code, "ABCD-EFGH");
+    const again = await one<{ code: string }>(ADMIN, "select public.admin_code_entree('WXYZ-2345') as r");
+    assert.equal(again.code, "ABCD-EFGH");
   });
 
-  it("l'équipe voit à qui est chaque code, jamais l'empreinte", async () => {
-    await assert.rejects(base.as(ADMIN, "select code_hash from public.access_codes"), /permission denied/);
-    const [{ r }] = await base.as<{ r: Record<string, unknown>[] }>(ADMIN, "select public.admin_codes() as r");
-    assert.equal(r.length, 1);
-    assert.deepEqual(Object.keys(r[0]).sort(), ["cree_le", "hint", "label", "nom", "user_id", "utilise_le"]);
-    assert.equal(r[0].nom, "Nadia");
-    assert.equal(r[0].hint, "EFGH");
-    // Le prénom choisi à la première entrée l'emporte sur l'étiquette de l'équipe.
-    await base.db.query("insert into public.profiles (user_id, display_name, birthdate) values ($1, 'Nad', '1979-06-02')", [NADIA]);
-    const [{ r: again }] = await base.as<{ r: { nom: string }[] }>(ADMIN, "select public.admin_codes() as r");
-    assert.equal(again[0].nom, "Nad");
+  it("l'équipe change le code ; un code mal formé est refusé", async () => {
+    const changed = await one<{ code: string }>(ADMIN, "select public.admin_changer_code_entree('WXYZ-2345') as r");
+    assert.equal(changed.code, "WXYZ-2345");
+    assert.equal((await one<{ code: string }>(ADMIN, "select public.admin_code_entree('ABCD-EFGH') as r")).code, "WXYZ-2345");
+    for (const bad of ["1234", "abcd-efgh", "ABCD-EFG0", "ABCDEFGH"]) {
+      await assert.rejects(base.as(ADMIN, "select public.admin_changer_code_entree($1)", [bad]), /check constraint/, bad);
+    }
+    const [{ n }] = await base.as<{ n: number }>("service", "select count(*)::integer as n from public.entry_code");
+    assert.equal(n, 1); // un seul code à la fois
   });
 
-  it("une seule empreinte par code, un seul code par client", async () => {
-    await assert.rejects(
-      base.as("service", "insert into public.access_codes (user_id, code_hash) values ($1, $2)", [ADMIN, HASH]),
-      /duplicate key/,
-    );
-    await assert.rejects(
-      base.as("service", "insert into public.access_codes (user_id, code_hash) values ($1, $2)", [NADIA, "d".repeat(64)]),
-      /duplicate key/,
-    );
-    await assert.rejects(base.as("service", "insert into public.access_codes (user_id, code_hash) values ($1, 'court')", [ADMIN]), /check constraint/);
-  });
-
-  it("supprimer le compte supprime son code", async () => {
-    await base.db.query("delete from auth.users where id = $1", [NADIA]);
-    const rows = await base.as("service", "select * from public.access_codes");
-    assert.deepEqual(rows, []);
+  it("personne d'autre ne lit ni ne change le code, seul le serveur le vérifie", async () => {
+    for (const user of [NADIA, null]) {
+      await assert.rejects(base.as(user, "select code from public.entry_code"), /permission denied/);
+    }
+    await assert.rejects(base.as(ADMIN, "select code from public.entry_code"), /permission denied/);
+    await assert.rejects(base.as(NADIA, "select public.admin_code_entree('ABCD-EFGH')"), /Réservé/);
+    await assert.rejects(base.as(NADIA, "select public.admin_changer_code_entree('ABCD-EFGH')"), /Réservé/);
+    await assert.rejects(base.as(null, "select public.admin_changer_code_entree('ABCD-EFGH')"), /permission denied/);
+    const [{ code }] = await base.as<{ code: string }>("service", "select code from public.entry_code where id = 1");
+    assert.equal(code, "WXYZ-2345");
   });
 });

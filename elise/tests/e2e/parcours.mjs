@@ -79,10 +79,10 @@ async function signUp(p, email, name, birthdate = "1982-03-14") {
   await p.goto(`${BASE}/connexion`);
   await emailForm(p);
   await p.getByText("Première visite ? Créer un compte").click();
-  await p.fill('input[name="email"]', email);
-  await p.fill('input[name="password"]', "motdepasse");
-  await p.fill('input[name="nom"]', name);
-  await p.fill('input[name="naissance"]', birthdate);
+  await p.fill('details input[name="email"]', email);
+  await p.fill('details input[name="password"]', "motdepasse");
+  await p.fill('details input[name="nom"]', name);
+  await p.fill('details input[name="naissance"]', birthdate);
   await submitEmail(p);
 }
 
@@ -92,8 +92,8 @@ async function signUp(p, email, name, birthdate = "1982-03-14") {
 async function logIn(p, email, landing = "/") {
   await p.goto(`${BASE}/connexion`);
   await emailForm(p);
-  await p.fill('input[name="email"]', email);
-  await p.fill('input[name="password"]', "motdepasse");
+  await p.fill('details input[name="email"]', email);
+  await p.fill('details input[name="password"]', "motdepasse");
   await submitEmail(p);
   await p.waitForURL(`${BASE}${landing}`);
 }
@@ -125,8 +125,8 @@ step("en-têtes de sécurité : pas d'affichage dans un autre site, adresse jama
 
 // 2. Mauvais identifiants.
 await emailForm(page);
-await page.fill('input[name="email"]', "karim@example.com");
-await page.fill('input[name="password"]', "mauvais");
+await page.fill('details input[name="email"]', "karim@example.com");
+await page.fill('details input[name="password"]', "mauvais");
 await submitEmail(page);
 await page.getByText("Adresse e-mail ou mot de passe incorrect.").waitFor();
 step("mauvais identifiants : message clair");
@@ -139,7 +139,7 @@ await page.waitForTimeout(800);
 assert.equal(new URL(page.url()).pathname, "/connexion");
 assert.equal(state().users.length, 0);
 step("une personne de moins de 18 ans ne peut pas s'inscrire");
-await page.fill('input[name="naissance"]', "1982-03-14");
+await page.fill('details input[name="naissance"]', "1982-03-14");
 await submitEmail(page);
 await page.waitForURL(`${BASE}/c/1`);
 await page.getByText("Bonjour, je suis Élise.").waitFor();
@@ -297,8 +297,8 @@ await page.waitForURL(`${BASE}/connexion`);
 await page.goto(BASE);
 await page.waitForURL(`${BASE}/connexion`);
 await emailForm(page);
-await page.fill('input[name="email"]', "karim@example.com");
-await page.fill('input[name="password"]', "motdepasse");
+await page.fill('details input[name="email"]', "karim@example.com");
+await page.fill('details input[name="password"]', "motdepasse");
 await submitEmail(page);
 await page.waitForURL(`${BASE}/c/1`);
 step("déconnexion puis reconnexion");
@@ -459,8 +459,8 @@ for (const colorScheme of ["light", "dark"]) {
   desk.on("pageerror", (e) => consoleErrors.push(String(e)));
   await desk.goto(`${BASE}/connexion`);
   await emailForm(desk);
-  await desk.fill('input[name="email"]', "karim@example.com");
-  await desk.fill('input[name="password"]', "motdepasse");
+  await desk.fill('details input[name="email"]', "karim@example.com");
+  await desk.fill('details input[name="password"]', "motdepasse");
   await submitEmail(desk);
   await desk.waitForURL(`${BASE}/admin`);
   const svg = desk.locator("svg[role=img]");
@@ -1000,8 +1000,8 @@ const desk = await newContext({ viewport: { width: 1280, height: 800 }, colorSch
 const deskPage = await desk.newPage();
 await deskPage.goto(`${BASE}/connexion`);
 await emailForm(deskPage);
-await deskPage.fill('input[name="email"]', "lea@example.com");
-await deskPage.fill('input[name="password"]', "motdepasse");
+await deskPage.fill('details input[name="email"]', "lea@example.com");
+await deskPage.fill('details input[name="password"]', "motdepasse");
 await submitEmail(deskPage);
 await deskPage.waitForURL(`${BASE}/`);
 await deskPage.getByRole("link", { name: "Parler avec Élise" }).click();
@@ -1110,97 +1110,107 @@ const statuses = await page2.evaluate(async () => {
 assert.ok(statuses.includes(400) && statuses.at(-1) === 429, statuses.join(","));
 step(`rafale de 45 messages : ${statuses.filter((x) => x === 429).length} refusés (« Vous écrivez très vite »)`);
 
-// 40. Codes d'accès des clients, comme une carte de médiathèque : l'équipe crée
-// un code dans Paramètres, le client entre avec ce seul code.
+// 40. Le code d'accès unique, le même pour tout le monde : on le tape avec son
+// prénom et sa date de naissance, et on parle à l'IA. Chacun sa conversation.
 await adminCtx.grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
 await admin.goto(`${BASE}/admin/parametres`);
-await admin.getByLabel("Prénom ou surnom du client").fill("Nadia");
-await admin.getByRole("button", { name: "Créer un code" }).click();
-await admin.locator("output[data-code]").waitFor();
-const nadiaCode = await admin.locator("output[data-code]").getAttribute("data-code");
-assert.match(nadiaCode, /^[A-HJKMNP-Z2-9]{4}-[A-HJKMNP-Z2-9]{4}$/);
+const codeBox = admin.locator("output[data-code]");
+await codeBox.waitFor();
+const entryCode = await codeBox.getAttribute("data-code");
+assert.match(entryCode, /^[A-HJKMNP-Z2-9]{4}-[A-HJKMNP-Z2-9]{4}$/);
+assert.equal(state().tables.entry_code[0].code, entryCode); // créé à la première visite, puis stable
 await admin.getByRole("button", { name: "Copier le lien" }).click();
 await admin.getByRole("button", { name: "Lien copié" }).waitFor();
-assert.equal(await admin.evaluate(() => navigator.clipboard.readText()), `${BASE}/connexion?code=${nadiaCode}`);
-await admin.getByText(`code …${nadiaCode.slice(-4)}`).waitFor();
-await admin.screenshot({ path: `${SHOTS}40-codes.png`, fullPage: true });
+assert.equal(await admin.evaluate(() => navigator.clipboard.readText()), `${BASE}/connexion?code=${entryCode}`);
+await admin.screenshot({ path: `${SHOTS}40-code.png` });
+step("Paramètres : le code d'accès (XXXX-XXXX) créé tout seul, et le lien copié en un clic");
+
+const visitor = async () => {
+  const c = await newContext(phone);
+  const p = await c.newPage();
+  p.on("pageerror", (e) => consoleErrors.push(String(e)));
+  return { c, p };
+};
+const enterWith = async (p, code, name, birthdate) => {
+  if (code !== null) await p.getByLabel("Code d'accès").fill(code);
+  await p.getByLabel("Prénom ou pseudo").first().fill(name);
+  await p.getByLabel("Date de naissance").first().fill(birthdate);
+  await p.getByRole("button", { name: "Entrer" }).click();
+};
+const usersBefore = state().users.length;
+const { c: nadiaCtx, p: nadiaPage } = await visitor();
+await nadiaPage.goto(`${BASE}/connexion`);
+await nadiaPage.screenshot({ path: `${SHOTS}40b-entree.png` });
+assert.equal(await nadiaPage.locator('details input[name="email"]').isVisible(), false); // l'e-mail de l'équipe est replié
+await enterWith(nadiaPage, "abc", "Nadia", "1979-06-02");
+await nadiaPage.getByText("Le code fait 8 lettres et chiffres, par exemple ABCD-EFGH.").waitFor();
+await enterWith(nadiaPage, entryCode === "WXYZ-2345" ? "WXYZ-2346" : "WXYZ-2345", "Nadia", "1979-06-02");
+await nadiaPage.getByText("Ce n'est pas le bon code.", { exact: false }).waitFor();
+const teen = new Date();
+teen.setFullYear(teen.getFullYear() - 17);
+await enterWith(nadiaPage, entryCode, "Nadia", teen.toISOString().slice(0, 10));
+const birth = nadiaPage.getByLabel("Date de naissance").first();
+assert.equal(await birth.evaluate((el) => el.validity.rangeOverflow), true); // le navigateur refuse déjà
+await birth.evaluate((el) => el.removeAttribute("max")); // et le serveur aussi, si on passe outre
+await nadiaPage.getByRole("button", { name: "Entrer" }).click();
+await nadiaPage.getByText("Élise est réservée aux personnes majeures (18 ans et plus).").waitFor();
+assert.equal(state().users.length, usersBefore); // aucun compte créé
+step("mauvais code, code incomplet ou moins de 18 ans : message clair, aucun compte créé");
+
+// Le lien remplit le code : il ne reste que le prénom et la date de naissance.
+await nadiaPage.goto(`${BASE}/connexion?code=${entryCode}`);
+assert.equal(await nadiaPage.getByLabel("Code d'accès").inputValue(), entryCode);
+await enterWith(nadiaPage, null, "Nadia", "1979-06-02");
+await nadiaPage.waitForURL((u) => u.pathname === "/" || u.pathname.startsWith("/c/"));
+if (new URL(nadiaPage.url()).pathname === "/") await nadiaPage.getByRole("link", { name: "Parler avec Élise" }).click();
+await nadiaPage.waitForURL(`${BASE}/c/1`);
+await nadiaPage.getByLabel("Votre message").fill("Salut, c'est Nadia !");
+await nadiaPage.getByLabel("Envoyer").click();
+await nadiaPage.getByText(/réponse de test/).waitFor();
 s = state();
-const nadiaRow = () => state().tables.access_codes.find((r) => r.label === "Nadia");
-const nadiaUser = s.users.find((u) => u.id === nadiaRow().user_id);
+const nadiaUser = s.users.find((u) => u.metadata?.display_name === "Nadia");
 assert.match(nadiaUser.email, /^client-[0-9a-f-]{36}@code\.elise\.invalid$/);
 assert.equal(nadiaUser.password, undefined);
-assert.equal(nadiaRow().hint, nadiaCode.slice(-4));
-assert.match(nadiaRow().code_hash, /^[0-9a-f]{64}$/);
-assert.ok(!JSON.stringify(s).includes(nadiaCode.replace("-", "")), "le code n'est gardé nulle part en clair");
-assert.equal(nadiaRow().last_used_at, null);
-step("Paramètres : un code par client (XXXX-XXXX), montré une fois, lien copié ; la base n'en garde qu'une empreinte et 4 caractères");
+assert.ok(s.tables.profiles.some((p) => p.user_id === nadiaUser.id && p.display_name === "Nadia"));
+assert.ok(s.tables.messages.some((m) => m.user_id === nadiaUser.id && m.content === "Salut, c'est Nadia !"));
+step("avec le lien : prénom, date de naissance, « Entrer », et on parle à l'IA (ni e-mail, ni mot de passe, ni autre écran)");
 
-const nadiaCtx = await newContext(phone);
-const nadiaPage = await nadiaCtx.newPage();
-nadiaPage.on("pageerror", (e) => consoleErrors.push(String(e)));
-const codeInput = nadiaPage.getByLabel("Votre code d'accès");
-const enter = nadiaPage.getByRole("button", { name: "Entrer" });
-await nadiaPage.goto(`${BASE}/connexion`);
-assert.equal(await nadiaPage.locator('input[name="email"]').isVisible(), false); // l'e-mail est replié
-await codeInput.fill("abc");
-await enter.click();
-await nadiaPage.getByText("Le code fait 8 lettres et chiffres, par exemple ABCD-EFGH.").waitFor();
-await codeInput.fill(nadiaCode === "WXYZ-2345" ? "WXYZ-2346" : "WXYZ-2345");
-await enter.click();
-await nadiaPage.getByText("Ce code n'existe pas. Vérifiez-le, ou demandez un nouveau code.").waitFor();
-step("code trop court ou inconnu : message clair, rien d'ouvert");
+// Une deuxième personne, même code : un autre compte, une autre conversation.
+const { c: omarCtx, p: omarPage } = await visitor();
+await omarPage.goto(`${BASE}/connexion?code=${entryCode.toLowerCase()}`);
+await enterWith(omarPage, null, "Omar", "1984-11-20");
+await omarPage.waitForURL((u) => u.pathname === "/" || u.pathname.startsWith("/c/"));
+if (new URL(omarPage.url()).pathname === "/") await omarPage.getByRole("link", { name: "Parler avec Élise" }).click();
+await omarPage.waitForURL(`${BASE}/c/1`);
+assert.equal(await omarPage.getByText("Salut, c'est Nadia !").count(), 0);
+const omarUser = state().users.find((u) => u.metadata?.display_name === "Omar");
+assert.ok(omarUser && omarUser.id !== nadiaUser.id);
+step("une autre personne avec le même code : son propre compte, rien de la conversation de Nadia");
 
-// Le lien remplit le code ; minuscules et espaces sont acceptés à la main.
-await nadiaPage.goto(`${BASE}/connexion?code=${nadiaCode}`);
-assert.equal(await codeInput.inputValue(), nadiaCode);
-await codeInput.fill(` ${nadiaCode.toLowerCase().replace("-", " ")} `);
-await enter.click();
-await nadiaPage.waitForURL(`${BASE}/bienvenue`);
-assert.equal(await nadiaPage.locator('input[name="nom"]').inputValue(), "Nadia");
-await nadiaPage.fill('input[name="naissance"]', "1979-06-02");
-await nadiaPage.getByRole("button", { name: "Continuer" }).click();
-await nadiaPage.waitForURL((u) => u.pathname === "/" || u.pathname.startsWith("/c/"));
-await until(() => state().tables.profiles.some((p) => p.user_id === nadiaUser.id && p.display_name === "Nadia"), "profil de Nadia");
-assert.ok(nadiaRow().last_used_at);
-step("le client entre avec son seul code (lien ou saisie), prénom déjà rempli, date de naissance (18 ans), puis la conversation");
-
-// Un membre de l'équipe déjà connecté peut ouvrir un lien de code : il est prévenu, rien ne change tant qu'il n'entre pas.
-await admin.goto(`${BASE}/connexion?code=${nadiaCode}`);
+// Un membre de l'équipe déjà connecté peut ouvrir le lien : il est prévenu, rien ne change tant qu'il n'entre pas.
+await admin.goto(`${BASE}/connexion?code=${entryCode}`);
 await admin.getByText("Vous êtes déjà connecté.", { exact: false }).waitFor();
 await admin.goto(`${BASE}/admin/parametres`);
-await admin.getByText("Nadia", { exact: true }).waitFor();
-await admin.getByText(/utilisé à l'instant|utilisé il y a/).waitFor();
 
-// Nouveau code : l'ancien ne marche plus, le nouveau ouvre le même compte.
-await admin.getByRole("button", { name: "Nouveau code pour Nadia" }).click();
-await until(async () => (await admin.locator("output[data-code]").getAttribute("data-code")) !== nadiaCode, "nouveau code affiché");
-const nadiaCode2 = await admin.locator("output[data-code]").getAttribute("data-code");
-assert.equal(state().tables.access_codes.filter((r) => r.user_id === nadiaUser.id).length, 1);
-const other = await newContext(phone);
-const otherPage = await other.newPage();
-await otherPage.goto(`${BASE}/connexion?code=${nadiaCode}`);
-await otherPage.getByRole("button", { name: "Entrer" }).click();
-await otherPage.getByText("Ce code n'existe pas.", { exact: false }).waitFor();
-await otherPage.getByLabel("Votre code d'accès").fill(nadiaCode2);
-await otherPage.getByRole("button", { name: "Entrer" }).click();
-await otherPage.waitForURL((u) => u.pathname === "/" || u.pathname.startsWith("/c/"));
-await other.close();
-step("« Nouveau code » : l'ancien est refusé, le nouveau ouvre le même compte (sans redemander l'âge)");
-
-// Désactiver : le code ne marche plus et le compte est bloqué ; ses données restent.
-await admin.getByRole("button", { name: "Désactiver le code de Nadia" }).click();
-await admin.getByRole("button", { name: "Confirmer : désactiver le code de Nadia" }).click();
-await until(() => !nadiaRow(), "code désactivé");
-await until(async () => (await admin.getByRole("button", { name: "Nouveau code pour Nadia" }).count()) === 0, "Nadia retirée de la liste");
-assert.ok(state().users.find((u) => u.id === nadiaUser.id).banned);
-assert.ok(state().tables.profiles.some((p) => p.user_id === nadiaUser.id));
-await nadiaPage.goto(BASE);
-await nadiaPage.waitForURL(`${BASE}/connexion`);
-await codeInput.fill(nadiaCode2);
-await enter.click();
-await nadiaPage.getByText("Ce code n'existe pas.", { exact: false }).waitFor();
-await nadiaCtx.close();
-step("« Désactiver » : le code est refusé, le client est déconnecté (au plus une heure en vrai), ses conversations restent");
+// Changer le code : l'ancien ne marche plus, les personnes déjà entrées restent.
+await admin.getByRole("button", { name: "Changer le code" }).click();
+await admin.getByRole("button", { name: "Oui, changer le code" }).click();
+await admin.getByText("Nouveau code en place : l'ancien ne marche plus.").waitFor();
+const entryCode2 = await codeBox.getAttribute("data-code");
+assert.notEqual(entryCode2, entryCode);
+assert.equal(state().tables.entry_code[0].code, entryCode2);
+await admin.reload();
+assert.equal(await codeBox.getAttribute("data-code"), entryCode2);
+const { c: lateCtx, p: latePage } = await visitor();
+await latePage.goto(`${BASE}/connexion?code=${entryCode}`);
+await enterWith(latePage, null, "Tom", "1990-01-01");
+await latePage.getByText("Ce n'est pas le bon code.", { exact: false }).waitFor();
+await enterWith(latePage, entryCode2, "Tom", "1990-01-01");
+await latePage.waitForURL((u) => u.pathname === "/" || u.pathname.startsWith("/c/"));
+await nadiaPage.reload();
+await nadiaPage.getByText("Salut, c'est Nadia !").waitFor();
+for (const c of [nadiaCtx, omarCtx, lateCtx]) await c.close();
+step("« Changer le code » : l'ancien est refusé, le nouveau marche, Nadia reste connectée avec sa conversation");
 
 // Les 429 (quota simulé) et 404 (pages réservées) sont voulus.
 assert.deepEqual(consoleErrors.filter((e) => !/status of (429|404)/.test(e)), []);

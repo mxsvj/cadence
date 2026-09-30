@@ -189,25 +189,26 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `OPEN_CONVERSATION` (`app/admin/messages/events.ts`). Dans les essais e2e,
   Next.js a son propre `role="alert"` vide : chercher le bandeau par son
   bouton « Fermer l'alerte ».
-- Codes d'accès des clients (« carte de médiathèque », demande du porteur du
-  projet : pas d'e-mail ni de mot de passe pour les clients) : table
-  `access_codes` (un code par compte, `code_hash` = HMAC-SHA256 avec
-  `SUPABASE_SECRET_KEY` comme poivre, `lib/code-login.ts` ; `hint` = 4
-  derniers caractères ; aucun droit pour anon/authenticated, même l'équipe :
-  liste par `admin_codes()`). Format `lib/access-code.ts` (8 caractères
-  sans 0/O/1/I/L, `normalizeCode`). L'équipe crée un compte sans vraie
-  adresse (`client-<uuid>@code.elise.invalid`, `auth.admin.createUser`,
-  `user_metadata.display_name` = prénom proposé sur `/bienvenue`) dans
-  Paramètres (`app/admin/parametres/code-actions.ts`) ; « Nouveau code »
-  remplace l'empreinte ; « Désactiver » bannit le compte (`ban_duration`,
-  session refusée au prochain rafraîchissement, ≤ 1 h) puis supprime la
-  ligne. Entrée : `enterWithCode` (`app/connexion/code-actions.ts`) → même
-  mécanisme que le lien de l'équipe (`generateLink` + `verifyOtp`), 10
-  essais / 10 min par IP. Changer la clé secrète invalide tous les codes.
-  `/connexion?code=…` reste ouvert à une personne déjà connectée (elle est
-  prévenue qu'elle changera de compte). L'e-mail et le mot de passe
-  (équipe) sont repliés dans un `<details>` : dans les essais e2e,
-  `emailForm()` l'ouvre et `submitEmail()` clique le bon bouton.
+- Entrée par le code unique (demande du porteur du projet : « au plus
+  simple pour tester l'IA », le même code pour tout le monde) : table
+  `entry_code` (une seule ligne, code en clair au format `ABCD-EFGH`, aucun
+  droit pour anon/authenticated ; l'équipe passe par
+  `admin_code_entree(p_nouveau)` — crée le code à la première visite de
+  Paramètres — et `admin_changer_code_entree`). `/connexion` : code + prénom
+  + date de naissance sur un seul écran (`app/connexion/code-form.tsx`) ;
+  `enterWithCode` vérifie le code (clé secrète, `sameCode`), crée un compte
+  de test (`client-<uuid>@code.elise.invalid`, `auth.admin.createUser`),
+  ouvre sa session comme le lien de l'équipe (`generateLink` + `verifyOtp`)
+  puis appelle `enregistrer_profil` (18 ans, refusé aussi par la base) ;
+  10 entrées / 10 min par IP. Une entrée = un nouveau compte (chacun sa
+  conversation). `/connexion?code=…` reste ouvert à une personne déjà
+  connectée (prévenue qu'elle changera de compte). L'e-mail et le mot de
+  passe (équipe) sont repliés dans un `<details>` : dans les essais e2e,
+  `emailForm()` l'ouvre, `submitEmail()` clique le bon bouton, et les
+  champs se visent par `details input[name=…]`. La première version (un
+  code par client, table `access_codes`, `admin_codes()`) ne sert plus ;
+  sa suppression a été bloquée par la vérification de sécurité (elle
+  effaçait des données) : la table reste, inutilisée.
 - Production : en-têtes de sécurité dans `next.config.ts` (frame-ancestors,
   nosniff, referrer, permissions, HSTS, `poweredByHeader: false`) ; au plus
   `CHAT_RATE_LIMIT` (12) messages par minute et par personne sur `/api/chat`
