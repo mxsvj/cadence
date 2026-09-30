@@ -759,6 +759,40 @@ as $$
 $$;
 
 
+-- ─── Les alertes de l'équipe ───────────────────────────────────────────────
+-- Ce qui mérite qu'un humain regarde une conversation tout de suite : une
+-- contre-offre sur un contenu payant, un plafond du mois presque atteint
+-- (80 %), une personne qui demande un humain ou dont le message demande de
+-- l'attention. On ne garde que le type d'alerte, la raison en un mot et des
+-- montants : jamais le texte des messages, jamais rien sur la santé.
+create table if not exists public.team_alerts (
+  id          bigint generated always as identity primary key,
+  user_id     uuid not null references auth.users (id) on delete cascade,
+  creator_id  bigint not null references public.creators (id) on delete cascade,
+  kind        text not null check (kind in ('contre_offre', 'plafond', 'urgence')),
+  offer_id    bigint references public.offers (id) on delete set null,
+  detail      jsonb not null default '{}'::jsonb check (octet_length(detail::text) <= 1000),
+  created_at  timestamptz not null default now(),
+  -- Envoyée sur Discord ou Telegram (null : pas encore).
+  notified_at timestamptz,
+  -- Traitée par l'équipe (null : à traiter).
+  handled_at  timestamptz,
+  handled_by  uuid references auth.users (id) on delete set null
+);
+create index if not exists team_alerts_open_idx on public.team_alerts (user_id, creator_id) where handled_at is null;
+
+alter table public.team_alerts enable row level security;
+revoke all on public.team_alerts from anon, authenticated;
+grant select on public.team_alerts to authenticated;
+drop policy if exists "L'équipe voit les alertes" on public.team_alerts;
+create policy "L'équipe voit les alertes" on public.team_alerts for select to authenticated
+  using ((select public.is_admin()));
+
+-- « Prendre la main » : dans cette conversation, l'IA se tait (quel que soit
+-- le mode) et l'équipe répond, jusqu'à ce qu'elle rende la main.
+alter table public.creator_contacts add column if not exists manual boolean not null default false;
+
+
 -- ─── Qui voit quoi ─────────────────────────────────────────────────────────
 alter table public.profiles     enable row level security;
 alter table public.scripts      enable row level security;
@@ -1030,6 +1064,11 @@ begin
   values (o.user_id, 'contenu', o.price_cents, true, o.id)
   returning id into achat;
   update public.offers set status = 'achetee', purchased_at = now() where id = o.id;
+  -- 80 % du plafond du mois dépensés : l'équipe est prévenue (une fois par mois).
+  if plafond is not null and plafond > 0 and public.depense_du_mois(o.user_id) * 100 >= plafond * 80 then
+    perform public.alerter_equipe(o.user_id, o.creator_id, 'plafond', o.id,
+      jsonb_build_object('depense_cents', public.depense_du_mois(o.user_id), 'plafond_cents', plafond));
+  end if;
   return jsonb_build_object('offre', o.id, 'achat', achat, 'cents', o.price_cents);
 end;
 $$;
@@ -1045,8 +1084,9 @@ security definer
 set search_path = ''
 as $$
 declare
-  o       public.offers;
-  minimum integer;
+  o        public.offers;
+  minimum  integer;
+  resultat jsonb;
 begin
   select * into o from public.offers where id = p_offre and user_id = (select auth.uid()) for update;
   if not found then
@@ -1065,21 +1105,28 @@ begin
   if p_montant_cents >= o.price_cents then
     -- Proposer plus que le prix affiché : on garde le prix affiché.
     update public.offers set last_bid_cents = p_montant_cents, last_bid_status = 'acceptee' where id = o.id;
-    return jsonb_build_object('statut', 'acceptee', 'prix_cents', o.price_cents);
+    resultat := jsonb_build_object('statut', 'acceptee', 'prix_cents', o.price_cents);
+  else
+    select st.min_price_cents into minimum from public.script_steps st where st.id = o.step_id;
+    if p_montant_cents >= coalesce(minimum, o.price_cents) then
+      update public.offers
+      set price_cents = p_montant_cents, personalized = true, last_bid_cents = p_montant_cents, last_bid_status = 'acceptee'
+      where id = o.id;
+      resultat := jsonb_build_object('statut', 'acceptee', 'prix_cents', p_montant_cents);
+    else
+      update public.offers
+      set bids_refused = bids_refused + 1, last_bid_cents = p_montant_cents, last_bid_status = 'refusee'
+      where id = o.id;
+      resultat := jsonb_build_object('statut', 'refusee', 'prix_cents', o.price_cents, 'essais_restants', 2 - o.bids_refused);
+    end if;
   end if;
 
-  select st.min_price_cents into minimum from public.script_steps st where st.id = o.step_id;
-  if p_montant_cents >= coalesce(minimum, o.price_cents) then
-    update public.offers
-    set price_cents = p_montant_cents, personalized = true, last_bid_cents = p_montant_cents, last_bid_status = 'acceptee'
-    where id = o.id;
-    return jsonb_build_object('statut', 'acceptee', 'prix_cents', p_montant_cents);
-  end if;
-
-  update public.offers
-  set bids_refused = bids_refused + 1, last_bid_cents = p_montant_cents, last_bid_status = 'refusee'
-  where id = o.id;
-  return jsonb_build_object('statut', 'refusee', 'prix_cents', o.price_cents, 'essais_restants', 2 - o.bids_refused);
+  -- L'équipe est prévenue de chaque contre-offre (une alerte par offre,
+  -- mise à jour à chaque nouvelle proposition).
+  perform public.alerter_equipe(o.user_id, o.creator_id, 'contre_offre', o.id,
+    jsonb_build_object('montant_cents', p_montant_cents, 'prix_cents', o.price_cents,
+                       'statut', resultat ->> 'statut', 'essais_restants', resultat -> 'essais_restants'));
+  return resultat;
 end;
 $$;
 
@@ -1142,6 +1189,11 @@ begin
                          and m.id > coalesce(cc.last_read_message_id, 0)),
            -- En mode hybride : cette créatrice a-t-elle le droit de lui répondre ?
            'ia_autorisee', coalesce(cc.ai_enabled, true),
+           -- L'équipe a pris la main : l'IA se tait dans cette conversation.
+           'manuel', coalesce(cc.manual, false),
+           -- Les alertes à traiter : urgence, contre_offre, plafond.
+           'alertes', (select coalesce(jsonb_agg(distinct a.kind), '[]'::jsonb) from public.team_alerts a
+                       where a.user_id = d.user_id and a.creator_id = d.creator_id and a.handled_at is null),
            'depense_cents', (select coalesce(sum(pu.amount_cents), 0) from public.purchases pu where pu.user_id = d.user_id))
          order by d.id desc), '[]'::jsonb)
   into resultat
@@ -1235,6 +1287,159 @@ end;
 $$;
 
 
+-- ─── Les alertes : prévenir, envoyer, traiter ─────────────────────────────
+-- Prévenir l'équipe (usage interne : contre-offres et achats ci-dessus, et le
+-- serveur pour les urgences). Une contre-offre met à jour l'alerte encore
+-- ouverte de la même offre ; une urgence n'est créée que si la conversation
+-- n'en a pas déjà une à traiter ; le plafond ne prévient qu'une fois par mois.
+-- Renvoie l'alerte créée ou mise à jour (null : rien de nouveau).
+create or replace function public.alerter_equipe(p_user uuid, p_creator bigint, p_kind text, p_offer bigint, p_detail jsonb)
+returns bigint
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  alerte bigint;
+begin
+  if p_kind = 'contre_offre' then
+    update public.team_alerts
+    set detail = coalesce(p_detail, '{}'::jsonb), created_at = now(), notified_at = null
+    where kind = 'contre_offre' and offer_id = p_offer and handled_at is null
+    returning id into alerte;
+    if alerte is not null then
+      return alerte;
+    end if;
+  elsif p_kind = 'urgence' then
+    if exists (select 1 from public.team_alerts
+               where kind = 'urgence' and user_id = p_user and creator_id = p_creator and handled_at is null) then
+      return null;
+    end if;
+  elsif p_kind = 'plafond' then
+    if exists (select 1 from public.team_alerts
+               where kind = 'plafond' and user_id = p_user
+                 and date_trunc('month', created_at at time zone 'Europe/Paris')
+                   = date_trunc('month', now() at time zone 'Europe/Paris')) then
+      return null;
+    end if;
+  end if;
+  insert into public.team_alerts (user_id, creator_id, kind, offer_id, detail)
+  values (p_user, p_creator, p_kind, p_offer, coalesce(p_detail, '{}'::jsonb))
+  returning id into alerte;
+  return alerte;
+end;
+$$;
+
+-- Les alertes à envoyer sur Discord ou Telegram, marquées comme envoyées
+-- (deux envois en même temps ne prennent jamais les mêmes). Seulement celles
+-- du dernier jour, encore à traiter. Usage interne.
+create or replace function public.alertes_a_envoyer(p_limite integer default 10)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  resultat jsonb;
+begin
+  with prises as (
+    update public.team_alerts a
+    set notified_at = now()
+    where a.id in (select t.id from public.team_alerts t
+                   where t.notified_at is null and t.handled_at is null and t.created_at > now() - interval '1 day'
+                   order by t.id
+                   limit greatest(p_limite, 0)
+                   for update skip locked)
+    returning a.*
+  )
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'id', p.id, 'kind', p.kind, 'user_id', p.user_id, 'creator_id', p.creator_id,
+           'creatrice', coalesce(nullif(trim(c.persona ->> 'nom'), ''), nullif(trim(c.persona ->> 'pseudo'), ''), 'Élise'),
+           'detail', p.detail)
+         order by p.id), '[]'::jsonb)
+  into resultat
+  from prises p
+  join public.creators c on c.id = p.creator_id;
+  return resultat;
+end;
+$$;
+
+-- Les alertes à traiter, les plus récentes d'abord, pour le bandeau et la
+-- messagerie de l'équipe.
+create or replace function public.admin_alertes()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  resultat jsonb;
+begin
+  if not public.is_admin() then
+    raise exception 'Réservé aux administrateurs.' using errcode = '42501';
+  end if;
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'id', a.id, 'kind', a.kind, 'user_id', a.user_id, 'creator_id', a.creator_id, 'offer_id', a.offer_id,
+           'nom', coalesce(p.display_name, split_part(u.email, '@', 1)),
+           'creatrice', coalesce(nullif(trim(c.persona ->> 'nom'), ''), nullif(trim(c.persona ->> 'pseudo'), ''), 'Élise'),
+           'detail', a.detail, 'date', a.created_at)
+         order by a.created_at desc, a.id desc), '[]'::jsonb)
+  into resultat
+  from (select * from public.team_alerts where handled_at is null order by created_at desc, id desc limit 100) a
+  join auth.users u on u.id = a.user_id
+  join public.creators c on c.id = a.creator_id
+  left join public.profiles p on p.user_id = a.user_id;
+  return resultat;
+end;
+$$;
+
+-- Marquer traitée une alerte (p_alerte) ou toutes celles d'une conversation.
+-- Au passage, les alertes traitées depuis plus de 90 jours sont effacées.
+create or replace function public.admin_traiter_alertes(p_user uuid, p_creator bigint, p_alerte bigint default null)
+returns integer
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  nombre integer;
+begin
+  if not public.is_admin() then
+    raise exception 'Réservé aux administrateurs.' using errcode = '42501';
+  end if;
+  update public.team_alerts
+  set handled_at = now(), handled_by = (select auth.uid())
+  where user_id = p_user and creator_id = p_creator and handled_at is null
+    and (p_alerte is null or id = p_alerte);
+  get diagnostics nombre = row_count;
+  delete from public.team_alerts where handled_at < now() - interval '90 days';
+  return nombre;
+end;
+$$;
+
+-- Prendre la main (l'IA se tait dans cette conversation) ou la rendre à l'IA.
+create or replace function public.admin_prendre_la_main(p_user uuid, p_creator bigint, p_manuel boolean)
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Réservé aux administrateurs.' using errcode = '42501';
+  end if;
+  insert into public.creator_contacts (creator_id, user_id, manual)
+  values (p_creator, p_user, coalesce(p_manuel, false))
+  on conflict (creator_id, user_id) do update set manual = excluded.manual, updated_at = now();
+end;
+$$;
+
+
 -- ─── Le bouton « Effacer toutes mes données » ──────────────────────────────
 -- Efface d'un seul coup, et seulement pour la personne connectée, ses
 -- messages, sa fiche, son résumé, et les notes de l'équipe à son sujet. Le
@@ -1255,6 +1460,7 @@ begin
   delete from public.messages   where user_id = moi;
   delete from public.user_facts where user_id = moi;
   delete from public.summaries  where user_id = moi;
+  delete from public.team_alerts where user_id = moi;
   update public.contacts set notes = '', emojis = '', city = '', last_read_message_id = 0 where user_id = moi;
   update public.creator_contacts set emojis = '', emoji_mode = 'libre', last_read_message_id = 0 where user_id = moi;
 end;
@@ -1335,6 +1541,11 @@ as $$
     and not exists (select 1 from public.creator_contacts cc
                     join public.ai_settings s on s.id = 1 and s.mode = 'hybride'
                     where cc.creator_id = dernier.creator_id and cc.user_id = p.user_id and not cc.ai_enabled)
+    -- Ni quand l'équipe a pris la main, ni sous une urgence à traiter.
+    and not exists (select 1 from public.creator_contacts cc
+                    where cc.creator_id = dernier.creator_id and cc.user_id = p.user_id and cc.manual)
+    and not exists (select 1 from public.team_alerts a
+                    where a.user_id = p.user_id and a.kind = 'urgence' and a.handled_at is null)
   order by dernier.created_at
   limit greatest(p_limite, 0);
 $$;
@@ -1353,7 +1564,9 @@ revoke execute on function
   public.admin_boite(), public.admin_personne(uuid, bigint), public.admin_envoyer(uuid, bigint, text),
   public.admin_marquer_lu(uuid, bigint), public.effacer_mes_donnees(),
   public.regler_relances(boolean), public.marquer_visite(), public.a_relancer(integer, integer),
-  public.creatrice_disponible(bigint), public.creatrices_disponibles()
+  public.creatrice_disponible(bigint), public.creatrices_disponibles(),
+  public.alerter_equipe(uuid, bigint, text, bigint, jsonb), public.alertes_a_envoyer(integer), public.admin_alertes(),
+  public.admin_traiter_alertes(uuid, bigint, bigint), public.admin_prendre_la_main(uuid, bigint, boolean)
   from public, anon, authenticated;
 grant execute on function
   public.enregistrer_profil(text, date), public.acheter_offre(bigint),
@@ -1361,11 +1574,13 @@ grant execute on function
   public.admin_proposer(uuid, bigint, bigint, integer, text), public.admin_retirer_offre(bigint),
   public.admin_boite(), public.admin_personne(uuid, bigint), public.admin_envoyer(uuid, bigint, text),
   public.admin_marquer_lu(uuid, bigint), public.regler_relances(boolean), public.marquer_visite(),
-  public.creatrice_disponible(bigint), public.creatrices_disponibles()
+  public.creatrice_disponible(bigint), public.creatrices_disponibles(),
+  public.admin_alertes(), public.admin_traiter_alertes(uuid, bigint, bigint), public.admin_prendre_la_main(uuid, bigint, boolean)
   to authenticated;
 grant execute on function
   public.script_de(uuid, bigint), public.prochaine_etape(uuid, bigint), public.depense_du_mois(uuid), public.plafond_de(uuid),
-  public.proposer_etape(uuid, bigint, bigint, integer, text, text, uuid), public.a_relancer(integer, integer)
+  public.proposer_etape(uuid, bigint, bigint, integer, text, text, uuid), public.a_relancer(integer, integer),
+  public.alerter_equipe(uuid, bigint, text, bigint, jsonb), public.alertes_a_envoyer(integer)
   to service_role;
 
 

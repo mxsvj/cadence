@@ -12,6 +12,7 @@ import {
 } from "@/lib/dashboard";
 import { clearDemo, fillDemo, simulatePurchase } from "./actions";
 import { EarningsChart } from "./chart";
+import { OpenAlerts } from "./open-alerts";
 
 /** Toutes les combien de secondes les chiffres sont redemandés. */
 const REFRESH_MS = 4000;
@@ -117,6 +118,8 @@ export function Dashboard({ initial }: { initial: DashboardData }) {
           </p>
         </div>
       </header>
+
+      <OpenAlerts now={now} />
 
       {data.demo && (
         <p className="rounded-2xl border border-line bg-accent-soft px-4 py-3 text-sm">

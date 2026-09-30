@@ -46,14 +46,18 @@ export async function buildReply(input: {
   settings: AiSettings;
   contact: Contact;
   profile: Profile | null;
+  /** Le message vient de déclencher une alerte d'urgence (lib/urgency.ts). */
+  teamAlerted?: boolean;
 }) {
   const { supabase, admin, userId, creator, settings, contact, profile } = input;
-  const [facts, summary, recent, sale] = await Promise.all([
+  const [facts, summary, recent, loaded] = await Promise.all([
     loadFacts(supabase, userId, creator.id),
     loadSummary(supabase, userId, creator.id),
     loadMessages(supabase, userId, creator.id, settings.context_messages - 1),
     loadSaleContext(admin, userId, creator.id, settings),
   ]);
+  // Le message vient de prévenir l'équipe : aucune offre dans cette réponse.
+  const sale: SaleContext = input.teamAlerted ? { ...loaded, canPropose: false, block: { reason: "urgence" } } : loaded;
 
   const system = chatSystemPrompt({
     base: getPersona(),
@@ -70,11 +74,12 @@ export async function buildReply(input: {
     facts,
     summary: summary?.summary ?? null,
     sale: toSalePrompt(sale),
+    team: { alerted: input.teamAlerted ?? false },
     extra: settings.extra_instructions,
     now: input.now,
   });
   const messages: Turn[] = [...recent.map(toTurn), { role: "user", content: input.newMessage }];
-  return { system, messages, facts, sale, name: displayName(creator.persona) };
+  return { system, messages, facts, summary, sale, name: displayName(creator.persona) };
 }
 
 async function insertAiMessage(admin: SupabaseClient, userId: string, creatorId: number, content: string): Promise<Message> {

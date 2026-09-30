@@ -35,23 +35,33 @@ refuse.
 - **À chaque message**, le modèle reçoit la persona (`elise-persona.md`), la
   fiche de la personne, le résumé des anciennes conversations, la date, et
   les 20 derniers messages.
-- **La fiche** : après chaque réponse, un second appel au modèle relève les
-  nouveaux faits utiles (prénom, entourage, rythme de vie, goûts, événements à
+- **La fiche** : tous les 3 messages de la personne, un second appel au
+  modèle relève les nouveaux faits utiles dans les derniers échanges (prénom, entourage, rythme de vie, goûts, événements à
   venir). Doublons écartés ; santé, religion, orientation sexuelle et argent
   jamais enregistrés (consigne au modèle, plus un filtre de mots en secours).
 - **Le résumé** : quand plus de 40 messages ne sont pas encore résumés, les
-  plus anciens (tous sauf les 20 derniers) rejoignent le résumé.
+  plus anciens (tous sauf les 20 derniers) rejoignent le résumé (vérifié en
+  même temps que la fiche, tous les 3 messages).
+- **Alertes de l'équipe** : une contre-offre, un plafond du mois dépensé à
+  80 %, ou une personne qui a besoin d'un humain (elle le demande, dit avoir
+  moins de 18 ans, parle d'un problème de paiement, ou son message inquiète
+  l'IA) préviennent l'équipe : bandeau « flash » dans l'espace de l'équipe,
+  pastille sur l'onglet Messages, et, si on le branche, un message sur Discord
+  ou Telegram. Voir « Alertes » plus bas.
 - **« Effacer toutes mes données »**, dans le menu `⋯` : supprime messages,
   fiche et résumé. Le compte reste ; Élise se présente à nouveau.
 - **Sécurité** : chaque table est protégée ligne par ligne (Row Level
   Security) ; chacun ne voit que ses propres données, et les visiteurs non
-  connectés n'ont accès à rien.
+  connectés n'ont accès à rien. Les clés secrètes ne quittent jamais le
+  serveur ; le site ne peut pas être affiché dans le cadre d'un autre site ;
+  au plus 12 messages par minute et par personne (contre les rafales).
 - **18 ans minimum** : prénom et date de naissance à l'inscription ; la base
   refuse les mineurs.
 - **Toujours savoir qui répond** : chaque réponse est marquée « Nom · IA » ou
   « Équipe ».
-- **Espace de l'équipe** (`/admin`, réservé aux administrateurs), en quatre
-  onglets : Tableau de bord, Messages, IA, Contenus (détails plus bas).
+- **Espace de l'équipe** (`/admin`, réservé aux administrateurs), en six
+  onglets : Tableau de bord, Messages, IA, Créatrices, Contenus, Paramètres
+  (détails plus bas).
 - **Tableau de bord des gains** (`/admin`, réservé aux administrateurs) :
   pourboires, messages achetés, abonnements actifs, total des gains et
   évolution, courbe des gains par jour (7, 30 ou 90 jours), dernier achat en
@@ -231,6 +241,45 @@ fiche de la personne :
   l'étape suivante par l'équipe, avec un message écrit à la main ou rédigé par
   l'IA puis relu.
 
+### Alertes
+
+Trois situations préviennent l'équipe, pour qu'elle intervienne au bon moment :
+
+- **Contre-offre** : une personne propose un autre prix pour un contenu
+  payant (une alerte par offre, mise à jour à chaque nouvelle proposition,
+  acceptée ou refusée).
+- **Plafond bientôt atteint** : après un achat, 80 % ou plus de son plafond du
+  mois est dépensé (une fois par mois). L'IA ne lui propose alors plus aucun
+  contenu payant : c'est l'équipe qui décide, et la base refuse toujours tout
+  achat au-delà du plafond.
+- **Urgence** : la personne demande à parler à un humain, dit avoir moins de
+  18 ans, parle d'un remboursement ou d'un problème de paiement, ou son
+  message demande de l'attention (détresse, danger) ; l'IA peut aussi
+  prévenir l'équipe d'elle-même. L'IA continue de lui répondre avec
+  attention et lui dit que l'équipe est prévenue ; elle ne propose plus rien
+  tant que l'urgence n'est pas marquée traitée. On ne garde que la raison en
+  un mot, jamais le texte du message.
+
+Où les voir : un **bandeau** en haut de chaque page de l'espace de l'équipe
+(avec « Prendre la main » et « Ouvrir »), une **pastille** sur l'onglet
+Messages, la liste **À traiter** du tableau de bord, et dans Messages des
+**filtres** (À traiter, Urgences, Contre-offres, Plafond proche, Non lus, Main
+prise), une étiquette par conversation, et les alertes en haut de la
+conversation avec « Traité ».
+
+**Prendre la main** (un clic, depuis le bandeau, le tableau de bord ou la
+conversation) : dans cette conversation, l'IA se tait quel que soit le mode, et
+les messages attendent la réponse de l'équipe. « Rendre la main à l'IA » la
+laisse répondre à nouveau.
+
+**Discord ou Telegram (facultatif, gratuit)** : sur Vercel, ajouter
+`DISCORD_WEBHOOK_URL` (Discord → paramètres du salon → Intégrations →
+Webhooks → Nouveau webhook → Copier l'URL), ou `TELEGRAM_BOT_TOKEN` et
+`TELEGRAM_CHAT_ID` (un robot créé avec @BotFather), puis redéployer. Le message
+envoyé ne contient ni prénom, ni e-mail, ni texte de la conversation : le type
+d'alerte, la créatrice, une phrase (« Demande à parler à un humain ») et le
+lien vers la conversation. L'onglet Paramètres dit si c'est branché.
+
 ### IA
 
 - **Qui répond** : automatique (l'IA répond à tout le monde), hybride
@@ -308,7 +357,8 @@ physiques dans un registre sexuel.
   (pas encore de notification sur le téléphone) ; l'équipe le voit marqué
   « prise de nouvelles ».
 - **Le site** : le modèle d'IA en service, si le lien de l'équipe est
-  activé, et si la prise de nouvelles peut tourner (`CRON_SECRET`).
+  activé, si les alertes partent sur Discord ou Telegram, et si la prise de
+  nouvelles peut tourner (`CRON_SECRET`).
 - **Compte** : le compte connecté, « Tester la conversation » (ce que voient
   les personnes) et « Se déconnecter ».
 
@@ -375,9 +425,12 @@ qui suit le Flash le plus récent).
 ## Limites connues de cette version
 
 - **Quota Gemini gratuit** : environ 10 demandes par minute et un plafond par
-  jour. Chaque message en coûte deux (la réponse, puis la fiche) ; au-delà,
-  Élise demande poliment de réessayer une minute plus tard, et le message
-  n'est pas perdu.
+  jour. Chaque message en coûte un, plus un tous les 3 messages pour la fiche
+  (et de temps en temps un pour le résumé) ; au-delà, Élise demande poliment
+  de réessayer une minute plus tard, et le message n'est pas perdu.
+- **Messagerie de l'équipe** : la liste des conversations est relue toutes
+  les 4 secondes ; au-delà de quelques milliers de conversations, il faudra
+  l'alléger (pagination).
 - **Supabase gratuit** met le projet en pause après 7 jours sans visite ; on le
   relance d'un clic depuis le tableau de bord.
 - **Mot de passe oublié** : pas encore prévu (il faudrait un service d'e-mail).

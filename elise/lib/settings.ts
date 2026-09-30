@@ -31,6 +31,8 @@ export type Contact = {
   user_id: string;
   /** Avec la créatrice de la conversation : l'IA peut-elle répondre en mode hybride ? */
   ai_enabled: boolean;
+  /** L'équipe a pris la main dans cette conversation : l'IA se tait, quel que soit le mode. */
+  manual: boolean;
   notes: string;
   /** Avec la créatrice de la conversation : emojis au choix de l'IA, seulement ceux de la liste, ou aucun. */
   emoji_mode: EmojiMode;
@@ -93,6 +95,7 @@ export function defaultContact(userId: string): Contact {
   return {
     user_id: userId,
     ai_enabled: true,
+    manual: false,
     notes: "",
     emoji_mode: "libre",
     emojis: "",
@@ -118,12 +121,13 @@ export async function loadContact(admin: SupabaseClient, userId: string, creator
   ]);
   if (contact.error) throw new Error(`Fiche contact illisible : ${contact.error.message}`);
   if (withCreator.error) throw new Error(`Réglages de la créatrice illisibles : ${withCreator.error.message}`);
-  const own = (withCreator.data ?? {}) as { ai_enabled?: boolean; emoji_mode?: unknown; emojis?: string };
+  const own = (withCreator.data ?? {}) as { ai_enabled?: boolean; manual?: boolean; emoji_mode?: unknown; emojis?: string };
   const emojis = own.emojis ?? "";
   return {
     ...defaultContact(userId),
     ...(contact.data ?? {}),
     ai_enabled: own.ai_enabled ?? true,
+    manual: own.manual === true,
     // Sans le réglage (schema.sql pas encore relancé) : une liste remplie vaut « seulement ceux-là ».
     emoji_mode: isEmojiMode(own.emoji_mode) ? own.emoji_mode : emojis.trim() ? "choisis" : "libre",
     emojis,
@@ -132,7 +136,7 @@ export async function loadContact(admin: SupabaseClient, userId: string, creator
 
 /** L'IA répond-elle à cette personne, dans le mode choisi ? */
 export function aiMayReply(settings: AiSettings, contact: Contact): boolean {
-  if (settings.mode === "manuel") return false;
+  if (settings.mode === "manuel" || contact.manual) return false;
   if (settings.mode === "hybride") return contact.ai_enabled;
   return true;
 }

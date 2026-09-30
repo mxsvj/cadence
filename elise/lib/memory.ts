@@ -23,6 +23,18 @@ import {
 export const CONTEXT_MESSAGES = 20;
 /** Plafond de faits envoyés au modèle (les plus récents). */
 const MAX_FACTS_IN_PROMPT = 150;
+/**
+ * La fiche et le résumé se mettent à jour tous les N messages de la personne,
+ * pas à chaque message : un appel au modèle sur trois au lieu de un sur deux,
+ * et moins de lectures dans la base. Les derniers messages étant toujours
+ * relus en entier, rien n'est perdu entre deux mises à jour.
+ */
+export const MEMORY_EVERY = 3;
+
+/** Faut-il mettre la mémoire à jour après ce message (le n-ième de la personne) ? */
+export function memoryDue(userMessages: number): boolean {
+  return userMessages > 0 && userMessages % MEMORY_EVERY === 0;
+}
 
 export type Message = Turn & {
   id: number;
@@ -110,7 +122,7 @@ export async function loadFacts(supabase: SupabaseClient, userId: string, creato
   return (data as { fact: string }[]).map((r) => r.fact).reverse();
 }
 
-type SummaryRow = { summary: string; last_message_id: number };
+export type SummaryRow = { summary: string; last_message_id: number };
 
 export async function loadSummary(supabase: SupabaseClient, userId: string, creatorId: number): Promise<SummaryRow | null> {
   const { data, error } = await supabase
@@ -124,8 +136,9 @@ export async function loadSummary(supabase: SupabaseClient, userId: string, crea
 }
 
 /**
- * Après chaque réponse : un second appel au modèle relève les nouveaux faits
- * sur la personne, qu'on range dans la fiche sans doublon.
+ * Tous les MEMORY_EVERY messages : un second appel au modèle relève les
+ * nouveaux faits dans les derniers échanges, qu'on range dans la fiche sans
+ * doublon.
  */
 export async function rememberFacts(
   supabase: SupabaseClient,
@@ -137,7 +150,7 @@ export async function rememberFacts(
 ): Promise<string[]> {
   const raw = await generate({
     system: factsSystemPrompt(now),
-    messages: [{ role: "user", content: factsUserPrompt(existing, recent.slice(-6)) }],
+    messages: [{ role: "user", content: factsUserPrompt(existing, recent.slice(-2 * MEMORY_EVERY)) }],
     temperature: 0,
     maxTokens: 500,
     json: true,
@@ -163,8 +176,10 @@ export async function summarizeIfNeeded(
   creatorId: number,
   now: Date,
   contextMessages = CONTEXT_MESSAGES,
+  /** Le résumé déjà lu pour écrire la réponse (évite de le relire). */
+  known?: SummaryRow | null,
 ): Promise<boolean> {
-  const previous = await loadSummary(supabase, userId, creatorId);
+  const previous = known === undefined ? await loadSummary(supabase, userId, creatorId) : known;
   const after = previous?.last_message_id ?? 0;
 
   const { count, error } = await supabase

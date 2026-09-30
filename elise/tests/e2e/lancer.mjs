@@ -26,6 +26,10 @@ const env = {
   E2E_CONTROL_PORT: String(Number(port) + 99),
   ADMIN_ACCESS_KEY: "cle-de-test-du-lien-equipe-0123456789",
   CRON_SECRET: "secret-de-test-des-relances-0123",
+  // Un faux Discord (faux-services.mjs) : les alertes de l'équipe y arrivent.
+  DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/123456789/jeton-de-test_0123",
+  // Le parcours envoie des rafales de messages : la limite normale est de 12 par minute.
+  CHAT_RATE_LIMIT: "40",
 };
 
 const build = spawnSync("npx", ["next", "build"], { cwd: root, env, stdio: "inherit" });

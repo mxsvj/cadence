@@ -3,6 +3,7 @@ import Link from "next/link";
 import { signOut } from "@/app/actions";
 import { Notice } from "@/app/notice";
 import { currentModel } from "@/lib/llm";
+import { channelStatus } from "@/lib/notify";
 import { cronSecret } from "@/lib/relances";
 import { DEFAULT_SETTINGS, type AiSettings } from "@/lib/settings";
 import { accessKey } from "@/lib/team-access";
@@ -36,6 +37,9 @@ export default async function ParametersPage() {
   const email = claims.data?.claims?.email as string | undefined;
   const linkReady = accessKey() !== null;
   const cronReady = cronSecret() !== null;
+  const channels = channelStatus();
+  const channelText = (state: "ok" | "absent" | "invalide", vars: string) =>
+    state === "ok" ? "Branché" : state === "invalide" ? `Mal copié : vérifiez ${vars} dans Vercel` : "Non branché (facultatif)";
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6">
@@ -70,6 +74,14 @@ export default async function ParametersPage() {
                 <span className="block text-xs text-muted">ADMIN_ACCESS_KEY manque dans Vercel (au moins 24 caractères).</span>
               </>
             )}
+          </dd>
+          <dt className="text-muted">Alertes de l&apos;équipe</dt>
+          <dd className="min-w-0">
+            Bandeau et onglet Messages : toujours
+            <span className="block text-xs text-muted">Discord : {channelText(channels.discord, "DISCORD_WEBHOOK_URL")}</span>
+            <span className="block text-xs text-muted">
+              Telegram : {channelText(channels.telegram, "TELEGRAM_BOT_TOKEN et TELEGRAM_CHAT_ID")}
+            </span>
           </dd>
           <dt className="text-muted">Prendre des nouvelles</dt>
           <dd className="min-w-0">

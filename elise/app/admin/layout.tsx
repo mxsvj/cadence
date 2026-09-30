@@ -1,3 +1,4 @@
+import { AlertFlash } from "./alert-flash";
 import { adminGate } from "./gate";
 import { AdminNav } from "./nav";
 
@@ -9,6 +10,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
     <div className="flex min-h-dvh flex-col pt-[env(safe-area-inset-top)] pb-[calc(4rem+env(safe-area-inset-bottom))]">
       {children}
+      <AlertFlash />
       <AdminNav />
     </div>
   );

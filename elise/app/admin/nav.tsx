@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAlerts } from "./alerts-store";
 
 // Les onglets de l'équipe, en bas de l'écran comme dans une appli. La barre
 // fait 4 rem (plus la marge de l'iPhone) : la mise en page et la messagerie
@@ -86,6 +87,9 @@ const TABS = [
 
 export function AdminNav() {
   const path = usePathname();
+  // La pastille de l'onglet Messages : les alertes à traiter (rouge s'il y a une urgence).
+  const { alerts } = useAlerts();
+  const urgent = alerts.some((a) => a.kind === "urgence");
   return (
     <nav
       aria-label="Espace de l'équipe"
@@ -94,17 +98,29 @@ export function AdminNav() {
       <ul className="mx-auto grid h-16 max-w-2xl grid-cols-6">
         {TABS.map((t) => {
           const active = t.href === "/admin" ? path === "/admin" : path.startsWith(t.href);
+          const badge = t.href === "/admin/messages" ? alerts.length : 0;
           return (
             <li key={t.href} className="min-w-0">
               <Link
                 href={t.href}
-                aria-label={t.name}
+                aria-label={badge ? `${t.name} (${badge} alerte${badge > 1 ? "s" : ""} à traiter)` : t.name}
                 aria-current={active ? "page" : undefined}
                 className={`flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${
                   active ? "text-accent" : "text-muted hover:text-foreground"
                 }`}
               >
-                <span aria-hidden>{t.icon}</span>
+                <span aria-hidden className="relative">
+                  {t.icon}
+                  {badge > 0 && (
+                    <span
+                      className={`absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${
+                        urgent ? "bg-bad" : "bg-accent"
+                      }`}
+                    >
+                      {badge > 99 ? "99+" : badge}
+                    </span>
+                  )}
+                </span>
                 <span aria-hidden className="max-w-full truncate px-0.5">
                   {t.label}
                 </span>

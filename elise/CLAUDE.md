@@ -21,11 +21,16 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   c'est un projet séparé dont le « Root Directory » est `elise`.
 - Supabase (`*.supabase.co`) n'est pas joignable depuis l'environnement cloud
   de Claude Code ; l'API Gemini l'est.
-- Mémoire : 20 derniers messages envoyés au modèle ; résumé déclenché dans
-  `after()` quand plus de 40 messages ne sont pas résumés
-  (`summaries.last_message_id` marque la limite) ; faits extraits après chaque
-  réponse, filtrés par `lib/facts.ts`. Tout passe par le client Supabase de
-  la personne connectée (RLS), jamais par une clé secrète.
+- Mémoire : 20 derniers messages envoyés au modèle ; fiche et résumé mis à
+  jour dans `after()` tous les `MEMORY_EVERY` (3) messages de la personne
+  (`memoryDue`, compté par `loadSaleContext` → `sale.userMessages`) : faits
+  relevés dans les 6 derniers tours, filtrés par `lib/facts.ts` ; résumé quand
+  plus de 40 messages ne sont pas résumés (`summaries.last_message_id` marque
+  la limite ; le résumé déjà lu par `buildReply` est réutilisé). Environ 20
+  requêtes courtes à la base par message (mesuré dans le parcours e2e,
+  `restCalls`) et 1 appel au modèle (2 tous les 3 messages). Tout passe par
+  le client Supabase de la personne connectée (RLS), jamais par une clé
+  secrète.
 - Tableau de bord `/admin` : table `purchases` (tip / message / abonnement,
   `is_demo` pour les achats fictifs), table `admins`, fonctions SQL
   `security definer` qui vérifient `is_admin()` (`admin_dashboard`,
@@ -147,3 +152,35 @@ impossibles à faire à sa place (créer un compte, copier une clé).
 - Au premier déploiement, le porteur du projet a collé des exemples au lieu
   des vraies valeurs (`sb_publishable_…`, `/rest/v1/` en trop) : donner des
   valeurs à copier telles quelles, ou lui faire utiliser le bouton « copier ».
+- Alertes de l'équipe : table `team_alerts` (kind `contre_offre` | `plafond`
+  | `urgence`, `detail` jsonb sans texte de message, `notified_at`,
+  `handled_at`). Créées par `alerter_equipe` (SQL, interne) : dans
+  `faire_une_offre` (une alerte ouverte par offre, mise à jour), dans
+  `acheter_offre` (80 % du plafond, une fois par mois), et par la route
+  `/api/chat` pour les urgences (`lib/urgency.ts` : `detectUrgency` sur le
+  message — humain, age, reclamation, attention — et la balise `[[EQUIPE]]`
+  que l'IA ajoute, consigne `teamSection` dans `lib/prompts.ts`, retirée par
+  `parseTeamFlag` ; une seule urgence ouverte par conversation). Une urgence
+  ouverte bloque toute vente (`saleBlock` → `urgence`) et la prise de
+  nouvelles ; 80 % du plafond bloque les offres payantes de l'IA
+  (`plafond_proche`, `NEAR_CAP_PERCENT` dans `lib/alerts.ts`, même seuil que
+  le SQL). Envoi Discord/Telegram par `lib/notify.ts` (`flushAlerts` dans
+  `after()`, `alertes_a_envoyer` réserve les alertes du dernier jour ;
+  `allowed_mentions` vide ; jamais le prénom). Équipe : `admin_alertes`,
+  `admin_traiter_alertes`, `admin_prendre_la_main` ; `admin_boite` renvoie
+  `alertes` et `manuel`. `creator_contacts.manual` (« Prendre la main ») fait
+  taire l'IA dans la conversation quel que soit le mode (`aiMayReply`).
+  Écrans : `app/admin/alerts-store.ts` (une seule relecture toutes les 8 s
+  pour le bandeau `alert-flash.tsx`, la pastille de `nav.tsx` et
+  `open-alerts.tsx` du tableau de bord ; « déjà vu » dans localStorage),
+  filtres et bandeau d'alertes dans `app/admin/messages/inbox.tsx`. Le bandeau
+  ouvre une conversation de l'onglet Messages par l'événement
+  `OPEN_CONVERSATION` (`app/admin/messages/events.ts`). Dans les essais e2e,
+  Next.js a son propre `role="alert"` vide : chercher le bandeau par son
+  bouton « Fermer l'alerte ».
+- Production : en-têtes de sécurité dans `next.config.ts` (frame-ancestors,
+  nosniff, referrer, permissions, HSTS, `poweredByHeader: false`) ; au plus
+  `CHAT_RATE_LIMIT` (12) messages par minute et par personne sur `/api/chat`
+  (`lib/rate-limit.ts`, en mémoire par instance) ; le faux Discord des essais
+  est dans `faux-services.mjs` (`webhooks`). Pas encore de Stripe : les
+  achats restent « démo ».

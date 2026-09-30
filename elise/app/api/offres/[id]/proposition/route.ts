@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { flushAlertsLater } from "@/lib/notify";
 import { offerError, offerId } from "@/lib/offer-api";
 import { OFFER_COLUMNS, parseEuros, type Offer } from "@/lib/offers";
 import { createClient, currentUserId } from "@/lib/supabase/server";
@@ -17,6 +18,8 @@ export async function POST(request: Request, ctx: RouteContext<"/api/offres/[id]
 
   const { data: result, error } = await supabase.rpc("faire_une_offre", { p_offre: id, p_montant_cents: cents });
   if (error) return offerError(error);
+  // La base a prévenu l'équipe de cette contre-offre : on l'envoie sur Discord ou Telegram.
+  flushAlertsLater(new URL(request.url).origin);
   const { data } = await supabase.from("offers").select(OFFER_COLUMNS).eq("id", id).single();
   return NextResponse.json({ result, offer: data as Offer });
 }

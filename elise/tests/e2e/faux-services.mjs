@@ -20,6 +20,8 @@ const SUPABASE = "http://fake-supabase.test";
 const realFetch = globalThis.fetch;
 const users = []; // { id, email, password }
 const llmLog = []; // requêtes reçues par le faux Gemini
+const webhooks = []; // messages envoyés au faux Discord
+let restCalls = 0; // requêtes reçues par le faux Supabase (base de données)
 
 // ─── La base, créée au premier appel (seul le processus qui sert les pages
 // en a besoin ; Next en lance d'autres qui chargent aussi ce fichier) ──────
@@ -65,7 +67,7 @@ async function saveState() {
   const db = await database();
   const tables = {};
   for (const t of ["messages", "user_facts", "summaries", "purchases", "admins", "profiles", "contacts",
-                   "ai_settings", "scripts", "script_steps", "offers", "creators", "creator_contacts"]) {
+                   "ai_settings", "scripts", "script_steps", "offers", "creators", "creator_contacts", "team_alerts"]) {
     try {
       tables[t] = (await db.query(`select * from public.${t}`)).rows;
     } catch {
@@ -74,7 +76,7 @@ async function saveState() {
   }
   // Écrit à côté puis renomme : le lecteur ne voit jamais un fichier à moitié écrit.
   const target = process.env.E2E_STATE;
-  writeFileSync(`${target}.tmp`, toJson({ users, tables, llm: llmLog }));
+  writeFileSync(`${target}.tmp`, toJson({ users, tables, llm: llmLog, webhooks, restCalls }));
   renameSync(`${target}.tmp`, target);
 }
 
@@ -314,6 +316,7 @@ function rowsResponse(status, rows, headers, extra = {}) {
 }
 
 async function handleRest(url, method, headers, body) {
+  restCalls++;
   const user = currentUser(headers);
   const route = url.pathname.replace("/rest/v1/", "");
   const prefer = headers.get("prefer") ?? "";
@@ -478,6 +481,8 @@ function gemini(body) {
   }
   const userText = contents.filter((c) => c.role === "user").at(-1).parts[0].text;
   if (userText.includes("QUOTA")) return json(429, { error: { code: 429, message: "Resource exhausted" } });
+  // L'IA juge qu'un humain doit lire la conversation.
+  if (userText.includes("ALERTE-IA")) return reply("Je préviens l'équipe, elle te répondra ici.\n[[EQUIPE]]");
   if (userText.includes("PROPOSE-MOI") && system.includes("termine ta réponse par une ligne contenant uniquement")) {
     return system.includes("[[PROPOSER prix=NN]]")
       ? reply("Je t'ai préparé quelque chose.\n[[PROPOSER prix=9]]")
@@ -501,6 +506,11 @@ globalThis.fetch = async function fakeFetch(input, init = {}) {
 
   if (url.origin === SUPABASE) {
     return url.pathname.startsWith("/auth/v1") ? handleAuth(url, method, headers, body) : handleRest(url, method, headers, body);
+  }
+  if (url.hostname === "discord.com" && url.pathname.startsWith("/api/webhooks/")) {
+    webhooks.push(body);
+    await exclusive(saveState);
+    return new Response(null, { status: 204 });
   }
   if (url.hostname === "generativelanguage.googleapis.com" && process.env.GEMINI_API_KEY === "fake") {
     const res = gemini(body);

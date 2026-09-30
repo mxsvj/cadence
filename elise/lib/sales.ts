@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { NEAR_CAP_PERCENT, nearCap } from "./alerts";
 import type { Step } from "./offers";
 import type { AiSettings } from "./settings";
 
@@ -25,6 +26,7 @@ type OfferRow = {
 
 /** Pourquoi l'IA ne peut pas proposer maintenant (pour la consigne et pour l'équipe). */
 export type SaleBlock =
+  | { reason: "urgence" }
   | { reason: "fin" }
   | { reason: "equipe" }
   | { reason: "attente" }
@@ -32,11 +34,14 @@ export type SaleBlock =
   | { reason: "espacement"; remaining: number }
   | { reason: "nouvelles"; remaining: number }
   | { reason: "plafond" }
+  | { reason: "plafond_proche" }
   | { reason: "pause"; hours: number }
   | { reason: "quota"; count: number };
 
 export type SaleInput = {
   next: Pick<Step, "trigger_mode" | "is_paid" | "min_price_cents"> | null;
+  /** Une alerte d'urgence attend l'équipe (avec n'importe quelle créatrice). */
+  urgent?: boolean;
   /** Une offre attend la réponse de la personne (avec n'importe quelle créatrice). */
   pending: boolean;
   /** Messages de la personne dans cette conversation, celui qu'elle vient d'envoyer compris. */
@@ -47,6 +52,8 @@ export type SaleInput = {
   sinceRelance: number | null;
   /** Ce qui reste du plafond du mois (null : pas de plafond). */
   remainingCents: number | null;
+  /** Au moins 80 % du plafond du mois dépensés (l'équipe a été prévenue). */
+  nearCap?: boolean;
   /** Heures depuis le dernier achat (null : aucun achat). */
   hoursSincePurchase: number | null;
   /** Offres payantes proposées par l'IA ces dernières 24 heures. */
@@ -57,10 +64,12 @@ type SaleRules = Pick<AiSettings, "sales_min_messages" | "sales_gap_messages" | 
 
 /**
  * Tous les garde-fous, dans l'ordre : le premier qui bloque est la raison.
- * Un contenu gratuit échappe au plafond, à la pause et au nombre par jour.
+ * Une urgence à traiter bloque tout, même un cadeau. Un contenu gratuit
+ * échappe au plafond, à la pause et au nombre par jour.
  */
 export function saleBlock(input: SaleInput, rules: SaleRules): SaleBlock | null {
   const { next } = input;
+  if (input.urgent) return { reason: "urgence" };
   if (!next) return { reason: "fin" };
   if (next.trigger_mode !== "ia") return { reason: "equipe" };
   if (input.pending) return { reason: "attente" };
@@ -75,6 +84,8 @@ export function saleBlock(input: SaleInput, rules: SaleRules): SaleBlock | null 
   }
   if (next.is_paid) {
     if (input.remainingCents !== null && input.remainingCents < next.min_price_cents) return { reason: "plafond" };
+    // Près du plafond, l'IA ne propose plus rien de payant : c'est l'équipe qui décide.
+    if (input.nearCap) return { reason: "plafond_proche" };
     if (rules.sales_pause_hours > 0 && input.hoursSincePurchase !== null && input.hoursSincePurchase < rules.sales_pause_hours) {
       return { reason: "pause", hours: Math.ceil(rules.sales_pause_hours - input.hoursSincePurchase) };
     }
@@ -94,6 +105,8 @@ const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? "s" : ""}`;
 export function describeBlock(block: SaleBlock | null, next: Pick<Step, "title"> | null): string {
   if (!block) return `L'IA peut proposer « ${next?.title ?? "le contenu suivant"} » dès que la conversation s'y prête.`;
   switch (block.reason) {
+    case "urgence":
+      return "Une urgence est à traiter : l'IA ne propose rien tant qu'elle n'est pas marquée traitée.";
     case "fin":
       return "Le script est terminé pour cette conversation.";
     case "equipe":
@@ -108,6 +121,8 @@ export function describeBlock(block: SaleBlock | null, next: Pick<Step, "title">
       return `Juste après une prise de nouvelles : encore ${plural(block.remaining, "message")} de la personne.`;
     case "plafond":
       return "Son plafond du mois ne permet pas ce contenu.";
+    case "plafond_proche":
+      return `Plus de ${NEAR_CAP_PERCENT} % de son plafond du mois est dépensé : l'IA ne propose plus de contenu payant, l'équipe décide.`;
     case "pause":
       return `Pause après son dernier achat : encore ${plural(block.hours, "heure")}.`;
     case "quota":
@@ -126,6 +141,8 @@ export type SaleContext = {
   owned: Step[];
   /** Ce qui reste du plafond du mois (null : pas de plafond). */
   remainingCents: number | null;
+  /** Messages de la personne dans cette conversation (celui qu'elle vient d'envoyer compris). */
+  userMessages: number;
   /** L'IA peut-elle proposer l'étape suivante dans cette réponse ? */
   canPropose: boolean;
   /** Sinon, pourquoi. */
@@ -144,7 +161,7 @@ export async function loadSaleContext(
 ): Promise<SaleContext> {
   const since = new Date(Date.now() - 24 * HOUR).toISOString();
   const conversation = () => admin.from("messages").select("id").eq("user_id", userId).eq("creator_id", creatorId);
-  const [next, offers, userCount, lastOffer, lastRelance, spent, cap, lastPurchase] = await Promise.all([
+  const [next, offers, userCount, lastOffer, lastRelance, spent, cap, lastPurchase, urgent] = await Promise.all([
     admin.rpc("prochaine_etape", { p_user: userId, p_creator: creatorId }),
     admin.from("offers").select("id, creator_id, step_id, price_cents, status, proposed_by, created_at").eq("user_id", userId).order("id"),
     admin.from("messages").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("creator_id", creatorId).eq("role", "user"),
@@ -153,10 +170,14 @@ export async function loadSaleContext(
     admin.rpc("depense_du_mois", { p_user: userId }),
     admin.rpc("plafond_de", { p_user: userId }),
     admin.from("purchases").select("created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(1),
+    // Une urgence à traiter, avec n'importe quelle créatrice.
+    admin.from("team_alerts").select("id").eq("user_id", userId).eq("kind", "urgence").is("handled_at", null).limit(1),
   ]);
   for (const r of [next, offers, userCount, lastOffer, lastRelance, spent, cap, lastPurchase]) {
     if (r.error) throw new Error(`Contexte de vente illisible : ${r.error.message}`);
   }
+  // Tant que schema.sql n'est pas relancé, la table des alertes n'existe pas : on continue sans.
+  if (urgent.error) console.error("Alertes illisibles :", urgent.error.message);
 
   const rows = ((offers.data ?? []) as OfferRow[]).map((o) => ({ ...o, creator_id: Number(o.creator_id) }));
   const here = rows.filter((o) => o.creator_id === creatorId);
@@ -202,11 +223,13 @@ export async function loadSaleContext(
   const purchasedAt = (lastPurchase.data as { created_at: string }[] | null)?.[0]?.created_at;
   const input: SaleInput = {
     next: nextStep,
+    urgent: Boolean(urgent.data?.length),
     pending: pendingAnywhere,
     userMessages: (userCount.count ?? 0) + extra,
     sinceLastOffer,
     sinceRelance,
     remainingCents,
+    nearCap: nearCap(spentCents, capCents),
     hoursSincePurchase: purchasedAt ? (Date.now() - new Date(purchasedAt).getTime()) / HOUR : null,
     paidOffersToday: rows.filter((o) => o.proposed_by === "ai" && o.price_cents > 0 && o.created_at >= since).length,
   };
@@ -223,6 +246,7 @@ export async function loadSaleContext(
       .map((o) => (o.step_id !== null ? steps.get(o.step_id) : undefined))
       .filter((s): s is Step => Boolean(s)),
     remainingCents,
+    userMessages: input.userMessages,
     canPropose: block === null,
     block,
   };
