@@ -32,7 +32,9 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/connexion") || path.startsWith("/auth/") || path.startsWith("/api/") || path === "/acces" || path.startsWith("/acces/");
 
   if (!signedIn && !isPublic) return redirectKeepingCookies(request, response, "/connexion");
-  if (signedIn && path.startsWith("/connexion")) return redirectKeepingCookies(request, response, "/");
+  // Un lien avec un code d'accès reste ouvert : on peut changer de compte (l'équipe qui teste le lien d'un client).
+  const withCode = path === "/connexion" && request.nextUrl.searchParams.has("code");
+  if (signedIn && path.startsWith("/connexion") && !withCode) return redirectKeepingCookies(request, response, "/");
   return response;
 }
 

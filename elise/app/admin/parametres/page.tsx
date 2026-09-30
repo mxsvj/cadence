@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { signOut } from "@/app/actions";
 import { Notice } from "@/app/notice";
+import { schemaOutdated } from "@/lib/admin";
 import { currentModel } from "@/lib/llm";
 import { channelStatus } from "@/lib/notify";
 import { cronSecret } from "@/lib/relances";
 import { DEFAULT_SETTINGS, type AiSettings } from "@/lib/settings";
 import { accessKey } from "@/lib/team-access";
 import { adminGate } from "../gate";
+import { ClientCodes, type ClientCode } from "./client-codes";
 import { ParametersForm } from "./parameters-form";
 
 export const metadata: Metadata = { title: "Paramètres · Élise" };
@@ -15,15 +17,16 @@ export const metadata: Metadata = { title: "Paramètres · Élise" };
 const card = "flex flex-col gap-3 rounded-3xl border border-line bg-surface p-5";
 
 // L'onglet Paramètres : les réglages fins de l'IA, les garde-fous de la vente,
-// l'état du site et le compte de l'équipe.
+// les codes d'accès des clients, l'état du site et le compte de l'équipe.
 export default async function ParametersPage() {
   const gate = await adminGate();
   if ("node" in gate) return gate.node;
   const { supabase } = gate;
 
-  const [settings, claims] = await Promise.all([
+  const [settings, claims, codes] = await Promise.all([
     supabase.from("ai_settings").select("*").eq("id", 1).maybeSingle(),
     supabase.auth.getClaims(),
+    supabase.rpc("admin_codes"),
   ]);
   if (settings.error) {
     return (
@@ -38,6 +41,8 @@ export default async function ParametersPage() {
   const linkReady = accessKey() !== null;
   const cronReady = cronSecret() !== null;
   const channels = channelStatus();
+  const codesOutdated = Boolean(codes.error && schemaOutdated(codes.error));
+  if (codes.error && !codesOutdated) console.error("Codes d'accès illisibles :", codes.error);
   const channelText = (state: "ok" | "absent" | "invalide", vars: string) =>
     state === "ok" ? "Branché" : state === "invalide" ? `Mal copié : vérifiez ${vars} dans Vercel` : "Non branché (facultatif)";
 
@@ -45,8 +50,20 @@ export default async function ParametersPage() {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6">
       <header>
         <h1 className="font-serif text-3xl">Paramètres</h1>
-        <p className="text-sm text-muted">Les réglages fins de l&apos;IA, les garde-fous de la vente, et le compte de l&apos;équipe.</p>
+        <p className="text-sm text-muted">Les codes d&apos;accès des clients, les réglages fins de l&apos;IA, les garde-fous de la vente, et le compte de l&apos;équipe.</p>
       </header>
+
+      <section className={card} aria-labelledby="titre-codes">
+        <div>
+          <h2 id="titre-codes" className="font-bold">
+            Codes d&apos;accès des clients
+          </h2>
+          <p className="text-sm text-muted">
+            Comme une carte de médiathèque : un code par client, qui entre avec ce seul code, sans e-mail ni mot de passe.
+          </p>
+        </div>
+        <ClientCodes initial={codes.error ? [] : ((codes.data ?? []) as ClientCode[])} outdated={codesOutdated} />
+      </section>
 
       <ParametersForm initial={current} />
 
