@@ -5,8 +5,9 @@ import { CHAT_TEMPERATURE, LlmError, generate } from "@/lib/llm";
 import { MESSAGE_COLUMNS, MemoryError, memoryDue, rememberFacts, summarizeIfNeeded, type Message } from "@/lib/memory";
 import { flushAlerts, raiseUrgency } from "@/lib/notify";
 import { OFFER_COLUMNS, parseProposal, type Offer } from "@/lib/offers";
-import { cleanReply } from "@/lib/prompts";
+import { cleanReply, validTimeZone } from "@/lib/prompts";
 import { RateLimiter, chatMessagesPerMinute } from "@/lib/rate-limit";
+import { typingDelayMs } from "@/lib/typing";
 import { aiMayReply, loadContact, loadCreator, loadProfile, loadSettings } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient, currentUserId } from "@/lib/supabase/server";
@@ -89,9 +90,11 @@ export async function POST(request: Request) {
   if (!userId) return problem(401, "Votre session a expiré. Reconnectez-vous.");
   if (!limiter.allow(userId)) return problem(429, "Vous écrivez très vite : attendez quelques secondes avant le prochain message.");
 
-  const body = (await request.json().catch(() => null)) as { content?: unknown; creator?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as { content?: unknown; creator?: unknown; tz?: unknown } | null;
   const content = typeof body?.content === "string" ? body.content.trim() : "";
   const creatorId = creatorParam(body?.creator);
+  // L'heure de la personne : le fuseau de son téléphone.
+  const timezone = validTimeZone(body?.tz);
   if (creatorId === null) return problem(400, "Conversation inconnue.");
   if (!content) return problem(400, "Le message est vide.");
   if (content.length > MAX_MESSAGE_LENGTH) {
@@ -136,6 +139,13 @@ export async function POST(request: Request) {
     // enregistrant le message.
     if (!creator?.active) return problem(410, "Cette créatrice n'est plus disponible. Choisissez-en une autre.");
     settings = loadedSettings;
+    // Le fuseau du téléphone remplace celui de la fiche (l'équipe le voit, les prises de nouvelles s'en servent).
+    if (timezone && timezone !== contact.timezone) {
+      after(async () => {
+        const { error } = await admin.from("contacts").upsert({ user_id: userId, timezone }, { onConflict: "user_id" });
+        if (error) console.error("Fuseau horaire non enregistré :", error.message);
+      });
+    }
 
     // Mode manuel, ou personne non cochée en mode hybride : l'équipe répondra.
     if (!aiMayReply(settings, contact)) {
@@ -158,6 +168,7 @@ export async function POST(request: Request) {
       contact,
       profile,
       teamAlerted: urgency !== null,
+      timezone,
     });
     reply = cleanReply(
       await generate({
@@ -217,5 +228,6 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({ messages: saved, offers });
+  // Le rythme d'une personne qui tape sa réponse : la page attend jusque-là (temps du modèle compris).
+  return NextResponse.json({ messages: saved, offers, typingMs: typingDelayMs(text) });
 }

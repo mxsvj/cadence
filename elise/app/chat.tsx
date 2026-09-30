@@ -159,11 +159,13 @@ export function Chat({
     setDraft("");
     setWaiting(true);
     sending.current = true;
+    const sentAt = Date.now();
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ content, creator: creatorId }),
+        // L'heure de son téléphone : l'IA vit au même rythme que la personne.
+        body: JSON.stringify({ content, creator: creatorId, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 401) {
@@ -181,7 +183,13 @@ export function Chat({
       }
       // Sans message du serveur (coupé en route, délai dépassé) : au moins le code, pour savoir où chercher.
       if (!res.ok) throw new Error(data.error ?? `Pas de réponse cette fois-ci (erreur ${res.status}). Réessayez dans un instant.`);
-      setMessages((m) => merge(m.filter((x) => x.id !== pending.id), data.messages as Message[]));
+      const incoming = data.messages as Message[];
+      setMessages((m) => merge(m.filter((x) => x.id !== pending.id), incoming.filter((x) => x.role === "user")));
+      // Comme une personne qui tape sa réponse : « … écrit » le temps qu'il faut, puis la réponse.
+      const replies = incoming.filter((x) => x.role !== "user");
+      const typing = Math.max(0, Number(data.typingMs ?? 0) - (Date.now() - sentAt));
+      if (replies.length && typing > 0) await new Promise((r) => setTimeout(r, typing));
+      setMessages((m) => merge(m, replies));
       if (data.offers?.length) setOffers((o) => ({ ...o, ...byId(data.offers as Offer[]) }));
       if (data.waiting) setNotice(data.notice ?? "Message envoyé. La réponse arrivera ici dès que possible.");
     } catch (err) {
@@ -352,18 +360,17 @@ export function Chat({
         })}
 
         {waiting && (
-          <div
-            role="status"
-            aria-label="Réponse en cours"
-            className="flex gap-1.5 self-start rounded-3xl rounded-bl-md border border-line bg-surface px-4 py-4"
-          >
-            {[0, 150, 300].map((delay) => (
-              <span
-                key={delay}
-                className="size-2 animate-bounce rounded-full bg-muted"
-                style={{ animationDelay: `${delay}ms` }}
-              />
-            ))}
+          <div role="status" aria-label="Réponse en cours" className="flex flex-col items-start gap-1 self-start">
+            <div className="flex gap-1.5 rounded-3xl rounded-bl-md border border-line bg-surface px-4 py-4">
+              {[0, 150, 300].map((delay) => (
+                <span
+                  key={delay}
+                  className="size-2 animate-bounce rounded-full bg-muted"
+                  style={{ animationDelay: `${delay}ms` }}
+                />
+              ))}
+            </div>
+            <span className="px-4 text-xs text-muted">{name} écrit…</span>
           </div>
         )}
         <div ref={endRef} />

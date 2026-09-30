@@ -9,17 +9,35 @@ export type Turn = { role: "user" | "assistant"; content: string };
 
 const TIME_ZONE = "Europe/Paris";
 
-/** « dimanche 28 septembre 2026 à 21 h 14 », heure de Paris. */
-export function formatNow(date: Date): string {
+let knownZones: Set<string> | null = null;
+
+/**
+ * Un fuseau horaire envoyé par le téléphone (« America/Toronto »), s'il fait
+ * partie de la liste que propose la fiche de l'équipe ; sinon null (« UTC »
+ * d'un ordinateur mal réglé, valeur inventée).
+ */
+export function validTimeZone(value: unknown): string | null {
+  if (typeof value !== "string" || !value.trim() || value.length > 64) return null;
+  try {
+    const zone = new Intl.DateTimeFormat("fr-FR", { timeZone: value.trim() }).resolvedOptions().timeZone;
+    knownZones ??= new Set(Intl.supportedValuesOf("timeZone"));
+    return knownZones.has(zone) ? zone : null;
+  } catch {
+    return null;
+  }
+}
+
+/** « dimanche 28 septembre 2026 à 21 h 14 », heure de Paris (ou du fuseau donné). */
+export function formatNow(date: Date, timeZone = TIME_ZONE): string {
   const day = new Intl.DateTimeFormat("fr-FR", {
-    timeZone: TIME_ZONE,
+    timeZone,
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   }).format(date);
   const [hours, minutes] = new Intl.DateTimeFormat("fr-FR", {
-    timeZone: TIME_ZONE,
+    timeZone,
     hour: "2-digit",
     minute: "2-digit",
   })
@@ -96,17 +114,25 @@ function localTime(now: Date, timezone: string): string | null {
 }
 
 /**
- * Le genre du personnage, dans chaque phrase : l'IA le perd vite de vue en
- * français (« je suis content »). Sans genre réglé, une créatrice est une
- * femme.
+ * Le genre du personnage, dans chaque phrase et dans la voix : l'IA le perd
+ * vite de vue en français (« je suis content », « La forme ? »). Sans genre
+ * réglé, une créatrice est une femme. `age` : l'âge du personnage, pour que
+ * la voix soit celle d'une personne de cet âge.
  */
-export function genderRule(genre: string | undefined): string {
+export function genderRule(genre: string | undefined, age?: number): string {
   const g = (genre ?? "").trim().toLowerCase();
+  const ofAge = age ? ` de ${age} ans` : " de ton âge";
   if (!g || g.startsWith("femme")) {
-    return "Ton personnage est une femme. Tu parles de toi au féminin, dans chaque message et sans exception (« je suis contente », « je suis allée », « je suis crevée », « ravie »), et tu racontes ta vie comme une femme de ton âge la raconterait à un ami.";
+    return [
+      "Ton personnage est une femme, et ça doit s'entendre dans chaque message :",
+      "- Tu parles de toi au féminin, sans exception (« je suis contente », « je suis allée », « crevée », « ravie »).",
+      `- Tu écris comme une femme${ofAge} qui écrit à quelqu'un qu'elle apprécie : chaleureuse et expressive. Tu dis ce que tu ressens (« ça me fait trop plaisir », « j'avoue, j'étais un peu stressée »), tu remarques les petits détails, tu mets de la douceur et de l'enthousiasme (« coucou », « oh non », « trop bien », « c'est trop mignon »), avec des emojis si le réglage le permet.`,
+      "- Jamais le style sec et viril des textos entre copains : pas de « Re ! », « La forme ? », « Tranquille ? », « Bien ou quoi ? », « Wesh », ni de réponse en trois mots froids.",
+      "- Féminine ne veut pas dire séductrice : ni drague, ni sous-entendu, ni mots doux (« mon cœur », « bébé », « mon chéri »).",
+    ].join("\n");
   }
   if (g.startsWith("homme")) {
-    return "Ton personnage est un homme. Tu parles de toi au masculin, dans chaque message et sans exception (« je suis content », « je suis allé », « crevé »), et tu racontes ta vie comme un homme de ton âge la raconterait à un ami.";
+    return `Ton personnage est un homme. Tu parles de toi au masculin, dans chaque message et sans exception (« je suis content », « je suis allé », « crevé »), et tu écris comme un homme${ofAge} qui écrit à quelqu'un qu'il apprécie.`;
   }
   if (g.startsWith("non binaire")) {
     return "Ton personnage est non binaire : quand tu parles de toi, préfère des tournures qui ne marquent pas le genre (« j'ai adoré » plutôt que « je suis ravie »).";
@@ -147,7 +173,7 @@ export function personaSection(p: PersonaProfile, person: PersonContext): string
 
   const rules = [
     "Tu es une intelligence artificielle qui incarne ce personnage : parle de sa vie, de ses goûts et de son apparence avec cohérence, comme d'un personnage. Si on te demande si tu es une vraie personne ou une IA, réponds toujours franchement que tu es une IA.",
-    genderRule(p.genre),
+    genderRule(p.genre, p.age),
     "Les détails physiques servent seulement à répondre de façon cohérente si on te pose la question : tu ne les mets jamais en avant, et jamais dans un registre sexuel.",
   ];
   if (nearby) {
@@ -167,8 +193,13 @@ export function personSection(person: PersonContext, now: Date): string {
   if (person.name) lines.push(`- Prénom ou pseudo : ${person.name}`);
   if (person.age) lines.push(`- Âge : ${person.age} ans`);
   if (person.city) lines.push(`- Ville : ${person.city}`);
-  const time = localTime(now, person.timezone || "Europe/Paris");
-  if (time) lines.push(`- Chez elle, nous sommes le ${time} (${person.timezone || "Europe/Paris"}) : adapte-toi au moment de sa journée.`);
+  const zone = validTimeZone(person.timezone) ?? TIME_ZONE;
+  const time = localTime(now, zone);
+  if (time) {
+    lines.push(
+      `- Chez elle, nous sommes le ${time} (${zone}). C'est son heure qui compte : tu vis au même rythme qu'elle (matin, midi, soir, nuit), tu dis bonjour ou bonsoir selon son heure à elle, et ta propre journée de personnage en est au même moment.`,
+    );
+  }
   lines.push(emojiInstruction(person.emojiMode, person.emojis));
   const notes = person.notes?.trim()
     ? `\n\nNotes de l'équipe, pour savoir comment te comporter avec elle (ne les cite jamais) :\n${person.notes.trim()}`
@@ -269,7 +300,9 @@ export function chatSystemPrompt(input: {
   ];
   if (input.team) sections.push(teamSection(input.team.alerted));
   if (input.extra?.trim()) sections.push(`## Consignes de l'équipe\n\n${input.extra.trim()}`);
-  sections.push(`## Repères\n\nNous sommes le ${formatNow(input.now)} (heure de Paris).`);
+  // L'heure de la personne, là où elle vit (celle de son téléphone) ; Paris par défaut.
+  const zone = validTimeZone(person.timezone) ?? TIME_ZONE;
+  sections.push(`## Repères\n\nChez la personne, nous sommes le ${formatNow(input.now, zone)} (${zone}).`);
   return sections.join("\n\n");
 }
 

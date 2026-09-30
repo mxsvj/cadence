@@ -47,6 +47,8 @@ export async function buildReply(input: {
   profile: Profile | null;
   /** Le message vient de déclencher une alerte d'urgence (lib/urgency.ts). */
   teamAlerted?: boolean;
+  /** Le fuseau horaire du téléphone de la personne ; sinon, celui de sa fiche. */
+  timezone?: string | null;
 }) {
   const { supabase, admin, userId, creator, settings, contact, profile } = input;
   const [facts, summary, recent, loaded] = await Promise.all([
@@ -65,7 +67,7 @@ export async function buildReply(input: {
       name: profile?.display_name,
       age: profile ? ageFrom(profile.birthdate, input.now) : undefined,
       city: contact.city,
-      timezone: contact.timezone,
+      timezone: input.timezone || contact.timezone,
       notes: contact.notes,
       emojiMode: contact.emoji_mode,
       emojis: contact.emojis,
