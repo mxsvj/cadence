@@ -5,22 +5,38 @@ import { chatSystemPrompt, personSection, validTimeZone } from "../lib/prompts";
 import { typingDelayMs } from "../lib/typing";
 
 describe("le temps d'écrire une réponse", () => {
-  const at = (r: number) => () => r;
+  // random = 0,5 : 2 s de réflexion, vitesse de frappe moyenne (3,5 caractères par seconde).
+  const middle = { random: () => 0.5, setting: undefined };
 
-  it("lire, puis taper à environ 7 caractères par seconde", () => {
-    const seventy = "x".repeat(70);
-    assert.equal(typingDelayMs(seventy, at(0), undefined), 11_000); // 1 s pour lire + 10 s pour taper
-    assert.equal(typingDelayMs(seventy, at(1), undefined), 12_500); // jusqu'à 2,5 s pour lire
+  it("lire le message, réfléchir, puis taper à une quarantaine de mots par minute", () => {
+    // « salut » se lit en 1 s ; 70 caractères se tapent en 20 s.
+    assert.equal(typingDelayMs("x".repeat(70), { ...middle, incoming: "salut" }), 23_000);
+    // Un long message reçu prend plus de temps à lire (200 caractères : 10 s, plafonné à 6).
+    assert.equal(typingDelayMs("x".repeat(70), { ...middle, incoming: "y".repeat(200) }), 28_000);
   });
 
-  it("jamais moins de 2 secondes, jamais plus de 20", () => {
-    assert.equal(typingDelayMs("ok", at(0), undefined), 2000);
-    assert.equal(typingDelayMs("x".repeat(2000), at(1), undefined), 20_000);
+  it("un message deux fois plus long prend deux fois plus de temps à taper", () => {
+    const short = typingDelayMs("x".repeat(100), middle) - 3000;
+    const long = typingDelayMs("x".repeat(200), middle) - 3000;
+    assert.ok(Math.abs(long - short * 2) <= 1, `${long} ≈ 2 × ${short}`);
+  });
+
+  it("une vitesse qui varie un peu, comme une vraie personne", () => {
+    const slow = typingDelayMs("x".repeat(70), { random: () => 0, setting: undefined });
+    const fast = typingDelayMs("x".repeat(70), { random: () => 0.999, setting: undefined });
+    assert.ok(slow > fast);
+    assert.ok(slow <= 2000 + 1000 + (70 / (3.5 * 0.85)) * 1000 + 1);
+  });
+
+  it("jamais moins de 3 secondes, jamais plus de 90", () => {
+    assert.equal(typingDelayMs("ok", middle), 3571); // 1 s de lecture + 2 s de réflexion + 0,6 s pour le mot
+    assert.equal(typingDelayMs("", { random: () => 0, setting: undefined }), 3000);
+    assert.equal(typingDelayMs("x".repeat(2000), middle), 90_000);
   });
 
   it("HUMAN_TYPING=off : la réponse s'affiche dès qu'elle arrive", () => {
-    assert.equal(typingDelayMs("x".repeat(70), at(0), "off"), 0);
-    assert.equal(typingDelayMs("x".repeat(70), at(0), " OFF "), 0);
+    assert.equal(typingDelayMs("x".repeat(70), { setting: "off" }), 0);
+    assert.equal(typingDelayMs("x".repeat(70), { setting: " OFF " }), 0);
   });
 });
 

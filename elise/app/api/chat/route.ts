@@ -229,5 +229,5 @@ export async function POST(request: Request) {
   }
 
   // Le rythme d'une personne qui tape sa réponse : la page attend jusque-là (temps du modèle compris).
-  return NextResponse.json({ messages: saved, offers, typingMs: typingDelayMs(text) });
+  return NextResponse.json({ messages: saved, offers, typingMs: typingDelayMs(text, { incoming: content }) });
 }
