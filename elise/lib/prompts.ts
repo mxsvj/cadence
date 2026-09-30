@@ -189,7 +189,8 @@ export function salesSection(sale: SalePrompt | null): string {
     const when = n.moment?.trim()
       ? `Il illustre ce sujet : ${n.moment.trim()}. Propose-le seulement si la conversation en cours porte vraiment là-dessus ; sinon, n'en parle pas du tout.`
       : "Propose-le seulement s'il enrichit naturellement ce dont vous parlez en ce moment (il l'illustre ou le prolonge).";
-    const place = n.progress && n.progress.total > 1 ? ` (le ${n.progress.index}e sur ${n.progress.total} du parcours prévu)` : "";
+    const rank = n.progress ? (n.progress.index === 1 ? "1er" : `${n.progress.index}e`) : "";
+    const place = n.progress && n.progress.total > 1 ? ` (le ${rank} sur ${n.progress.total} du parcours prévu)` : "";
     parts.push(
       `Le prochain contenu, dans l'ordre prévu${place} : ${n.description}\n${price}\n${when} Dans le doute, ne le propose pas : il y aura d'autres occasions. Pour le proposer, termine ta réponse par une ligne contenant uniquement ${tag}. ${message}`,
     );

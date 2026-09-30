@@ -75,8 +75,9 @@ async function signUp(p, email, name, birthdate = "1982-03-14") {
   await p.click('button[type="submit"]');
 }
 
-// Après la connexion, une personne arrive sur la conversation, l'équipe sur
-// son tableau de bord.
+// Après la connexion, une personne arrive sur le choix des créatrices (ou
+// directement chez la seule en ligne : la n° 1, « Élise », au départ),
+// l'équipe sur son tableau de bord.
 async function logIn(p, email, landing = "/") {
   await p.goto(`${BASE}/connexion`);
   await p.fill('input[name="email"]', email);
@@ -119,7 +120,7 @@ assert.equal(state().users.length, 0);
 step("une personne de moins de 18 ans ne peut pas s'inscrire");
 await page.fill('input[name="naissance"]', "1982-03-14");
 await page.click('button[type="submit"]');
-await page.waitForURL(`${BASE}/`);
+await page.waitForURL(`${BASE}/c/1`);
 await page.getByText("Bonjour, je suis Élise.").waitFor();
 await page.screenshot({ path: `${SHOTS}2-premier-message.png` });
 let s = state();
@@ -173,7 +174,7 @@ await input.fill("");
 // 9. Beaucoup de messages : le résumé se déclenche au-delà de 40.
 for (let i = 1; i <= 20; i++) {
   const res = await page.evaluate(async (i) => {
-    const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ content: `Message numéro ${i}` }) });
+    const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ content: `Message numéro ${i}`, creator: 1 }) });
     return r.status;
   }, i);
   assert.equal(res, 200);
@@ -194,7 +195,7 @@ step(`43 messages → les ${msgs.length - unsummarized} plus anciens résumés, 
 
 // 10. La réponse suivante reçoit le résumé, la fiche et exactement 20 messages.
 await page.evaluate(async () => {
-  await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ content: "Tu te souviens de moi ?" }) });
+  await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ content: "Tu te souviens de moi ?", creator: 1 }) });
 });
 await sleep(800);
 s = state();
@@ -216,7 +217,7 @@ step("l'historique s'affiche au rechargement");
 const ctx2 = await newContext(phone);
 const page2 = await ctx2.newPage();
 await signUp(page2, "lea@example.com", "Léa");
-await page2.waitForURL(`${BASE}/`);
+await page2.waitForURL(`${BASE}/c/1`);
 await page2.getByText("Bonjour, je suis Élise.").waitFor();
 assert.equal(await page2.getByText("Karim").count(), 0);
 assert.equal(await page2.getByText("Élise · IA").count(), 1);
@@ -251,7 +252,7 @@ await page.waitForURL(`${BASE}/connexion`);
 await page.fill('input[name="email"]', "karim@example.com");
 await page.fill('input[name="password"]', "motdepasse");
 await page.click('button[type="submit"]');
-await page.waitForURL(`${BASE}/`);
+await page.waitForURL(`${BASE}/c/1`);
 step("déconnexion puis reconnexion");
 
 // 15. Le tableau de bord n'existe pas pour qui n'est pas administrateur.
@@ -300,7 +301,7 @@ await page.getByRole("link", { name: "Paramètres" }).click();
 await page.waitForURL(`${BASE}/admin/parametres`);
 await page.getByRole("heading", { name: "Garde-fous de la vente" }).waitFor();
 await page.getByRole("link", { name: "Tester la conversation" }).click();
-await page.waitForURL(`${BASE}/?vue=conversation`);
+await page.waitForURL(`${BASE}/c/1`); // une seule créatrice en ligne : directement chez elle
 await page.getByLabel("Votre message").waitFor();
 await page.getByLabel("Menu").click();
 await page.getByRole("link", { name: "Tableau de bord" }).click();
@@ -407,12 +408,14 @@ admin.on("pageerror", (e) => consoleErrors.push(String(e)));
 await logIn(admin, "karim@example.com", "/admin");
 await admin.getByRole("link", { name: "Créatrices" }).click();
 await admin.waitForURL(`${BASE}/admin/creatrices`);
-await admin.getByText("Aucune créatrice pour l'instant").waitFor();
+// Au départ, une seule créatrice : « Élise », le personnage par défaut, en ligne.
+await admin.getByRole("link", { name: "Créatrice Élise" }).waitFor();
 await admin.getByRole("link", { name: "Créer une créatrice" }).click();
 await admin.waitForURL(`${BASE}/admin/creatrices/nouvelle`);
 await admin.getByLabel("L'IA peut parler à Karim").waitFor();
 await admin.getByText("S'enregistre tout seul dès que vous écrivez.").waitFor();
-assert.equal(state().tables.creators?.length ?? 0, 0); // ouvrir la page ne crée rien
+assert.equal(state().tables.creators.length, 1); // ouvrir la page ne crée rien
+const chloeRow = () => state().tables.creators.find((c) => c.persona.nom === "Chloé");
 // Le prénom, puis « retour » sans valider : il est déjà enregistré, et la
 // liste le montre (pas une ancienne version gardée par le navigateur).
 await admin.getByLabel("Prénom", { exact: true }).fill("Chloé");
@@ -420,9 +423,8 @@ await admin.getByText("✓ Enregistré").waitFor();
 await admin.goBack();
 await admin.waitForURL(`${BASE}/admin/creatrices`);
 await admin.getByRole("link", { name: "Créatrice Chloé" }).waitFor();
-s = state();
-assert.equal(s.tables.creators.length, 1);
-assert.equal(s.tables.ai_settings[0].creator_id, null); // pas encore validée
+assert.equal(state().tables.creators.length, 2);
+assert.equal(chloeRow().active, false); // pas encore validée : pas encore en ligne
 step("créatrice : le prénom s'enregistre tout seul ; après « retour », Chloé est dans la liste");
 
 await admin.getByRole("link", { name: "Créatrice Chloé" }).click();
@@ -455,27 +457,37 @@ assert.equal(await admin.getByRole("button", { name: "Retirer 🍑" }).count(), 
 await admin.screenshot({ path: `${SHOTS}14-creatrice.png`, fullPage: true });
 await admin.getByRole("button", { name: "Valider" }).click();
 await admin.waitForURL(`${BASE}/admin/creatrices`);
-await admin.getByText("Incarnée par l'IA").waitFor();
+await until(() => chloeRow()?.active === true, "Chloé en ligne");
+assert.equal(await admin.getByText("En ligne", { exact: true }).count(), 2); // Élise et Chloé
 s = state();
-assert.equal(s.tables.creators.length, 1);
+const CHLOE = Number(chloeRow().id);
 const karimWithChloe = s.tables.creator_contacts.find((c) => c.emoji_mode === "choisis");
+assert.equal(Number(karimWithChloe.creator_id), CHLOE);
 assert.equal(karimWithChloe.emojis, "🌸 ☕ 🦋");
-assert.equal(s.tables.creators[0].persona.nom, "Chloé");
-assert.equal(s.tables.creators[0].persona.pres_de_la_personne, true);
-assert.match(s.tables.creators[0].first_message, /on discute librement/);
-assert.equal(Number(s.tables.ai_settings[0].creator_id), Number(s.tables.creators[0].id));
-step("onglet Créatrices : Chloé créée sur une seule page puis validée ; l'IA l'incarne aussitôt");
+assert.equal(chloeRow().persona.pres_de_la_personne, true);
+assert.match(chloeRow().first_message, /on discute librement/);
+step("onglet Créatrices : Chloé créée sur une seule page puis validée ; elle passe en ligne, à côté d'Élise");
 
-// 24a. L'onglet IA : seulement « Qui répond » et la créatrice incarnée.
+// 24a. L'onglet IA : « Qui répond » et les créatrices en ligne (plusieurs).
 await admin.getByRole("link", { name: "IA", exact: true }).click();
 await admin.waitForURL(`${BASE}/admin/ia`);
-const chloe = admin.getByRole("radio", { name: /Chloé/ });
-await chloe.waitFor();
-assert.ok(await chloe.isChecked());
+await admin.getByLabel("Chloé en ligne").waitFor();
+assert.ok(await admin.getByLabel("Chloé en ligne").isChecked());
+assert.ok(await admin.getByLabel("Élise en ligne").isChecked());
 assert.equal(await admin.getByText("Profil du personnage").count(), 0);
 assert.equal(await admin.getByLabel("Prénom", { exact: true }).count(), 0);
+// Au moins une en ligne : sinon, personne ne pourrait parler.
+await admin.getByLabel("Chloé en ligne").uncheck();
+await admin.getByLabel("Élise en ligne").uncheck();
+await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
+await admin.getByText("Gardez au moins une créatrice en ligne", { exact: false }).waitFor();
+await admin.getByLabel("Chloé en ligne").check();
+await admin.getByLabel("Élise en ligne").check();
+await admin.getByRole("button", { name: "Enregistrer les réglages" }).click();
+await admin.getByText("Réglages enregistrés.", { exact: false }).waitFor();
+assert.ok(state().tables.creators.every((c) => c.active));
 await admin.screenshot({ path: `${SHOTS}14-ia.png`, fullPage: true });
-step("onglet IA : qui répond, et Chloé cochée comme créatrice incarnée ; plus de profil ici");
+step("onglet IA : qui répond, et plusieurs créatrices en ligne (au moins une)");
 
 // 24b. L'onglet Paramètres : les garde-fous de la vente, l'état du site, le compte.
 await admin.getByRole("link", { name: "Paramètres" }).click();
@@ -487,11 +499,17 @@ assert.equal(await admin.getByText(/^Créativité/).count(), 0);
 assert.equal(await admin.getByLabel("Longueur maximale d'une réponse").count(), 0);
 await admin.getByLabel("Messages avant la première offre").fill("0");
 await admin.getByLabel("Messages entre deux offres").fill("0");
+await admin.getByLabel("Pause après un achat (heures)").fill("12");
+await admin.getByLabel("Offres payantes par l'IA sur 24 h, au plus").fill("2");
 await admin.getByRole("button", { name: "Enregistrer les paramètres" }).click();
 await admin.getByText("Paramètres enregistrés.").waitFor();
 s = state();
-assert.deepEqual([s.tables.ai_settings[0].sales_min_messages, s.tables.ai_settings[0].sales_gap_messages], [0, 0]);
-assert.equal(s.tables.creators[0].persona.nom, "Chloé"); // la créatrice n'a pas bougé
+const guards = s.tables.ai_settings[0];
+assert.deepEqual(
+  [guards.sales_min_messages, guards.sales_gap_messages, guards.sales_pause_hours, guards.sales_max_per_day],
+  [0, 0, 12, 2],
+);
+assert.equal(chloeRow().persona.nom, "Chloé"); // la créatrice n'a pas bougé
 await admin.screenshot({ path: `${SHOTS}14b-parametres.png`, fullPage: true });
 step("onglet Paramètres : sans créativité ni longueur à régler ; garde-fous enregistrés, créatrice intacte");
 
@@ -508,10 +526,11 @@ const photo = await paint("#b86b52,#f3e1d8 55%,#7aa0b8");
 const photo2 = await paint("#3f7a4a,#f6e7b0 50%,#b86b52");
 await admin.goto(`${BASE}/admin/contenus`);
 await admin.getByLabel("Nom du nouveau script").fill("Principal");
-assert.equal(await admin.getByLabel("Créatrice du nouveau script").inputValue(), String(s.tables.creators[0].id)); // la créatrice active
+assert.equal(await admin.getByLabel("Créatrice du nouveau script").inputValue(), ""); // pour toutes, par défaut
+await admin.getByLabel("Créatrice du nouveau script").selectOption({ label: "Chloé" });
 await admin.getByRole("button", { name: "Créer" }).click();
 await admin.getByText("Script créé.").waitFor();
-assert.equal(Number(state().tables.scripts[0].creator_id), Number(s.tables.creators[0].id));
+assert.equal(Number(state().tables.scripts[0].creator_id), CHLOE);
 await admin.getByRole("tab", { name: /Principal.*Chloé.*par défaut/ }).waitFor();
 // Rendu à toutes les créatrices, puis de nouveau à Chloé.
 await admin.getByLabel("Créatrice du script").selectOption({ label: "Toutes les créatrices" });
@@ -519,7 +538,7 @@ await admin.getByText("Le script sert à toutes les créatrices.").waitFor();
 assert.equal(state().tables.scripts[0].creator_id, null);
 await admin.getByLabel("Créatrice du script").selectOption({ label: "Chloé" });
 await admin.getByText("Script associé à Chloé.").waitFor();
-assert.equal(Number(state().tables.scripts[0].creator_id), Number(s.tables.creators[0].id));
+assert.equal(Number(state().tables.scripts[0].creator_id), CHLOE);
 
 async function addStep({ title, files, text, description, instruction, fixed, team, price, moment }) {
   await admin.getByRole("button", { name: "Ajouter un message au script" }).click();
@@ -579,12 +598,19 @@ await admin.getByText("« dis que c'est un petit cadeau de bienvenue »").waitFo
 await admin.screenshot({ path: `${SHOTS}15-contenus.png`, fullPage: true });
 step("onglet Contenus : 3 messages dans l'ordre, dont un pack de 2 photos envoyées dans le stockage privé, et une consigne pour l'IA");
 
-// 26. Sam s'inscrit : l'IA se présente sous le nom du personnage.
+// 26. Sam s'inscrit : deux créatrices en ligne, il choisit Chloé ; elle se
+// présente avec son premier message à elle.
 const samCtx = await newContext(phone);
 const sam = await samCtx.newPage();
 sam.on("pageerror", (e) => consoleErrors.push(String(e)));
 await signUp(sam, "sam@example.com", "Sam");
 await sam.waitForURL(`${BASE}/`);
+await sam.getByRole("heading", { name: "Avec qui voulez-vous parler ?" }).waitFor();
+assert.equal(await sam.getByRole("link", { name: /^Parler avec/ }).count(), 2);
+await sam.getByText("29 ans · Annecy").waitFor();
+await sam.screenshot({ path: `${SHOTS}15b-choix.png` });
+await sam.getByRole("link", { name: "Parler avec Chloé" }).click();
+await sam.waitForURL(`${BASE}/c/${CHLOE}`);
 await sam.getByText("Bonjour, je suis Chloé.").waitFor();
 await sam.getByText("ici, on discute librement", { exact: false }).waitFor(); // son premier message à elle
 await sam.getByText("Chloé · IA").waitFor();
@@ -593,7 +619,7 @@ await samInput.fill("Salut Chloé, moi c'est Sam.");
 await sam.getByLabel("Envoyer").click();
 await sam.getByText(/réponse de test/).waitFor();
 assert.equal(await sam.getByText("Chloé · IA").count(), 2);
-step("nouvelle personne : le premier message de Chloé, et des réponses signées « Chloé · IA »");
+step("nouvelle personne : elle choisit parmi les créatrices en ligne ; le premier message de Chloé, des réponses « Chloé · IA »");
 
 // 27. Mode hybride : Sam est décochée dans la page de Chloé, l'IA ne lui répond plus.
 await admin.goto(`${BASE}/admin/ia`);
@@ -640,9 +666,9 @@ await admin.screenshot({ path: `${SHOTS}17-messages.png` });
 s = state();
 const samContact = s.tables.contacts.find((c) => c.city === "Lyon");
 assert.equal(samContact.notes, "Aime les voyages.");
-const samWithChloe = s.tables.creator_contacts.find((c) => c.user_id === samContact.user_id);
+const samWithChloe = s.tables.creator_contacts.find((c) => c.user_id === samContact.user_id && Number(c.creator_id) === CHLOE);
 assert.deepEqual([samWithChloe.ai_enabled, samWithChloe.emoji_mode, samWithChloe.emojis], [true, "choisis", "🌸"]);
-step("fiche contact enregistrée : ville, notes ; IA autorisée et emojis pour Chloé, la créatrice active");
+step("fiche contact enregistrée : ville, notes ; IA autorisée et emojis de Chloé pour Sam");
 
 // 30. L'IA propose la première étape (gratuite) : offerte et visible tout de suite.
 await samInput.fill("PROPOSE-MOI quelque chose");
@@ -657,7 +683,7 @@ assert.match(salesPrompt, /Tu ne proposes jamais de la rencontrer/);
 assert.match(salesPrompt, /Tatouages : une hirondelle sur le poignet/);
 assert.match(salesPrompt, /uniquement ceux-là, selon la discussion : 🌸/);
 assert.match(salesPrompt, /Aime les voyages\./);
-assert.match(salesPrompt, /Le prochain contenu, dans l'ordre prévu : un court poème \(un texte\)/);
+assert.match(salesPrompt, /Le prochain contenu, dans l'ordre prévu \(le 1er sur 3 du parcours prévu\) : un court poème \(un texte\)/);
 assert.match(salesPrompt, /« dis que c'est un petit cadeau de bienvenue »/);
 assert.match(salesPrompt, /la solitude, l'attachement, la culpabilité ou l'urgence/);
 assert.ok(!salesPrompt.includes("Bienvenue")); // le titre reste interne
@@ -675,7 +701,7 @@ await card.waitFor();
 assert.match(plain(await card.textContent()), /9,00 €/);
 assert.match(await card.textContent(), /prix personnalisé pour vous/);
 assert.equal(await sam.locator("img").count(), 0);
-const samApi = await sam.evaluate(async () => (await fetch("/api/chat?apres=0")).json());
+const samApi = await sam.evaluate(async (c) => (await fetch(`/api/chat?apres=0&c=${c}`)).json(), CHLOE);
 assert.ok(samApi.offers.every((o) => !("min_price_cents" in o) && !("step_id" in o)));
 await card.scrollIntoViewIfNeeded();
 await sam.screenshot({ path: `${SHOTS}18-offre-verrouillee.png` });
@@ -710,6 +736,8 @@ step("contre-offre à 3 € refusée, à 6 € acceptée ; achat (paiement de d�
 // 33. L'étape 3 se propose par l'équipe : message écrit par l'IA, relu, envoyé.
 await admin.reload();
 await admin.getByText("Étape suivante :").waitFor();
+// La fiche dit où en est la vente, et pourquoi l'IA ne propose pas.
+await admin.getByText("Le prochain contenu se propose par l'équipe, depuis cette fiche.").waitFor();
 assert.match(await admin.getByText("Étape suivante :").locator("..").textContent(), /Lettre/);
 await admin.getByRole("button", { name: "Faire écrire par l'IA" }).click();
 await admin.getByText("Relisez le message avant de l'envoyer.").waitFor();
@@ -770,7 +798,7 @@ const again = await (await cron(`Bearer ${process.env.CRON_SECRET}`)).json();
 assert.equal(again.sent, 0); // un seul message par absence
 await sam.reload();
 await sam.getByText("Coucou ! Comment s'est passée ta semaine à Lyon ?").waitFor();
-await admin.goto(`${BASE}/admin/messages?u=${samId}`);
+await admin.goto(`${BASE}/admin/messages?u=${samId}&c=${CHLOE}`);
 await admin.getByText("IA · prise de nouvelles", { exact: false }).first().waitFor();
 await sam.screenshot({ path: `${SHOTS}19b-nouvelles.png` });
 step("après 30 h d'absence, une seule prise de nouvelles, sans balise ni vente ; l'équipe la voit dans Messages");
@@ -779,8 +807,36 @@ step("après 30 h d'absence, une seule prise de nouvelles, sans balise ni vente 
 await sam.getByLabel("Menu").click();
 await samSwitch.click();
 await until(() => state().tables.profiles.find((p) => p.user_id === samId)?.relances_ok === false, "Sam refuse les nouvelles");
-await sam.mouse.click(20, 600); // referme le menu
+await sam.mouse.click(20, 600); // toucher à côté referme le menu
+await samSwitch.waitFor({ state: "detached" });
 step("la personne peut refuser les prises de nouvelles depuis son menu");
+
+// 34e. Sam parle aussi à Élise : une conversation à part, qui ne sait rien de
+// celle avec Chloé (ni messages, ni mémoire, ni script de vente).
+await sam.getByRole("link", { name: "Toutes les créatrices" }).click();
+await sam.waitForURL(`${BASE}/`);
+await sam.getByRole("link", { name: "Parler avec Élise" }).click();
+await sam.waitForURL(`${BASE}/c/1`);
+await sam.getByText("Bonjour, je suis Élise.").waitFor();
+assert.equal(await sam.getByText("Salut Chloé, moi c'est Sam.").count(), 0);
+await samInput.fill("PROPOSE-MOI quelque chose, Élise");
+await sam.getByLabel("Envoyer").click();
+await sam.getByText("Élise · IA").nth(1).waitFor();
+s = state();
+const elisePrompt = s.llm.filter((r) => !r.json && r.system.includes("## Vente")).at(-1);
+assert.match(elisePrompt.system, /Nom : Élise/);
+assert.ok(s.tables.user_facts.some((f) => f.user_id === samId && Number(f.creator_id) === CHLOE && f.fact === "Se prénomme Sam."));
+assert.ok(!elisePrompt.system.includes("Se prénomme Sam")); // ce que Chloé sait de lui reste chez Chloé
+assert.ok(!JSON.stringify(elisePrompt.contents).includes("Salut Chloé"));
+assert.match(elisePrompt.system, /Ne propose aucun contenu dans cette réponse/); // le script de Chloé ne sert pas ici
+assert.equal(s.tables.offers.filter((o) => o.user_id === samId && Number(o.creator_id) === 1).length, 0);
+await admin.goto(`${BASE}/admin/messages`);
+await admin.getByRole("button", { name: /Sam · avec Élise/ }).waitFor();
+await admin.getByRole("button", { name: /Sam · avec Chloé/ }).waitFor();
+step("une conversation par créatrice : avec Élise, rien de ce qui s'est dit avec Chloé ; l'équipe voit les deux");
+
+await sam.goto(`${BASE}/c/${CHLOE}`);
+await sam.getByText("Salut Chloé, moi c'est Sam.").waitFor();
 
 // 35. Mode manuel : l'IA ne répond plus à personne.
 await admin.goto(`${BASE}/admin/ia`);
@@ -814,6 +870,8 @@ await deskPage.fill('input[name="email"]', "lea@example.com");
 await deskPage.fill('input[name="password"]', "motdepasse");
 await deskPage.click('button[type="submit"]');
 await deskPage.waitForURL(`${BASE}/`);
+await deskPage.getByRole("link", { name: "Parler avec Élise" }).click();
+await deskPage.waitForURL(`${BASE}/c/1`);
 await deskPage.getByLabel("Votre message").fill("Salut Élise, moi c'est Léa.");
 await deskPage.getByLabel("Votre message").press("Enter");
 await deskPage.getByText(/réponse de test/).waitFor();

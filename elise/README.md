@@ -23,6 +23,12 @@ refuse.
 ## Ce que fait cette version
 
 - **Connexion / inscription** par e-mail et mot de passe (`/connexion`).
+- **Plusieurs créatrices en ligne** : la personne choisit avec laquelle
+  parler (`/`, ou directement `/c/<numéro>` ; une seule en ligne : on arrive
+  chez elle). Chaque conversation est totalement séparée : ses messages, ce
+  que l'IA sait de la personne, son résumé, son script et ses offres. Seul le
+  plafond de dépenses (et la pause après un achat, et le nombre d'offres
+  payantes par jour) vaut pour la personne, toutes créatrices confondues.
 - **La conversation**, façon messagerie : Élise à gauche, soi à droite,
   lisible sur téléphone, mode sombre compris. Élise se présente d'elle-même
   au premier passage.
@@ -205,17 +211,20 @@ l'appareil ; le lien peut resservir à tout moment.
 
 ### Messages
 
-La liste des conversations, la plus récente en haut, avec les messages non
-lus, comme dans une messagerie. On ouvre une conversation pour la lire et
-répondre au nom de l'équipe (la personne voit « Équipe »). À côté, la fiche de
-la personne :
+La liste des conversations (une par personne **et par créatrice** : « Sam ·
+avec Chloé », « Sam · avec Katherine »), la plus récente en haut, avec les
+messages non lus, comme dans une messagerie. On ouvre une conversation pour la
+lire et répondre au nom de l'équipe (la personne voit « Équipe »). À côté, la
+fiche de la personne :
 
-- **L'IA peut répondre à cette personne** (compte en mode hybride) ;
+- **L'IA peut répondre à cette personne** (compte en mode hybride), pour la
+  créatrice de cette conversation ;
 - **ville** et **fuseau horaire** (l'IA sait quelle heure il est chez elle) ;
-- **emojis** de la créatrice active avec elle : au choix de l'IA, seulement
-  ceux qu'on choisit, ou aucun ;
-- **comment se comporter avec elle** : 5 000 caractères de notes pour l'IA ;
-- **script de vente** suivi (ceux de la créatrice active ou de toutes), et
+- **emojis** de cette créatrice avec elle : au choix de l'IA, seulement ceux
+  qu'on choisit, ou aucun ;
+- **comment se comporter avec elle** : 5 000 caractères de notes pour l'IA
+  (communes à toutes les créatrices) ;
+- **script de vente** suivi (ceux de cette créatrice ou de toutes), et
   **plafond de dépenses** mensuel propre ;
 - ce que l'IA sait d'elle (sa fiche), sa LTV, et la **vente** : l'étape
   suivante du script, l'offre en attente (qu'on peut retirer), et l'envoi de
@@ -226,8 +235,10 @@ la personne :
 
 - **Qui répond** : automatique (l'IA répond à tout le monde), hybride
   (seulement aux personnes cochées), manuel (l'IA est coupée).
-- **La créatrice que l'IA incarne** : l'une des créatrices, ou « Aucune »
-  (le personnage par défaut, « Élise »). Bouton « Créer une créatrice ».
+- **Créatrices en ligne** : une case par créatrice (au moins une). Les
+  personnes choisissent parmi elles. Hors ligne, une créatrice ne répond
+  plus et disparaît du choix ; ses conversations restent lisibles par
+  l'équipe. Bouton « Créer une créatrice ».
 
 ### Créatrices
 
@@ -248,15 +259,21 @@ Enregistré » en bas) : on peut partir et revenir quand on veut.
   langue maternelle (toutes les langues), taille, poids, pointure, bonnet,
   cheveux, yeux, origine, silhouette, groupes personnalisés (tatouages,
   piercings…), centres d'intérêt par catégories libres, et un texte libre ;
+  La **personnalité et façon d'écrire** : les consignes de ton pour l'IA
+  (son énergie, son humour, ses expressions) ; les règles de base passent
+  toujours avant ;
 - **Premier message** : son message d'accueil (`{nom}` devient son prénom).
 
 Puis **Valider** (le prénom est alors obligatoire) : tout ce qui est rempli
-appartient à cette créatrice, et quand l'IA l'incarne, elle agit selon ce
-profil. La première créatrice validée devient celle que l'IA incarne ;
-ensuite, on choisit dans l'onglet IA. Dans la fiche d'une personne (onglet
-Messages), « L'IA peut répondre » et les emojis sont ceux de la créatrice
-active. Si un enregistrement échoue, la raison s'affiche en rouge, avec
-« Réessayer ».
+appartient à cette créatrice, et elle passe en ligne. Dans chaque
+conversation, l'IA agit selon le profil de la créatrice de cette
+conversation. Si un enregistrement échoue, la raison s'affiche en rouge, avec
+« Réessayer ». Supprimer une créatrice supprime aussi ses conversations.
+
+Au départ, la base contient une créatrice « Élise » (le personnage par
+défaut). **Katherine** (24 ans, vlogueuse solaire et taquine) se crée d'un
+coup en collant `supabase/katherine.sql` dans Supabase (SQL Editor → New
+query → Run), après `schema.sql` ; on peut ensuite tout retoucher ici.
 
 L'IA reste une IA : elle le dit si on le lui demande, ne propose jamais de
 rencontre (même « dans la même région »), n'utilise jamais les détails
@@ -268,7 +285,15 @@ physiques dans un registre sexuel.
   supplémentaires. La créativité est réglée au maximum fiable (1,0) et l'IA
   choisit elle-même la longueur de chaque réponse : rien à régler.
 - **Garde-fous de la vente** : plafond mensuel par personne, nombre de
-  messages avant la première offre et entre deux offres.
+  messages avant la première offre et entre deux offres, **pause après un
+  achat** (24 h par défaut : aucune offre payante pendant ce temps) et **offres
+  payantes par l'IA sur 24 h** (1 par défaut). L'IA ne propose jamais un prix
+  au-delà de ce qui reste du plafond du mois (la base le refuse aussi, même
+  pour l'équipe) ; un cadeau gratuit n'est freiné ni par le plafond, ni par la
+  pause, ni par le nombre par jour. Dans la fiche d'une personne (onglet
+  Messages), une ligne dit où en est la vente et pourquoi l'IA ne propose pas
+  (« Prochaine offre dans 3 messages », « Pause après son dernier achat :
+  encore 12 heures »…).
 - **Prendre des nouvelles** (coupé par défaut) : quand une personne ne vient
   plus depuis le délai choisi (24 h à 2 semaines, sans visite ni message),
   l'IA lui écrit un court message amical pour prendre de ses nouvelles. Une
