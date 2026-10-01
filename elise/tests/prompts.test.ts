@@ -27,7 +27,9 @@ describe("chatSystemPrompt : ce que le modèle reçoit", () => {
       summary: "Ils ont parlé de son déménagement.",
       now,
     });
-    assert.ok(system.startsWith("PERSONA"));
+    // Le jour d'abord (l'IA se trompait de jour), puis les règles de base.
+    assert.ok(system.startsWith("## Maintenant"));
+    assert.ok(system.indexOf("PERSONA") < system.indexOf("## Ton personnage"));
     assert.match(system, /- Se prénomme Karim\.\n- A un chat\./);
     assert.match(system, /Ils ont parlé de son déménagement\./);
     assert.match(system, /lundi 28 septembre 2026 à 21 h 14/);

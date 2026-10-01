@@ -89,6 +89,10 @@ describe("le personnage", () => {
     assert.match(base, /tu entres directement dans le vif du\s+sujet/);
     assert.match(base, /pas une question à la fin de chaque\s+message par réflexe/);
     assert.match(base, /« jsais pas »/);
+    // Les abréviations des textos, sans rien d'affectueux.
+    for (const abbr of ["« cc » (coucou)", "« mdr »", "« tkt »", "« jsp »"]) assert.ok(base.includes(abbr), abbr);
+    assert.match(base, /Jamais d'abréviation affectueuse ou amoureuse \(« jtm »,\s+« bsx »/);
+    assert.match(base, /Tu tutoies, comme sur WhatsApp/);
     assert.match(base, /Le classique\.\.\. Courage/);
     assert.match(base, /si elle est en\s+danger, tu\s+donnes toujours les numéros d'aide/);
     for (const banned of [/« Je\s+comprends… »/, /« En tant que… »/, /« Comment puis-je t'aider \? »/, /« N'hésite pas à partager… »/]) {
@@ -225,7 +229,7 @@ describe("la vente", () => {
       extra: "Parle un peu de cuisine.",
       now,
     });
-    const order = ["RÈGLES", "## Ton personnage", "## La personne", "## Ce que tu sais", "## Résumé", "## Vente", "## Consignes de l'équipe", "## Repères"];
+    const order = ["## Maintenant", "RÈGLES", "## Ton personnage", "## La personne", "## Ce que tu sais", "## Résumé", "## Vente", "## Consignes de l'équipe", "## Repères"];
     const positions = order.map((h) => system.indexOf(h));
     assert.ok(positions.every((p) => p >= 0), JSON.stringify(positions));
     assert.deepEqual([...positions].sort((a, b) => a - b), positions);

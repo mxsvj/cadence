@@ -35,6 +35,11 @@ function toSalePrompt(sale: SaleContext): SalePrompt {
   };
 }
 
+function previousUserMessageAt(recent: Message[]): Date | null {
+  const last = recent.findLast((m) => m.role === "user");
+  return last ? new Date(last.created_at) : null;
+}
+
 /** Elle dit qu'elle est une IA, au plus tard en répondant à ce message de la personne. */
 export const INTRO_WITHIN = 3;
 
@@ -83,6 +88,8 @@ export async function buildReply(input: {
     introduce: sale.userMessages <= INTRO_WITHIN && !saidItsAnAi(recent.map(toTurn)),
     extra: settings.extra_instructions,
     now: input.now,
+    // Son dernier message avant celui-ci (pas encore enregistré) : depuis quand elle n'avait pas écrit.
+    previousAt: previousUserMessageAt(recent),
   });
   const messages: Turn[] = [...recent.map(toTurn), { role: "user", content: input.newMessage }];
   return { system, messages, facts, summary, sale, name: displayName(creator.persona) };
