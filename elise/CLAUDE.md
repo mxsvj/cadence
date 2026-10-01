@@ -238,6 +238,11 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `personSection` le réinjecte (« Ce que tu as remarqué… indicatif, ne le
   dis jamais… jamais pour vendre »). Faux Gemini : « Tu relis la fin d'une
   conversation » → fatigué / timide / la randonnée.
+  Personne qui devient froide (demande du 01/10/2026) : règle
+  d'`elise-persona.md` — l'IA le remarque et demande une fois, en parlant
+  d'elle (« t'as l'air un peu ailleurs, ça va ? »), sans reproche ni « tu
+  m'en veux ? », et n'insiste pas ; écrire toujours court n'est pas être
+  froid.
   Refusé dans la même demande : la relance « 3 h après une sortie brusque »
   avec un prétexte inventé (« je t'ai même pas raconté ma fin de journée,
   t'es là ») — Vercel Hobby ne lance la tâche qu'une fois par jour, et un
