@@ -492,6 +492,10 @@ function gemini(body, model) {
     const n = (last.match(/La personne :/g) ?? []).length;
     return reply(`Résumé de test : ${n} messages de la personne résumés.`);
   }
+  // Le profil de discussion (humeur, style, sujet), tous les 5 messages, par le petit modèle.
+  if (system.includes("Tu relis la fin d'une conversation")) {
+    return reply(JSON.stringify({ humeur: "fatigué", style: "timide", centre_interet: "la randonnée" }));
+  }
   // La créatrice réagit à une contre-offre que la base vient d'accepter ou de refuser.
   if (system.includes("## Sa contre-offre")) {
     return reply(system.includes("C'est accepté") ? "allez, ça marche pour cette fois 😉 je te débloque ça !" : "ahah bien tenté 😜 mais je peux pas descendre aussi bas");
@@ -516,6 +520,7 @@ function gemini(body, model) {
       !r.system.includes("carnet de mémoire") &&
       !r.system.includes("## Ta tâche") &&
       !r.system.includes("## Sa contre-offre") &&
+      !r.system.includes("Tu relis la fin d'une conversation") &&
       !/QUOTA|SURCHARGE/.test(r.contents.filter((c) => c.role === "user").at(-1).parts[0].text),
   ).length;
   return reply(`C'est noté. **Merci** de me le dire. (réponse de test n° ${n})`);

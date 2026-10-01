@@ -34,6 +34,10 @@ export type Contact = {
   emojis: string;
   city: string;
   timezone: string;
+  /** Profil de discussion noté par l'IA (lib/profiling.ts) : absent avant schema.sql relancé. */
+  humeur?: string;
+  style_discussion?: string;
+  centre_interet?: string;
   script_id: number | null;
   last_read_message_id: number;
 };

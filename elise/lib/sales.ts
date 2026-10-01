@@ -121,8 +121,8 @@ export async function loadSaleContext(
   userId: string,
   creatorId: number,
   settings: AiSettings,
-  /** Le message que la personne vient d'envoyer, pas encore enregistré, compte-t-il ? */
-  incoming = true,
+  /** Les messages que la personne vient d'envoyer, pas encore enregistrés (true : un seul). */
+  incoming: boolean | number = true,
 ): Promise<SaleContext> {
   const conversation = () => admin.from("messages").select("id").eq("user_id", userId).eq("creator_id", creatorId);
   const [next, offers, userCount, lastOffer, lastRelance, urgent] = await Promise.all([
@@ -172,7 +172,7 @@ export async function loadSaleContext(
   };
   const lastOfferId = (lastOffer.data as { id: number }[] | null)?.[0]?.id;
   const lastRelanceId = (lastRelance.data as { id: number }[] | null)?.[0]?.id;
-  const extra = incoming ? 1 : 0;
+  const extra = typeof incoming === "number" ? incoming : incoming ? 1 : 0;
   const [sinceLastOffer, sinceRelance] = await Promise.all([
     lastOfferId ? countAfter(lastOfferId, false) : Number.POSITIVE_INFINITY,
     lastRelanceId ? countAfter(lastRelanceId, true).then((n) => n + extra) : null,

@@ -209,7 +209,7 @@ describe("envoyer les alertes sur Discord ou Telegram", () => {
 
 describe("ménager la base et le quota du modèle", () => {
   it("la fiche et le résumé se mettent à jour tous les 3 messages de la personne", () => {
-    assert.deepEqual([1, 2, 3, 4, 5, 6, 7].map(memoryDue), [false, false, true, false, false, true, false]);
+    assert.deepEqual([1, 2, 3, 4, 5, 6, 7].map((n) => memoryDue(n)), [false, false, true, false, false, true, false]);
     assert.equal(memoryDue(0), false);
   });
 

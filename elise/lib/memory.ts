@@ -32,8 +32,13 @@ const MAX_FACTS_IN_PROMPT = 150;
 export const MEMORY_EVERY = 3;
 
 /** Faut-il mettre la mémoire à jour après ce message (le n-ième de la personne) ? */
-export function memoryDue(userMessages: number): boolean {
-  return userMessages > 0 && userMessages % MEMORY_EVERY === 0;
+export function memoryDue(userMessages: number, added = 1): boolean {
+  return crossed(userMessages, added, MEMORY_EVERY);
+}
+
+/** Le total vient-il de franchir un multiple de `every` (plusieurs messages d'un coup compris) ? */
+export function crossed(total: number, added: number, every: number): boolean {
+  return total > 0 && Math.floor(total / every) > Math.floor((total - Math.max(1, added)) / every);
 }
 
 export type Message = Turn & {

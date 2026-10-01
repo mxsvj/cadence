@@ -28,6 +28,8 @@ export type GenerateOptions = {
   json?: boolean;
   /** Appelé avec le modèle qui a vraiment répondu (le principal ou celui de secours). */
   onModel?: (model: string) => void;
+  /** Gemini : un autre modèle que le principal (par exemple `lightModel()`). Ignoré pour Claude. */
+  model?: string;
 };
 
 export class LlmError extends Error {
@@ -73,6 +75,11 @@ export function currentModel(): { provider: string; model: string } {
   const provider = (process.env.LLM_PROVIDER ?? "gemini").trim().toLowerCase();
   if (provider === "claude") return { provider, model: process.env.CLAUDE_MODEL?.trim() || DEFAULTS.claude };
   return { provider, model: process.env.GEMINI_MODEL?.trim() || DEFAULTS.gemini };
+}
+
+/** Le petit modèle Gemini des tâches de fond (profil de discussion) : son quota gratuit est séparé. */
+export function lightModel(): string {
+  return process.env.GEMINI_LIGHT_MODEL?.trim() || GEMINI_FALLBACK;
 }
 
 /** Le modèle de secours de Gemini, ou null s'il est désactivé. */
@@ -164,7 +171,7 @@ type GeminiResponse = {
 
 async function callGemini(o: Ready): Promise<string> {
   const key = requireEnv("GEMINI_API_KEY");
-  const primary = process.env.GEMINI_MODEL?.trim() || DEFAULTS.gemini;
+  const primary = o.model?.trim() || process.env.GEMINI_MODEL?.trim() || DEFAULTS.gemini;
   const backup = fallbackModel();
   const start = Date.now();
   try {
