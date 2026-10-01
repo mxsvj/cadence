@@ -4,17 +4,17 @@
 // au lieu d'afficher la réponse d'un coup. La réponse reste marquée « IA » :
 // ce n'est qu'un rythme.
 
-/** Lire le message reçu : environ 20 caractères par seconde, entre 1 et 6 secondes. */
-const READ_CHARS_PER_SECOND = 20;
-const READ_MS = [1000, 6000] as const;
-/** Réfléchir avant de taper : 1 à 3 secondes. */
-const THINK_MS = [1000, 3000] as const;
-/** Taper sur un téléphone : environ 3,5 caractères par seconde (une quarantaine de mots par minute), à 15 % près. */
-const TYPE_CHARS_PER_SECOND = 3.5;
+/** Lire le message reçu, sans se presser : environ 15 caractères par seconde, entre 1,5 et 8 secondes. */
+const READ_CHARS_PER_SECOND = 15;
+const READ_MS = [1500, 8000] as const;
+/** Réfléchir avant de taper : 2 à 5 secondes. */
+const THINK_MS = [2000, 5000] as const;
+/** Taper sur un téléphone, à un rythme moyen : 2,5 caractères par seconde (une trentaine de mots par minute), à 15 % près. */
+const TYPE_CHARS_PER_SECOND = 2.5;
 const TYPE_VARIATION = 0.15;
-/** Au moins 3 secondes, au plus 90 : même un long message finit par arriver. */
-const MIN_MS = 3000;
-const MAX_MS = 90_000;
+/** Au moins 4 secondes, au plus 2 minutes : même un long message finit par arriver. */
+const MIN_MS = 4000;
+const MAX_MS = 120_000;
 
 const clamp = (n: number, [min, max]: readonly [number, number]) => Math.min(max, Math.max(min, n));
 
