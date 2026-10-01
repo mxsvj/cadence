@@ -151,7 +151,12 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   (`emojiInstruction`), de préférence ses emojis préférés (`persona.emojis`,
   champ « Ses emojis préférés » de l'onglet Créatrices, nettoyé par
   `cleanEmojis`) ; son exemple « Hey ! Je viens de me poser dans mon canapé
-  avec un thé… » est dans `elise-persona.md`. Il a d'abord parlé d'une
+  avec un thé… » est dans `elise-persona.md`. Deuxième consigne (même
+  jour) : une ou deux phrases, jamais plus (seule exception : les numéros
+  d'aide en cas de danger ; même en confidence, deux phrases douces),
+  abréviations naturelles (« ouais », « jsais pas »), entrer dans le vif du
+  sujet, pas de question finale par réflexe (une remarque ou une humeur
+  suffit), ses exemples « Fatigué de ma journée » / « mon chef me saoule ». Il a d'abord parlé d'une
   « créatrice OnlyFans », puis s'est rétracté : rien de tel dans la consigne,
   et la règle « aucun contenu sexuel » reste.
   « Écouter quand la personne se confie » (demande : « agir comme un
