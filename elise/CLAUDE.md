@@ -156,7 +156,17 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   d'aide en cas de danger ; même en confidence, deux phrases douces),
   abréviations naturelles (« ouais », « jsais pas »), entrer dans le vif du
   sujet, pas de question finale par réflexe (une remarque ou une humeur
-  suffit), ses exemples « Fatigué de ma journée » / « mon chef me saoule ». Il a d'abord parlé d'une
+  suffit), ses exemples « Fatigué de ma journée » / « mon chef me saoule ».
+  Abréviations des textos (demande « genre cc ») : tutoiement d'emblée, liste
+  « cc », « slt », « mdr », « jsp », « tkt »… quelques-unes par message,
+  jamais « jtm » ni « bsx » (rien d'affectueux).
+  Le bon jour (l'IA a parlé de « ton vendredi » un jeudi, avec la date
+  seulement en fin de consigne) : `nowSection` ouvre la consigne (« ##
+  Maintenant » : date et heure chez la personne, moment de la journée, hier
+  et demain, depuis quand elle n'avait pas écrit si plus de 2 h —
+  `previousAt`, son dernier message dans `recent` — et « ne parle jamais
+  d'un jour pas encore arrivé comme s'il était passé ») ; « ## Repères »
+  rappelle le jour à la fin. Il a d'abord parlé d'une
   « créatrice OnlyFans », puis s'est rétracté : rien de tel dans la consigne,
   et la règle « aucun contenu sexuel » reste.
   « Écouter quand la personne se confie » (demande : « agir comme un

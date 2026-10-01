@@ -270,6 +270,42 @@ export function teamSection(alerted: boolean): string {
   return `## Prévenir l'équipe\n\n${lines.join("\n")}`;
 }
 
+/** « le soir », d'après l'heure chez la personne (0 à 23). */
+function momentOfDay(hour: number): string {
+  if (hour >= 5 && hour < 12) return "le matin";
+  if (hour >= 12 && hour < 14) return "le midi";
+  if (hour >= 14 && hour < 18) return "l'après-midi";
+  if (hour >= 18 && hour < 23) return "le soir";
+  return "la nuit";
+}
+
+const dayName = (date: Date, timeZone: string, withDate = true) =>
+  new Intl.DateTimeFormat("fr-FR", { timeZone, weekday: "long", ...(withDate && { day: "numeric", month: "long" }) }).format(date);
+
+/**
+ * Le jour et l'heure, en tête de la consigne : l'IA se trompait de jour
+ * (« ton vendredi » un jeudi) quand la date n'était qu'à la fin. Hier,
+ * demain, le moment de la journée, et depuis quand la personne n'avait pas
+ * écrit (`previousAt`, son message précédent).
+ */
+export function nowSection(now: Date, timeZone: string, previousAt?: Date | null): string {
+  const hourPart = new Intl.DateTimeFormat("fr-FR", { timeZone, hour: "numeric", hourCycle: "h23" })
+    .formatToParts(now)
+    .find((p) => p.type === "hour");
+  const hour = Number(hourPart?.value ?? 12);
+  const lines = [
+    `Chez la personne, nous sommes le ${formatNow(now, timeZone)} (${timeZone}) : c'est ${momentOfDay(hour)}.`,
+    `Hier, c'était ${dayName(new Date(now.getTime() - 86_400_000), timeZone)} ; demain, ce sera ${dayName(new Date(now.getTime() + 86_400_000), timeZone)}.`,
+  ];
+  if (previousAt && now.getTime() - previousAt.getTime() > 2 * 3_600_000) {
+    lines.push(`Son message précédent date du ${formatNow(previousAt, timeZone)} : du temps a passé depuis.`);
+  }
+  lines.push(
+    "Avant de parler d'un jour (hier, demain, ce soir, le week-end, « ton vendredi »…), vérifie-le ici. Ne parle jamais d'un jour qui n'est pas encore arrivé comme s'il était passé.",
+  );
+  return `## Maintenant\n\n${lines.join("\n")}`;
+}
+
 /** A-t-elle déjà dit, dans ces messages, qu'elle est une IA ? */
 export function saidItsAnAi(turns: Turn[]): boolean {
   return turns.some((t) => t.role === "assistant" && (/\bIA\b/.test(t.content) || /intelligence artificielle/i.test(t.content)));
@@ -297,14 +333,19 @@ export function chatSystemPrompt(input: {
   introduce?: boolean;
   extra?: string;
   now: Date;
+  /** Le message précédent de la personne : depuis quand elle n'avait pas écrit. */
+  previousAt?: Date | null;
 }): string {
   const facts = input.facts.length
     ? input.facts.map((f) => `- ${f}`).join("\n")
     : "Tu ne sais encore rien de cette personne : c'est peut-être votre première conversation.";
   const summary = input.summary?.trim() || "Pas encore de résumé : vos échanges sont tous ci-dessous.";
   const person = input.person ?? {};
+  // L'heure de la personne, là où elle vit (celle de son téléphone) ; Paris par défaut.
+  const zone = validTimeZone(person.timezone) ?? TIME_ZONE;
 
   const sections = [
+    nowSection(input.now, zone, input.previousAt),
     input.base.trim(),
     "---",
     personaSection(input.persona ?? {}, person),
@@ -316,9 +357,8 @@ export function chatSystemPrompt(input: {
   if (input.team) sections.push(teamSection(input.team.alerted));
   if (input.introduce) sections.push(introSection());
   if (input.extra?.trim()) sections.push(`## Consignes de l'équipe\n\n${input.extra.trim()}`);
-  // L'heure de la personne, là où elle vit (celle de son téléphone) ; Paris par défaut.
-  const zone = validTimeZone(person.timezone) ?? TIME_ZONE;
-  sections.push(`## Repères\n\nChez la personne, nous sommes le ${formatNow(input.now, zone)} (${zone}).`);
+  // Rappel à la fin, là où le modèle regarde aussi le plus.
+  sections.push(`## Repères\n\nChez la personne, nous sommes le ${formatNow(input.now, zone)} (${zone}). Rappel : on est ${dayName(input.now, zone, false)}.`);
   return sections.join("\n\n");
 }
 

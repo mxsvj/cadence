@@ -174,7 +174,7 @@ step("un seul appel au modèle pour ce message : la fiche attend le 3e message")
 
 // 7. Ce que le modèle a reçu pour répondre.
 const firstChat = s.llm.find((r) => !r.json);
-assert.match(firstChat.system, /^# Règles de base de l'IA/);
+assert.match(firstChat.system, /^## Maintenant\n\nChez la personne, nous sommes le [\s\S]*# Règles de base de l'IA/);
 assert.match(firstChat.system, /## Ton personnage[\s\S]*Nom : Élise/);
 assert.match(firstChat.system, /Prénom ou pseudo : Karim/);
 assert.match(firstChat.system, /Tu ne sais encore rien/);

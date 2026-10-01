@@ -1,7 +1,7 @@
 // Le rythme des réponses (comme une personne qui tape), et l'heure de la personne.
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { chatSystemPrompt, personSection, validTimeZone } from "../lib/prompts";
+import { chatSystemPrompt, nowSection, personSection, validTimeZone } from "../lib/prompts";
 import { typingDelayMs } from "../lib/typing";
 
 describe("le temps d'écrire une réponse", () => {
@@ -62,5 +62,31 @@ describe("l'heure de la personne, celle de son téléphone", () => {
       const prompt = chatSystemPrompt({ base: "Règles.", person: { timezone }, facts: [], summary: null, now });
       assert.match(prompt, /Chez la personne, nous sommes le lundi 28 septembre 2026 à 21 h 14 \(Europe\/Paris\)\./);
     }
+  });
+});
+
+describe("le bon jour, la bonne heure", () => {
+  // Jeudi 1er octobre 2026, 22 h 14 à Paris.
+  const thursday = new Date("2026-10-01T20:14:00Z");
+
+  it("en tête de la consigne : le jour, le moment de la journée, hier et demain", () => {
+    const text = nowSection(thursday, "Europe/Paris");
+    assert.match(text, /^## Maintenant\n\nChez la personne, nous sommes le jeudi 1 octobre 2026 à 22 h 14 \(Europe\/Paris\) : c'est le soir\./);
+    assert.match(text, /Hier, c'était mercredi 30 septembre ; demain, ce sera vendredi 2 octobre\./);
+    assert.match(text, /Ne parle jamais d'un jour qui n'est pas encore arrivé comme s'il était passé/);
+    const prompt = chatSystemPrompt({ base: "# Règles", person: {}, facts: [], summary: null, now: thursday });
+    assert.ok(prompt.startsWith("## Maintenant"));
+    assert.match(prompt, /## Repères\n\n.+Rappel : on est jeudi\.$/);
+  });
+
+  it("à l'heure de la personne : à Toronto, c'est encore l'après-midi", () => {
+    assert.match(nowSection(thursday, "America/Toronto"), /jeudi 1 octobre 2026 à 16 h 14 \(America\/Toronto\) : c'est l'après-midi/);
+    assert.match(nowSection(new Date("2026-10-01T23:30:00Z"), "Europe/Paris"), /vendredi 2 octobre 2026 à 1 h 30 .+ c'est la nuit/);
+  });
+
+  it("dit depuis quand la personne n'avait pas écrit, si ça fait plus de deux heures", () => {
+    const yesterday = new Date("2026-09-30T19:05:00Z");
+    assert.match(nowSection(thursday, "Europe/Paris", yesterday), /Son message précédent date du mercredi 30 septembre 2026 à 21 h 05 : du temps a passé depuis\./);
+    assert.doesNotMatch(nowSection(thursday, "Europe/Paris", new Date("2026-10-01T20:00:00Z")), /Son message précédent/);
   });
 });
