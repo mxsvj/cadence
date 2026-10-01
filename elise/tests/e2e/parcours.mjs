@@ -776,6 +776,7 @@ step("fiche contact enregistrée : ville, notes ; IA autorisée et emojis de Chl
 const karimId = s.users.find((u) => u.email === "karim@example.com").id;
 // (Karim a effacé ses données à l'étape 13 : un profil noté depuis.)
 await sql("update public.contacts set humeur = 'fatigué', style_discussion = 'timide', centre_interet = 'la randonnée', profil_maj_le = now() where user_id = $1", [karimId]);
+const samThreadUrl = admin.url();
 await admin.goto(`${BASE}/admin/messages?u=${karimId}&c=1`);
 await admin.getByText("humeur fatigué · style timide · aime parler de la randonnée").waitFor();
 await admin.getByLabel("Comment se comporter avec elle", { exact: false }).fill("Aime la montagne.");
@@ -783,6 +784,8 @@ await admin.getByRole("button", { name: "Enregistrer la fiche" }).click();
 await admin.getByText("Fiche enregistrée.").waitFor();
 const karimContact = state().tables.contacts.find((c) => c.user_id === karimId);
 assert.deepEqual([karimContact.notes, karimContact.humeur, karimContact.style_discussion], ["Aime la montagne.", "fatigué", "timide"]);
+await admin.goto(samThreadUrl); // la suite reprend sur la conversation de Sam
+await admin.getByLabel("Réponse de l'équipe").waitFor();
 step("la fiche montre ce que l'IA a remarqué (humeur, style, sujet) ; l'enregistrer ne l'efface pas");
 
 // 30. L'IA propose la première étape (gratuite) : offerte et visible tout de suite.
