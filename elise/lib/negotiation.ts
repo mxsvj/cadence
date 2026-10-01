@@ -5,6 +5,7 @@ import { CHAT_TEMPERATURE, generate } from "./llm";
 import type { Message } from "./memory";
 import { describeStep, parseProposal, type Step } from "./offers";
 import { cleanReply, type BidPrompt } from "./prompts";
+import { addTypo } from "./typos";
 import { aiMayReply, loadContact, loadCreator, loadProfile, loadSettings } from "./settings";
 import { parseTeamFlag } from "./urgency";
 
@@ -70,7 +71,9 @@ export async function negotiationReply(input: {
   });
   if (context.sale.block?.reason === "urgence") return [];
   const raw = cleanReply(await generate({ system: context.system, messages: context.messages, temperature: CHAT_TEMPERATURE }));
-  const text = parseProposal(parseTeamFlag(raw).text).text;
+  const flag = parseTeamFlag(raw);
+  const clean = parseProposal(flag.text).text;
+  const text = flag.flagged ? clean : addTypo(clean);
   if (!text) return [];
   const { messages } = await saveReply({ admin, userId, creatorId, text, proposal: null, sale: context.sale });
   return messages;

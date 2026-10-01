@@ -33,6 +33,8 @@ const env = {
   // Le rythme « humain » des réponses (lib/typing.ts, qui a ses propres essais) : coupé ici,
   // sinon chaque réponse du parcours attendrait plusieurs secondes.
   HUMAN_TYPING: "off",
+  // Les fautes de frappe au hasard (lib/typos.ts, qui a ses propres essais) : coupées, les réponses sont vérifiées mot pour mot.
+  HUMAN_TYPOS: "off",
 };
 
 const build = spawnSync("npx", ["next", "build"], { cwd: root, env, stdio: "inherit" });
