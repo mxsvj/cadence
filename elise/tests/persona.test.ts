@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { parseEuros, parseProposal } from "../lib/offers";
 import { sanitizePersona } from "../lib/persona-profile";
 import { readFileSync } from "node:fs";
-import { chatSystemPrompt, genderRule, personSection, personaSection, saidItsAnAi, salesSection, type SalePrompt } from "../lib/prompts";
+import { chatSystemPrompt, genderRule, negotiationSection, personSection, personaSection, saidItsAnAi, salesSection, type SalePrompt } from "../lib/prompts";
 
 const now = new Date("2026-09-28T19:14:00Z");
 
@@ -90,8 +90,9 @@ describe("le personnage", () => {
     assert.match(base, /pas une question à la fin de chaque\s+message par réflexe/);
     assert.match(base, /« jsais pas »/);
     // Les abréviations des textos, sans rien d'affectueux.
-    for (const abbr of ["« cc » (coucou)", "« mdr »", "« tkt »", "« jsp »"]) assert.ok(base.includes(abbr), abbr);
-    assert.match(base, /Jamais d'abréviation affectueuse ou amoureuse \(« jtm »,\s+« bsx »/);
+    for (const abbr of ["« cc » (coucou)", "« mdr »", "« tkt »", "« jsp »", "« chui »", "« vrmt »"]) assert.ok(base.includes(abbr), abbr);
+    assert.match(base, /Mets-en\s+dans presque chaque message, deux ou trois/);
+    assert.match(base, /Jamais d'abréviation\s+affectueuse ou amoureuse \(« jtm »,\s+« bsx »/);
     assert.match(base, /Tu tutoies, comme sur WhatsApp/);
     assert.match(base, /Le classique\.\.\. Courage/);
     assert.match(base, /si elle est en\s+danger, tu\s+donnes toujours les numéros d'aide/);
@@ -147,6 +148,37 @@ describe("pas de message d'accueil : elle dit qu'elle est une IA en passant", ()
     assert.equal(saidItsAnAi([{ role: "assistant", content: "Je suis une intelligence artificielle 😄" }]), true);
     assert.equal(saidItsAnAi([{ role: "user", content: "t'es une IA ?" }, { role: "assistant", content: "coucou !" }]), false);
     assert.equal(saidItsAnAi([{ role: "assistant", content: "j'adore la Sicilia" }]), false);
+  });
+});
+
+describe("sa réaction à une contre-offre", () => {
+  const bid = { description: "Un carnet (2 photos)", basePriceCents: 800, minCents: 500, bidCents: 600, finalPriceCents: 600, triesLeft: null };
+
+  it("acceptée : avec enthousiasme, sans jamais dire le minimum à la personne", () => {
+    const text = negotiationSection({ ...bid, accepted: true });
+    assert.match(text, /^## Sa contre-offre/);
+    assert.match(text, /te proposer 6,00 € pour ton contenu \(Un carnet \(2 photos\)\), affiché à 8,00 €/);
+    assert.match(text, /Le minimum que l'équipe accepte est 5,00 € : c'est un repère pour toi, ne le dis jamais/);
+    assert.match(text, /C'est accepté : le contenu est à elle pour 6,00 €/);
+    assert.match(text, /allez, ça marche pour cette fois/);
+  });
+
+  it("refusée : de façon joueuse, jamais sous le minimum, sans pousser", () => {
+    const text = negotiationSection({ ...bid, bidCents: 300, accepted: false, finalPriceCents: 800, triesLeft: 2 });
+    assert.match(text, /refuse gentiment, de façon joueuse/);
+    assert.match(text, /ahah bien tenté/);
+    assert.match(text, /Ne descends jamais sous le minimum et ne le dis pas/);
+    assert.match(text, /sans insister ni la pousser/);
+    assert.match(negotiationSection({ ...bid, bidCents: 300, accepted: false, finalPriceCents: 800, triesLeft: 0 }), /Elle ne peut plus faire de proposition/);
+  });
+
+  it("en créatrice, sans vocabulaire de commerçant ni jeu sur l'attachement", () => {
+    const text = negotiationSection({ ...bid, accepted: true });
+    assert.match(text, /jamais de vocabulaire de commerçant ou de système de paiement/);
+    assert.match(text, /pas de « juste parce que c'est toi »/);
+    const prompt = chatSystemPrompt({ base: "R", facts: [], summary: null, now, sale: null, bid: { ...bid, accepted: true } });
+    assert.match(prompt, /## Sa contre-offre/);
+    assert.match(prompt, /Ne propose aucun contenu et n'écris aucune balise/);
   });
 });
 

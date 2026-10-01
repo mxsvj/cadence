@@ -18,7 +18,16 @@ function lockedLabel(offer: Offer): string {
 // Une offre dans la conversation. Tant qu'elle n'est pas achetée, rien du
 // contenu n'est chargé : ni aperçu, ni flou, seulement ce qu'elle contient
 // (« 3 photos ») et le prix.
-export function OfferCard({ offer, onChange }: { offer: Offer; onChange: (offer: Offer) => void }) {
+export function OfferCard({
+  offer,
+  onChange,
+  onReply,
+}: {
+  offer: Offer;
+  onChange: (offer: Offer) => void;
+  /** La réaction de la créatrice à une contre-offre, et le temps qu'il lui reste à « écrire ». */
+  onReply?: (messages: unknown[], typingMs: number) => void;
+}) {
   const [step, setStep] = useState<"idle" | "confirm" | "bid">("idle");
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
@@ -73,8 +82,12 @@ export function OfferCard({ offer, onChange }: { offer: Offer; onChange: (offer:
 
   async function bid(e: React.FormEvent) {
     e.preventDefault();
-    const data = await call("proposition", { montant: amount });
+    const started = Date.now();
+    const data = await call("proposition", { montant: amount, tz: Intl.DateTimeFormat().resolvedOptions().timeZone });
     if (!data) return;
+    if (Array.isArray(data.messages) && data.messages.length) {
+      onReply?.(data.messages, Math.max(0, Number(data.typingMs ?? 0) - (Date.now() - started)));
+    }
     const r = data.result as { statut: string; prix_cents: number; essais_restants?: number };
     if (r.statut === "acceptee") {
       setNotice(`Offre acceptée : le contenu est à vous pour ${formatEuros(r.prix_cents)}.`);

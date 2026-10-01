@@ -159,7 +159,23 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   suffit), ses exemples « Fatigué de ma journée » / « mon chef me saoule ».
   Abréviations des textos (demande « genre cc ») : tutoiement d'emblée, liste
   « cc », « slt », « mdr », « jsp », « tkt »… quelques-unes par message,
-  jamais « jtm » ni « bsx » (rien d'affectueux).
+  jamais « jtm » ni « bsx » (rien d'affectueux). « Plus d'abréviations » :
+  deux ou trois dans presque chaque message (« chui », « vrmt »…).
+  Contre-offres (consigne de négociation du porteur du projet) : après
+  `faire_une_offre`, `/api/offres/[id]/proposition` appelle
+  `negotiationReply` (`lib/negotiation.ts`) : `buildReply` avec `bid`
+  (`negotiationSection` : prix proposé, affiché, minimum à ne jamais dire,
+  acceptée → enthousiasme, refusée → refus joueur, essais restants sans
+  pousser, pas de vocabulaire de commerçant ; `sale: null` donc aucune
+  nouvelle offre), rien si l'IA ne répond pas à la personne ou si une
+  urgence est ouverte ; message enregistré par `saveReply`, renvoyé avec
+  `typingMs` ; `OfferCard` → `onReply` → `showTyped` (« … écrit » puis le
+  message). Écartés de ses exemples : « juste parce que c'est toi » et
+  « fais un petit effort » (jeu sur l'attachement, pression : règles de
+  vente). Faux Gemini : « ## Sa contre-offre » → « allez, ça marche… » ou
+  « ahah bien tenté… ». Prise de nouvelles (`relanceTask`) : un message
+  d'amie qui passe dans les messages privés, 10 à 15 mots, ses deux
+  exemples, jamais de vente ni de photo.
   Le bon jour (l'IA a parlé de « ton vendredi » un jeudi, avec la date
   seulement en fin de consigne) : `nowSection` ouvre la consigne (« ##
   Maintenant » : date et heure chez la personne, moment de la journée, hier
