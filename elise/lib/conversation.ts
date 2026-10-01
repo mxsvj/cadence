@@ -4,7 +4,7 @@ import { MESSAGE_COLUMNS, loadFacts, loadMessages, loadSummary, toTurn, type Mes
 import { describeStep as describe } from "./offers";
 import { fillName, getFirstMessage, getPersona } from "./persona";
 import { displayName } from "./persona-profile";
-import { chatSystemPrompt, saidItsAnAi, type SalePrompt, type Turn } from "./prompts";
+import { chatSystemPrompt, saidItsAnAi, type BidPrompt, type SalePrompt, type Turn } from "./prompts";
 import { loadSaleContext, proposeStep, type SaleContext } from "./sales";
 import { ageFrom, type AiSettings, type Contact, type Creator, type Profile } from "./settings";
 
@@ -57,6 +57,8 @@ export async function buildReply(input: {
   teamAlerted?: boolean;
   /** Le fuseau horaire du téléphone de la personne ; sinon, celui de sa fiche. */
   timezone?: string | null;
+  /** Réagir à une contre-offre (lib/negotiation.ts) : aucune nouvelle offre dans cette réponse. */
+  bid?: BidPrompt;
 }) {
   const { supabase, admin, userId, creator, settings, contact, profile } = input;
   const [facts, summary, recent, loaded] = await Promise.all([
@@ -82,10 +84,11 @@ export async function buildReply(input: {
     },
     facts,
     summary: summary?.summary ?? null,
-    sale: toSalePrompt(sale),
+    sale: input.bid ? null : toSalePrompt(sale),
+    bid: input.bid,
     team: { alerted: input.teamAlerted ?? false },
     // Ses trois premiers messages : si elle ne l'a pas encore dit, elle dit qu'elle est une IA.
-    introduce: sale.userMessages <= INTRO_WITHIN && !saidItsAnAi(recent.map(toTurn)),
+    introduce: !input.bid && sale.userMessages <= INTRO_WITHIN && !saidItsAnAi(recent.map(toTurn)),
     extra: settings.extra_instructions,
     now: input.now,
     // Son dernier message avant celui-ci (pas encore enregistré) : depuis quand elle n'avait pas écrit.

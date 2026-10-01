@@ -89,6 +89,18 @@ export function Chat({
     messagesRef.current = messages;
   }, [messages]);
 
+  // Une réponse qui arrive d'ailleurs (réaction à une contre-offre) : « … écrit »
+  // le temps qu'il lui reste à taper, puis le message. La relecture régulière
+  // attend, pour ne pas l'afficher avant.
+  async function showTyped(incoming: Message[], typingMs: number) {
+    sending.current = true;
+    setWaiting(true);
+    if (typingMs > 0) await new Promise((r) => setTimeout(r, typingMs));
+    setMessages((m) => merge(m, incoming));
+    setWaiting(false);
+    sending.current = false;
+  }
+
   // Les nouveaux messages (réponses de l'équipe, offres) et l'état des offres.
   const poll = useCallback(async () => {
     if (sending.current || document.visibilityState !== "visible") return;
@@ -353,6 +365,7 @@ export function Chat({
                   <OfferCard
                     offer={offers[m.offer_id]}
                     onChange={(o) => setOffers((current) => ({ ...current, [o.id]: o }))}
+                    onReply={(incoming, typingMs) => void showTyped(incoming as Message[], typingMs)}
                   />
                 )}
               </div>

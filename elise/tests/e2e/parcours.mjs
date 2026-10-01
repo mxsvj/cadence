@@ -800,10 +800,19 @@ await sam.getByRole("button", { name: "Faire une offre" }).click();
 await sam.getByLabel("Montant de votre offre en euros").fill("3");
 await sam.getByRole("button", { name: "Proposer", exact: true }).click();
 await sam.getByText("Offre refusée : c'est en dessous du prix accepté. Il vous reste 2 essais.").waitFor();
+// Chloé réagit dans la conversation, en créatrice : refus joueur, sans dire le minimum.
+await sam.getByText("ahah bien tenté", { exact: false }).waitFor();
+const refusedPrompt = state().llm.filter((r) => r.system.includes("## Sa contre-offre")).at(-1).system;
+assert.match(refusedPrompt, /te proposer 3,00 € pour ton contenu/);
+assert.match(refusedPrompt, /refuse gentiment, de façon joueuse/);
+assert.match(refusedPrompt, /ne le dis jamais/);
+assert.match(refusedPrompt, /Ne propose aucun contenu et n'écris aucune balise/);
 await sam.getByRole("button", { name: "Faire une offre" }).click();
 await sam.getByLabel("Montant de votre offre en euros").fill("6");
 await sam.getByRole("button", { name: "Proposer", exact: true }).click();
 await sam.getByText("Offre acceptée : le contenu est à vous pour 6,00 €.").waitFor();
+await sam.getByText("allez, ça marche pour cette fois", { exact: false }).waitFor();
+assert.match(state().llm.filter((r) => r.system.includes("## Sa contre-offre")).at(-1).system, /C'est accepté : le contenu est à elle pour 6,00 €/);
 await sam.getByRole("button", { name: "Confirmer" }).click();
 await sam.getByText("Débloqué · 6,00 €").waitFor();
 const unlocked = sam.getByAltText("Contenu débloqué, 1 sur 2");
@@ -819,7 +828,7 @@ await sam.screenshot({ path: `${SHOTS}19-contenu-debloque.png` });
 s = state();
 const bought = s.tables.purchases.find((p) => p.kind === "contenu");
 assert.deepEqual([bought.amount_cents, bought.is_demo], [600, true]);
-step("contre-offre à 3 € refusée, à 6 € acceptée ; achat (paiement de démo) ; les 2 photos et la légende s'affichent");
+step("contre-offre à 3 € refusée (Chloé : « ahah bien tenté »), à 6 € acceptée (« allez, ça marche ») ; achat (paiement de démo) ; les 2 photos et la légende s'affichent");
 
 // 32b. L'équipe est prévenue de la contre-offre (une seule alerte, mise à jour à chaque proposition).
 await until(() => (state().tables.team_alerts ?? []).some((a) => a.detail.statut === "acceptee"), "alerte créée");

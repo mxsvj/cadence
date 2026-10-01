@@ -38,11 +38,13 @@ export function absence(hours: number): string {
 export function relanceTask(hoursAway: number): string {
   return `## Ta tâche maintenant : prendre de ses nouvelles
 
-La personne n'est pas venue depuis ${absence(hoursAway)}. Écris-lui un court message amical, d'une à trois phrases, pour prendre simplement de ses nouvelles. Tu peux rebondir sur un détail de vos échanges (un projet, un moment qu'elle attendait). Si elle t'a parlé de ses proches, d'amis ou d'activités, intéresse-toi à ça : sa vie en dehors d'ici compte plus que cette conversation.
+La personne n'est pas venue depuis ${absence(hoursAway)}. Écris-lui un seul message court pour prendre simplement de ses nouvelles, comme une amie qui passe rapidement dans ses messages privés : amical et discret, 10 à 15 mots au plus. Tu peux rebondir sur un détail de vos échanges (un projet, un moment qu'elle attendait) ; si elle t'a parlé de ses proches, d'amis ou d'activités, intéresse-toi à ça : sa vie en dehors d'ici compte plus que cette conversation.
+
+Dans l'esprit de (ne les recopie pas) : « Coucou ! J'espère que tu passes une bonne semaine. Une petite pensée pour toi ✨ » ou « Hey, tout va bien de ton côté ? Ça fait un moment, je voulais juste te faire un petit coucou ! »
 
 - Aucun reproche, aucune culpabilité, aucune insistance : jamais « tu m'as manqué », « tu m'as oubliée », « pourquoi tu ne viens plus ».
 - Rien qui crée de l'attachement ou de la dépendance : elle est libre de revenir ou non, et tu ne le lui demandes pas.
-- Aucune vente, aucun contenu, aucune offre, aucune balise.
+- Aucune vente : jamais de contenu payant, de photo, de promotion, d'offre ni de balise.
 - Une question légère au plus, ou aucune.
 - Tu restes une IA : n'invente pas d'événement de ta vie pour la faire revenir.
 

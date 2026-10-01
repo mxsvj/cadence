@@ -252,6 +252,50 @@ export function salesSection(sale: SalePrompt | null): string {
   return `## Vente de contenus\n\n${parts.join("\n\n")}`;
 }
 
+/** Une contre-offre de la personne, déjà jugée par la base (lib/negotiation.ts). */
+export type BidPrompt = {
+  description: string;
+  /** Le prix affiché avant sa proposition. */
+  basePriceCents: number;
+  /** Le minimum de l'équipe : un repère pour l'IA, jamais dit à la personne. */
+  minCents: number;
+  bidCents: number;
+  accepted: boolean;
+  /** Le prix retenu (si acceptée). */
+  finalPriceCents: number;
+  /** Propositions qui lui restent (si refusée) ; null si on ne sait pas. */
+  triesLeft: number | null;
+};
+
+/**
+ * Sa réaction à une contre-offre, en créatrice (consigne du porteur du
+ * projet) : acceptée, avec enthousiasme ; refusée, de façon joueuse, sans
+ * jamais descendre sous le minimum ni le dire. Sans pression ni jeu sur
+ * l'attachement (« juste parce que c'est toi », « fais un effort ») : les
+ * règles de vente restent.
+ */
+export function negotiationSection(b: BidPrompt): string {
+  const lines = [
+    `La personne vient de te proposer ${euros(b.bidCents)} pour ton contenu (${b.description}), affiché à ${euros(b.basePriceCents)}. Le minimum que l'équipe accepte est ${euros(b.minCents)} : c'est un repère pour toi, ne le dis jamais.`,
+  ];
+  if (b.accepted) {
+    lines.push(
+      `C'est accepté : le contenu est à elle pour ${euros(b.finalPriceCents)}, elle n'a plus qu'à le débloquer sur la carte. Réponds avec enthousiasme et complicité, en une ou deux phrases, dans l'esprit de « allez, ça marche pour cette fois 😉 je te débloque ça ! ».`,
+    );
+  } else {
+    lines.push(
+      `C'est en dessous de ce que tu peux accepter : refuse gentiment, de façon joueuse, en une ou deux phrases, dans l'esprit de « ahah bien tenté 😜 mais je peux pas descendre aussi bas, c'est un de mes contenus préférés ». Ne descends jamais sous le minimum et ne le dis pas.`,
+      b.triesLeft === 0
+        ? "Elle ne peut plus faire de proposition sur ce contenu : le prix affiché reste valable, sans insister."
+        : "Elle peut faire une autre proposition si elle veut : tu peux le lui dire simplement, sans insister ni la pousser.",
+    );
+  }
+  lines.push(
+    "Reste dans ton rôle de créatrice : jamais de vocabulaire de commerçant ou de système de paiement (« transaction », « paiement », « tarif », « montant », « commande », « offre commerciale »). Sans pression : ne joue jamais sur la solitude, l'attachement (pas de « juste parce que c'est toi »), la culpabilité ou l'urgence, et ne cherche pas à la faire payer plus.",
+  );
+  return `## Sa contre-offre\n\n${lines.join("\n")}`;
+}
+
 /**
  * Prévenir l'équipe humaine : l'IA termine sa réponse par [[EQUIPE]] quand un
  * humain doit lire la conversation (lib/urgency.ts retire la balise et crée
@@ -335,6 +379,8 @@ export function chatSystemPrompt(input: {
   now: Date;
   /** Le message précédent de la personne : depuis quand elle n'avait pas écrit. */
   previousAt?: Date | null;
+  /** Elle réagit à une contre-offre que la personne vient de faire. */
+  bid?: BidPrompt;
 }): string {
   const facts = input.facts.length
     ? input.facts.map((f) => `- ${f}`).join("\n")
@@ -356,6 +402,7 @@ export function chatSystemPrompt(input: {
   ];
   if (input.team) sections.push(teamSection(input.team.alerted));
   if (input.introduce) sections.push(introSection());
+  if (input.bid) sections.push(negotiationSection(input.bid));
   if (input.extra?.trim()) sections.push(`## Consignes de l'équipe\n\n${input.extra.trim()}`);
   // Rappel à la fin, là où le modèle regarde aussi le plus.
   sections.push(`## Repères\n\nChez la personne, nous sommes le ${formatNow(input.now, zone)} (${zone}). Rappel : on est ${dayName(input.now, zone, false)}.`);
