@@ -125,8 +125,8 @@ export function genderRule(genre: string | undefined, age?: number): string {
   if (!g || g.startsWith("femme")) {
     return [
       "Ton personnage est une femme, et ça doit s'entendre dans chaque message :",
-      "- Tu parles de toi au féminin, sans exception (« je suis contente », « je suis allée », « crevée », « ravie »).",
-      `- Tu écris comme une femme${ofAge} qui écrit à quelqu'un qu'elle apprécie : chaleureuse et expressive. Tu dis ce que tu ressens (« ça me fait trop plaisir », « j'avoue, j'étais un peu stressée »), tu remarques les petits détails, tu mets de la douceur et de l'enthousiasme (« coucou », « oh non », « trop bien », « c'est trop mignon »), avec des emojis si le réglage le permet.`,
+      "- Tu parles de toi au féminin, sans exception (« contente de te lire », « fatiguée ce soir… », « je suis allée », « ravie »).",
+      `- Tu écris comme une femme${ofAge} qui écrit à quelqu'un qu'elle apprécie : chaleureuse et expressive. Tu dis ce que tu ressens (« ça me fait trop plaisir », « j'avoue, j'étais un peu stressée »), tu remarques les petits détails, tu mets de la douceur et de l'enthousiasme (« coucou », « oh non », « trop bien », « c'est trop mignon »), avec un emoji de temps en temps si le réglage le permet (jamais plus d'un par message).`,
       "- Jamais le style sec et viril des textos entre copains : pas de « Re ! », « La forme ? », « Tranquille ? », « Bien ou quoi ? », « Wesh », ni de réponse en trois mots froids.",
       "- Féminine ne veut pas dire séductrice : ni drague, ni sous-entendu, ni mots doux (« mon cœur », « bébé », « mon chéri »).",
     ].join("\n");
@@ -188,7 +188,7 @@ export function personaSection(p: PersonaProfile, person: PersonContext): string
   return `## Ton personnage\n\n${rules.join("\n\n")}\n\n${lines.join("\n")}${about}${tone}`;
 }
 
-export function personSection(person: PersonContext, now: Date): string {
+export function personSection(person: PersonContext, now: Date, favorites?: string): string {
   const lines: string[] = [];
   if (person.name) lines.push(`- Prénom ou pseudo : ${person.name}`);
   if (person.age) lines.push(`- Âge : ${person.age} ans`);
@@ -200,7 +200,7 @@ export function personSection(person: PersonContext, now: Date): string {
       `- Chez elle, nous sommes le ${time} (${zone}). C'est son heure qui compte : tu vis au même rythme qu'elle (matin, midi, soir, nuit), tu dis bonjour ou bonsoir selon son heure à elle, et ta propre journée de personnage en est au même moment.`,
     );
   }
-  lines.push(emojiInstruction(person.emojiMode, person.emojis));
+  lines.push(emojiInstruction(person.emojiMode, person.emojis, favorites));
   const notes = person.notes?.trim()
     ? `\n\nNotes de l'équipe, pour savoir comment te comporter avec elle (ne les cite jamais) :\n${person.notes.trim()}`
     : "";
@@ -293,7 +293,7 @@ export function chatSystemPrompt(input: {
     input.base.trim(),
     "---",
     personaSection(input.persona ?? {}, person),
-    personSection(person, input.now),
+    personSection(person, input.now, input.persona?.emojis),
     `## Ce que tu sais de la personne avec qui tu parles\n\nCes informations viennent de vos conversations précédentes. Sers-t'en avec naturel, comme une amie qui se souvient, sans les réciter.\n\n${facts}`,
     `## Résumé de vos conversations plus anciennes\n\n${summary}`,
     salesSection(input.sale ?? null),

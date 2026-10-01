@@ -1,6 +1,8 @@
 // Le profil du personnage que l'IA incarne, réglé par l'équipe dans l'onglet
 // « IA ». Partagé entre le navigateur (formulaire) et le serveur (consigne).
 
+import { cleanEmojis } from "./emojis";
+
 export type CustomGroup = { titre: string; valeur: string };
 export type InterestCategory = { categorie: string; elements: string };
 
@@ -31,6 +33,8 @@ export type PersonaProfile = {
   a_propos?: string;
   /** Sa personnalité et sa façon d'écrire : les consignes de ton pour l'IA. */
   ton?: string;
+  /** Ses emojis préférés (« 🍵 ✨ 😅 ») : l'IA les prend d'abord, un au plus par message. */
+  emojis?: string;
 };
 
 export const DEFAULT_NAME = "Élise";
@@ -99,6 +103,7 @@ export function sanitizePersona(input: unknown): { persona: PersonaProfile; erro
     corps: text("corps", 60),
     a_propos: text("a_propos", MAX_TEXT),
     ton: text("ton", MAX_TEXT),
+    emojis: cleanEmojis(src.emojis) || undefined,
   };
   const age = Number(src.age);
   if (src.age !== undefined && src.age !== "" && src.age !== null) {

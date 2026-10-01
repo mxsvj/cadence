@@ -455,6 +455,10 @@ qui suit le Flash le plus récent).
 
 ## Limites connues de cette version
 
+- **Style des réponses** : des messages ultra-courts, comme sur WhatsApp
+  (15 à 20 mots), au féminin, sans formule de chatbot, au plus un emoji par
+  message, de préférence parmi « Ses emojis préférés » (fiche de la
+  créatrice, onglet Créatrices).
 - **Rythme des réponses** : comme une personne qui répond sur son téléphone,
   la réponse s'affiche après « Katherine écrit… » : le temps de lire le
   message (1,5 à 8 s), de réfléchir (2 à 5 s), puis de taper la réponse à une

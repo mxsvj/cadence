@@ -134,6 +134,17 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   (`genderRule(genre, age)`) : chaleureuse et expressive, jamais le style sec
   des textos entre copains (« Re ! », « La forme ? »), jamais séductrice ;
   l'IA garde sa voix même face à un « salut » sec (elle imitait la personne).
+  Consigne de style du porteur du projet (01/10/2026) : pas une assistante
+  virtuelle, elle partage un moment de vie ; messages ultra-courts (15 à 20
+  mots, sauf confidences et numéros d'aide en cas de danger) ; formules de
+  chatbot interdites (« Je comprends… », « En tant que… », « Comment puis-je
+  t'aider ? », « N'hésite pas à partager… ») ; au plus un emoji par message
+  (`emojiInstruction`), de préférence ses emojis préférés (`persona.emojis`,
+  champ « Ses emojis préférés » de l'onglet Créatrices, nettoyé par
+  `cleanEmojis`) ; son exemple « Hey ! Je viens de me poser dans mon canapé
+  avec un thé… » est dans `elise-persona.md`. Il a d'abord parlé d'une
+  « créatrice OnlyFans », puis s'est rétracté : rien de tel dans la consigne,
+  et la règle « aucun contenu sexuel » reste.
   « Écouter quand la personne se confie » (demande : « agir comme un
   psychologue ») : réflexes d'écoute d'une psy (questions ouvertes, mettre
   des mots sur les émotions, aider à y voir clair, orienter vers un
