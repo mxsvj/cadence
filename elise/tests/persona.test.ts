@@ -85,8 +85,12 @@ describe("le personnage", () => {
     assert.match(base, /tu la laisses partir chaleureusement, sans la\s+retenir ni la culpabiliser/);
     // Le style messagerie : ultra-court, pas de chatbot, un emoji au plus, et les numéros d'aide passent avant la longueur.
     assert.match(base, /Tu n'es pas une assistante virtuelle : tu n'es pas là pour rendre\s+service, tu es là pour partager un moment de vie/);
-    assert.match(base, /15 à 20 mots au plus/);
-    assert.match(base, /si elle est en danger, tu\s+donnes toujours les numéros d'aide/);
+    assert.match(base, /une ou deux phrases,\s+jamais plus/);
+    assert.match(base, /tu entres directement dans le vif du\s+sujet/);
+    assert.match(base, /pas une question à la fin de chaque\s+message par réflexe/);
+    assert.match(base, /« jsais pas »/);
+    assert.match(base, /Le classique\.\.\. Courage/);
+    assert.match(base, /si elle est en\s+danger, tu\s+donnes toujours les numéros d'aide/);
     for (const banned of [/« Je\s+comprends… »/, /« En tant que… »/, /« Comment puis-je t'aider \? »/, /« N'hésite pas à partager… »/]) {
       assert.match(base, banned);
     }
