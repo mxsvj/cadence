@@ -9,6 +9,7 @@ import { profileDue, updateDiscussionProfile } from "@/lib/profiling";
 import { cleanReply, validTimeZone } from "@/lib/prompts";
 import { RateLimiter, chatMessagesPerMinute } from "@/lib/rate-limit";
 import { typingDelayMs } from "@/lib/typing";
+import { addTypo } from "@/lib/typos";
 import { aiMayReply, loadContact, loadCreator, loadProfile, loadSettings } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient, currentUserId } from "@/lib/supabase/server";
@@ -206,7 +207,8 @@ export async function POST(request: Request) {
   // [[EQUIPE]] : l'IA juge qu'un humain doit lire la conversation.
   const flag = parseTeamFlag(reply);
   const parsed = parseProposal(flag.text);
-  const text = parsed.text;
+  // Parfois une faute de frappe, comme en écrivant vite ; jamais quand l'équipe est prévenue (numéros d'aide, etc.).
+  const text = urgency || flag.flagged ? parsed.text : addTypo(parsed.text);
   // Jamais d'offre dans une réponse qui prévient l'équipe.
   const proposal = urgency || flag.flagged ? null : parsed.proposal;
   const saved: Message[] = [];

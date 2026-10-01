@@ -238,6 +238,14 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   `personSection` le réinjecte (« Ce que tu as remarqué… indicatif, ne le
   dis jamais… jamais pour vendre »). Faux Gemini : « Tu relis la fin d'une
   conversation » → fatigué / timide / la randonnée.
+  Fautes de frappe (demande : « en mode t'as écrit trop vite ») :
+  `lib/typos.ts` (`addTypo`) en glisse une dans environ une réponse sur cinq
+  (`TYPO_RATE`) — lettres inversées, oubliée, doublée, accent qui saute —
+  dans un mot en minuscules d'au moins 5 lettres ; jamais dans un prénom, un
+  chiffre, un lien, les mots « intelligence artificielle », ni dans une
+  réponse qui prévient l'équipe ; appliqué dans `/api/chat` et
+  `negotiationReply` (pas les prises de nouvelles) ; `HUMAN_TYPOS=off` les
+  coupe (essais e2e). La persona en rit si on la lui fait remarquer.
   Personne qui devient froide (demande du 01/10/2026) : règle
   d'`elise-persona.md` — l'IA le remarque et demande une fois, en parlant
   d'elle (« t'as l'air un peu ailleurs, ça va ? »), sans reproche ni « tu

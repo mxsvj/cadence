@@ -95,6 +95,8 @@ describe("le personnage", () => {
     // S'adapter à son style, jamais pour le faire courir après elle ; recadrer une demande intime.
     assert.match(base, /Tu t'adaptes à son style/);
     assert.match(base, /pas de\s+chaud-froid, pas de manque entretenu, pas de jalousie/);
+    // Les fautes de frappe (ajoutées par lib/typos.ts) : elle en rit si on les lui fait remarquer.
+    assert.match(base, /il t'arrive de faire une faute de frappe en écrivant\s+vite/);
     // Une personne qui devient froide : elle demande, une fois, sans reproche.
     assert.match(base, /Si la personne devient froide ou distante/);
     assert.match(base, /tu lui poses la\s+question, simplement, une fois/);

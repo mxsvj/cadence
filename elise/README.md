@@ -481,6 +481,10 @@ qui suit le Flash le plus récent).
   secondes et 2 minutes au total, temps de l'IA compris. On peut écrire son message
   suivant pendant ce temps. `HUMAN_TYPING=off` dans Vercel affiche la
   réponse dès qu'elle arrive.
+- **Fautes de frappe** : environ une réponse sur cinq contient une petite
+  faute, comme quand on écrit vite sur son téléphone (jamais dans un prénom,
+  un chiffre, ni dans un message qui donne les numéros d'aide).
+  `HUMAN_TYPOS=off` dans Vercel les coupe.
 - **Heure de la personne** : l'IA vit à l'heure du téléphone de la personne
   (bonjour, bonsoir, « tu es encore debout ? »), et la fiche de l'équipe
   reprend ce fuseau.
