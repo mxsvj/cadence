@@ -1570,7 +1570,8 @@ begin
   delete from public.user_facts where user_id = moi;
   delete from public.summaries  where user_id = moi;
   delete from public.team_alerts where user_id = moi;
-  update public.contacts set notes = '', emojis = '', city = '', last_read_message_id = 0 where user_id = moi;
+  update public.contacts set notes = '', emojis = '', city = '', last_read_message_id = 0,
+    humeur = '', style_discussion = '', centre_interet = '', profil_maj_le = null where user_id = moi;
   update public.creator_contacts set emojis = '', emoji_mode = 'libre', last_read_message_id = 0 where user_id = moi;
 end;
 $$;
@@ -1674,6 +1675,21 @@ alter table public.ai_settings drop column if exists sales_max_per_day;
 delete from public.team_alerts where kind not in ('contre_offre', 'urgence');
 alter table public.team_alerts drop constraint if exists team_alerts_kind_check;
 alter table public.team_alerts add constraint team_alerts_kind_check check (kind in ('contre_offre', 'urgence'));
+
+
+-- ─── Ce que l'IA remarque de la personne (profil de discussion) ─────────────
+-- Tous les 5 messages de la personne, un petit modèle note son humeur du
+-- moment, le sujet qui lui plaît et sa façon d'écrire, pour adapter le ton
+-- (lib/profiling.ts). L'humeur n'est qu'un mot de tous les jours, dans une
+-- liste fermée ; jamais de santé, de religion, d'orientation sexuelle ni
+-- d'argent. Seuls le serveur et l'équipe y ont accès (fiche contact).
+alter table public.contacts add column if not exists humeur text not null default ''
+  check (humeur in ('', 'joyeux', 'en forme', 'neutre', 'fatigué', 'stressé'));
+alter table public.contacts add column if not exists style_discussion text not null default ''
+  check (style_discussion in ('', 'timide', 'joueur', 'direct'));
+alter table public.contacts add column if not exists centre_interet text not null default ''
+  check (char_length(centre_interet) <= 80);
+alter table public.contacts add column if not exists profil_maj_le timestamptz;
 
 
 -- ─── Les droits sur les fonctions ──────────────────────────────────────────

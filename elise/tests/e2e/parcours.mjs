@@ -211,6 +211,17 @@ assert.deepEqual(facts.sort(), ["A un chat, Filou.", "Préfère le tutoiement.",
 const factCalls = s.llm.filter((r) => r.system.includes("fiche mémoire")).length;
 assert.equal(factCalls, 7); // messages 3, 6, 9… 21 de Karim : 7 mises à jour pour 21 messages
 step(`fiche : ${facts.join(" / ")} — l'antidépresseur a été écarté, le doublon aussi ; ${factCalls} mises à jour pour 21 messages`);
+// Le profil de discussion : tous les 5 messages, par le petit modèle.
+const profileCalls = s.llm.filter((r) => r.system.includes("Tu relis la fin d'une conversation"));
+assert.equal(profileCalls.length, 4); // messages 5, 10, 15 et 20 de Karim
+assert.ok(profileCalls.every((r) => r.model === "gemini-flash-lite-latest" && r.json));
+const karimProfile = s.tables.contacts.find((c) => c.user_id === s.users.find((u) => u.email === "karim@example.com").id);
+assert.deepEqual(
+  [karimProfile.humeur, karimProfile.style_discussion, karimProfile.centre_interet],
+  ["fatigué", "timide", "la randonnée"],
+);
+assert.ok(karimProfile.profil_maj_le);
+step("profil de discussion : relu par le petit modèle tous les 5 messages (4 fois pour 21), humeur, style et sujet dans sa fiche");
 const msgs = s.tables.messages;
 const summary = s.tables.summaries[0];
 const unsummarized = msgs.filter((m) => m.id > summary.last_message_id).length;
@@ -234,7 +245,8 @@ assert.match(lastChat.system, /- Se prénomme Karim\./);
 const sent = lastChat.contents.filter((c) => c.parts[0].text !== "(La personne ouvre la conversation.)");
 assert.equal(sent.length, 20);
 assert.equal(sent.at(-1).parts[0].text, "Tu te souviens de moi ?");
-step("la réponse suivante reçoit la fiche, le résumé et les 20 derniers messages");
+assert.match(lastChat.system, /Ce que tu as remarqué ces derniers messages \(indicatif, ne le dis jamais\) : humeur du moment : fatigué ; style : timide ; sujet qui lui plaît : la randonnée\./);
+step("la réponse suivante reçoit la fiche, le résumé, son profil de discussion et les 20 derniers messages");
 
 // 10b. La charge d'un message : requêtes à la base et appels au modèle.
 // La page de conversation est fermée pendant la mesure : sa relecture régulière ne compte pas.
@@ -286,11 +298,14 @@ s = state();
 const karim = s.users.find((u) => u.email === "karim@example.com").id;
 const lea = s.users.find((u) => u.email === "lea@example.com").id;
 assert.equal(s.tables.messages.filter((m) => m.user_id === karim).length, 0);
+// Son profil de discussion aussi.
+const erasedProfile = s.tables.contacts.find((c) => c.user_id === karim);
+assert.deepEqual([erasedProfile.humeur, erasedProfile.style_discussion, erasedProfile.centre_interet, erasedProfile.profil_maj_le], ["", "", "", null]);
 assert.equal(s.tables.user_facts.filter((m) => m.user_id === karim).length, 0);
 assert.equal(s.tables.summaries.filter((m) => m.user_id === karim).length, 0);
 assert.equal(s.tables.messages.filter((m) => m.user_id === lea).length, 0);
 await page.screenshot({ path: `${SHOTS}8-apres-effacement.png` });
-step("« Effacer » vide messages, fiche et résumé ; la conversation repart de zéro ; l'autre compte est intact");
+step("« Effacer » vide messages, fiche, résumé et profil de discussion ; la conversation repart de zéro ; l'autre compte est intact");
 
 // 14. Déconnexion, puis reconnexion.
 await page.getByLabel("Menu").click();
@@ -756,6 +771,22 @@ assert.equal(samContact.notes, "Aime les voyages.");
 const samWithChloe = s.tables.creator_contacts.find((c) => c.user_id === samContact.user_id && Number(c.creator_id) === CHLOE);
 assert.deepEqual([samWithChloe.ai_enabled, samWithChloe.emoji_mode, samWithChloe.emojis], [true, "choisis", "🌸"]);
 step("fiche contact enregistrée : ville, notes ; IA autorisée et emojis de Chloé pour Sam");
+
+// Le profil de discussion noté par l'IA se lit dans la fiche, et l'enregistrer ne l'efface pas.
+const karimId = s.users.find((u) => u.email === "karim@example.com").id;
+// (Karim a effacé ses données à l'étape 13 : un profil noté depuis.)
+await sql("update public.contacts set humeur = 'fatigué', style_discussion = 'timide', centre_interet = 'la randonnée', profil_maj_le = now() where user_id = $1", [karimId]);
+const samThreadUrl = admin.url();
+await admin.goto(`${BASE}/admin/messages?u=${karimId}&c=1`);
+await admin.getByText("humeur fatigué · style timide · aime parler de la randonnée").waitFor();
+await admin.getByLabel("Comment se comporter avec elle", { exact: false }).fill("Aime la montagne.");
+await admin.getByRole("button", { name: "Enregistrer la fiche" }).click();
+await admin.getByText("Fiche enregistrée.").waitFor();
+const karimContact = state().tables.contacts.find((c) => c.user_id === karimId);
+assert.deepEqual([karimContact.notes, karimContact.humeur, karimContact.style_discussion], ["Aime la montagne.", "fatigué", "timide"]);
+await admin.goto(samThreadUrl); // la suite reprend sur la conversation de Sam
+await admin.getByLabel("Réponse de l'équipe").waitFor();
+step("la fiche montre ce que l'IA a remarqué (humeur, style, sujet) ; l'enregistrer ne l'efface pas");
 
 // 30. L'IA propose la première étape (gratuite) : offerte et visible tout de suite.
 await samInput.fill("PROPOSE-MOI quelque chose");
@@ -1225,6 +1256,40 @@ assert.equal(await omarPage.getByText("Salut, c'est Nadia !").count(), 0);
 const omarUser = state().users.find((u) => u.metadata?.display_name === "Omar");
 assert.ok(omarUser && omarUser.id !== nadiaUser.id);
 step("une autre personne avec le même code : son propre compte, rien de la conversation de Nadia");
+
+// Plusieurs messages d'affilée : la page attend le dernier, puis une seule réponse pour l'ensemble.
+const omarInput = omarPage.getByLabel("Votre message");
+for (const text of ["cc", "tu vas bien ?", "moi grosse journée"]) {
+  await omarInput.fill(text);
+  await omarPage.getByLabel("Envoyer").click();
+}
+await omarPage.getByText("moi grosse journée").waitFor();
+assert.equal(await omarPage.getByText("tu vas bien ?").count(), 1); // affichés tout de suite…
+assert.equal(state().tables.messages.filter((m) => m.user_id === omarUser.id).length, 0); // …envoyés après le dernier
+await omarPage.getByText(/réponse de test/).waitFor();
+s = state();
+const omarMessages = s.tables.messages.filter((m) => m.user_id === omarUser.id).sort((a, b) => a.id - b.id);
+assert.deepEqual(
+  omarMessages.map((m) => [m.role, m.content.replace(/ \(réponse de test n° \d+\)$/, "")]),
+  [["user", "cc"], ["user", "tu vas bien ?"], ["user", "moi grosse journée"], ["assistant", "C'est noté. Merci de me le dire."]],
+);
+const omarCalls = s.llm.filter((r) => !r.json && r.contents.at(-1).parts[0].text.includes("grosse journée"));
+assert.equal(omarCalls.length, 1);
+assert.equal(omarCalls[0].contents.at(-1).parts[0].text, "cc\n\ntu vas bien ?\n\nmoi grosse journée");
+assert.match(omarCalls[0].system, /plusieurs messages d'affilée, tu les lis tous/);
+await omarPage.reload();
+await omarPage.getByText("moi grosse journée").waitFor();
+assert.equal(await omarPage.getByText("tu vas bien ?").count(), 1);
+assert.equal(await omarPage.getByText(/réponse de test/).count(), 1);
+step("trois messages d'affilée : affichés tout de suite, envoyés ensemble après le dernier, une seule réponse à l'ensemble");
+
+// En quittant la page pendant l'attente, le message part quand même.
+await omarInput.fill("je file, à plus");
+await omarPage.getByLabel("Envoyer").click();
+await omarPage.goto(`${BASE}/`);
+await until(() => state().tables.messages.some((m) => m.user_id === omarUser.id && m.content === "je file, à plus"), "message gardé en partant");
+await until(() => state().tables.messages.filter((m) => m.user_id === omarUser.id && m.role === "assistant").length === 2, "réponse en son absence");
+step("en quittant la page pendant l'attente : le message part quand même, la réponse attend son retour");
 
 // Un membre de l'équipe déjà connecté peut ouvrir le lien : il est prévenu, rien ne change tant qu'il n'entre pas.
 await admin.goto(`${BASE}/connexion?code=${entryCode}`);

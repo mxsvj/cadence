@@ -47,6 +47,19 @@ refuse.
 - **Le résumé** : quand plus de 40 messages ne sont pas encore résumés, les
   plus anciens (tous sauf les 20 derniers) rejoignent le résumé (vérifié en
   même temps que la fiche, tous les 3 messages).
+- **Plusieurs messages d'affilée** : chaque message s'affiche tout de suite,
+  mais la page attend 3 secondes sans nouveau message avant de les envoyer
+  ensemble ; l'IA répond à l'ensemble, en une seule fois (10 messages au plus
+  d'un coup). S'il passe à une autre appli ou quitte la page pendant ce
+  temps, ses messages partent quand même.
+- **Le profil de discussion** : tous les 5 messages de la personne, un petit
+  modèle (`gemini-flash-lite-latest`, ou `GEMINI_LIGHT_MODEL` dans Vercel)
+  relit les 10 derniers messages et note dans sa fiche son humeur du moment
+  (joyeux, en forme, neutre, fatigué ou stressé), sa façon d'écrire (timide,
+  joueur ou direct) et le sujet qui lui plaît. L'IA s'en sert au message
+  suivant pour adapter son ton, jamais pour vendre. Jamais de santé,
+  religion, orientation sexuelle ni argent ; effacé avec « Effacer toutes mes
+  données ».
 - **Alertes de l'équipe** : une contre-offre, ou une personne qui a besoin
   d'un humain (elle le demande, dit avoir
   moins de 18 ans, parle d'un problème de paiement, ou son message inquiète
@@ -476,8 +489,10 @@ qui suit le Flash le plus récent).
   `gemini-flash-lite-latest` (quota gratuit séparé, un peu moins fin).
   `GEMINI_FALLBACK_MODEL` dans Vercel le change ; `aucun` le désactive.
 - **Quota Gemini gratuit** : environ 10 demandes par minute et un plafond par
-  jour. Chaque message en coûte un, plus un tous les 3 messages pour la fiche
-  (et de temps en temps un pour le résumé) ; au-delà, Élise demande poliment
+  jour. Chaque message (ou chaque série de messages d'affilée) en coûte un,
+  plus un tous les 3 messages pour la fiche (et de temps en temps un pour le
+  résumé), et un tous les 5 messages pour le profil de discussion, sur le
+  quota séparé du petit modèle ; au-delà, Élise demande poliment
   de réessayer une minute plus tard, et le message n'est pas perdu.
 - **Messagerie de l'équipe** : la liste des conversations est relue toutes
   les 4 secondes ; au-delà de quelques milliers de conversations, il faudra

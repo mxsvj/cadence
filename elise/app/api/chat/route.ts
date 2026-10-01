@@ -5,6 +5,7 @@ import { CHAT_TEMPERATURE, LlmError, generate } from "@/lib/llm";
 import { MESSAGE_COLUMNS, MemoryError, memoryDue, rememberFacts, summarizeIfNeeded, type Message } from "@/lib/memory";
 import { flushAlerts, raiseUrgency } from "@/lib/notify";
 import { OFFER_COLUMNS, parseProposal, type Offer } from "@/lib/offers";
+import { profileDue, updateDiscussionProfile } from "@/lib/profiling";
 import { cleanReply, validTimeZone } from "@/lib/prompts";
 import { RateLimiter, chatMessagesPerMinute } from "@/lib/rate-limit";
 import { typingDelayMs } from "@/lib/typing";
@@ -17,6 +18,9 @@ import { CRISIS_NOTICE, detectUrgency, parseTeamFlag, type UrgencyReason } from 
 export const maxDuration = 60;
 
 const limiter = new RateLimiter(chatMessagesPerMinute(), 60_000);
+
+/** Au plus autant de messages envoyés d'affilée dans une même demande. */
+const MAX_BATCH = 10;
 
 function problem(status: number, error: string) {
   return NextResponse.json({ error }, { status });
@@ -90,16 +94,23 @@ export async function POST(request: Request) {
   if (!userId) return problem(401, "Votre session a expiré. Reconnectez-vous.");
   if (!limiter.allow(userId)) return problem(429, "Vous écrivez très vite : attendez quelques secondes avant le prochain message.");
 
-  const body = (await request.json().catch(() => null)) as { content?: unknown; creator?: unknown; tz?: unknown } | null;
-  const content = typeof body?.content === "string" ? body.content.trim() : "";
+  const body = (await request.json().catch(() => null)) as { content?: unknown; contents?: unknown; creator?: unknown; tz?: unknown } | null;
+  // Un message, ou plusieurs envoyés d'affilée (la page attend le dernier) : une seule réponse pour l'ensemble.
+  const contents = (Array.isArray(body?.contents) ? body.contents : [body?.content])
+    .filter((c): c is string => typeof c === "string")
+    .map((c) => c.trim())
+    .filter(Boolean);
   const creatorId = creatorParam(body?.creator);
   // L'heure de la personne : le fuseau de son téléphone.
   const timezone = validTimeZone(body?.tz);
   if (creatorId === null) return problem(400, "Conversation inconnue.");
-  if (!content) return problem(400, "Le message est vide.");
-  if (content.length > MAX_MESSAGE_LENGTH) {
+  if (!contents.length) return problem(400, "Le message est vide.");
+  if (contents.length > MAX_BATCH) return problem(400, `Au plus ${MAX_BATCH} messages d'un coup.`);
+  if (contents.some((c) => c.length > MAX_MESSAGE_LENGTH)) {
     return problem(400, `Le message est trop long (${MAX_MESSAGE_LENGTH} caractères au plus).`);
   }
+  // Ce que l'IA lit : tous ses messages d'affilée, dans l'ordre.
+  const content = contents.join("\n\n");
 
   let admin;
   try {
@@ -117,12 +128,18 @@ export async function POST(request: Request) {
     after(async () => {
       if (await raiseUrgency(admin, userId, creatorId, reason, source)) await flushAlerts(admin, origin);
     });
-  const saveUserMessage = () =>
-    supabase
-      .from("messages")
-      .insert({ user_id: userId, creator_id: creatorId, role: "user", content, created_at: receivedAt.toISOString() })
-      .select(MESSAGE_COLUMNS)
-      .single();
+  const saveUserMessages = async (): Promise<Message[]> => {
+    const rows = contents.map((c, i) => ({
+      user_id: userId,
+      creator_id: creatorId,
+      role: "user",
+      content: c,
+      created_at: new Date(receivedAt.getTime() + i).toISOString(),
+    }));
+    const { data, error } = await supabase.from("messages").insert(rows).select(MESSAGE_COLUMNS);
+    if (error) throw new MemoryError(`Message non enregistré : ${error.message}`);
+    return ((data ?? []) as Message[]).sort((a, b) => a.id - b.id);
+  };
 
   let context: Awaited<ReturnType<typeof buildReply>>;
   let reply: string;
@@ -149,12 +166,11 @@ export async function POST(request: Request) {
 
     // Mode manuel, ou personne non cochée en mode hybride : l'équipe répondra.
     if (!aiMayReply(settings, contact)) {
-      const { data, error } = await saveUserMessage();
-      if (error) throw new MemoryError(`Message non enregistré : ${error.message}`);
+      const mine = await saveUserMessages();
       if (urgency) alertTeam(urgency, "mots");
       // Personne ne répond tout de suite : un message inquiétant reçoit les numéros d'aide sans attendre.
       const notice = urgency === "attention" ? CRISIS_NOTICE : undefined;
-      return NextResponse.json({ messages: [data as Message], offers: [], waiting: true, notice });
+      return NextResponse.json({ messages: mine, offers: [], waiting: true, notice });
     }
 
     context = await buildReply({
@@ -169,6 +185,7 @@ export async function POST(request: Request) {
       profile,
       teamAlerted: urgency !== null,
       timezone,
+      incomingCount: contents.length,
     });
     reply = cleanReply(
       await generate({
@@ -195,9 +212,7 @@ export async function POST(request: Request) {
   const saved: Message[] = [];
   let offers: Offer[] = [];
   try {
-    const { data, error } = await saveUserMessage();
-    if (error) throw error;
-    saved.push(data as Message);
+    saved.push(...(await saveUserMessages()));
     const result = await saveReply({ admin, userId, creatorId, text, proposal, sale: context.sale });
     saved.push(...result.messages);
     if (result.offerIds.length) {
@@ -211,8 +226,19 @@ export async function POST(request: Request) {
 
   if (urgency || flag.flagged) alertTeam(urgency ?? "attention", urgency ? "mots" : "ia");
 
+  // Son profil de discussion (humeur, sujet, style) : tous les PROFILE_EVERY messages, par un petit modèle.
+  if (profileDue(context.sale.userMessages, contents.length)) {
+    after(async () => {
+      try {
+        await updateDiscussionProfile(admin, userId, [...context.messages, { role: "assistant", content: text }]);
+      } catch (err) {
+        console.error("Profil de discussion non mis à jour :", err);
+      }
+    });
+  }
+
   // La fiche et le résumé : tous les MEMORY_EVERY messages de la personne.
-  if (memoryDue(context.sale.userMessages)) {
+  if (memoryDue(context.sale.userMessages, contents.length)) {
     after(async () => {
       const now = new Date();
       try {

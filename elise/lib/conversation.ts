@@ -59,13 +59,15 @@ export async function buildReply(input: {
   timezone?: string | null;
   /** Réagir à une contre-offre (lib/negotiation.ts) : aucune nouvelle offre dans cette réponse. */
   bid?: BidPrompt;
+  /** Combien de messages la personne vient d'envoyer d'affilée (pas encore enregistrés). */
+  incomingCount?: number;
 }) {
   const { supabase, admin, userId, creator, settings, contact, profile } = input;
   const [facts, summary, recent, loaded] = await Promise.all([
     loadFacts(supabase, userId, creator.id),
     loadSummary(supabase, userId, creator.id),
     loadMessages(supabase, userId, creator.id, settings.context_messages - 1),
-    loadSaleContext(admin, userId, creator.id, settings),
+    loadSaleContext(admin, userId, creator.id, settings, input.incomingCount ?? 1),
   ]);
   // Le message vient de prévenir l'équipe : aucune offre dans cette réponse.
   const sale: SaleContext = input.teamAlerted ? { ...loaded, canPropose: false, block: { reason: "urgence" } } : loaded;
@@ -81,6 +83,9 @@ export async function buildReply(input: {
       notes: contact.notes,
       emojiMode: contact.emoji_mode,
       emojis: contact.emojis,
+      mood: contact.humeur,
+      style: contact.style_discussion,
+      interest: contact.centre_interet,
     },
     facts,
     summary: summary?.summary ?? null,

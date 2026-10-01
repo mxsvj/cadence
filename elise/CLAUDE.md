@@ -214,6 +214,40 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   page montre « … écrit » jusque-là (temps du modèle compris), puis la
   réponse ; `HUMAN_TYPING=off` le coupe (essais e2e). Les limites (IA, pas
   de romance, pas de rencontre, 3114, vente) n'ont pas bougé.
+- « Disponibilité réelle » (demande du 01/10/2026) : plusieurs messages
+  d'affilée reçoivent une seule réponse. `app/chat.tsx` affiche chaque
+  message tout de suite (id négatif, `byOrder` les range après les
+  enregistrés), les garde dans `queue` et n'envoie qu'après `BATCH_MS`
+  (3 s) sans nouveau message (`flush`, `keepalive`) ; en passant à une autre
+  appli (`visibilitychange`) ils partent aussitôt, en quittant la page
+  (`pagehide`, démontage) par un envoi direct. `/api/chat` accepte
+  `contents` (au plus `MAX_BATCH` = 10) ou `content`, enregistre un message
+  par élément (`saveUserMessages`, `created_at` décalés d'1 ms) et donne
+  au modèle le tout joint par une ligne vide ; `incomingCount` va jusqu'à
+  `loadSaleContext` ; `memoryDue`/`profileDue` passent par `crossed()`
+  (un lot qui franchit un multiple compte). Règle dans `elise-persona.md` :
+  répondre à l'ensemble, globalement. Profil de discussion
+  (`lib/profiling.ts`) : tous les `PROFILE_EVERY` (5) messages, dans
+  `after()`, `lightModel()` (`gemini-flash-lite-latest` ou
+  `GEMINI_LIGHT_MODEL`, option `model` de `generate`) relit les 10 derniers
+  messages et note `contacts.humeur` (liste fermée : joyeux, en forme,
+  neutre, fatigué, stressé), `style_discussion` (timide, joueur, direct),
+  `centre_interet` (≤ 80 caractères, filtré par `isSensitive`),
+  `profil_maj_le` ; contraintes `check` en base, effacé par
+  `effacer_mes_donnees` ; une valeur incertaine ne remplace pas l'ancienne.
+  `personSection` le réinjecte (« Ce que tu as remarqué… indicatif, ne le
+  dis jamais… jamais pour vendre »). Faux Gemini : « Tu relis la fin d'une
+  conversation » → fatigué / timide / la randonnée.
+  Refusé dans la même demande : la relance « 3 h après une sortie brusque »
+  avec un prétexte inventé (« je t'ai même pas raconté ma fin de journée,
+  t'es là ») — Vercel Hobby ne lance la tâche qu'une fois par jour, et un
+  appât pour faire revenir va contre les règles de la prise de nouvelles ;
+  le « teasing progressif » (annoncer une séance photo puis proposer un
+  média « en exclu, j'ose pas le mettre sur mon fil public… dis-moi si t'es
+  prêt ») : changer de sujet pour vendre et fausse exclusivité, contraires
+  à `SALE_RULES` ; la « tension narrative » (« t'es pressé toi… on verra si
+  tu la mérites ») : push and pull déjà refusé. Ne pas les ajouter sans en
+  reparler.
 - Réponses : créativité fixe `CHAT_TEMPERATURE = 1` (`lib/llm.ts`, valeur
   recommandée par Google pour ses modèles récents), pas de plafond de
   longueur (Gemini n'en reçoit pas, Claude 4096 jetons) : la persona dit à

@@ -690,6 +690,21 @@ export function Inbox({
                     ))}
                   </ul>
                 )}
+                {(thread.contact.humeur || thread.contact.style_discussion || thread.contact.centre_interet) && (
+                  <p className="mt-2 text-sm">
+                    <span className="font-semibold">Remarqué ces derniers messages : </span>
+                    {[
+                      thread.contact.humeur && `humeur ${thread.contact.humeur}`,
+                      thread.contact.style_discussion && `style ${thread.contact.style_discussion}`,
+                      thread.contact.centre_interet && `aime parler de ${thread.contact.centre_interet}`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    <span className="block text-xs text-muted">
+                      Noté par l&apos;IA tous les 5 messages, pour adapter son ton (jamais pour vendre).
+                    </span>
+                  </p>
+                )}
               </section>
 
               <section className="flex flex-col gap-3">

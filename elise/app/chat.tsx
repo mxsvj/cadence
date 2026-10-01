@@ -21,13 +21,30 @@ type Message = {
 /** Les réponses de l'équipe arrivent toutes les quelques secondes. */
 const POLL_MS = 5000;
 
+/**
+ * Plusieurs messages d'affilée : comme une vraie personne, l'IA attend le
+ * dernier (ce délai sans nouveau message) et répond à l'ensemble, en une fois.
+ */
+const BATCH_MS = 3000;
+
+/** L'heure, hors du rendu (pour mesurer le temps de réponse). */
+const clock = () => Date.now();
+
 const byId = (offers: Offer[]) => Object.fromEntries(offers.map((o) => [o.id, o])) as Record<number, Offer>;
+
+/** L'ordre d'affichage : les messages enregistrés, puis ceux en cours d'envoi (ids négatifs, -1, -2…). */
+function byOrder(a: Message, b: Message): number {
+  if (a.id < 0 && b.id < 0) return b.id - a.id;
+  if (a.id < 0) return 1;
+  if (b.id < 0) return -1;
+  return a.id - b.id;
+}
 
 /** Ajoute des messages sans doublon, dans l'ordre. */
 function merge(current: Message[], incoming: Message[]): Message[] {
   const known = new Set(current.map((m) => m.id));
   const fresh = incoming.filter((m) => !known.has(m.id));
-  return fresh.length ? [...current, ...fresh].sort((a, b) => (a.id < 0 ? 1 : b.id < 0 ? -1 : a.id - b.id)) : current;
+  return fresh.length ? [...current, ...fresh].sort(byOrder) : current;
 }
 
 const dayFormat = new Intl.DateTimeFormat("fr-FR", {
@@ -70,6 +87,10 @@ export function Chat({
   const [offers, setOffers] = useState(() => byId(initialOffers));
   const [notice, setNotice] = useState<string | null>(null);
   const sending = useRef(false);
+  // Les messages pas encore envoyés au serveur, et l'attente du dernier.
+  const queue = useRef<{ id: number; content: string }[]>([]);
+  const batchTimer = useRef<number | null>(null);
+  const nextPendingId = useRef(-1);
   const [draft, setDraft] = useState("");
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -153,13 +174,15 @@ export function Chat({
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [draft]);
 
-  async function send() {
+  // Le message s'affiche tout de suite ; l'IA attend que la personne ait fini
+  // d'écrire (BATCH_MS sans nouveau message) pour répondre à l'ensemble.
+  function send() {
     const content = draft.trim();
-    if (!content || waiting) return;
+    if (!content) return;
     setError(null);
     setNotice(null);
     const pending: Message = {
-      id: -Date.now(),
+      id: nextPendingId.current--,
       role: "user",
       author: "user",
       kind: "text",
@@ -169,15 +192,36 @@ export function Chat({
     };
     setMessages((m) => [...m, pending]);
     setDraft("");
+    queue.current.push({ id: pending.id, content });
+    if (batchTimer.current) window.clearTimeout(batchTimer.current);
+    batchTimer.current = window.setTimeout(() => void flush(), BATCH_MS);
+  }
+
+  async function flush() {
+    batchTimer.current = null;
+    // Une réponse est encore en route : la suite partira juste après.
+    if (sending.current) {
+      batchTimer.current = window.setTimeout(() => void flush(), 500);
+      return;
+    }
+    const batch = queue.current.splice(0);
+    if (!batch.length) return;
+    const pendingIds = new Set(batch.map((b) => b.id));
     setWaiting(true);
     sending.current = true;
-    const sentAt = Date.now();
+    const sentAt = clock();
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
+        // La demande va au bout même si la page se ferme entre-temps.
+        keepalive: true,
         headers: { "content-type": "application/json" },
         // L'heure de son téléphone : l'IA vit au même rythme que la personne.
-        body: JSON.stringify({ content, creator: creatorId, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
+        body: JSON.stringify({
+          contents: batch.map((b) => b.content),
+          creator: creatorId,
+          tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 401) {
@@ -196,18 +240,18 @@ export function Chat({
       // Sans message du serveur (coupé en route, délai dépassé) : au moins le code, pour savoir où chercher.
       if (!res.ok) throw new Error(data.error ?? `Pas de réponse cette fois-ci (erreur ${res.status}). Réessayez dans un instant.`);
       const incoming = data.messages as Message[];
-      setMessages((m) => merge(m.filter((x) => x.id !== pending.id), incoming.filter((x) => x.role === "user")));
+      setMessages((m) => merge(m.filter((x) => !pendingIds.has(x.id)), incoming.filter((x) => x.role === "user")));
       // Comme une personne qui tape sa réponse : « … écrit » le temps qu'il faut, puis la réponse.
       const replies = incoming.filter((x) => x.role !== "user");
-      const typing = Math.max(0, Number(data.typingMs ?? 0) - (Date.now() - sentAt));
+      const typing = Math.max(0, Number(data.typingMs ?? 0) - (clock() - sentAt));
       if (replies.length && typing > 0) await new Promise((r) => setTimeout(r, typing));
       setMessages((m) => merge(m, replies));
       if (data.offers?.length) setOffers((o) => ({ ...o, ...byId(data.offers as Offer[]) }));
       if (data.waiting) setNotice(data.notice ?? "Message envoyé. La réponse arrivera ici dès que possible.");
     } catch (err) {
-      // Rien n'a été enregistré : le message revient dans la zone de saisie.
-      setMessages((m) => m.filter((x) => x.id !== pending.id));
-      setDraft((current) => current || content);
+      // Rien n'a été enregistré : les messages reviennent dans la zone de saisie.
+      setMessages((m) => m.filter((x) => !pendingIds.has(x.id)));
+      setDraft((current) => current || batch.map((b) => b.content).join("\n"));
       setError(
         err instanceof TypeError
           ? "La connexion a été perdue. Vérifiez votre réseau et réessayez."
@@ -219,13 +263,55 @@ export function Chat({
     }
   }
 
+  // Rien ne se perd pendant l'attente du dernier message : en passant à une
+  // autre appli, ils partent tout de suite ; en quittant la page, ils partent
+  // quand même (la réponse sera là au retour).
+  const flushRef = useRef<() => Promise<void>>(async () => undefined);
+  useEffect(() => {
+    flushRef.current = flush;
+  });
+  useEffect(() => {
+    const pending = queue.current;
+    const timer = batchTimer;
+    const stopWaiting = () => {
+      if (timer.current) window.clearTimeout(timer.current);
+      timer.current = null;
+    };
+    const leave = () => {
+      stopWaiting();
+      const rest = pending.splice(0);
+      if (!rest.length) return;
+      void fetch("/api/chat", {
+        method: "POST",
+        keepalive: true,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ contents: rest.map((r) => r.content), creator: creatorId, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
+      }).catch(() => undefined);
+      // Si la page revient (bouton « retour »), la relecture régulière les remontre, enregistrés.
+      const ids = new Set(rest.map((r) => r.id));
+      setMessages((m) => m.filter((x) => !ids.has(x.id)));
+    };
+    const hidden = () => {
+      if (document.visibilityState !== "hidden" || !pending.length) return;
+      stopWaiting();
+      void flushRef.current();
+    };
+    window.addEventListener("pagehide", leave);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      window.removeEventListener("pagehide", leave);
+      document.removeEventListener("visibilitychange", hidden);
+      leave();
+    };
+  }, [creatorId]);
+
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     // Sur ordinateur, Entrée envoie et Maj+Entrée va à la ligne. Sur
     // téléphone, Entrée va à la ligne : on envoie avec le bouton.
     const touch = window.matchMedia("(pointer: coarse)").matches;
     if (e.key === "Enter" && !e.shiftKey && !touch && !e.nativeEvent.isComposing) {
       e.preventDefault();
-      void send();
+      send();
     }
   }
 
@@ -410,7 +496,7 @@ export function Chat({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            void send();
+            send();
           }}
           className="flex items-end gap-2"
         >
@@ -427,7 +513,7 @@ export function Chat({
           />
           <button
             type="submit"
-            disabled={!draft.trim() || waiting}
+            disabled={!draft.trim()}
             aria-label="Envoyer"
             className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-white transition-opacity disabled:opacity-40"
           >

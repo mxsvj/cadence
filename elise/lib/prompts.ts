@@ -63,6 +63,10 @@ export type PersonContext = {
   /** Emojis de la créatrice avec elle : au choix de l'IA, seulement ceux-là, ou aucun. */
   emojiMode?: EmojiMode;
   emojis?: string;
+  /** Son profil de discussion, noté tous les 5 messages (lib/profiling.ts). */
+  mood?: string;
+  style?: string;
+  interest?: string;
 };
 
 /** La partie vente de la consigne, décidée côté serveur (voir lib/sales.ts). */
@@ -201,6 +205,16 @@ export function personSection(person: PersonContext, now: Date, favorites?: stri
     );
   }
   lines.push(emojiInstruction(person.emojiMode, person.emojis, favorites));
+  const noticed = [
+    person.mood && `humeur du moment : ${person.mood}`,
+    person.style && `style : ${person.style}`,
+    person.interest && `sujet qui lui plaît : ${person.interest}`,
+  ].filter(Boolean);
+  if (noticed.length) {
+    lines.push(
+      `- Ce que tu as remarqué ces derniers messages (indicatif, ne le dis jamais) : ${noticed.join(" ; ")}. Adapte ton ton en conséquence (voir « Tu t'adaptes à son style »), jamais pour vendre ; ses messages récents passent avant.`,
+    );
+  }
   const notes = person.notes?.trim()
     ? `\n\nNotes de l'équipe, pour savoir comment te comporter avec elle (ne les cite jamais) :\n${person.notes.trim()}`
     : "";
