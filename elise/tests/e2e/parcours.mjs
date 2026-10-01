@@ -142,18 +142,17 @@ step("une personne de moins de 18 ans ne peut pas s'inscrire");
 await page.fill('details input[name="naissance"]', "1982-03-14");
 await submitEmail(page);
 await page.waitForURL(`${BASE}/c/1`);
-await page.getByText("Bonjour, je suis Élise.").waitFor();
+await page.getByText("Dis bonjour à Élise").waitFor();
 await page.screenshot({ path: `${SHOTS}2-premier-message.png` });
 let s = state();
-assert.equal(s.tables.messages.length, 1);
-assert.equal(s.tables.messages[0].role, "assistant");
-step("inscription → premier message d'Élise, enregistré en base");
+assert.equal(s.tables.messages.length, 0);
+step("inscription → la conversation s'ouvre vide : pas de message d'accueil, c'est la personne qui commence");
 
-// 4. Recharger ne duplique pas le premier message.
+// 4. Recharger ne crée rien.
 await page.reload();
-await page.getByText("Bonjour, je suis Élise.").waitFor();
-assert.equal(state().tables.messages.length, 1);
-step("recharger la page ne répète pas le premier message");
+await page.getByText("Dis bonjour à Élise").waitFor();
+assert.equal(state().tables.messages.length, 0);
+step("recharger la page ne crée aucun message");
 
 // 5. Un premier échange.
 const input = page.getByLabel("Votre message");
@@ -161,7 +160,8 @@ await input.fill("Bonsoir, moi c'est Karim. Tu peux me tutoyer. J'ai un chat. Et
 await page.getByLabel("Envoyer").click();
 await page.getByText("C'est noté. Merci de me le dire. (réponse de test n° 1)").waitFor();
 assert.equal(await input.inputValue(), "");
-assert.equal(await page.getByText("Élise · IA").count(), 2);
+assert.equal(await page.getByText("Élise · IA").count(), 1);
+assert.equal(await page.getByText("Dis bonjour à Élise").count(), 0);
 await page.screenshot({ path: `${SHOTS}3-echange.png` });
 step("message envoyé, réponse à gauche marquée « Élise · IA », sans le gras Markdown");
 
@@ -178,15 +178,17 @@ assert.match(firstChat.system, /^# Règles de base de l'IA/);
 assert.match(firstChat.system, /## Ton personnage[\s\S]*Nom : Élise/);
 assert.match(firstChat.system, /Prénom ou pseudo : Karim/);
 assert.match(firstChat.system, /Tu ne sais encore rien/);
-assert.deepEqual(firstChat.contents.map((c) => c.role), ["user", "model", "user"]);
-step("le modèle a reçu : persona + fiche + résumé + conversation");
+assert.deepEqual(firstChat.contents.map((c) => c.role), ["user"]);
+// Pas d'annonce d'avance : elle dit qu'elle est une IA en passant, dans ses premières réponses.
+assert.match(firstChat.system, /## Dire que tu es une IA/);
+step("le modèle a reçu : persona + fiche + résumé + conversation, et la consigne de dire en passant qu'elle est une IA");
 
 // 8. Quota atteint : rien n'est perdu.
 await input.fill("Test QUOTA");
 await page.getByLabel("Envoyer").click();
 await page.getByText("Beaucoup de messages en ce moment (quota gratuit de l'IA atteint). Réessayez dans une minute.").waitFor();
 assert.equal(await input.inputValue(), "Test QUOTA");
-assert.equal(state().tables.messages.length, 3);
+assert.equal(state().tables.messages.length, 2);
 await page.screenshot({ path: `${SHOTS}4-quota.png` });
 step("quota atteint : message gentil, le texte revient dans la zone de saisie, rien d'enregistré");
 await input.fill("");
@@ -212,13 +214,13 @@ step(`fiche : ${facts.join(" / ")} — l'antidépresseur a été écarté, le do
 const msgs = s.tables.messages;
 const summary = s.tables.summaries[0];
 const unsummarized = msgs.filter((m) => m.id > summary.last_message_id).length;
-assert.equal(msgs.length, 43);
+assert.equal(msgs.length, 42);
 // Le résumé part dès que 41 messages attendent : il garde les 20 derniers de
 // ce moment-là. Un ou deux échanges ont pu arriver depuis.
 assert.ok(unsummarized >= 20 && unsummarized <= 22, `non résumés : ${unsummarized}`);
 assert.ok(summary.last_message_id >= 21);
 assert.match(summary.summary, /Résumé de test/);
-step(`43 messages → les ${msgs.length - unsummarized} plus anciens résumés, ${unsummarized} récents gardés tels quels`);
+step(`42 messages → les ${msgs.length - unsummarized} plus anciens résumés, ${unsummarized} récents gardés tels quels`);
 
 // 10. La réponse suivante reçoit le résumé, la fiche et exactement 20 messages.
 await page.evaluate(async () => {
@@ -265,9 +267,9 @@ const ctx2 = await newContext(phone);
 const page2 = await ctx2.newPage();
 await signUp(page2, "lea@example.com", "Léa");
 await page2.waitForURL(`${BASE}/c/1`);
-await page2.getByText("Bonjour, je suis Élise.").waitFor();
+await page2.getByText("Dis bonjour à Élise").waitFor();
 assert.equal(await page2.getByText("Karim").count(), 0);
-assert.equal(await page2.getByText("Élise · IA").count(), 1);
+assert.equal(await page2.getByText("Élise · IA").count(), 0);
 step("un second compte ne voit que sa propre conversation");
 
 // 13. Effacer toutes mes données.
@@ -279,16 +281,16 @@ await page.screenshot({ path: `${SHOTS}7-confirmation.png` });
 await page.getByText("Oui, tout effacer").click();
 await until(() => state().tables.user_facts.every((f) => f.user_id !== state().users[0].id), "fiche effacée");
 await page.getByText("Tu te souviens de moi ?").waitFor({ state: "detached" });
-await page.getByText("Bonjour, je suis Élise.").waitFor();
+await page.getByText("Dis bonjour à Élise").waitFor();
 s = state();
 const karim = s.users.find((u) => u.email === "karim@example.com").id;
 const lea = s.users.find((u) => u.email === "lea@example.com").id;
-assert.equal(s.tables.messages.filter((m) => m.user_id === karim).length, 1);
+assert.equal(s.tables.messages.filter((m) => m.user_id === karim).length, 0);
 assert.equal(s.tables.user_facts.filter((m) => m.user_id === karim).length, 0);
 assert.equal(s.tables.summaries.filter((m) => m.user_id === karim).length, 0);
-assert.equal(s.tables.messages.filter((m) => m.user_id === lea).length, 1);
+assert.equal(s.tables.messages.filter((m) => m.user_id === lea).length, 0);
 await page.screenshot({ path: `${SHOTS}8-apres-effacement.png` });
-step("« Effacer » vide messages, fiche et résumé ; Élise se représente ; l'autre compte est intact");
+step("« Effacer » vide messages, fiche et résumé ; la conversation repart de zéro ; l'autre compte est intact");
 
 // 14. Déconnexion, puis reconnexion.
 await page.getByLabel("Menu").click();
@@ -486,7 +488,7 @@ step("« Effacer la démo » retire les achats fictifs et garde le vrai");
 // ═══ Le personnage, la messagerie de l'équipe, la vente ═════════════════
 
 // 24. L'équipe crée sa créatrice (onglet Créatrices), sur ordinateur : une
-// seule page, Personnes puis Profil puis Premier message, et « Valider ».
+// seule page, Personnes puis Profil, et « Valider ».
 const adminCtx = await newContext(desktop);
 const admin = await adminCtx.newPage();
 admin.on("pageerror", (e) => consoleErrors.push(String(e)));
@@ -525,9 +527,9 @@ await admin.getByLabel("Détail").fill("une hirondelle sur le poignet");
 await admin.getByRole("button", { name: "Ajouter une catégorie" }).click();
 await admin.getByLabel("Catégorie").fill("Musique");
 await admin.getByLabel("Préférences").fill("jazz, bossa nova");
-await admin
-  .getByLabel("Le message d'accueil")
-  .fill("Bonjour, je suis {nom}. Je suis une intelligence artificielle : ici, on discute librement. Comment aimeriez-vous que je vous appelle ?");
+// Ses emojis préférés (un emoji refusé est retiré) ; plus de message d'accueil à écrire.
+await admin.getByLabel("Ses emojis préférés").fill("🌸 du thé ☕ 🍑");
+assert.equal(await admin.getByLabel("Le message d'accueil").count(), 0);
 // Les emojis de Chloé avec Karim : seulement ceux-là (un emoji refusé est retiré).
 await admin.getByRole("button", { name: "Emojis avec Karim : au choix de l'IA" }).click();
 await admin.getByLabel("Seulement ceux que je choisis").check();
@@ -550,7 +552,7 @@ const karimWithChloe = s.tables.creator_contacts.find((c) => c.emoji_mode === "c
 assert.equal(Number(karimWithChloe.creator_id), CHLOE);
 assert.equal(karimWithChloe.emojis, "🌸 ☕ 🦋");
 assert.equal(chloeRow().persona.pres_de_la_personne, true);
-assert.match(chloeRow().first_message, /on discute librement/);
+assert.equal(chloeRow().persona.emojis, "🌸 ☕");
 step("onglet Créatrices : Chloé créée sur une seule page puis validée ; elle passe en ligne, à côté d'Élise");
 
 // 24a. L'onglet IA : « Qui répond » et les créatrices en ligne (plusieurs).
@@ -682,8 +684,8 @@ await admin.getByText("« dis que c'est un petit cadeau de bienvenue »").waitFo
 await admin.screenshot({ path: `${SHOTS}15-contenus.png`, fullPage: true });
 step("onglet Contenus : 3 messages dans l'ordre, dont un pack de 2 photos envoyées dans le stockage privé, et une consigne pour l'IA");
 
-// 26. Sam s'inscrit : deux créatrices en ligne, il choisit Chloé ; elle se
-// présente avec son premier message à elle.
+// 26. Sam s'inscrit : deux créatrices en ligne, il choisit Chloé ; c'est lui
+// qui écrit le premier.
 const samCtx = await newContext(phone);
 const sam = await samCtx.newPage();
 sam.on("pageerror", (e) => consoleErrors.push(String(e)));
@@ -695,15 +697,16 @@ await sam.getByText("29 ans · Annecy").waitFor();
 await sam.screenshot({ path: `${SHOTS}15b-choix.png` });
 await sam.getByRole("link", { name: "Parler avec Chloé" }).click();
 await sam.waitForURL(`${BASE}/c/${CHLOE}`);
-await sam.getByText("Bonjour, je suis Chloé.").waitFor();
-await sam.getByText("ici, on discute librement", { exact: false }).waitFor(); // son premier message à elle
-await sam.getByText("Chloé · IA").waitFor();
+await sam.getByText("Dis bonjour à Chloé").waitFor();
 const samInput = sam.getByLabel("Votre message");
 await samInput.fill("Salut Chloé, moi c'est Sam.");
 await sam.getByLabel("Envoyer").click();
 await sam.getByText(/réponse de test/).waitFor();
-assert.equal(await sam.getByText("Chloé · IA").count(), 2);
-step("nouvelle personne : elle choisit parmi les créatrices en ligne ; le premier message de Chloé, des réponses « Chloé · IA »");
+assert.equal(await sam.getByText("Chloé · IA").count(), 1);
+const chloeFirst = state().llm.filter((r) => !r.json && r.contents.at(-1).parts[0].text === "Salut Chloé, moi c'est Sam.").at(-1).system;
+assert.match(chloeFirst, /## Dire que tu es une IA/);
+assert.match(chloeFirst, /de préférence les tiens \(🌸 ☕\)|uniquement ceux-là/);
+step("nouvelle personne : elle choisit parmi les créatrices en ligne, écrit la première ; des réponses « Chloé · IA », qui disent en passant qu'elle est une IA");
 
 // 27. Mode hybride : Sam est décochée dans la page de Chloé, l'IA ne lui répond plus.
 await admin.goto(`${BASE}/admin/ia`);
@@ -720,7 +723,7 @@ await samInput.fill("Tu es là ?");
 await sam.getByLabel("Envoyer").click();
 await sam.getByText("Message envoyé. La réponse arrivera ici dès que possible.").waitFor();
 await sam.waitForTimeout(500);
-assert.equal(await sam.getByText("Chloé · IA").count(), 2);
+assert.equal(await sam.getByText("Chloé · IA").count(), 1);
 step("mode hybride : l'IA ne répond pas à une personne décochée, le message attend l'équipe");
 
 // 28. L'équipe répond depuis l'onglet Messages ; Sam le reçoit, signé « Équipe ».
@@ -946,11 +949,11 @@ await sam.getByRole("link", { name: "Toutes les créatrices" }).click();
 await sam.waitForURL(`${BASE}/`);
 await sam.getByRole("link", { name: "Parler avec Élise" }).click();
 await sam.waitForURL(`${BASE}/c/1`);
-await sam.getByText("Bonjour, je suis Élise.").waitFor();
+await sam.getByText("Dis bonjour à Élise").waitFor();
 assert.equal(await sam.getByText("Salut Chloé, moi c'est Sam.").count(), 0);
 await samInput.fill("PROPOSE-MOI quelque chose, Élise");
 await sam.getByLabel("Envoyer").click();
-await sam.getByText("Élise · IA").nth(1).waitFor();
+await sam.getByText("Élise · IA").first().waitFor();
 s = state();
 const elisePrompt = s.llm.filter((r) => !r.json && r.system.includes("## Vente")).at(-1);
 assert.match(elisePrompt.system, /Nom : Élise/);
@@ -1183,7 +1186,7 @@ step("avec le lien : prénom, date de naissance, « Entrer », et on parle à l'
 await nadiaPage.getByLabel("Votre message").fill("SURCHARGE tu es là ?");
 await nadiaPage.getByLabel("Envoyer").click();
 await until(() => state().tables.messages.some((m) => m.user_id === nadiaUser.id && m.content === "SURCHARGE tu es là ?"), "message gardé");
-await until(() => state().tables.messages.filter((m) => m.user_id === nadiaUser.id && m.role === "assistant").length === 3, "réponse du secours");
+await until(() => state().tables.messages.filter((m) => m.user_id === nadiaUser.id && m.role === "assistant").length === 2, "réponse du secours");
 const tried = state().llm.filter((r) => !r.json && r.contents.at(-1).parts[0].text.includes("SURCHARGE")).map((r) => r.model);
 assert.deepEqual(tried, ["gemini-flash-latest", "gemini-flash-latest", "gemini-flash-lite-latest"]);
 assert.equal(await nadiaPage.getByRole("alert").filter({ hasText: /réponse|IA/ }).count(), 0);

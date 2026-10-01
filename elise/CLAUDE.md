@@ -13,8 +13,17 @@ impossibles à faire à sa place (créer un compte, copier une clé).
 - Gemini gratuit réutilise les données : conversations fictives seulement.
 - Tout appel au modèle passe par `lib/llm.ts` ; `LLM_PROVIDER` choisit
   `gemini` ou `claude` (Haiku 4.5).
-- La persona est `elise-persona.md` (instruction système complète) ; son titre
-  `## Premier message` fournit le message d'accueil.
+- La persona est `elise-persona.md` (instruction système complète). Plus de
+  message d'accueil automatique (demande du porteur du projet, 01/10/2026 :
+  « pas d'un coup avant même que la conversation ait commencé ») : `/c/[id]`
+  n'insère plus rien, la page affiche « Dis bonjour à … » et la personne
+  écrit la première ; `introSection` (`lib/prompts.ts`) demande à l'IA de
+  dire en passant qu'elle est une IA tant qu'elle ne l'a pas fait
+  (`saidItsAnAi` sur les messages récents) dans les `INTRO_WITHIN` (3)
+  premiers messages de la personne (`lib/conversation.ts`). L'étiquette
+  « IA » sous chaque message et l'en-tête restent. `## Premier message`,
+  `creators.first_message`, `firstMessageFor` et l'accueil de
+  `katherine.sql` ne servent plus (section retirée de la fiche Créatrices).
 - Faits sur l'utilisateur : jamais de santé, religion, orientation sexuelle ni
   argent.
 - Le projet vit dans le sous-dossier `elise/` du dépôt `cadence` ; sur Vercel,

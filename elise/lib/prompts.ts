@@ -270,6 +270,19 @@ export function teamSection(alerted: boolean): string {
   return `## Prévenir l'équipe\n\n${lines.join("\n")}`;
 }
 
+/** A-t-elle déjà dit, dans ces messages, qu'elle est une IA ? */
+export function saidItsAnAi(turns: Turn[]): boolean {
+  return turns.some((t) => t.role === "assistant" && (/\bIA\b/.test(t.content) || /intelligence artificielle/i.test(t.content)));
+}
+
+/**
+ * Pas de message d'accueil qui l'annonce d'emblée : l'IA le dit elle-même,
+ * en passant, dans ses premières réponses (demande du porteur du projet).
+ */
+export function introSection(): string {
+  return "## Dire que tu es une IA\n\nC'est le début de votre conversation et tu ne lui as pas encore dit que tu es une IA : glisse-le dans cette réponse, naturellement et en passant, avec ton ton à toi (une demi-phrase après avoir réagi à son message, par exemple « au fait, petite précision : je suis une IA, mais une IA bavarde »), sans en faire une annonce ni un paragraphe.";
+}
+
 /** L'instruction système complète : règles, personnage, personne, mémoire, vente, date. */
 export function chatSystemPrompt(input: {
   base: string;
@@ -280,6 +293,8 @@ export function chatSystemPrompt(input: {
   sale?: SalePrompt | null;
   /** Dans la conversation (pas pour une prise de nouvelles) : l'IA peut prévenir l'équipe. */
   team?: { alerted: boolean };
+  /** Début de conversation et pas encore dit : elle doit dire, en passant, qu'elle est une IA. */
+  introduce?: boolean;
   extra?: string;
   now: Date;
 }): string {
@@ -299,6 +314,7 @@ export function chatSystemPrompt(input: {
     salesSection(input.sale ?? null),
   ];
   if (input.team) sections.push(teamSection(input.team.alerted));
+  if (input.introduce) sections.push(introSection());
   if (input.extra?.trim()) sections.push(`## Consignes de l'équipe\n\n${input.extra.trim()}`);
   // L'heure de la personne, là où elle vit (celle de son téléphone) ; Paris par défaut.
   const zone = validTimeZone(person.timezone) ?? TIME_ZONE;

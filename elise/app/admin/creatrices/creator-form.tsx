@@ -45,7 +45,7 @@ const sameSetting = (a: PersonSetting, b: PersonSetting) =>
   a.ai_enabled === b.ai_enabled && a.emoji_mode === b.emoji_mode && a.emojis === b.emojis;
 
 // La page d'une créatrice : les personnes (ce qu'elle fait avec chacune),
-// son profil, son premier message. Tout s'enregistre tout seul à chaque
+// et son profil. Tout s'enregistre tout seul à chaque
 // changement : on peut partir et revenir. « Valider » quand elle est prête ;
 // quand l'IA l'incarne, elle agit selon tout ce qui est rempli ici.
 export function CreatorForm({
@@ -59,7 +59,8 @@ export function CreatorForm({
 }) {
   const router = useRouter();
   const [persona, setPersona] = useState<PersonaProfile>(creator.persona ?? {});
-  const [firstMessage, setFirstMessage] = useState(creator.first_message);
+  // Plus de message d'accueil (la personne écrit la première) : l'ancien texte est gardé tel quel.
+  const firstMessage = creator.first_message;
   const [people, setPeople] = useState(initialPeople);
   const [search, setSearch] = useState("");
   const [limit, setLimit] = useState(PAGE);
@@ -494,26 +495,6 @@ export function CreatorForm({
             <option key={s} value={s} />
           ))}
         </datalist>
-      </section>
-
-      {/* Le premier message */}
-      <section className={card} aria-labelledby="titre-premier-message">
-        <h2 id="titre-premier-message" className="font-bold">
-          Premier message
-        </h2>
-        <Field label="Le message d'accueil" hint="Envoyé à chaque nouvelle personne. Vide : le message d'accueil par défaut. {nom} devient son prénom.">
-          <textarea
-            value={firstMessage}
-            rows={5}
-            maxLength={2000}
-            onChange={(e) => {
-              setFirstMessage(e.target.value);
-              touch();
-            }}
-            placeholder="Bonjour, je suis {nom}…"
-            className={input}
-          />
-        </Field>
       </section>
 
       {/* Juste au-dessus de la barre d'onglets. */}

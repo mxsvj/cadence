@@ -4,7 +4,7 @@ import { MESSAGE_COLUMNS, loadFacts, loadMessages, loadSummary, toTurn, type Mes
 import { describeStep as describe } from "./offers";
 import { fillName, getFirstMessage, getPersona } from "./persona";
 import { displayName } from "./persona-profile";
-import { chatSystemPrompt, type SalePrompt, type Turn } from "./prompts";
+import { chatSystemPrompt, saidItsAnAi, type SalePrompt, type Turn } from "./prompts";
 import { loadSaleContext, proposeStep, type SaleContext } from "./sales";
 import { ageFrom, type AiSettings, type Contact, type Creator, type Profile } from "./settings";
 
@@ -34,6 +34,9 @@ function toSalePrompt(sale: SaleContext): SalePrompt {
     canPropose: sale.canPropose,
   };
 }
+
+/** Elle dit qu'elle est une IA, au plus tard en répondant à ce message de la personne. */
+export const INTRO_WITHIN = 3;
 
 export async function buildReply(input: {
   supabase: SupabaseClient;
@@ -76,6 +79,8 @@ export async function buildReply(input: {
     summary: summary?.summary ?? null,
     sale: toSalePrompt(sale),
     team: { alerted: input.teamAlerted ?? false },
+    // Ses trois premiers messages : si elle ne l'a pas encore dit, elle dit qu'elle est une IA.
+    introduce: sale.userMessages <= INTRO_WITHIN && !saidItsAnAi(recent.map(toTurn)),
     extra: settings.extra_instructions,
     now: input.now,
   });

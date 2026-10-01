@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { parseEuros, parseProposal } from "../lib/offers";
 import { sanitizePersona } from "../lib/persona-profile";
 import { readFileSync } from "node:fs";
-import { chatSystemPrompt, genderRule, personSection, personaSection, salesSection, type SalePrompt } from "../lib/prompts";
+import { chatSystemPrompt, genderRule, personSection, personaSection, saidItsAnAi, salesSection, type SalePrompt } from "../lib/prompts";
 
 const now = new Date("2026-09-28T19:14:00Z");
 
@@ -121,6 +121,24 @@ describe("le personnage", () => {
       pres_de_la_personne: true,
       groupes: [{ titre: "Piercing", valeur: "oreille" }],
     });
+  });
+});
+
+describe("pas de message d'accueil : elle dit qu'elle est une IA en passant", () => {
+  const base = { base: "Règles.", facts: [], summary: null, now };
+
+  it("tant qu'elle ne l'a pas dit, la consigne le lui demande dans cette réponse", () => {
+    const prompt = chatSystemPrompt({ ...base, introduce: true });
+    assert.match(prompt, /## Dire que tu es une IA/);
+    assert.match(prompt, /glisse-le dans cette réponse, naturellement et en passant/);
+    assert.doesNotMatch(chatSystemPrompt(base), /## Dire que tu es une IA/);
+  });
+
+  it("repère qu'elle l'a déjà dit (et pas quand c'est la personne qui en parle)", () => {
+    assert.equal(saidItsAnAi([{ role: "assistant", content: "au fait, je suis une IA, mais une IA bavarde" }]), true);
+    assert.equal(saidItsAnAi([{ role: "assistant", content: "Je suis une intelligence artificielle 😄" }]), true);
+    assert.equal(saidItsAnAi([{ role: "user", content: "t'es une IA ?" }, { role: "assistant", content: "coucou !" }]), false);
+    assert.equal(saidItsAnAi([{ role: "assistant", content: "j'adore la Sicilia" }]), false);
   });
 });
 
