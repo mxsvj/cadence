@@ -325,6 +325,13 @@ export function Chat({
       </header>
 
       <main aria-live="polite" className="flex flex-1 flex-col gap-2 px-4 py-4">
+        {/* Pas de message d'accueil : c'est la personne qui commence. */}
+        {rows.length === 0 && !waiting && (
+          <p className="m-auto max-w-xs text-center text-muted">
+            Dis bonjour à {name} 👋
+            <span className="mt-1 block text-sm">C&apos;est toi qui commences.</span>
+          </p>
+        )}
         {rows.map(({ m, day }) => {
           const mine = m.role === "user";
           return (

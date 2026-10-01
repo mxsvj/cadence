@@ -74,10 +74,10 @@ refuse.
 
 ## Ce qu'il y a dans ce dossier
 
-- `elise-persona.md` — qui est Élise, comment elle parle, ses limites, et son
-  premier message. C'est le fichier à retoucher pour changer sa personnalité,
-  sans toucher au code. Le titre `## Premier message` doit rester : l'application
-  y cherche le message d'accueil.
+- `elise-persona.md` — qui est Élise, comment elle parle et ses limites.
+  C'est le fichier à retoucher pour changer sa personnalité, sans toucher au
+  code. Son titre `## Premier message` ne sert plus : il n'y a plus de
+  message d'accueil (la personne écrit la première).
 - `supabase/schema.sql` — la base de données : tables, sécurité, fonction
   d'effacement, achats et calculs du tableau de bord. À coller dans Supabase ;
   on peut le relancer sans risque après chaque mise à jour.
@@ -328,8 +328,10 @@ Enregistré » en bas) : on peut partir et revenir quand on veut.
   piercings…), centres d'intérêt par catégories libres, et un texte libre ;
   La **personnalité et façon d'écrire** : les consignes de ton pour l'IA
   (son énergie, son humour, ses expressions) ; les règles de base passent
-  toujours avant ;
-- **Premier message** : son message d'accueil (`{nom}` devient son prénom).
+  toujours avant ; ses **emojis préférés** (au plus un par message).
+- Plus de **premier message** : la conversation s'ouvre vide (« Dis bonjour
+  à … »), la personne écrit la première, et l'IA dit qu'elle est une IA en
+  passant, dans ses premières réponses.
 
 Puis **Valider** (le prénom est alors obligatoire) : tout ce qui est rempli
 appartient à cette créatrice, et elle passe en ligne. Dans chaque

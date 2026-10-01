@@ -3,8 +3,7 @@ import { connection } from "next/server";
 import { Chat } from "@/app/chat";
 import { Notice, SetupNotice, missingSettings } from "@/app/notice";
 import { adminStatus } from "@/lib/admin";
-import { firstMessageFor } from "@/lib/conversation";
-import { MemoryError, ensureFirstMessage, loadMessages, type Message } from "@/lib/memory";
+import { MemoryError, loadMessages, type Message } from "@/lib/memory";
 import { OFFER_COLUMNS, type Offer } from "@/lib/offers";
 import { displayName } from "@/lib/persona-profile";
 import { loadCreator, loadProfile, loadSettings } from "@/lib/settings";
@@ -46,7 +45,8 @@ export default async function ConversationPage({ params }: PageProps<"/c/[id]">)
     } else if (!creator?.active) {
       loaded = "indisponible";
     } else {
-      await ensureFirstMessage(supabase, admin, userId, creator.id, firstMessageFor(creator));
+      // Pas de message d'accueil : la personne écrit la première (l'IA dit
+      // qu'elle est une IA dans ses premières réponses, voir introSection).
       const [messages, offers] = await Promise.all([
         loadMessages(supabase, userId, creator.id, DISPLAY_MESSAGES),
         supabase.from("offers").select(OFFER_COLUMNS).eq("user_id", userId).eq("creator_id", creator.id).order("id"),

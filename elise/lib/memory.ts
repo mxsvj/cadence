@@ -87,28 +87,6 @@ export async function loadMessages(supabase: SupabaseClient, userId: string, cre
   return (data as Message[]).reverse();
 }
 
-/** Première visite à cette créatrice (ou tout vient d'être effacé) : elle dit bonjour. */
-export async function ensureFirstMessage(
-  supabase: SupabaseClient,
-  admin: SupabaseClient,
-  userId: string,
-  creatorId: number,
-  text: string,
-): Promise<void> {
-  const { count, error } = await supabase
-    .from("messages")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("creator_id", creatorId);
-  if (error) fail("Lecture des messages impossible", error);
-  if (count) return;
-
-  const { error: insertError } = await admin
-    .from("messages")
-    .insert({ user_id: userId, creator_id: creatorId, role: "assistant", author: "ai", content: text });
-  if (insertError) fail("Impossible d'enregistrer le premier message", insertError);
-}
-
 /** Ce que cette créatrice sait de la personne (rien de ce qu'elle a dit aux autres). */
 export async function loadFacts(supabase: SupabaseClient, userId: string, creatorId: number): Promise<string[]> {
   const { data, error } = await supabase
