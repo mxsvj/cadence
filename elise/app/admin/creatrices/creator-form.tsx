@@ -472,6 +472,18 @@ export function CreatorForm({
             className={input}
           />
         </Field>
+        <Field
+          label="Ses emojis préférés"
+          hint="Ceux qu'elle utilise le plus, collés à la suite (🍵 ✨ 😅). L'IA les prend d'abord, au plus un par message. Vide : à son choix."
+        >
+          <input
+            value={text("emojis")}
+            onChange={(e) => set("emojis", e.target.value)}
+            maxLength={200}
+            placeholder="🍵 ✨ 😅"
+            className={input}
+          />
+        </Field>
         <datalist id="genres">
           {GENRES.map((g) => (
             <option key={g} value={g} />

@@ -50,7 +50,8 @@ describe("le personnage", () => {
     for (const genre of ["Femme", undefined, " femme "]) {
       const rule = genderRule(genre, 24);
       assert.match(rule, /Ton personnage est une femme, et ça doit s'entendre dans chaque message/);
-      assert.match(rule, /Tu parles de toi au féminin, sans exception/);
+      assert.match(rule, /Tu parles de toi au féminin, sans exception \(« contente de te lire », « fatiguée ce soir… »/);
+      assert.match(rule, /jamais plus d'un par message/);
       assert.match(rule, /comme une femme de 24 ans qui écrit à quelqu'un qu'elle apprécie : chaleureuse et expressive/);
       assert.match(rule, /pas de « Re ! », « La forme \? »/);
       assert.match(rule, /Féminine ne veut pas dire séductrice : ni drague, ni sous-entendu/);
@@ -82,10 +83,26 @@ describe("le personnage", () => {
     // Faire vivre la conversation, sans jamais retenir la personne qui s'en va.
     assert.match(base, /Tu ne fermes jamais la conversation\s+toi-même/);
     assert.match(base, /tu la laisses partir chaleureusement, sans la\s+retenir ni la culpabiliser/);
+    // Le style messagerie : ultra-court, pas de chatbot, un emoji au plus, et les numéros d'aide passent avant la longueur.
+    assert.match(base, /Tu n'es pas une assistante virtuelle : tu n'es pas là pour rendre\s+service, tu es là pour partager un moment de vie/);
+    assert.match(base, /15 à 20 mots au plus/);
+    assert.match(base, /si elle est en danger, tu\s+donnes toujours les numéros d'aide/);
+    for (const banned of [/« Je\s+comprends… »/, /« En tant que… »/, /« Comment puis-je t'aider \? »/, /« N'hésite pas à partager… »/]) {
+      assert.match(base, banned);
+    }
+    assert.match(base, /au plus un par message, et pas à chaque message/);
+    assert.match(base, /Je viens de me\s+poser dans mon canapé avec un thé/);
   });
 
   it("par défaut, le personnage s'appelle Élise", () => {
     assert.match(personaSection({}, {}), /Nom : Élise/);
+  });
+
+  it("ses emojis préférés : des emojis seulement, sans ceux qui sont refusés", () => {
+    assert.equal(sanitizePersona({ emojis: "🍵 du thé ✨ 🍑" }).persona.emojis, "🍵 ✨");
+    assert.equal(sanitizePersona({ emojis: "rien" }).persona.emojis, undefined);
+    const prompt = chatSystemPrompt({ base: "Règles.", persona: { nom: "Kath", emojis: "🍵 ✨" }, person: {}, facts: [], summary: null, now });
+    assert.match(prompt, /de préférence les tiens \(🍵 ✨\)/);
   });
 
   it("refuse un personnage de moins de 18 ans, et nettoie le reste", () => {
@@ -116,7 +133,7 @@ describe("la personne", () => {
     assert.match(text, /Prénom ou pseudo : Karim/);
     assert.match(text, /Âge : 44 ans/);
     assert.match(text, /lundi 28 septembre à 15:14 \(America\/Toronto\)/);
-    assert.match(text, /uniquement ceux-là, selon la discussion : 😊 🌿/);
+    assert.match(text, /uniquement ceux-là, selon la discussion \(au plus un par message, et pas à chaque message\) : 😊 🌿/);
     assert.match(text, /Préfère les messages courts\./);
   });
 });

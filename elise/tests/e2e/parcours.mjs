@@ -765,7 +765,7 @@ assert.match(salesPrompt, /Nom : Chloé/);
 assert.match(salesPrompt, /près de Lyon/);
 assert.match(salesPrompt, /Tu ne proposes jamais de la rencontrer/);
 assert.match(salesPrompt, /Tatouages : une hirondelle sur le poignet/);
-assert.match(salesPrompt, /uniquement ceux-là, selon la discussion : 🌸/);
+assert.match(salesPrompt, /uniquement ceux-là, selon la discussion \(au plus un par message, et pas à chaque message\) : 🌸/);
 assert.match(salesPrompt, /Aime les voyages\./);
 assert.match(salesPrompt, /Le prochain contenu, dans l'ordre prévu \(le 1er sur 3 du parcours prévu\) : un court poème \(un texte\)/);
 assert.match(salesPrompt, /« dis que c'est un petit cadeau de bienvenue »/);

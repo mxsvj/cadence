@@ -89,13 +89,17 @@ export function emojiSummary(mode: EmojiMode, emojis: string): string {
 }
 
 /** Ce que l'IA reçoit sur les emojis, pour une personne. */
-export function emojiInstruction(mode: EmojiMode | undefined, emojis: string | undefined): string {
+export function emojiInstruction(mode: EmojiMode | undefined, emojis: string | undefined, favorites?: string): string {
   const list = (emojis ?? "").trim();
+  const own = cleanEmojis(favorites ?? "");
+  const sparingly = "au plus un par message, et pas à chaque message";
   if ((mode ?? "libre") === "libre") {
-    return "- Emojis : à toi de choisir ceux qui vont avec la discussion et le ton de la personne, sans en abuser.";
+    return own
+      ? `- Emojis : de préférence les tiens (${own}), ou d'autres qui vont avec la discussion ; ${sparingly}.`
+      : `- Emojis : à toi de choisir ceux qui vont avec la discussion et le ton de la personne ; ${sparingly}.`;
   }
   if (mode === "choisis" && list) {
-    return `- Emojis à utiliser avec elle, avec modération et uniquement ceux-là, selon la discussion : ${list}`;
+    return `- Emojis à utiliser avec elle, uniquement ceux-là, selon la discussion (${sparingly}) : ${list}`;
   }
   return "- N'utilise aucun emoji avec elle.";
 }
