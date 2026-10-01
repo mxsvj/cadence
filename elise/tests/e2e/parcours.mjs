@@ -298,11 +298,14 @@ s = state();
 const karim = s.users.find((u) => u.email === "karim@example.com").id;
 const lea = s.users.find((u) => u.email === "lea@example.com").id;
 assert.equal(s.tables.messages.filter((m) => m.user_id === karim).length, 0);
+// Son profil de discussion aussi.
+const erasedProfile = s.tables.contacts.find((c) => c.user_id === karim);
+assert.deepEqual([erasedProfile.humeur, erasedProfile.style_discussion, erasedProfile.centre_interet, erasedProfile.profil_maj_le], ["", "", "", null]);
 assert.equal(s.tables.user_facts.filter((m) => m.user_id === karim).length, 0);
 assert.equal(s.tables.summaries.filter((m) => m.user_id === karim).length, 0);
 assert.equal(s.tables.messages.filter((m) => m.user_id === lea).length, 0);
 await page.screenshot({ path: `${SHOTS}8-apres-effacement.png` });
-step("« Effacer » vide messages, fiche et résumé ; la conversation repart de zéro ; l'autre compte est intact");
+step("« Effacer » vide messages, fiche, résumé et profil de discussion ; la conversation repart de zéro ; l'autre compte est intact");
 
 // 14. Déconnexion, puis reconnexion.
 await page.getByLabel("Menu").click();
@@ -771,6 +774,8 @@ step("fiche contact enregistrée : ville, notes ; IA autorisée et emojis de Chl
 
 // Le profil de discussion noté par l'IA se lit dans la fiche, et l'enregistrer ne l'efface pas.
 const karimId = s.users.find((u) => u.email === "karim@example.com").id;
+// (Karim a effacé ses données à l'étape 13 : un profil noté depuis.)
+await sql("update public.contacts set humeur = 'fatigué', style_discussion = 'timide', centre_interet = 'la randonnée', profil_maj_le = now() where user_id = $1", [karimId]);
 await admin.goto(`${BASE}/admin/messages?u=${karimId}&c=1`);
 await admin.getByText("humeur fatigué · style timide · aime parler de la randonnée").waitFor();
 await admin.getByLabel("Comment se comporter avec elle", { exact: false }).fill("Aime la montagne.");
