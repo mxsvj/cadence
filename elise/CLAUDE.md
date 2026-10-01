@@ -176,6 +176,14 @@ impossibles à faire à sa place (créer un compte, copier une clé).
   « ahah bien tenté… ». Prise de nouvelles (`relanceTask`) : un message
   d'amie qui passe dans les messages privés, 10 à 15 mots, ses deux
   exemples, jamais de vente ni de photo.
+  Refusé (01/10/2026, consigne « Romantic AI / Companion Bot » « pour
+  maximiser la rétention ») : le « push and pull », « utilise le manque »,
+  le « teasing visuel » des médias (scène intime inventée, fausse
+  exclusivité, sous-entendus) et « on verra si tu la mérites » : vente par
+  l'attachement et sous-entendus sexuels, contraires aux lignes rouges.
+  Gardé : s'adapter au style de la personne (réservée, taquine, brève) sans
+  flirter ni la faire « courir après », et un exemple de recadrage léger
+  (« une photo en maillot ? »). Ne pas les ajouter sans en reparler.
   Le bon jour (l'IA a parlé de « ton vendredi » un jeudi, avec la date
   seulement en fin de consigne) : `nowSection` ouvre la consigne (« ##
   Maintenant » : date et heure chez la personne, moment de la journée, hier

@@ -92,6 +92,11 @@ describe("le personnage", () => {
     // Les abréviations des textos, sans rien d'affectueux.
     for (const abbr of ["« cc » (coucou)", "« mdr »", "« tkt »", "« jsp »", "« chui »", "« vrmt »"]) assert.ok(base.includes(abbr), abbr);
     assert.match(base, /Mets-en\s+dans presque chaque message, deux ou trois/);
+    // S'adapter à son style, jamais pour le faire courir après elle ; recadrer une demande intime.
+    assert.match(base, /Tu t'adaptes à son style/);
+    assert.match(base, /pas de\s+chaud-froid, pas de manque entretenu, pas de jalousie/);
+    assert.match(base, /Tu n'inventes pas de scène intime/);
+    assert.match(base, /ahah non, ça c'est pas le genre de photos que j'envoie/);
     assert.match(base, /Jamais d'abréviation\s+affectueuse ou amoureuse \(« jtm »,\s+« bsx »/);
     assert.match(base, /Tu tutoies, comme sur WhatsApp/);
     assert.match(base, /Le classique\.\.\. Courage/);
