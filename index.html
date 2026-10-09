@@ -177,9 +177,13 @@ main{flex:1;padding:2px 16px 150px}
 #fab{position:fixed;z-index:46;right:max(16px,calc(50vw - var(--maxw)/2 + 16px));
   bottom:calc(env(safe-area-inset-bottom) + 88px);width:56px;height:56px;border-radius:19px;
   background:var(--acc);color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 8px 22px rgba(59,130,246,.4);transition:transform .16s var(--ease),background .16s}
+  box-shadow:0 8px 22px rgba(59,130,246,.4);
+  transition:transform .22s var(--ease),opacity .18s,background .16s}
 #fab:active{transform:scale(.88)}
 @media (hover:hover){#fab:hover{background:var(--acc-hi);transform:translateY(-2px)}}
+/* escamoté : il glisse sous le bord plutôt que de s'évaporer, pour qu'on
+   comprenne où il est parti et d'où il revient */
+#fab.away{transform:translateY(96px) scale(.85);opacity:0;pointer-events:none}
 
 /* ============================ 7. bannière de rappel ============================ */
 #banner{position:sticky;top:calc(env(safe-area-inset-top) + 60px);z-index:39;margin:0 16px 10px;
@@ -1006,7 +1010,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v18 · 2026-10-09';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v19 · 2026-10-09';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 4;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -2617,7 +2621,9 @@ function render(){
   else if(planDate)              v.innerHTML=viewPlan();
   else                           v.innerHTML=viewSport();
   justDone=null;   /* la pulsation ne se rejoue pas au rendu suivant */
-  $('#fab').classList.toggle('hide', state.tab!=='sport');
+  var fab=$('#fab');
+  fab.classList.toggle('hide', state.tab!=='sport');
+  if((window.pageYOffset||0) < 90) fab.classList.remove('away');
   $('#topbar [data-act="gofocus"]').innerHTML = ic('bolt');
 }
 
@@ -5441,6 +5447,26 @@ document.addEventListener('keydown', function(ev){
 });
 
 function toTop(){ try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ window.scrollTo(0,0); } }
+
+/* Le bouton + passait par-dessus le carnet et les records pendant qu'on les
+   lit. Il s'efface donc quand on descend et revient dès qu'on remonte —
+   plutôt que de disparaître à tout défilement, ce qui obligerait à remonter
+   en haut pour ajouter quelque chose.
+
+   Le seuil de six pixels évite qu'il clignote sur le rebond élastique d'iOS,
+   et l'écouteur est passif : il ne fait qu'une comparaison, il ne bloque
+   jamais le défilement. */
+var fabY = 0;
+function fabScroll(){
+  var f = $('#fab'); if(!f) return;
+  var y = Math.max(0, window.pageYOffset || 0);
+  if(y < 90)            f.classList.remove('away');   /* en haut, toujours là */
+  else if(y > fabY + 6) f.classList.add('away');      /* on descend           */
+  else if(y < fabY - 6) f.classList.remove('away');   /* on remonte           */
+  fabY = y;
+}
+try{ window.addEventListener('scroll', fabScroll, { passive:true }); }
+catch(e){ window.addEventListener('scroll', fabScroll); }
 
 /* ======================================================================= */
 /*                        TUTORIEL (projecteur)                            */
