@@ -14,6 +14,7 @@ Chromium est déjà là (`/opt/pw-browsers`), seul `playwright-core` s'installe.
 | `seance.js` | composer une séance, la dérouler série par série, la retrouver au carnet |
 | `images.js` | une image par exercice, jamais la même deux fois, jamais hors cadre |
 | `journal.js` | poids, besoins caloriques, repas, humeur |
+| `fab.js` | le bouton + s'efface en descendant et revient en remontant |
 
 Une première version de ces suites vivait dans un dossier temporaire de session.
 Un redémarrage de machine l'a effacée — d'où celle-ci, dans le dépôt.

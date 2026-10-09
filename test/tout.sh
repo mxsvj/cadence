@@ -3,7 +3,7 @@
 cd "$(dirname "$0")" || exit 1
 [ -d node_modules ] || npm install --silent
 KO=""
-for s in syntaxe.js fumee.js structure.js seance.js images.js journal.js; do
+for s in syntaxe.js fumee.js structure.js seance.js images.js journal.js fab.js; do
   echo ""; echo "══════════ $s ══════════"
   node "$s" 2>&1 | tail -4
   [ "${PIPESTATUS[0]}" -eq 0 ] || KO="$KO $s"

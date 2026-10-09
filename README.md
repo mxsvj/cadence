@@ -646,7 +646,7 @@ ne conseille rien là-dessus.
 bash test/tout.sh
 ```
 
-Six suites, 96 vérifications, pilotant Chromium avec Playwright. Elles ne
+Sept suites, 111 vérifications, pilotant Chromium avec Playwright. Elles ne
 dépendent d'aucun serveur : la page est ouverte en `file://` et toute requête
 sortante est coupée.
 
@@ -658,6 +658,7 @@ sortante est coupée.
 | `seance.js` | composer une séance, la dérouler série par série, la retrouver au carnet |
 | `images.js` | une image par exercice, jamais la même deux fois, jamais hors cadre |
 | `journal.js` | poids, besoins caloriques, repas, humeur |
+| `fab.js` | le bouton + s'efface en descendant et revient en remontant |
 
 `fumee.js` est la plus bête et la plus utile : elle énumère tous les `data-act`
 de chaque onglet et appuie dessus. Une fonction supprimée mais encore appelée ne
