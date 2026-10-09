@@ -19,7 +19,8 @@
 /* ============================ 1. jetons ============================ */
 :root{
   --bg:#0E1116; --surf:#171C24; --surf2:#1F2630; --nav:rgba(16,20,27,.86);
-  --line:#242C38; --line2:#333D4C;
+  --line:#242C38; --line2:#333D4C; --corps:#2E3847;
+  --et-pret:#6D4F4E; --et-recup:#B45C5B; --et-chaud:#FF6367;
   --txt:#F2F5F9; --mut:#8C97A8; --mut2:#5F6B7C;
   --acc:#3B82F6; --acc-hi:#5B9BFF; --acc-soft:rgba(59,130,246,.14);
   --ok:#34D399; --ok-soft:rgba(52,211,153,.14);
@@ -34,7 +35,8 @@
 }
 html[data-theme="light"]{
   --bg:#F6F8FB; --surf:#FFFFFF; --surf2:#EDF1F7; --nav:rgba(255,255,255,.88);
-  --line:#E2E8F0; --line2:#CDD7E4;
+  --line:#E2E8F0; --line2:#CDD7E4; --corps:#D3DCE8;
+  --et-pret:#B99896; --et-recup:#B85F5E; --et-chaud:#AC0024;
   --txt:#0F1622; --mut:#59657A; --mut2:#8B97A6;
   --acc-soft:rgba(59,130,246,.10); --ok-soft:rgba(52,211,153,.14);
   --sh1:0 1px 2px rgba(22,42,74,.07), 0 2px 6px rgba(22,42,74,.06);
@@ -1010,7 +1012,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v19 · 2026-10-09';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v20 · 2026-10-09';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 4;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -1300,6 +1302,42 @@ function fuseau(x1,y1,w1,x2,y2,w2){
     'L'+r2(x2+w2)+' '+r2(y2)+
     'C'+r2(x2+w2)+' '+r2(y2+k2)+' '+r2(x2-w2)+' '+r2(y2+k2)+' '+r2(x2-w2)+' '+r2(y2)+'Z';
 }
+/* Une brique d'abdomino : un rectangle à coins ronds, plus large en haut
+   qu'en bas. Le bord central reste droit — c'est la ligne blanche. */
+function brique(x1, y1, x2, y2, r){
+  var h = y2 - y1, rr = (r === undefined ? Math.min(2.6, h / 3.4) : r);
+  var g = x1 + (x2 - x1) * 0.06;                 /* le bas se resserre un peu */
+  return 'M' + r2(x2) + ' ' + r2(y1) +
+    'H' + r2(x1 + rr) + 'Q' + r2(x1) + ' ' + r2(y1) + ' ' + r2(x1) + ' ' + r2(y1 + rr) +
+    'V' + r2(y2 - rr) + 'Q' + r2(g) + ' ' + r2(y2) + ' ' + r2(g + rr) + ' ' + r2(y2) +
+    'H' + r2(x2) + 'Z';
+}
+/* Un chef de muscle long : plein à la racine, un ventre réglable, et une
+   pointe effilée au lieu d'un bout coupé net. */
+function chefLong(x1, y1, x2, y2, w1, w2, wv){
+  var m = (y1 + y2) / 2, xm = (x1 + x2) / 2;
+  if(wv === undefined) wv = (w1 + w2) / 2;
+  return 'M' + r2(x1 - w1) + ' ' + r2(y1) +
+    'C' + r2(x1 - w1) + ' ' + r2(y1 - w1 * 0.72) + ' ' + r2(x1 + w1) + ' ' + r2(y1 - w1 * 0.72) +
+      ' ' + r2(x1 + w1) + ' ' + r2(y1) +
+    'C' + r2(xm + wv) + ' ' + r2(m - (m - y1) * 0.3) + ' ' + r2(xm + wv) + ' ' + r2(m + (y2 - m) * 0.3) +
+      ' ' + r2(x2 + w2) + ' ' + r2(y2) +
+    'Q' + r2(x2) + ' ' + r2(y2 + w2 * 1.5) + ' ' + r2(x2 - w2) + ' ' + r2(y2) +
+    'C' + r2(xm - wv) + ' ' + r2(m + (y2 - m) * 0.3) + ' ' + r2(xm - wv) + ' ' + r2(m - (m - y1) * 0.3) +
+      ' ' + r2(x1 - w1) + ' ' + r2(y1) + 'Z';
+}
+/* Une goutte : courte, ronde en bas, effilée en haut. Le vaste interne et le
+   fessier ont cette forme-là. */
+function goutte(x1, y1, x2, y2, w1, w2){
+  var m = (y1 + y2) / 2, xm = (x1 + x2) / 2;
+  return 'M' + r2(x1) + ' ' + r2(y1) +
+    'C' + r2(xm + w1 * 1.6) + ' ' + r2(m - (m - y1) * 0.4) + ' ' + r2(x2 + w2) + ' ' + r2(m) +
+      ' ' + r2(x2 + w2) + ' ' + r2(y2 - w2) +
+    'Q' + r2(x2 + w2) + ' ' + r2(y2 + w2 * 0.9) + ' ' + r2(x2) + ' ' + r2(y2 + w2 * 0.9) +
+    'Q' + r2(x2 - w2) + ' ' + r2(y2 + w2 * 0.9) + ' ' + r2(x2 - w2) + ' ' + r2(y2 - w2) +
+    'C' + r2(x2 - w2) + ' ' + r2(m) + ' ' + r2(xm - w1 * 1.6) + ' ' + r2(m - (m - y1) * 0.4) +
+      ' ' + r2(x1) + ' ' + r2(y1) + 'Z';
+}
 var AXE = 59.2;
 
 /* Une masse du tronc touche l'axe du corps : son bord central doit rester
@@ -1356,45 +1394,52 @@ var SIL = {
   trapezes: lisse([[53,38.6],[52.6,43],[50,46.8],[45.6,49.2],[43,52.8],
                    [44.6,48.4],[47.2,44.6],[50.6,41]], true),
 
-  /* pectoral : le haut plat sous la clavicule, le bord externe qui plonge,
-     puis la ligne du bas qui remonte vers l'aisselle */
-  pecs: contreAxe([[59.2,53.2],[50.6,53.8],[45,56.4],[41.8,61.4],[41.6,67.6],
-                   [45,73],[50.6,76.4],[59.2,78.6]]),
+  /* Pectoral. C'était un ovale qui barrait toute la poitrine : un plastron,
+     pas un muscle. Un pectoral a le haut presque plat sous la clavicule, le
+     bord externe qui plonge vers l'aisselle, et surtout une ligne du bas qui
+     **remonte** vers le sternum — c'est cette diagonale qui le fait lire. */
+  pecs: lisse([[57.6,52.8],[52,53.2],[47.2,55],[44,58.6],[43.2,62.6],      /* clavicule → aisselle */
+               [45.4,67.2],[49.6,70.4],[53.4,72.4],[56.8,72.8],             /* bord bas qui remonte  */
+               [57.8,66]], true),                                           /* bord du sternum, droit */
 
-  /* deltoïde antérieur : la coiffe qui arrondit l'épaule */
-  epaules: lisse([[45.6,49.6],[39.6,51.6],[34.4,55.4],[30.6,61],[29,67.6],[28.6,74],
-                  [32.6,73],[34,66.6],[36.2,60.6],[40.4,55.8],[44.4,52.6]], true),
+  /* deltoïde antérieur : une coiffe arrondie sur l'épaule, plus charnue en
+     haut qu'en bas — avant, c'était un croissant de manche */
+  epaules: lisse([[45.4,49.4],[39.8,50.8],[34.8,54],[31,58.8],[29.2,65],[29,71.4],
+                  [31.4,74.6],[33.8,72.4],[34.6,66],[36.8,60.4],[40.8,55.8],[44.6,52.6]], true),
 
-  /* grand droit : les six faisceaux, séparés par les intersections
-     tendineuses. C'est ce détail qui fait lire « abdos » et pas « ventre ». */
+  /* Grand droit. C'étaient six carrés séparés par des rainures : une grille
+     de fenêtre. Les faisceaux sont en réalité des briques arrondies, plus
+     larges en haut qu'en bas, et la colonne se resserre vers le pubis. Les
+     intersections tendineuses sont des sillons, pas des joints de carrelage. */
   abdos: [
-    'M50.2 81.4h9v10.6h-8.5c-.3-3.6-.5-7.1-.5-10.6z',
-    'M50.4 93.6h8.8v10.4h-8.6c-.1-3.5-.2-6.9-.2-10.4z',
-    'M50.2 105.6h9v10h-8.4c-.4-3.3-.6-6.6-.6-10z',
+    brique(50.0, 80.6, 59.2, 90.2), brique(50.3, 91.4, 59.2, 100.6),
+    brique(50.8, 101.8, 59.2, 110.4), brique(51.6, 111.6, 59.2, 121.4),
     /* l'oblique : la bande étroite qui ferme le flanc */
-    lisse([[48.6,81.8],[46.4,88.4],[46,97],[46.8,107.6],[48.4,117.6],[49.4,120],
-           [49.6,113.6],[49.2,100.4],[48.8,89.6]], true)
+    lisse([[48.8,82.4],[46.6,89],[46.2,97.4],[47,107.6],[48.6,117],[49.6,119.6],
+           [49.8,113],[49.4,100.6],[49,90]], true)
   ],
 
   biceps: [
-    fuseau(30.8,74,3, 31,100,2.4),
-    fuseau(36.2,74,2.8, 34.6,100,2.2)
+    fuseau(31,73.6,2.9, 31.2,100.4,2.3),
+    fuseau(36.2,74.2,2.7, 34.6,100,2.1)
   ],
   avantbras: [
-    fuseau(28,118,2.8, 24.8,142,2.2),
-    fuseau(33.4,117,2.6, 29,141,2.2)
+    fuseau(28,117.6,2.8, 25,141.6,2.1),
+    fuseau(33.4,117,2.5, 29.2,140.6,2)
   ],
-  /* cuisse : vaste externe, droit fémoral, et le vaste interne en goutte
-     juste au-dessus du genou */
+  /* Cuisse. Trois lozenges à bouts festonnés faisaient trois bananes. Un
+     quadriceps est long, plein en haut, et se resserre franchement au-dessus
+     du genou ; le vaste interne est une goutte courte, basse et en dedans. */
   quadris: [
-    fuseau(42.6,137,3.6, 43.8,181,3),
-    fuseau(50,135,4, 49.4,180,3.2),
-    fuseau(56.4,158,2.4, 54.4,181,3.2)
+    chefLong(42.2,136.5, 43.6,179.6, 2.8, 1.9, 3.2),   /* vaste externe */
+    chefLong(48.8,133.5, 48.6,178.8, 2.9, 2.0, 3.3),   /* droit fémoral */
+    goutte(54,159, 53.2,179.8, 1.8, 2.5)               /* vaste interne */
   ],
-  /* mollet : le jumeau interne descend plus bas que l'externe */
+  /* Mollet : deux jumeaux, l'interne plus bas et plus charnu, tous deux
+     effilés vers le tendon plutôt que coupés net. */
   mollets: [
-    fuseau(44.4,200,3, 44.6,228,2),
-    fuseau(51.6,200,3.4, 49.6,226,2.2)
+    chefLong(45.2,201.4, 46,225.4, 2.3, 1.1, 2.6),
+    chefLong(50.8,201, 49.6,229, 2.6, 1.1, 2.9)
   ]
 } },
   ar:{ neutre:SIL_NEUTRE, m:{
@@ -1403,8 +1448,9 @@ var SIL = {
                        [40.6,53.4],[44,60.8],[48.4,68.4],[53.4,75],[59.2,80.4]]),
 
   /* dorsaux : le V — large sous l'aisselle, étroit sur les lombes */
-  dos: contreAxe([[59.2,72],[52.6,68],[46.4,64],[42.4,61],[39.6,68.4],[39,77.4],
-                  [40.4,86.6],[43.2,95],[46.6,100.6],[52.4,97.4],[59.2,94]]),
+  dos: contreAxe([[59.2,70],[52.6,67],[46.4,63.4],[42.2,60.6],             /* bord supérieur, sous l'aisselle */
+                  [39.4,68],[38.8,77.6],[40.8,87.6],[44.6,95.4],            /* le grand bord externe en V      */
+                  [49.4,100.2],[54,98.6],[59.2,96]]),                       /* la pointe sur les lombes        */
 
   /* lombaires : les deux colonnes de l'érecteur du rachis, pas une plaque */
   lombaires: [
@@ -1413,8 +1459,10 @@ var SIL = {
   ],
 
   /* fessier : la masse ronde, et le pli qui le sépare de la cuisse */
-  fessiers: contreAxe([[59.2,113.4],[51.4,114.4],[45.6,118.6],[43.2,126.4],
-                       [44.2,134.6],[47.6,141.4],[52.6,142.8],[59.2,140.4]]),
+  /* fessier : une masse carrée aux angles ronds, pas une balle — le pli
+     fessier la coupe net en bas, il ne la fait pas remonter */
+  fessiers: contreAxe([[59.2,113],[52,113.6],[46.4,116.6],[43.4,122.4],[42.8,129.4],
+                       [43.8,136.6],[46.8,141.4],[52,142.8],[59.2,142.6]]),
 
   epaules: lisse([[45.6,49.6],[39.6,51.6],[34.4,55.4],[30.6,61],[29,67.6],[28.6,74],
                   [32.6,73],[34,66.6],[36.2,60.6],[40.4,55.8],[44.4,52.6]], true),
@@ -1429,8 +1477,8 @@ var SIL = {
     fuseau(33.4,117,2.6, 29,141,2.2)
   ],
   ischios: [
-    fuseau(43,147,3.6, 43.8,181,3),
-    fuseau(50.4,146,3.8, 49.6,180,3.2)
+    chefLong(43.2,148, 44,180, 2.9, 2.0, 3.3),
+    chefLong(50,147, 49.2,179.4, 3.1, 2.1, 3.5)
   ],
   mollets: [
     fuseau(44.4,200,3, 44.6,228,2),
@@ -1748,7 +1796,12 @@ function silhouette(face,couleurs,w,cls){
     return '<g fill="'+c+'"><path d="'+pth+'"/>'+
            '<path d="'+pth+'" transform="translate(120,0) scale(-1,1)"/></g>';
   }
-  d.neutre.forEach(function(pth){ out+=paire(pth,'var(--line)'); });
+  /* Le corps était tracé en --line, à un cheveu de la couleur de la carte :
+     la tête et les pieds flottaient dans le noir. Il a sa propre teinte,
+     assez claire pour qu'on lise la silhouette même quand aucun muscle n'est
+     coloré — et c'est ce corps qui apparaît dans l'interstice entre deux
+     muscles, donc c'est lui qui fait la séparation. */
+  d.neutre.forEach(function(pth){ out+=paire(pth,'var(--corps)'); });
   var ids=Object.keys(d.m);
   for(var i=0;i<ids.length;i++){
     var c=(couleurs&&couleurs[ids[i]])||'var(--line2)', pth=d.m[ids[i]];
@@ -2207,11 +2260,47 @@ function recuperation(){
     };
   });
 }
-/* Feu tricolore, pas palette de marque : sur un muscle, le rouge veut dire
-   « n'y touche pas » dans toutes les applis de sport, et c'est plus fort que
-   la cohérence chromatique. */
-var ETATS = { chaud:{n:'Chaud', c:'#EF4444'}, recup:{n:'En récupération', c:'var(--gold)'},
-              pret:{n:'Prêt à travailler', c:'var(--ok)'} };
+/* Les trois états de récupération, et leurs couleurs.
+
+   Ce n'est pas une palette d'identité : les trois états sont *ordonnés*
+   (chaud -> en récupération -> prêt), et intervertir cet ordre changerait le
+   sens. Une grandeur ordonnée se code sur une rampe d'une seule teinte dont
+   la clarté suit l'intensité, pas sur trois teintes qui se disputent
+   l'attention.
+
+   C'était un feu tricolore : rouge vif, ambre vif, vert printemps, tous à
+   saturation maximale. Deux défauts mesurés plutôt que supposés.
+
+   D'abord le rouge et le vert se confondent sous daltonisme — ΔE 4,1 en
+   deutéranopie, là où il en faut 8. Sur une carte dont le seul message est
+   « ce muscle est cuit / ce muscle est frais », c'est le message même qui
+   disparaît pour une personne sur douze. Toutes les variantes rouge-vert
+   essayées échouent pareil : le problème est la paire, pas la nuance.
+
+   Ensuite l'ambre et le vert sortaient de la bande de luminosité du mode
+   sombre (0,84 et 0,77 pour une bande 0,48–0,67) : un corps au repos était un
+   mannequin vert fluo, et l'état le plus fréquent criait le plus fort.
+
+   La rampe règle les deux d'un coup. Une seule teinte, donc plus de paire à
+   confondre : la lecture tient à la clarté, qui survit à tous les daltonismes.
+   Et c'est la fatigue qui porte la couleur, pas le repos : « prêt » est le pas
+   le plus proche du corps neutre, si bien qu'un corps reposé reste calme et
+   que le corps s'allume là où on a travaillé. L'état fréquent se tait, l'état
+   rare se voit.
+
+   Rouge, parce que sur un muscle le rouge veut dire « n'y touche pas » dans
+   toutes les applis de sport. Il ne marche pas sur les plates-bandes du bleu
+   de l'app, qui reste le signal « sélectionné ».
+
+   Chaque thème a ses propres pas, choisis contre sa propre surface — un
+   simple miroir du mode sombre ne tiendrait pas. Les deux rampes passent les
+   quatre contrôles ordinaux (clarté monotone, écart entre pas >= 0,06, pas le
+   plus proche du fond >= 2:1, teinte unique) : voir le README. La couleur
+   n'est jamais seule à porter le sens — la légende et la liste « muscle par
+   muscle » nomment chaque état. */
+var ETATS = { chaud:{n:'Chaud', c:'var(--et-chaud)'},
+              recup:{n:'En récupération', c:'var(--et-recup)'},
+              pret:{n:'Prêt à travailler', c:'var(--et-pret)'} };
 /* Ce qu'il reste de frais, du plus reposé au moins reposé. */
 function fraisDabord(){
   return recuperation().slice().sort(function(a, b){
