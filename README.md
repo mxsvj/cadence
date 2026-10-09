@@ -1,13 +1,17 @@
 # Cadence
 
-Tracker d'habitudes en un seul fichier, pensé pour l'écran d'accueil d'un iPhone.
+Carnet d'entraînement en un seul fichier, pensé pour l'écran d'accueil d'un
+iPhone. On y compose ses séances, on les déroule série par série, et tout
+s'inscrit : les charges, la récupération muscle par muscle, les calories.
+
+Il a d'abord été un tracker d'habitudes avec du sport dedans, puis six onglets,
+puis un jeu de points. Il est redevenu une chose : un carnet. Les habitudes y
+tiennent en une bande sur l'accueil, et c'est assez.
 
 - `index.html` — toute l'application : HTML, CSS et JavaScript. Aucune dépendance
   hors les polices Google *Barlow Condensed* et *Manrope*.
 - `api/_store.js` — accès à Redis, partagé par les fonctions. Le préfixe `_`
   empêche l'hébergeur d'en faire une route.
-- `api/board.js` — le classement entre amis.
-- `api/crew.js` — les groupes : code d'invitation, membres, défis.
 - `api/account.js` — le compte Google et la sauvegarde des données.
 - `api/push.js` — les notifications : abonnements, minuteur, envoi.
 - `api/food.js` — les aliments : recherche et code-barres, via Open Food Facts.
@@ -16,27 +20,62 @@ Tracker d'habitudes en un seul fichier, pensé pour l'écran d'accueil d'un iPho
 - `manifest.json`, `icon-192.png`, `icon-512.png` — ce qu'il faut pour que
   l'app s'installe sur l'écran d'accueil.
 - `.github/workflows/rappels.yml` — le réveil régulier du minuteur.
+- `test/` — les suites, à lancer avec `bash test/tout.sh`. Elles vivaient dans
+  un dossier temporaire de session ; un redémarrage de machine les a effacées,
+  d'où leur place ici.
 - `.github/workflows/verifier.yml` — à lancer à la main après un déploiement :
   il appelle la page et le contrôle de santé de chaque fonction, puis demande un
   vrai code-barres à Open Food Facts. C'est la façon la plus rapide de savoir si
   une panne vient du code, de la base ou du déploiement.
 
+## Trois onglets
+
+Il y en avait six : Jour, Sport, Stats, Habitudes, Journal, Profil. Six endroits
+où chercher la même chose — l'état de la journée se racontait sur quatre d'entre
+eux, en anneau, en points, en tuiles de records et en phrases de bilan.
+
+**Entraînement** est l'accueil : la séance du jour, les habitudes en une bande,
+la semaine, la récupération, les records, la charge sur l'année, le carnet, la
+régularité. **Journal** : poids, nutrition, repas, humeur. **Profil** : le
+compte, les rappels, l'aide.
+
+Il n'y a plus de portail « valide ta journée » avant d'accéder au reste. Le
+verrou servait à forcer un rituel ; se faire barrer la route pour consulter sa
+séance n'avait pas de sens.
+
+## Ce qui est parti, et pourquoi
+
+**Le jeu social.** XP, douze rangs, vingt-quatre badges, Crew, classement entre
+amis, défis de la semaine. Dans une app qu'une personne utilise seule, c'était
+quatre écrans vides — « pas encore de groupe », « 1 joueur », aucun ami — et
+dix-neuf badges gris sur vingt-quatre. Ça supposait de convaincre des proches
+d'installer une application web ; ça n'arrive pas. Partis avec : `api/board.js`,
+`api/crew.js` et toute la synchronisation qui allait avec.
+
+**Les points.** Dix par tâche, cinq de bonus dans l'heure. Ils ne servaient qu'à
+nourrir l'XP. Ce qui reste, et qui veut dire quelque chose : la série en cours,
+la meilleure série, le pourcentage de régularité.
+
+**Les niveaux de force.** La carte affichait « Novice » sur les cinq mouvements
+et « 130 kg pour Intermédiaire » en dessous, d'après des seuils rapportés au
+poids de corps. Les records restent — ce sont tes charges ; la comparaison à des
+inconnus est partie.
+
+**Les redites.** L'état de la journée apparaissait en anneau, en points, en
+série, dans six tuiles de records, dans trois cartes de bilan et dans une liste
+des sept derniers jours. Il reste le calendrier du mois et deux séries.
+
+Au total : environ 1 800 lignes en moins, sans perdre une seule fonction qui
+servait.
+
 ## Ce qui est stocké, et où
 
-Sur le téléphone (`localStorage`) : les habitudes et leurs étapes, l'historique des
-validations, les notes du journal, les humeurs, le poids, les badges, le profil.
-Rien de tout cela ne sort de l'appareil.
+Sur le téléphone (`localStorage`) : les habitudes et leurs étapes, l'historique
+des validations, le carnet de séances, les notes du journal, les humeurs, le
+poids, les repas, le profil. Rien de tout cela ne sort de l'appareil.
 
-En ligne (base Redis), sans compte : uniquement de quoi afficher le classement —
-blaze, avatar, points du jour, de la semaine et du mois, XP. Ces enregistrements
-expirent après 90 jours sans activité. L'identifiant de chaque joueur est un
-tirage au hasard qui fait office de clé : le code ami se donne à ses potes, pas
-en public.
-
-Le Crew ajoute, pour chaque groupe : son nom, son code, la liste des identifiants
-de ses membres et ses défis en cours. Les fiches des membres sont celles du
-classement — le groupe ne duplique rien, il les rassemble. Tout expire après six
-mois sans activité.
+Sans compte, **rien ne part en ligne** : plus de classement, donc plus de fiche
+publique.
 
 En ligne, avec un compte Google : en plus, la totalité des données ci-dessus,
 rangées telles quelles sous le compte, pour les retrouver sur un autre téléphone.
@@ -70,17 +109,15 @@ origines autorisées côté Google, et la vérification du jeton côté serveur 
 refuse un jeton émis pour une autre application, expiré, ou que Google ne
 reconnaît pas.
 
-## Mettre le classement en service
+## Brancher la base Redis
 
-L'application fonctionne sans rien faire : tant qu'aucune base n'est branchée, la
-route répond `501`, et chacun s'échange son code à la main comme avant.
-
-Pour activer le classement automatique :
+Elle sert au compte Google (sauvegarde), aux rappels et au cache des aliments.
+Sans elle, l'application marche quand même : tout vit dans le navigateur.
 
 1. Sur Vercel, ouvrir le projet → **Storage** → ajouter une base **Redis**
    (l'offre gratuite suffit largement), puis la relier à ce projet.
 2. Vercel injecte les identifiants tout seul, quel que soit le produit choisi.
-   La fonction sait joindre Redis de deux façons et prend celle qui est
+   Les fonctions savent joindre Redis de deux façons et prennent celle qui est
    disponible :
    - **en HTTP**, si la base expose une API REST — `KV_REST_API_URL` /
      `KV_REST_API_TOKEN`, ou `UPSTASH_REDIS_REST_URL` /
@@ -89,21 +126,8 @@ Pour activer le classement automatique :
      ou `KV_URL` (cas du Redis natif de Vercel). Ce chemin utilise `ioredis`,
      installé par Vercel à la construction — avec `web-push`, ce sont les deux
      seules dépendances du projet.
-
-   Le champ `transport` de la vérification indique lequel des deux est en
-   service.
-3. Redéployer, puis ouvrir **`/api/board?check=1`** dans un navigateur. Cette
-   adresse ne se contente pas de lire la configuration : elle écrit une clé dans
-   la base, la relit, l'efface, et rapporte le résultat.
-   - `"redis":"ok"` — tout est en place, le classement se synchronise seul.
-   - `"redis":"absente"` — les variables ne sont pas arrivées au déploiement.
-   - `"redis":"injoignable"` — les identifiants sont là mais la base ne répond pas.
-
-   Le champ `cles` indique le nombre d'entrées dans la base : il augmente dès que
-   quelqu'un ouvre l'application.
-
-Dès lors, un seul des deux amis a besoin de coller un code : le lien est posé dans
-les deux sens, et chacun voit l'autre apparaître dans son classement.
+3. Redéployer, puis ouvrir **`/api/account`** ou **`/api/food`** : le champ
+   `store` (ou `cache`) à `true` dit que la base répond.
 
 ## Mettre les notifications en service
 
@@ -191,28 +215,20 @@ Concrètement, les séances quittent trois endroits et en gagnent un :
   exercices sous la main, pas dans la liste des habitudes ;
 - `seancesFor()` et `seancesVisibles()` les rassemblent pour le nouvel onglet.
 
-En revanche `dayPoints()` lit le journal brut, donc **les points restent** : l'XP,
-le rang, le classement entre amis et les défis du Crew continuent de voir les
-séances. Ce sont deux comptes distincts, pas deux mondes.
-
-Deux détails qui découlent du même principe. Le Sport n'est **pas verrouillé**
-par la validation de la journée : le verrou existe pour qu'on pose sa journée
-avant d'aller consulter des chiffres, et s'entraîner n'est pas consulter. Et les
-jours d'une séance sont devenus **facultatifs** : sans jour elle reste dans la
+Les jours d'une séance sont **facultatifs** : sans jour elle reste dans la
 bibliothèque et se lance quand on veut, alors qu'une habitude récurrente sans
 jour ne reviendrait jamais — là, c'est toujours une erreur.
 
-Six onglets tiennent dans 390 px en retirant la gouttière, en resserrant le
-bourrage latéral et en descendant le libellé d'un point. La suite `sport.js`
-mesure la barre plutôt que de la croire : aucun onglet ne déborde de l'écran,
-aucun libellé n'est tronqué.
+L'entraînement est depuis devenu l'accueil, et la suite `structure.js` mesure la
+barre d'onglets plutôt que de la croire : aucun onglet ne déborde de l'écran,
+aucun libellé n'est tronqué. C'est elle qui a trouvé la barre restée calée sur
+six colonnes alors qu'il n'y en avait plus que trois.
 
 ### Ce qu'il y a dans l'onglet
 
 Une séance n'est pas un objet à part : c'est une tâche du jour avec
 `kind:'seance'` et une liste d'exercices. Tout ce qui existait — le choix de la
-journée, les points, la série, le classement, les rappels — continue de marcher
-sans une ligne de plus, et une séance validée vaut exactement une tâche validée.
+journée, la série, les rappels — continue de marcher sans une ligne de plus.
 
 Le catalogue compte une quarantaine d'exercices, chacun avec ses muscles
 moteurs, ses muscles secondaires, son matériel et ce qu'il compte (répétitions,
@@ -572,31 +588,9 @@ vérifie que chaque nom d'icône cité dans les données existe dans la planche,
 qu'aucun `<use>` ne pointe dans le vide — un `<use>` orphelin ne dessine rien
 du tout, et ça ne se voit qu'à l'œil.
 
-## Le Crew
-
-Le classement entre amis reste ce qu'il était : chacun colle le code de l'autre
-et les deux se voient. Un groupe est autre chose — un endroit où tout le monde se
-voit d'un coup, et où l'on se lance un défi commun. D'où un code par groupe, et
-pas un code par personne.
-
-L'appartenance vit sur le serveur, pas dans le téléphone : sinon quitter un
-groupe depuis un appareil ne quitterait rien. La liste locale ne retient que les
-codes.
-
-Les défis se jouent du lundi au dimanche et portent sur ce que les fiches des
-joueurs savent déjà dire : des répétitions d'un exercice, des séances, des séries
-ou des points. Rien à calculer côté serveur, donc rien à maintenir en double.
-N'importe quel membre peut en poser un : un groupe entre potes n'a pas de chef,
-et le seul dégât possible est une ligne en trop.
-
-Le code d'invitation est tiré dans un alphabet sans `0`/`O` ni `1`/`I`/`L` : il se
-lit à voix haute ou se recopie d'une capture d'écran, il ne doit pas prêter à
-confusion. Il n'est accepté que s'il était libre, donc deux créations simultanées
-ne peuvent pas tomber sur le même.
-
 ## L'onglet Athlète
 
-L'onglet Profil se dédouble : le joueur d'un côté (rang, badges, Crew, compte),
+L'onglet Profil se dédouble : les réglages d'un côté (compte, rappels, aide),
 le corps de l'autre. Tout mettre à la suite faisait une page interminable.
 
 **Le gabarit** rassemble ce qui sert à calculer : taille, âge, poids, sexe,
@@ -648,29 +642,32 @@ ne conseille rien là-dessus.
 
 ## Développement
 
-Un serveur local sert l'application et la vraie fonction, branchée sur un Redis en
-mémoire — pratique pour dérouler le scénario à deux téléphones sans rien déployer.
-Les suites de tests pilotent Chromium avec Playwright : parcours complet, tutoriel
-et verrouillage, états de démarrage, rendu clair et sombre, géométrie du
-projecteur, et synchronisation entre deux appareils.
+```bash
+bash test/tout.sh
+```
 
-Les services extérieurs sont doublés, jamais appelés pour de vrai : un faux
-service de notification qui déchiffre ce qu'il reçoit, et un faux Open Food
-Facts qui répond comme le vrai — mêmes chemins, mêmes noms de champs, mêmes
-pièges (l'énergie en kilojoules, une fiche sans nom, une fiche sans calories) et
-trois modes : normal, vide, en panne. Une suite ne doit jamais dépendre d'un
-serveur qu'on ne contrôle pas.
+Six suites, 96 vérifications, pilotant Chromium avec Playwright. Elles ne
+dépendent d'aucun serveur : la page est ouverte en `file://` et toute requête
+sortante est coupée.
 
-L'onglet Athlète a sa propre suite : couleur d'accent jusqu'au style calculé des
-boutons, grille de l'année, décompte de la saison, estimation de maximum et
-paliers de force, repères de zone sensible, objectif de poids, compléments.
+| suite | ce qu'elle garde |
+|---|---|
+| `syntaxe.js` | le script de la page se parse |
+| `fumee.js` | on visite tout et on clique sur **toutes** les actions sans une erreur |
+| `structure.js` | trois onglets, l'entraînement en accueil, aucune trace du jeu social |
+| `seance.js` | composer une séance, la dérouler série par série, la retrouver au carnet |
+| `images.js` | une image par exercice, jamais la même deux fois, jamais hors cadre |
+| `journal.js` | poids, besoins caloriques, repas, humeur |
 
-Le Crew se déroule lui aussi à deux téléphones contre un vrai Redis : l'un crée
-le groupe, l'autre colle le code, les deux se voient, et un défi lancé d'un côté
-se remplit avec ce que l'autre inscrit vraiment dans son carnet.
+`fumee.js` est la plus bête et la plus utile : elle énumère tous les `data-act`
+de chaque onglet et appuie dessus. Une fonction supprimée mais encore appelée ne
+se voit qu'à ce moment-là, et c'est ce qui arrive après une grosse coupe.
 
-Les notifications se testent de bout en bout sans dépendre d'Apple ni de Google :
-un faux service de notification reçoit les envois, les déchiffre avec la clé de
-l'appareil simulé, et permet de vérifier le contenu réellement livré — puis de
-rejouer les cas pénibles (appareil devenu injoignable, panne passagère, deux
-minuteurs rapprochés, fuseau horaire décalé).
+Une première version de ces suites — vingt fichiers, 832 vérifications — vivait
+dans un dossier temporaire de session. Un redémarrage de machine l'a effacée.
+D'où celle-ci, dans le dépôt : plus petite, mais elle existera encore demain.
+
+Le déploiement se vérifie à part, avec `.github/workflows/verifier.yml` : il
+appelle le vrai site, les quatre fonctions, cinq photos d’exercices et un vrai
+code-barres chez Open Food Facts. C'est la façon la plus rapide de savoir si une
+panne vient du code, de la base ou du déploiement.

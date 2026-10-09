@@ -1,0 +1,6 @@
+{
+  "name": "cadence-test",
+  "private": true,
+  "description": "Les suites vivent dans le dépôt, pas dans un dossier temporaire : la première version a été effacée par un redémarrage de machine.",
+  "dependencies": { "playwright-core": "*" }
+}

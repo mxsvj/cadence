@@ -155,11 +155,13 @@ main{flex:1;padding:2px 16px 150px}
   padding:0 12px calc(env(safe-area-inset-bottom) + 10px);pointer-events:none}
 /* Six onglets sur un écran de 390 px : chacun tient dans 62 px, donc plus de
    gouttière ni de bourrage latéral, et un libellé d'un point plus petit. */
-.tabs{pointer-events:auto;width:100%;max-width:var(--maxw);display:grid;grid-template-columns:repeat(6,1fr);
+.tabs{pointer-events:auto;width:100%;max-width:var(--maxw);display:grid;grid-template-columns:repeat(3,1fr);
   gap:0;background:var(--nav);border:1px solid var(--line);border-radius:22px;padding:7px 4px;
   box-shadow:var(--sh2);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4)}
-.tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 1px;border-radius:14px;
-  font-size:9px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--mut2);
+/* Trois colonnes, donc de la place : la barre était serrée à 9 px pour faire
+   tenir six onglets. */
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;border-radius:14px;
+  font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--mut2);
   overflow:hidden;white-space:nowrap;
   transition:transform .14s var(--ease),color .18s,background .18s}
 .tab .ti{position:relative;display:flex;font-size:19px;line-height:1;transition:transform .2s var(--ease)}
@@ -397,42 +399,6 @@ main{flex:1;padding:2px 16px 150px}
 .hist .hn{flex:1;font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ============================ 14. onglet Profil ============================ */
-.rankcard{display:flex;align-items:center;gap:16px;padding:18px 16px;
-  background:linear-gradient(125deg,var(--surf),var(--surf2))}
-.rankcard .re{font-size:44px;line-height:1;width:62px;height:62px;flex:0 0 62px;border-radius:19px;
-  display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(circle at 50% 45%,rgba(251,191,36,.20),transparent 68%)}
-.rankcard h2{font-size:25px}
-.prog{height:8px;border-radius:8px;background:var(--surf2);border:1px solid var(--line);overflow:hidden;margin-top:9px}
-.prog i{display:block;height:100%;background:var(--acc);transition:width .6s var(--ease)}
-.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
-.badge{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:12px 5px;text-align:center;
-  box-shadow:var(--sh1);transition:transform .16s var(--ease),border-color .16s}
-.badge:active{transform:scale(.93)}
-.badge .be{font-size:25px;display:block;line-height:1.1}
-.badge small{display:block;font-size:9.5px;font-weight:700;color:var(--mut);margin-top:6px;line-height:1.22}
-.badge.off{opacity:.32;filter:grayscale(1)}
-.badge.on{border-color:rgba(251,191,36,.4);background:linear-gradient(180deg,rgba(251,191,36,.09),var(--surf))}
-.avarow{display:flex;flex-wrap:wrap;gap:7px}
-.lbtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:13px}
-.lbtabs button{padding:10px;border-radius:12px;background:var(--surf2);border:1px solid var(--line);
-  font-weight:700;font-size:12.5px;transition:transform .14s var(--ease),background .16s}
-.lbtabs button:active{transform:scale(.95)}
-.lbtabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
-.lbrow{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:var(--r);margin-bottom:7px;
-  background:var(--surf2);border:1px solid var(--line)}
-.lbrow.me{border-color:var(--acc);background:var(--acc-soft)}
-.lbrow .pos{width:28px;flex:0 0 28px;text-align:center;font-weight:800;font-size:17px;color:var(--mut);line-height:1}
-.lbrow .av{font-size:23px}
-.lbrow .nm{flex:1;min-width:0}
-.lbrow .nm b{display:block;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lbrow .nm small{font-size:10.5px;color:var(--mut);font-weight:700}
-.lbrow .pt{display:flex;flex-direction:column;align-items:flex-end;line-height:1;min-width:44px}
-.lbrow .pt b{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;
-  font-variant-numeric:tabular-nums}
-.lbrow .pt small{font-size:10.5px;font-weight:700;color:var(--mut);margin-top:4px;
-  font-variant-numeric:tabular-nums}
-.lbrow.me .pt small{color:var(--acc)}
 details{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;
   margin-bottom:9px;box-shadow:var(--sh1)}
 details summary{font-weight:700;font-size:14px;cursor:pointer;list-style:none;
@@ -486,6 +452,24 @@ details .dc li{margin-bottom:6px}
 
 
 /* une ligne d'exercice : dans la fiche et dans le formulaire */
+/* la bande des habitudes du jour : une ligne, un geste */
+.jrow{padding:6px 8px 8px}
+.jline{display:flex;align-items:center;gap:11px;width:100%;padding:10px 6px;
+  border-radius:12px;background:none;border:0;text-align:left;transition:background .14s}
+.jline:active{background:var(--surf2)}
+.jline .jc{font-size:20px;color:var(--mut2);flex:0 0 auto;line-height:1}
+.jline.on .jc{color:var(--ok)}
+.jline .jn{flex:1;min-width:0;font-weight:700;font-size:14.5px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jline.on .jn{color:var(--mut);text-decoration:line-through;text-decoration-color:var(--mut2)}
+.jline .jt{font-size:12px;color:var(--mut);flex:0 0 auto}
+.lnk.wide{display:block;width:100%;text-align:center;padding:9px}
+
+.avarow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.avarow .echip{display:flex;align-items:center;justify-content:center;padding:11px 0;font-size:20px}
+.mdet{background:none;border:0;padding:0;margin:11px 0 0;box-shadow:none}
+.mdet summary{font-size:13px;color:var(--mut)}
+
 .exorow{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:var(--r);
   background:var(--surf2);border:1px solid var(--line);margin-bottom:8px}
 .exorow .ei{flex:1;min-width:0}
@@ -612,29 +596,6 @@ details .dc li{margin-bottom:6px}
 .objchips button{flex:1;padding:9px;border-radius:999px;background:var(--surf2);border:1px solid var(--line);
   font-size:12.5px;font-weight:700;color:var(--mut)}
 .objchips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
-
-/* ============================ 14d. crew ============================ */
-.crewtabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:9px;margin-bottom:3px}
-.crewtabs button{flex:0 0 auto;padding:8px 14px;border-radius:999px;background:var(--surf2);
-  border:1px solid var(--line);font-size:13px;font-weight:700;color:var(--mut);white-space:nowrap}
-.crewtabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
-.crewcode{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:var(--r);
-  background:var(--surf2);border:1px dashed var(--line2);margin-bottom:11px}
-.crewcode b{font-family:'Barlow Condensed',sans-serif;font-size:25px;letter-spacing:.14em;font-weight:700}
-.defi{padding:12px 13px;border-radius:var(--r);background:var(--surf2);border:1px solid var(--line);
-  margin-bottom:9px}
-.defihead{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
-.defihead .dn{font-weight:800;font-size:14.5px;flex:1;min-width:0}
-.defihead .dc{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
-.defiline{display:flex;align-items:center;gap:9px;margin-bottom:6px}
-.defiline .av{font-size:17px;flex:0 0 auto}
-.defiline .nm{flex:0 0 74px;font-size:12.5px;font-weight:700;overflow:hidden;
-  text-overflow:ellipsis;white-space:nowrap}
-.defiline .bar{flex:1;height:7px;border-radius:5px;background:var(--line);overflow:hidden}
-.defiline .bar i{display:block;height:100%;background:var(--acc);border-radius:5px;
-  transition:width .6s var(--ease)}
-.defiline .bar i.full{background:var(--ok)}
-.defiline .pc{flex:0 0 40px;text-align:right;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
 
 /* ============================ 14e. athlète ============================ */
 /* les années de salle : 53 colonnes de 7 jours */
@@ -812,6 +773,7 @@ html[data-theme="light"] #chole.none{box-shadow:0 0 0 9999px rgba(15,22,34,.8)}
 <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
 <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"/></symbol>
+<symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10" width="15" height="10.5" rx="2.6"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></symbol>
 <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 1.5M9.5 2.5h5"/></symbol>
@@ -1044,7 +1006,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v17 · 2026-09-17';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v18 · 2026-10-09';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 4;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -1083,20 +1045,6 @@ var QUOTES = [
 /* Douze paliers au lieu de six, et une courbe qui tient sur des années.
    Repère : une bonne journée pèse 50 à 60 points. Les premiers rangs tombent
    en quelques jours pour lancer la machine, le dernier se mérite. */
-var RANKS = [
-  {xp:0,     n:'Recrue',      e:'chevron1'},
-  {xp:250,   n:'Apprenti',    e:'chevron2'},
-  {xp:750,   n:'Soldat',      e:'chevron3'},
-  {xp:1800,  n:'Vétéran',     e:'medal'},
-  {xp:3500,  n:'Guerrier',    e:'sword'},
-  {xp:6000,  n:'Gladiateur',  e:'shield'},
-  {xp:9500,  n:'Machine',     e:'gear'},
-  {xp:14000, n:'Titan',       e:'mountain'},
-  {xp:20000, n:'Inarrêtable', e:'fire'},
-  {xp:28000, n:'Fauve',       e:'fauve'},
-  {xp:38000, n:'Monstre',     e:'claw'},
-  {xp:50000, n:'Légende',     e:'crown'}
-];
 
 var AVATARS = ['dumbbell','fire','glove','barbell','run','fauve','claw','crown','skull','gear'];
 var COLORS  = ['#3B82F6','#34D399','#FBBF24','#A78BFA','#F472B6','#22D3EE'];
@@ -1128,33 +1076,6 @@ var DEFAULTS = [
    steps:['Choisir protéine + féculent + légumes','Cuisiner','Prévoir la portion suivante']},
   {name:'Skincare',          emoji:'bottle', time:'22:00', type:'rec', days:[0,1,2,3,4,5,6],   color:'#34D399',
    steps:['Nettoyant doux','Sérum','Crème hydratante']}
-];
-
-var BADGES = [
-  {id:'b1',  e:'target', n:'Première tâche',   d:'Valider une première tâche'},
-  {id:'b2',  e:'hundred', n:'Journée parfaite', d:'100% des tâches sur une journée'},
-  {id:'b3',  e:'fire', n:'Série de 7',       d:'7 jours parfaits d’affilée'},
-  {id:'b4',  e:'trophy', n:'Série de 30',      d:'30 jours parfaits d’affilée'},
-  {id:'b5',  e:'mountain', n:'Série de 100',     d:'100 jours parfaits d’affilée'},
-  {id:'b6',  e:'medal', n:'Semaine à 100%',   d:'Une semaine complète sans rater'},
-  {id:'b7',  e:'medals', n:'4 semaines pleines',d:'Quatre semaines à 100%'},
-  {id:'b8',  e:'calstar', n:'30 jours parfaits',d:'Trente journées à 100%, en tout'},
-  {id:'b9',  e:'dumbbell', n:'100 tâches',       d:'100 tâches validées au total'},
-  {id:'b10', e:'fauve', n:'500 tâches',       d:'500 tâches validées au total'},
-  {id:'b11', e:'claw', n:'1000 tâches',      d:'1000 tâches validées au total'},
-  {id:'b12', e:'gem', n:'10 000 XP',        d:'Cumuler 10 000 points d’expérience'},
-  {id:'b13', e:'sunrise', n:'10 avant 9h',      d:'10 tâches validées avant 9h'},
-  {id:'b14', e:'sun', n:'50 avant 9h',      d:'50 tâches validées avant 9h'},
-  {id:'b15', e:'moon', n:'20 après 22h',     d:'20 tâches validées après 22h'},
-  {id:'b16', e:'calcheck', n:'100 jours actifs', d:'100 jours avec au moins une tâche'},
-  {id:'b17', e:'headphones', n:'10 sessions focus',d:'Lancer 10 fois le mode focus'},
-  {id:'b18', e:'play', n:'50 sessions focus',d:'Lancer 50 fois le mode focus'},
-  {id:'b19', e:'book', n:'7 notes',          d:'7 notes de journal d’affilée'},
-  {id:'b20', e:'edit', n:'30 notes',         d:'Trente notes de journal en tout'},
-  {id:'b21', e:'scale', n:'4 pesées',         d:'Noter son poids 4 fois'},
-  {id:'b22', e:'stats', n:'30 pesées',        d:'Noter son poids trente fois'},
-  {id:'b23', e:'userplus', n:'1 ami',            d:'Ajouter un ami au classement'},
-  {id:'b24', e:'users', n:'5 amis',           d:'Cinq amis dans ton classement'}
 ];
 
 /* ========================================================================= */
@@ -1331,10 +1252,6 @@ var FORCE = [
   {x:'devmil',     n:'Développé militaire', h:[0.40,0.60,0.85,1.10,1.40], f:0.62},
   {x:'tractions',  n:'Tractions',           reps:[1,5,12,20,30],          f:0.45}
 ];
-var NIVEAUX = ['Débutant','Novice','Intermédiaire','Avancé','Élite'];
-
-/* Epley : l'estimation d'un maximum à partir d'une série. Au-delà de dix
-   répétitions elle dérive, on s'arrête donc là. */
 function unRM(poids,reps){
   if(!poids || !reps) return 0;
   return poids * (1 + Math.min(reps,10)/30);
@@ -1353,33 +1270,6 @@ function meilleurEffort(id){
   });
   return best ? {v:best, key:quand} : null;
 }
-function niveauForce(f,valeur,kg,sexe){
-  var paliers = f.reps
-    ? f.reps.map(function(v){ return sexe==='f' ? Math.max(1,Math.round(v*f.f)) : v; })
-    : f.h.map(function(r){ return (sexe==='f' ? r*f.f : r) * kg; });
-  var i=-1;
-  for(var k=0;k<paliers.length;k++) if(valeur>=paliers[k]) i=k;
-  return {
-    i:i, nom: i<0 ? 'Pas encore classé' : NIVEAUX[i],
-    seuil: paliers[Math.min(i+1,paliers.length-1)],
-    dernier: i>=paliers.length-1,
-    paliers: paliers
-  };
-}
-function classementForce(){
-  var kg=dernierPoids(), sexe=(state.body&&state.body.sexe)||'h';
-  if(!kg) return [];
-  return FORCE.map(function(f){
-    var e=meilleurEffort(f.x);
-    if(!e) return null;
-    return { f:f, val:e.v, key:e.key, unite:f.reps?'rép.':'kg', niv:niveauForce(f,e.v,kg,sexe) };
-  }).filter(Boolean);
-}
-
-/* ------------------------------------------------------------ silhouette */
-/* Elle sert en grand pour la récupération, et en petit pour un exercice créé
-   à la main : elle dit ce qui travaille. Ce qu'on *fait*, c'est la pose de
-   l'exercice qui le montre — elle est juste en dessous. */
 function r2(n){ return Math.round(n*10)/10; }
 
 /* Une courbe lisse qui passe par tous les points donnés. Catmull-Rom : la
@@ -1900,16 +1790,15 @@ function vignetteExo(x,w){
 /* ------------------------------------------------------------------ état */
 function defaults(){
   return {
-    v:2, theme:'dark', tab:'jour',
+    v:2, theme:'dark', tab:'sport',
     plannedDays:{},  /* journées déjà posées : { 'YYYY-MM-DD': true } — on peut préparer la veille */
     off:{},       /* 'YYYY-MM-DD' -> [ids retirés de la journée]                                                 */
     tutoSeen:false, tutoStep:0, tutoV:0,
     habits:[],
-    log:{},      /* 'YYYY-MM-DD' -> { habitId:{done,steps[],pts,doneAt} }  */
+    log:{},      /* 'YYYY-MM-DD' -> { habitId:{done,steps[],doneAt} }      */
     mood:{}, notes:{}, weight:{},
     focus:0,
     profile:{ id:uid(), name:'Moi', avatar:'dumbbell' },
-    friends:[], pendingDrop:[], syncAt:0,
     account:null,   /* {uid, name, picture, token} — local, ne part jamais sur le serveur */
     cloudAt:0,      /* horodatage de la dernière sauvegarde acceptée */
     notified:{},
@@ -1917,7 +1806,6 @@ function defaults(){
     meals:{},       /* 'YYYY-MM-DD' -> [ {n, kcal, prot} ]                */
     foods:[],       /* aliments enregistrés pour ne pas les retaper      */
     body:{},        /* taille, âge, sexe, activité, objectif             */
-    crews:[],       /* groupes rejoints : [ {code, name} ]               */
     accent:'',      /* couleur d'accent choisie, vide = celle d'origine  */
     season:null,    /* la saison en cours : { n, from, to }              */
     gene:[],        /* zones sensibles : identifiants de muscles         */
@@ -1950,8 +1838,6 @@ function load(){
     var d = defaults();
     for(var k in d){ if(!(k in o)) o[k]=d[k]; }
     if(!Array.isArray(o.habits))  o.habits  = [];
-    if(!Array.isArray(o.friends)) o.friends = [];
-    if(!Array.isArray(o.pendingDrop)) o.pendingDrop = [];
     if(!o.log     || typeof o.log!=='object')     o.log={};
     if(!o.mood    || typeof o.mood!=='object')    o.mood={};
     if(!o.notes   || typeof o.notes!=='object')   o.notes={};
@@ -1959,7 +1845,6 @@ function load(){
     if(!o.notified|| typeof o.notified!=='object')o.notified={};
     if(!Array.isArray(o.myexos)) o.myexos=[];
     if(!Array.isArray(o.foods))  o.foods=[];
-    if(!Array.isArray(o.crews))  o.crews=[];
     if(!Array.isArray(o.gene))   o.gene=[];
     if(!Array.isArray(o.suivis)) o.suivis=[];
     if(!o.suppl || typeof o.suppl!=='object') o.suppl={};
@@ -2034,12 +1919,11 @@ function seancesFor(key){
 function dayReady(){ return !!state.plannedDays[today()]; }
 var planDate=null;   /* non nul quand on prépare un autre jour qu'aujourd'hui */
 function planKey(){ return planDate || today(); }
-/* Tant qu'elle ne l'est pas : rien d'autre que Jour et Profil. Le Sport n'est
-   pas verrouillé — le verrou existe pour qu'on pose sa journée avant d'aller
-   consulter des chiffres, et s'entraîner n'est pas consulter. */
-function locked(tab){
-  return !dayReady() && tab!=='jour' && tab!=='profil' && tab!=='sport';
-}
+/* Plus rien n'est verrouillé. Le verrou servait à forcer le rituel « pose ta
+   journée » avant de consulter quoi que ce soit ; quand l'accueil devient
+   l'entraînement, se faire barrer la route pour voir sa séance n'a plus de
+   sens. La préparation de la veille reste, mais comme une offre. */
+function locked(){ return false; }
 function habitById(id){
   for(var i=0;i<state.habits.length;i++) if(state.habits[i].id===id) return state.habits[i];
   return null;
@@ -2047,7 +1931,7 @@ function habitById(id){
 function entry(key,id){ return (state.log[key] && state.log[key][id]) || null; }
 function ensure(key,id){
   if(!state.log[key]) state.log[key]={};
-  if(!state.log[key][id]) state.log[key][id]={done:false,steps:[],pts:0,doneAt:null};
+  if(!state.log[key][id]) state.log[key][id]={done:false,steps:[],doneAt:null};
   var e=state.log[key][id];
   if(!Array.isArray(e.steps)) e.steps=[];
   return e;
@@ -2059,18 +1943,11 @@ function stepsDone(key,h){
   for(var i=0;i<len;i++) if(e.steps[i]) n++;
   return n;
 }
-/* 10 pts par tâche, +5 si validée dans l'heure qui suit son horaire */
-function computePts(h,doneAt){
-  var p=10;
-  if(h.time && doneAt){ var d=toMin(doneAt)-toMin(h.time); if(d>=0 && d<=60) p+=5; }
-  return p;
-}
 function setDone(key,h,val){
   var e=ensure(key,h.id);
   if(val){
     if(!e.done){
       e.doneAt = (key===today()) ? nowHM() : (h.time||'12:00');
-      e.pts    = computePts(h,e.doneAt);
     }
     e.done=true;
     if((h.steps||[]).length) e.steps = h.steps.map(function(){ return true; });
@@ -2079,7 +1956,7 @@ function setDone(key,h,val){
        resteraient vides alors que la séance a bien eu lieu. */
     if(isSeance(h) && !e.sea) e.sea = seanceParDefaut(h);
   }else{
-    e.done=false; e.doneAt=null; e.pts=0; delete e.sea;
+    e.done=false; e.doneAt=null; delete e.sea;
   }
   save();
 }
@@ -2088,10 +1965,10 @@ function toggleStep(key,h,i){
   e.steps[i] = !e.steps[i];
   var all = (h.steps||[]).length>0 && h.steps.every(function(_,j){ return !!e.steps[j]; });
   if(all && !e.done){
-    e.done=true; e.doneAt=(key===today())?nowHM():(h.time||'12:00'); e.pts=computePts(h,e.doneAt);
+    e.done=true; e.doneAt=(key===today())?nowHM():(h.time||'12:00');
     save(); return 'done';
   }
-  if(!all && e.done){ e.done=false; e.doneAt=null; e.pts=0; }
+  if(!all && e.done){ e.done=false; e.doneAt=null; }
   save(); return 'step';
 }
 
@@ -2101,43 +1978,10 @@ function dayStat(key){
   for(var i=0;i<hs.length;i++) if(isDone(key,hs[i].id)) d++;
   return {done:d, total:hs.length, pct: hs.length ? Math.round(d*100/hs.length) : 0};
 }
-function dayPoints(key){
-  var m=state.log[key]||{}, s=0;
-  for(var k in m) if(m[k].done) s += (+m[k].pts || 10);
-  return s;
-}
-function rangePoints(from,to){
-  var s=0, d=new Date(from.getTime());
-  while(d<=to){ s+=dayPoints(dk(d)); d=addDays(d,1); }
-  return s;
-}
 function rangeStat(from,to){
   var done=0,total=0,d=new Date(from.getTime());
   while(d<=to){ var st=dayStat(dk(d)); done+=st.done; total+=st.total; d=addDays(d,1); }
   return {done:done,total:total,pct: total?Math.round(done*100/total):0};
-}
-function totalXP(){
-  var s=0;
-  for(var day in state.log){ var m=state.log[day]; for(var id in m) if(m[id].done) s+=(+m[id].pts||10); }
-  return s;
-}
-function totalDone(){
-  var n=0;
-  for(var day in state.log){ var m=state.log[day]; for(var id in m) if(m[id].done) n++; }
-  return n;
-}
-function doneBefore9(){
-  var n=0;
-  for(var day in state.log){ var m=state.log[day];
-    for(var id in m){ var e=m[id]; if(e.done && e.doneAt && toMin(e.doneAt)<540) n++; } }
-  return n;
-}
-function rankOf(xp){
-  var i=0;
-  for(var k=0;k<RANKS.length;k++) if(xp>=RANKS[k].xp) i=k;
-  var cur=RANKS[i], nxt=RANKS[i+1]||null;
-  var pct = nxt ? clamp(Math.round((xp-cur.xp)*100/(nxt.xp-cur.xp)),0,100) : 100;
-  return {i:i, cur:cur, next:nxt, pct:pct, need: nxt ? nxt.xp-xp : 0};
 }
 
 /* premier jour connu (création d'habitude la plus ancienne ou plus vieux log) */
@@ -2198,71 +2042,9 @@ function globalBestStreak(){
   }
   return best;
 }
-function perfectDays(){
-  var n=0,d=fromKey(firstDay()),end=nowD();
-  while(d<=end){ var st=dayStat(dk(d)); if(st.total>0 && st.done===st.total) n++; d=addDays(d,1); }
-  return n;
-}
 function weekStat(monday){ return rangeStat(monday, addDays(monday,6)); }
-/* nombre de semaines bouclées à 100% */
-function weeks100(){
-  var n=0,d=mondayOf(fromKey(firstDay())),end=mondayOf(nowD());
-  while(d<=end){ var w=weekStat(d); if(w.total>0 && w.pct===100) n++; d=addDays(d,7); }
-  return n;
-}
-/* jours où au moins une tâche a été validée */
-function activeDays(){
-  var n=0;
-  for(var k in state.log){ var m=state.log[k];
-    for(var id in m){ if(m[id].done){ n++; break; } } }
-  return n;
-}
-function doneAfter22(){
-  var n=0;
-  for(var day in state.log){ var m=state.log[day];
-    for(var id in m){ var e=m[id]; if(e.done && e.doneAt && toMin(e.doneAt)>=1320) n++; } }
-  return n;
-}
-function notesCount(){
-  return Object.keys(state.notes).filter(function(k){ return String(state.notes[k]||'').trim(); }).length;
-}
-function bestWeek(){
-  var best=0,d=mondayOf(fromKey(firstDay())),end=mondayOf(nowD());
-  while(d<=end){ var w=weekStat(d); if(w.total>0 && w.pct>best) best=w.pct; d=addDays(d,7); }
-  return best;
-}
-function bestDayOfWeek(monday){
-  var bp=-1,bd=null;
-  for(var i=0;i<7;i++){
-    var day=addDays(monday,i), st=dayStat(dk(day));
-    if(st.total>0 && st.pct>bp){ bp=st.pct; bd=day; }
-  }
-  return bd ? {day:bd,pct:bp} : null;
-}
 function isLate(h,key){
   return key===today() && h.time && toMin(nowHM())>toMin(h.time) && !isDone(key,h.id);
-}
-function badgeState(){
-  var xp=totalXP(), tot=totalDone(), gb=globalBestStreak();
-  /* plus longue suite de jours consécutifs avec une note */
-  var nk=Object.keys(state.notes).filter(function(k){ return String(state.notes[k]||'').trim(); }).sort();
-  var notesRun=0, run=0, prev=null;
-  nk.forEach(function(k){
-    run = (prev && dk(addDays(fromKey(prev),1))===k) ? run+1 : 1;
-    if(run>notesRun) notesRun=run;
-    prev=k;
-  });
-  var pd=perfectDays(), b9h=doneBefore9(), fo=state.focus||0,
-      w=Object.keys(state.weight).length, fr=state.friends.length, nc=notesCount();
-  var got={
-    b1: tot>=1,          b2: pd>=1,            b3: gb>=7,           b4: gb>=30,
-    b5: gb>=100,         b6: bestWeek()>=100,  b7: weeks100()>=4,   b8: pd>=30,
-    b9: tot>=100,        b10:tot>=500,         b11:tot>=1000,       b12:xp>=10000,
-    b13:b9h>=10,         b14:b9h>=50,          b15:doneAfter22()>=20, b16:activeDays()>=100,
-    b17:fo>=10,          b18:fo>=50,           b19:notesRun>=7,     b20:nc>=30,
-    b21:w>=4,            b22:w>=30,            b23:fr>=1,           b24:fr>=5
-  };
-  return {got:got, xp:xp};
 }
 
 /* ========================================================================= */
@@ -2270,8 +2052,8 @@ function badgeState(){
 /* ========================================================================= */
 /* Une séance n'est pas un objet à part : c'est une tâche comme les autres,
    avec kind:'seance' et une liste d'exercices. Tout ce qui existe déjà — le
-   choix de la journée, les points, la série, le classement, les rappels —
-   continue de marcher sans une ligne de plus. */
+   choix de la journée, la série, les rappels — continue de marcher sans une
+   ligne de plus. */
 function isSeance(h){ return !!(h && h.kind === 'seance'); }
 function exosOf(h){ return (h && Array.isArray(h.exos)) ? h.exos : []; }
 function setsPrevus(h){
@@ -2779,8 +2561,12 @@ var touched=false;
 });
 function buzz(p){ if(!touched) return; try{ if(navigator.vibrate) navigator.vibrate(p||30); }catch(e){} }
 
-var TABS=[['jour','day','Jour'],['sport','dumbbell','Sport'],['stats','stats','Stats'],
-          ['habitudes','habits','Habitudes'],['journal','journal','Journal'],['profil','profile','Profil']];
+/* Trois onglets. Il y en avait six : Jour, Sport, Stats, Habitudes, Journal,
+   Profil. Six onglets pour une app qui sert à s'entraîner, c'était six
+   endroits où chercher la même chose — la journée se racontait sur quatre
+   d'entre eux. L'entraînement est l'accueil, le reste suit. */
+var TABS=[['sport','dumbbell','Entraînement'],['journal','journal','Journal'],
+          ['profil','profile','Profil']];
 var pendingDel=null, delT=null, statsMonth=null, lbTab='day', justDone=null;
 
 function renderTabs(){
@@ -2824,49 +2610,15 @@ function render(){
   document.documentElement.setAttribute('data-theme', state.theme);
   $('[data-act="theme"]').innerHTML = ic(state.theme==='dark'?'moon':'sun');
   var mt=$('meta[name="theme-color"]'); if(mt) mt.setAttribute('content', state.theme==='dark'?'#0E1116':'#F6F8FB');
-  if(locked(state.tab)) state.tab='jour';
   renderTabs();
   var v=$('#view');
-  if(state.tab==='jour')           v.innerHTML= (planDate || !dayReady()) ? viewPlan() : viewJour();
-  else if(state.tab==='sport')     v.innerHTML=viewSport();
-  else if(state.tab==='stats')     v.innerHTML=viewStats();
-  else if(state.tab==='habitudes') v.innerHTML=viewHabitudes();
-  else if(state.tab==='journal'){  v.innerHTML=viewJournal(); bindJournal(); }
-  else                           { v.innerHTML=viewProfil(); bindAccount(); }
+  if(state.tab==='journal'){     v.innerHTML=viewJournal(); bindJournal(); }
+  else if(state.tab==='profil'){ v.innerHTML=viewProfil(); bindAccount(); }
+  else if(planDate)              v.innerHTML=viewPlan();
+  else                           v.innerHTML=viewSport();
   justDone=null;   /* la pulsation ne se rejoue pas au rendu suivant */
-  $('#fab').classList.toggle('hide', !(state.tab==='jour'||state.tab==='habitudes'||state.tab==='sport'));
-  /* verrouillé = visible avec un cadenas, pas caché : on doit comprendre pourquoi */
-  var fb=$('#topbar [data-act="gofocus"]');
-  fb.innerHTML = ic('bolt') + (dayReady()?'':'<span class="lk">'+ic('lock')+'</span>');
-  fb.classList.toggle('locked', !dayReady());
-}
-
-/* --------------------------------------------------------------- ONGLET JOUR */
-function taskCard(h,key,done){
-  var e=entry(key,h.id)||{};
-  var ns=(h.steps||[]).length, ds=stepsDone(key,h), st=streakOf(h);
-  var late=isLate(h,key);
-  var meta=[];
-  if(h.time) meta.push('<span class="num '+(late?'late':'')+'">'+esc(h.time)+'</span>');
-  if(ns)     meta.push('<span class="num">'+ds+'/'+ns+' étapes</span>');
-  if(isSeance(h)){
-    var sea=e.sea, sx=sea?statSeance(sea):null;
-    meta.push('<span class="num">'+(sx ? sx.series+' séries · '+(sx.reps||Math.round(sx.secs/60)+' min')
-                                       : exosOf(h).length+' exercices')+'</span>');
-  }
-  if(st>1)   meta.push('<span>'+ic('fire')+' '+st+' j</span>');
-  if(done && e.doneAt) meta.push('<span class="grn num">'+esc(e.doneAt)+' · +'+(e.pts||10)+' pts</span>');
-  if(h.type==='once' && !done) meta.push('<span>'+ic('bolt')+' aujourd\'hui</span>');
-  var sure = pendingDel===h.id;
-  var pulse = (justDone===h.id) ? ' pulse' : '';
-  return '<article class="card lift task'+(done?' done':'')+pulse+'" data-act="open" data-id="'+h.id+'">'+
-    '<span class="etile"'+tileStyle(h.color)+'><span class="emo">'+ico(h.emoji,'star')+'</span></span>'+
-    '<div class="tmain"><div class="tname">'+esc(h.name)+'</div>'+
-      (meta.length?'<div class="tmeta">'+meta.join('')+'</div>':'')+'</div>'+
-    '<div class="tright">'+
-      '<button class="chk'+(done?' on':'')+'" data-act="toggle" data-id="'+h.id+'" aria-label="Valider">'+ic('check')+'</button>'+
-      '<button class="del'+(sure?' sure':'')+'" data-act="del" data-id="'+h.id+'" aria-label="Supprimer">'+(sure?'Sûr ?':ic('trash'))+'</button>'+
-    '</div></article>';
+  $('#fab').classList.toggle('hide', state.tab!=='sport');
+  $('#topbar [data-act="gofocus"]').innerHTML = ic('bolt');
 }
 
 /* Écran d'ouverture de chaque journée : on choisit ce qu'on fait avant tout le reste. */
@@ -2996,48 +2748,8 @@ function bougeOk(id){
   }
   /* La séance ne valide plus la journée d'habitudes : ce sont deux choses
      séparées depuis que le sport a son onglet. */
-  save(); buzz([25,50,25]); toast('Noté — respect','🔥'); syncLater();
+  save(); buzz([25,50,25]); toast('Noté — respect','fire');
   closeSheet(); render();
-}
-
-function viewJour(){
-  var key=today(), hs=habitsFor(key), st=dayStat(key);
-  var todo=hs.filter(function(h){ return !isDone(key,h.id); });
-  var done=hs.filter(function(h){ return  isDone(key,h.id); });
-  var h='';
-
-  h+='<section class="card dayhead pop">'+ring(st.pct)+
-     '<div class="dh"><div class="date">'+esc(frDate(nowD()))+'</div>'+
-     '<h1>'+st.done+'/'+st.total+' tâche'+(st.total>1?'s':'')+'</h1>'+
-     '<div class="chips">'+
-       '<span class="chip"><b>+'+dayPoints(key)+'</b> pts du jour</span>'+
-       '<span class="chip">'+ic('fire')+' <b>'+globalBestStreak()+' j</b> meilleure série</span>'+
-     '</div>'+
-     '<button class="btn pri sm" data-act="gofocus">'+ic('bolt')+' Mode focus</button>'+
-     '</div></section>';
-
-  h+='<div class="sec"><h2>À faire</h2><span>'+todo.length+' restante'+(todo.length>1?'s':'')+'</span></div>';
-  if(!todo.length){
-    h+= hs.length
-      ? '<div class="card empty"><span class="e">'+ic('trophy')+'</span><b>Journée bouclée.</b><br>Tout est validé, respect.</div>'
-      : '<div class="card empty"><span class="e">'+ic('sprout')+'</span>Rien de prévu aujourd\'hui.<br>Appuie sur <b>+</b> pour créer une tâche.</div>';
-  } else h+=todo.map(function(x){ return taskCard(x,key,false); }).join('');
-
-  if(done.length){
-    h+='<div class="sec"><h2>Fait</h2><span class="grn">'+done.length+' '+ic('check')+'</span></div>';
-    h+=done.map(function(x){ return taskCard(x,key,true); }).join('');
-  }
-
-  h+= rappelSport();
-  h+= carteRythme();
-
-  var demain=dk(addDays(nowD(),1)), pret=!!state.plannedDays[demain];
-  h+='<div class="grid2" style="margin-top:16px">'+
-     '<button class="btn ghost sm" data-act="replan">'+ic('edit')+' Modifier</button>'+
-     '<button class="btn '+(pret?'ghost':'')+' sm" data-act="plannext">'+ic('moon')+' '+(pret?'Demain est prêt':'Préparer demain')+'</button>'+
-     '</div>';
-  h+='<div class="quote"><p>« '+esc(quoteOfDay())+' »</p><small>CADENCE · '+esc(frShort(nowD()))+'</small></div>';
-  return h;
 }
 
 /* ------------------------------------------------------- fiche routine (sheet) */
@@ -3077,7 +2789,7 @@ function renderSheet(){
     }).join('')+'</div>';
     var n=stepsDone(key,h);
     out+='<div class="muted small center" style="margin-bottom:4px">'+n+' / '+steps.length+' étapes'+
-         (e.done?' · <span class="grn">validée à '+esc(e.doneAt||'')+' (+'+(e.pts||10)+' pts)</span>':'')+'</div>';
+         (e.done?' · <span class="grn">validée à '+esc(e.doneAt||'')+'</span>':'')+'</div>';
   }else{
     out+='<div class="empty" style="padding:16px 0">Pas d\'étapes sur cette tâche.<br>Valide-la d\'un coup '+ic('down')+'</div>';
   }
@@ -3132,39 +2844,6 @@ function monthGrid(){
         '<i style="background:rgba(52,211,153,.68)"></i><i style="background:var(--grn)"></i> plus</div>'+
     '</section>', done:mdone, total:mtotal, pct:pct, y:y, mo:mo};
 }
-function weeksChart(){
-  var mon=mondayOf(nowD()), arr=[];
-  for(var i=7;i>=0;i--){ var m=addDays(mon,-7*i); var w=weekStat(m); arr.push({m:m,pct:w.pct,total:w.total}); }
-  var best=0; arr.forEach(function(a){ if(a.total&&a.pct>best) best=a.pct; });
-  return '<section class="card pop"><div class="bars">'+arr.map(function(a){
-    var hgt=a.total?Math.max(4,Math.round(a.pct*0.9)):3;   /* px : 100% -> 90px */
-    var cls=a.total?(a.pct===best&&best>0?'best':'has'):'';
-    return '<div class="barw"><span class="barv">'+(a.total?a.pct+'%':'–')+'</span>'+
-      '<div class="bar '+cls+'" style="height:'+hgt+'px"></div>'+
-      '<small>'+a.m.getDate()+'/'+(a.m.getMonth()+1)+'</small></div>';
-  }).join('')+'</div></section>';
-}
-function weekTable(){
-  var mon=mondayOf(nowD()), t=today();
-  var ids={}, rows=[];
-  for(var i=0;i<7;i++){
-    habitsFor(dk(addDays(mon,i))).forEach(function(h){ if(!ids[h.id]){ ids[h.id]=1; rows.push(h); } });
-  }
-  if(!rows.length) return '<div class="card empty">Rien de planifié cette semaine.</div>';
-  var head='<tr><th class="n" style="text-align:left">Habitude</th>'+DL.map(function(x){return '<th>'+x+'</th>';}).join('')+'</tr>';
-  var body=rows.map(function(h){
-    var tds='';
-    for(var i=0;i<7;i++){
-      var key=dk(addDays(mon,i));
-      if(!planned(h,key))          tds+='<td class="na">·</td>';
-      else if(isDone(key,h.id))    tds+='<td class="yes">'+ic('check')+'</td>';
-      else if(key>=t)              tds+='<td class="na">'+ic('dot')+'</td>';
-      else                         tds+='<td class="no">'+ic('close')+'</td>';
-    }
-    return '<tr><td class="n">'+ico(h.emoji,'star')+' '+esc(h.name)+'</td>'+tds+'</tr>';
-  }).join('');
-  return '<section class="card pop"><table class="wtable">'+head+body+'</table></section>';
-}
 /* ------------------------------------------------- récupération et carnet */
 var bodyFace='av', anneeVue=null;
 
@@ -3208,18 +2887,18 @@ function carteRecup(){
       '<button class="'+(bodyFace==='ar'?'on':'')+'" data-act="bface" data-f="ar">Derrière</button>'+
     '</div>'+
     '<div class="bodywrap">'+silhouette(bodyFace,couleursRecup(),160)+'</div>'+
+    '<details class="mdet"><summary>'+ic('body')+
+      '<span>Muscle par muscle</span>'+ic('down','cv')+'</summary>'+
     '<div class="mrecup">'+ r.map(function(m){
       var d = m.depuis===null ? 'Jamais travaillé'
             : (m.etat==='pret' ? 'Prêt · il y a '+heures(m.depuis)
                                : 'Encore '+heures(m.reste));
       return '<div class="mrow"><i style="background:'+ETATS[m.etat].c+'"></i>'+
         '<div><div class="mn">'+esc(m.n)+'</div><div class="ms">'+esc(d)+'</div></div></div>';
-    }).join('')+'</div>'+
+    }).join('')+'</div></details>'+
     '<div class="mleg">'+['chaud','recup','pret'].map(function(k){
       return '<span><i style="background:'+ETATS[k].c+'"></i>'+ETATS[k].n+'</span>';
     }).join('')+'</div>'+
-    '<div class="small muted" style="margin-top:12px">Ces durées sont des ordres de grandeur : '+
-    'un gros groupe met deux à trois jours à revenir, un petit un jour et demi. À toi de sentir le reste.</div>'+
     '</section>';
   return h;
 }
@@ -3229,8 +2908,11 @@ function heures(n){
   var j=Math.round(n/24);
   return j+' jour'+(j>1?'s':'');
 }
+/* Le carnet affichait tout, du premier jour à aujourd'hui : deux cents
+   entrées au bout d'un an, sur la page d'accueil. Il n'en montre plus que les
+   dernières, et se déplie si on veut remonter. */
 function carteCarnet(n){
-  var l=carnet().slice(0,n||12);
+  var tout=carnet(), l=n ? tout.slice(0,n) : tout;
   if(!l.length) return '<div class="card empty"><span class="e">'+ic('book')+'</span>Le carnet est vide.<br>'+
     'Déroule une séance et tout s\'inscrit tout seul.</div>';
   return l.map(function(sn){
@@ -3243,7 +2925,18 @@ function carteCarnet(n){
         '<div class="lgs">'+st.series+' séries'+(st.reps?' · '+st.reps+' rép.':'')+
           (st.secs?' · '+Math.round(st.secs/60)+' min':'')+(det?' · '+esc(det):'')+'</div></div>'+
       ic('right','cv')+'</article>';
-  }).join('');
+  }).join('') +
+  (n && tout.length>n
+    ? '<button class="lnk wide" data-act="carnettout">'+ic('book')+' Voir les '+tout.length+' séances</button>'
+    : '');
+}
+/* Tout le carnet, dans une feuille : on y remonte rarement, et jamais en
+   plein milieu d'une séance. */
+function openCarnetTout(){
+  openSheet('<div class="sheethead"><h2>Carnet</h2>'+
+    '<span class="small muted">'+carnet().length+' séances</span>'+
+    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
+    carteCarnet(0));
 }
 /* Une séance du carnet, dépliée. */
 function ficheCarnet(key,id){
@@ -3266,114 +2959,6 @@ function ficheCarnet(key,id){
         '</div></div>';
     }).join(''));
 }
-
-function viewStats(){
-  var t=today(), mon=mondayOf(nowD()), prevMon=addDays(mon,-7);
-  var mg=monthGrid();
-  var wk=weekStat(mon), pw=weekStat(prevMon);
-  var wkPts=rangePoints(mon,addDays(mon,6)), pwPts=rangePoints(prevMon,addDays(prevMon,6));
-  var st=dayStat(t), bd=bestDayOfWeek(mon);
-  var h='';
-
-  h+='<div class="sec"><h2>Le mois</h2><span>'+mg.done+' tâches</span></div>'+mg.html;
-
-  h+='<div class="sec"><h2>Tes années</h2><span class="small">jours actifs</span></div>'+carteAnnee();
-
-  h+='<div class="sec"><h2>Régularité</h2><span>8 dernières semaines</span></div>'+weeksChart();
-
-  h+='<div class="sec"><h2>Cette semaine</h2><span>'+wk.pct+'%</span></div>'+weekTable();
-
-  h+='<div class="sec"><h2>Records</h2></div><section class="recs">'+
-    '<div class="rec hero"><span class="emo" style="font-size:32px">'+ic('fire')+'</span>'+
-      '<div class="rt"><b>'+globalBestStreak()+' j</b><small>Meilleure série</small></div></div>'+
-    '<div class="rec"><b>'+perfectDays()+'</b><small>Jours parfaits</small></div>'+
-    '<div class="rec"><b>'+bestWeek()+'%</b><small>Meilleure semaine</small></div>'+
-    '<div class="rec"><b>'+totalDone()+'</b><small>Tâches faites</small></div>'+
-    '<div class="rec"><b>'+totalXP()+'</b><small>XP total</small></div>'+
-    '<div class="rec"><b>'+(state.focus||0)+'</b><small>Sessions focus</small></div>'+
-    '<div class="rec"><b>'+globalStreak()+' j</b><small>Série en cours</small></div>'+
-  '</section>';
-
-  /* --- bilans automatiques --- */
-  var mood = state.mood[t]!=null ? ic(MOODS[state.mood[t]]) : null;
-  h+='<div class="sec"><h2>Bilans</h2></div>';
-  var gs=globalStreak();
-  h+='<section class="card bilan pop"><h3>Aujourd\'hui</h3><p>'+
-      '<b>'+st.done+'/'+st.total+'</b> tâche'+(st.total>1?'s':'')+' · <b>'+dayPoints(t)+' pts</b>'+
-      (mood?' · humeur '+mood:'')+(gs>1?' · série en cours <b>'+gs+' j</b>':'')+'. '+
-      (st.total===0 ? 'Aucune tâche prévue — profites-en pour en ajouter une.'
-        : st.done===st.total ? 'Journée parfaite, rien à redire.'
-        : st.pct>=50 ? 'Bien engagé, finis le travail.'
-        : 'La journée n\'est pas finie.')+
-    '</p></section>';
-
-  var dPct = wk.pct-pw.pct, dPts=wkPts-pwPts;
-  var arrow = function(v,suffix){
-    if(!pw.total) return '<span class="muted">(pas de semaine précédente)</span>';
-    if(v>0) return '<span class="up">'+ic('up')+' +'+v+(suffix||'')+'</span>';
-    if(v<0) return '<span class="down">'+ic('down')+' '+v+(suffix||'')+'</span>';
-    return '<span class="muted">= stable</span>';
-  };
-  h+='<section class="card bilan pop"><h3>Cette semaine</h3><p>'+
-      '<b>'+wk.pct+'%</b> de régularité ('+wk.done+'/'+wk.total+') '+arrow(dPct,' % vs S-1')+'.<br>'+
-      (bd ? 'Meilleur jour : <b>'+DAYS[bd.day.getDay()]+'</b> ('+bd.pct+'%). ' : '')+
-      '<b>'+wkPts+' pts</b> '+arrow(dPts,' pts')+'.'+
-    '</p></section>';
-
-  var wKeys=Object.keys(state.weight).sort();
-  var mPrefix=mg.y+'-'+pad(mg.mo+1);
-  var mW=wKeys.filter(function(k){ return k.indexOf(mPrefix)===0; });
-  var wTxt='pas de pesée ce mois-ci';
-  if(mW.length>=2){
-    var d=+(state.weight[mW[mW.length-1]]-state.weight[mW[0]]).toFixed(1);
-    wTxt='poids '+(d>0?'<span class="down">+'+d+' kg</span>':d<0?'<span class="up">'+d+' kg</span>':'stable')+
-         ' ('+state.weight[mW[0]]+' → '+state.weight[mW[mW.length-1]]+' kg)';
-  }else if(mW.length===1){ wTxt='poids noté : <b>'+state.weight[mW[0]]+' kg</b>'; }
-  h+='<section class="card bilan pop"><h3>Ce mois-ci</h3><p>'+
-      '<b>'+mg.pct+'%</b> de régularité · <b>'+mg.done+'</b> tâches faites · '+wTxt+'.'+
-    '</p></section>';
-
-  return h;
-}
-
-/* ---------------------------------------------------------- ONGLET HABITUDES */
-function viewHabitudes(){
-  var list=visibleHabits(), nbs=list.filter(isSeance).length;
-  var h='<div class="sec"><h2>Mes habitudes</h2><span>'+list.length+
-        (nbs?' · '+nbs+' séance'+(nbs>1?'s':''):'')+'</span></div>';
-  if(!list.length){
-    return h+'<div class="card empty"><span class="e">'+ic('habits')+'</span>Aucune habitude.<br>Appuie sur <b>+</b> pour en créer une.</div>';
-  }
-  h+=list.map(function(x,i){
-    var sure=pendingDel===x.id;
-    return '<article class="card lift hrow">'+
-      '<div class="ord">'+
-        '<button data-act="up" data-id="'+x.id+'"'+(i===0?' disabled':'')+' aria-label="Monter">'+ic('up')+'</button>'+
-        '<button data-act="down" data-id="'+x.id+'"'+(i===list.length-1?' disabled':'')+' aria-label="Descendre">'+ic('down')+'</button>'+
-      '</div>'+
-      '<span class="etile"'+tileStyle(x.color)+'><span class="emo">'+ico(x.emoji,'star')+'</span></span>'+
-      '<div class="tmain"><div class="tname">'+esc(x.name)+'</div>'+
-        '<div class="tmeta"><span class="num">'+(x.time?esc(x.time)+' · ':'')+esc(schedLabel(x))+'</span>'+
-        (isSeance(x)?'<span class="acc">'+ic('dumbbell')+' '+exosOf(x).length+' exercices</span>'
-                    :((x.steps||[]).length?'<span>'+x.steps.length+' étapes</span>':''))+'</div></div>'+
-      '<div class="tright">'+
-        '<button class="del" data-act="edit" data-id="'+x.id+'" aria-label="Modifier">'+ic('edit')+'</button>'+
-        '<button class="del'+(sure?' sure':'')+'" data-act="del" data-id="'+x.id+'" aria-label="Supprimer">'+(sure?'Sûr ?':ic('trash'))+'</button>'+
-      '</div></article>';
-  }).join('');
-  h+='<div class="grid2" style="margin-top:12px">'+
-     '<button class="btn" data-act="new">'+ic('plus')+' Une tâche</button>'+
-     '<button class="btn pri" data-act="newseance">'+ic('dumbbell')+' Une séance</button>'+
-     '</div>';
-  return h;
-}
-
-/* -------------------------------------------------------------- ONGLET SPORT */
-/* Le sport a son onglet parce qu'une séance n'est pas une case à cocher : on la
-   choisit, on la déroule série par série, elle laisse des charges et des
-   répétitions derrière elle. Elle rapporte toujours ses points — l'XP, le rang
-   et les défis du Crew continuent de la voir — mais elle n'occupe plus un
-   créneau du « 3 tâches sur 5 » : ce sont deux comptes différents. */
 function ligneSeance(h, key, compacte){
   var fait = key && isDone(key, h.id), l = exosOf(h);
   return '<article class="card lift hrow">'+
@@ -3389,6 +2974,82 @@ function ligneSeance(h, key, compacte){
       (compacte ? '' : '<button class="del'+(pendingDel===h.id?' sure':'')+'" data-act="del" data-id="'+h.id+'" aria-label="Supprimer">'+
         (pendingDel===h.id?'Sûr ?':ic('trash'))+'</button>')+
     '</div></article>';
+}
+
+/* La bande des habitudes du jour.
+
+   Les habitudes avaient un onglet entier, un anneau, un compteur, une liste
+   « à faire », une liste « fait » et une bande des sept jours. Pour trois
+   cases à cocher. Ici elles tiennent en une bande : ce qui reste à faire, en
+   un geste, et le reste se gère dans une feuille qu'on ouvre quand on veut. */
+function bandeJour(){
+  var key = today(), l = habitsFor(key);
+  var faits = l.filter(function(h){ return isDone(key, h.id); }).length;
+  var h = '<div class="sec"><h2>Aussi aujourd\'hui</h2><span>'+
+          (l.length ? faits+'/'+l.length : 'rien de prévu')+'</span></div>';
+  if(!l.length){
+    return h + '<div class="card empty" style="margin-bottom:9px">'+
+      'Pas d\'habitude aujourd\'hui. '+
+      '<button class="lnk" data-act="habgerer">En ajouter une</button></div>';
+  }
+  h += '<section class="card pop jrow">'+ l.map(function(x){
+    var fait = isDone(key, x.id);
+    return '<button class="jline'+(fait?' on':'')+'" data-act="jtoggle" data-id="'+x.id+'">'+
+      '<span class="jc">'+ic(fait?'check':'circle')+'</span>'+
+      '<span class="jn">'+esc(x.name)+'</span>'+
+      (x.time ? '<span class="jt num">'+esc(x.time)+'</span>' : '')+
+      '</button>';
+  }).join('') +
+    '<button class="lnk wide" data-act="habgerer" style="margin-top:4px">'+
+    ic('habits')+' Gérer mes habitudes</button></section>';
+  return h;
+}
+
+/* La gestion des habitudes : un écran entier avant, une feuille maintenant.
+   On y vient pour ajouter, réordonner ou supprimer — rarement, et jamais en
+   même temps qu'on s'entraîne. */
+function openHabitudes(){
+  var list = visibleHabits().filter(function(x){ return !isSeance(x); });
+  var h = '<div class="sheethead"><h2>Mes habitudes</h2>'+
+    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>';
+  h += list.length ? list.map(function(x, i){
+    var sure = pendingDel === x.id;
+    return '<article class="card lift hrow">'+
+      '<div class="ord">'+
+        '<button data-act="up" data-id="'+x.id+'"'+(i===0?' disabled':'')+' aria-label="Monter">'+ic('up')+'</button>'+
+        '<button data-act="down" data-id="'+x.id+'"'+(i===list.length-1?' disabled':'')+' aria-label="Descendre">'+ic('down')+'</button>'+
+      '</div>'+
+      '<span class="etile"'+tileStyle(x.color)+'><span class="emo">'+ico(x.emoji,'star')+'</span></span>'+
+      '<div class="tmain"><div class="tname">'+esc(x.name)+'</div>'+
+        '<div class="tmeta"><span class="num">'+(x.time?esc(x.time)+' · ':'')+esc(schedLabel(x))+'</span>'+
+        ((x.steps||[]).length?'<span>'+x.steps.length+' étapes</span>':'')+'</div></div>'+
+      '<div class="tright">'+
+        '<button class="del" data-act="edit" data-id="'+x.id+'" aria-label="Modifier">'+ic('edit')+'</button>'+
+        '<button class="del'+(sure?' sure':'')+'" data-act="del" data-id="'+x.id+'" aria-label="Supprimer">'+
+          (sure?'Sûr ?':ic('trash'))+'</button>'+
+      '</div></article>';
+  }).join('')
+   : '<div class="card empty"><span class="e">'+ic('habits')+'</span>Aucune habitude.</div>';
+  h += '<div class="grid2" style="margin-top:12px">'+
+       '<button class="btn" data-act="new">'+ic('plus')+' Une habitude</button>'+
+       '<button class="btn" data-act="replan">'+ic('moon')+' Préparer demain</button>'+
+       '</div>';
+  openSheet(h);
+}
+
+/* La régularité, en une carte au lieu d'un onglet. Le calendrier du mois dit
+   déjà tout ce que disaient les six tuiles de records et les trois cartes de
+   bilan : on le garde, lui, et les deux séries. */
+function carteRegularite(){
+  var mg = monthGrid(), gs = globalStreak(), bs = globalBestStreak();
+  return '<div class="sec"><h2>Ta régularité</h2><span>'+mg.pct+'% ce mois-ci</span></div>'+
+    mg.html +
+    '<section class="grid2" style="margin-top:9px">'+
+      '<div class="rec"><b>'+gs+' j</b><small>Série en cours</small></div>'+
+      '<div class="rec"><b>'+bs+' j</b><small>Meilleure série</small></div>'+
+    '</section>'+
+    '<div class="sec"><h2>Tes années</h2><span class="small">jours actifs</span></div>'+
+    carteAnnee();
 }
 
 function viewSport(){
@@ -3413,7 +3074,10 @@ function viewSport(){
        '<button class="btn pri" data-act="newseance">'+ic('plus')+' Une séance</button>'+
        '</div>';
 
-  /* 2. la bibliothèque */
+  /* 2. le reste de la journée, en une bande */
+  h += bandeJour();
+
+  /* 3. la bibliothèque */
   h += '<div class="sec"><h2>Mes séances</h2><span>'+toutes.length+'</span></div>';
   h += toutes.length
     ? toutes.map(function(x){ return ligneSeance(x, null, false); }).join('')
@@ -3421,7 +3085,7 @@ function viewSport(){
       'Crée-en une : tu choisis des exercices dans le catalogue ('+EXOS.length+' pour l\'instant), '+
       'tu poses tes séries, et tu la retrouves ici.</div>';
 
-  /* 3. la semaine, la récupération, la force, le carnet */
+  /* 4. la semaine, la récupération, la charge, le carnet, la régularité */
   h += '<div class="sec"><h2>Cette semaine</h2><span class="small">'+tw.seances+' séance'+(tw.seances>1?'s':'')+'</span></div>'+
      '<section class="card pop"><div class="wkstat" style="margin:0;padding:0;border:0">'+
      '<div><b>'+tw.seances+'</b><span>SÉANCES</span></div>'+
@@ -3430,10 +3094,11 @@ function viewSport(){
      '</div></section>';
 
   h += '<div class="sec"><h2>Récupération</h2><span class="small">maintenant</span></div>'+carteRecup();
-  h += carteForce();
+  h += carteRecords();
   h += carteCharge();
   h += '<div class="sec"><h2>Carnet</h2><span class="small">'+carnet().length+' séance'+(carnet().length>1?'s':'')+'</span></div>'+
-       carteCarnet(20);
+       carteCarnet(8);
+  h += carteRegularite();
   h += '<div class="dispo">Cadence est une application d\'entraînement : elle ne donne pas d\'avis '+
        'médical et ne remplace pas un professionnel de santé.<br>'+
        'Photos des exercices : jeu de données ouvert '+
@@ -3959,105 +3624,7 @@ function bindJournal(){
     },450);
   });
 }
-
-/* ------------------------------------------------------------- ONGLET PROFIL */
-function periodScores(){
-  var t=today(), mon=mondayOf(nowD()), d=nowD();
-  var m0=new Date(d.getFullYear(),d.getMonth(),1), m1=new Date(d.getFullYear(),d.getMonth()+1,0);
-  var mEnd=m1>d?d:m1;                       /* le mois en cours s'arrête aujourd'hui */
-  return {
-    day:   dayPoints(t),                      dayP:  dayStat(t).pct,
-    dayK:  t,
-    week:  rangePoints(mon, addDays(mon,6)),  weekP: weekStat(mon).pct,
-    weekK: dk(mon),
-    month: rangePoints(m0, m1),               monthP:rangeStat(m0, mEnd).pct,
-    monthK:d.getFullYear()+'-'+pad(d.getMonth()+1),
-    xp:    totalXP()
-  };
-}
 /* ========================================================================= */
-/*            CLASSEMENT PARTAGÉ  (seule partie qui sort du téléphone)        */
-/* ========================================================================= */
-/* Ce qui part : blaze, avatar, points du jour/semaine/mois et XP. Rien d'autre.
-   Les habitudes, les notes, le poids et le journal ne quittent pas l'appareil. */
-var API='/api/board';
-var netOff=false;            /* pas de base branchée, ou fichier ouvert en local */
-var diagMsg='';              /* verdict du dernier test de connexion */
-var syncing=false, syncFail=0;
-
-function netReady(){ return !netOff && (location.protocol==='http:'||location.protocol==='https:'); }
-function api(payload){
-  if(!netReady()) return Promise.reject(new Error('off'));
-  return fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify(payload)})
-    .then(function(r){
-      if(r.status===501){ netOff=true; throw new Error('no_store'); }   /* aucune base : on arrête d'essayer */
-      if(!r.ok) throw new Error('http '+r.status);
-      return r.json();
-    });
-}
-function wireMe(){
-  var sc=periodScores(), p=state.profile, t=statSemaine(mondayOf(nowD()));
-  /* Seulement les exercices comptés en répétitions, et pas plus de vingt :
-     c'est ce dont les défis du Crew ont besoin, rien de plus. */
-  var exo={}, n=0;
-  Object.keys(t.parExo).forEach(function(k){
-    if(n>=20 || !/^[a-z0-9]{1,24}$/.test(k)) return;
-    if(exoOr(k).u!=='rep') return;
-    exo[k]=t.parExo[k]; n++;
-  });
-  return {id:p.id, name:p.name, avatar:p.avatar,
-          day:sc.day,   dayP:sc.dayP,   dayK:sc.dayK,
-          week:sc.week, weekP:sc.weekP, weekK:sc.weekK,
-          month:sc.month, monthP:sc.monthP, monthK:sc.monthK,
-          sea:t.seances, ser:t.series, rep:t.reps, exo:exo,
-          xp:sc.xp, at:today(), ts:Date.now()};
-}
-/* On complète, on n'écrase jamais : un ami connu localement reste si le serveur
-   ne le renvoie pas (hors ligne, base vide), et un nouveau venu s'ajoute seul. */
-function mergeFriends(list){
-  var changed=false, mine=state.profile.id;
-  (list||[]).forEach(function(f){
-    if(!f || !f.id || f.id===mine) return;
-    if(state.pendingDrop.indexOf(f.id)>-1) return;    /* retrait pas encore parti */
-    var found=null;
-    for(var i=0;i<state.friends.length;i++) if(state.friends[i].id===f.id) found=state.friends[i];
-    if(found && (+f.ts||0) < (+found.ts||0)) return;  /* fiche du serveur plus vieille : on garde la nôtre */
-    if(found){
-      if(found.name!==f.name||found.avatar!==f.avatar||found.day!==f.day||
-         found.week!==f.week||found.month!==f.month||found.xp!==f.xp||
-         found.dayP!==f.dayP||found.weekP!==f.weekP||found.monthP!==f.monthP) changed=true;
-      found.name=f.name; found.avatar=f.avatar; found.at=f.at||found.at; found.ts=+f.ts||found.ts||0;
-      found.day=f.day; found.dayK=f.dayK; found.dayP=f.dayP;
-      found.week=f.week; found.weekK=f.weekK; found.weekP=f.weekP;
-      found.month=f.month; found.monthK=f.monthK; found.monthP=f.monthP;
-      found.xp=f.xp;
-    }else{
-      state.friends.push(f); changed=true;
-    }
-  });
-  return changed;
-}
-function syncNow(force){
-  if(syncing || !netReady()) return Promise.resolve(false);
-  if(!force && Date.now()-(state.syncAt||0) < 25000) return Promise.resolve(false);
-  syncing=true;
-  return api({action:'sync', me:wireMe(), drop:state.pendingDrop.slice(0,20)})
-    .then(function(o){
-      syncing=false; syncFail=0; state.syncAt=Date.now();
-      (o.dropped||[]).forEach(function(id){
-        var i=state.pendingDrop.indexOf(id); if(i>-1) state.pendingDrop.splice(i,1);
-      });
-      var changed=mergeFriends(o.friends);
-      save();
-      if(changed && state.tab==='profil' && !coachOn) render();
-      return changed;
-    })
-    .catch(function(){ syncing=false; syncFail++; return false; });
-}
-var syncT=null;
-function syncLater(){ clearTimeout(syncT); syncT=setTimeout(function(){ syncNow(false); },4000); }
-
 /* ========================================================================= */
 /*                          NOTIFICATIONS PUSH                               */
 /* ========================================================================= */
@@ -4314,331 +3881,6 @@ function b64d(s){ return decodeURIComponent(escape(atob(s))); }
    se lance un défi commun. D'où un code par groupe, et pas un code par
    personne. La liste locale ne retient que les codes ; l'appartenance vit sur
    le serveur, sinon quitter un groupe depuis un téléphone ne quitterait rien. */
-var CREW='/api/crew';
-var crewData=[], crewI=0, crewBusy=false, crewMsg='';
-
-function crewCall(payload){
-  return fetch(CREW,{method:'POST',headers:{'Content-Type':'application/json'},
-                     body:JSON.stringify(payload)})
-    .then(function(r){ return r.json().then(function(o){ o._status=r.status; return o; }); });
-}
-function crewRefresh(){
-  if(!netReady() || !state.crews.length){ crewData=[]; return Promise.resolve(); }
-  return crewCall({action:'read', me:state.profile.id,
-                   codes:state.crews.map(function(c){ return c.code; })})
-    .then(function(o){
-      if(o && o.ok){
-        crewData=o.crews||[];
-        /* un groupe effacé côté serveur ne doit pas rester dans la liste */
-        var vus={}; crewData.forEach(function(g){ vus[g.code]=g.nom; });
-        var avant=state.crews.length;
-        state.crews=state.crews.filter(function(c){ return vus[c.code]; })
-                               .map(function(c){ return {code:c.code, name:vus[c.code]}; });
-        if(state.crews.length!==avant) save();
-        if(crewI>=crewData.length) crewI=0;
-      }
-    })
-    .catch(function(){ /* hors ligne : on garde le dernier état connu */ });
-}
-function crewCree(nom){
-  crewBusy=true; crewMsg='Création…'; render();
-  crewCall({action:'create', me:state.profile.id, nom:nom}).then(function(o){
-    crewBusy=false; crewMsg='';
-    if(o && o.ok && o.crew){
-      state.crews.push({code:o.crew.code, name:o.crew.nom}); save();
-      crewData.push(o.crew); crewI=crewData.length-1;
-      toast('Groupe créé — partage le code','👥'); buzz(30);
-    }else toast(msgCrew(o),'⚠️');
-    closeSheet(); render();
-  }).catch(function(){ crewBusy=false; crewMsg=''; toast('Création impossible','⚠️'); render(); });
-}
-function crewRejoint(code){
-  code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
-  if(code.length!==6){ toast('Un code fait six caractères','🔢'); return; }
-  if(state.crews.some(function(c){ return c.code===code; })){ toast('Tu es déjà dedans','👌'); closeSheet(); return; }
-  if(state.crews.length>=8){ toast('Huit groupes, c\'est déjà beaucoup','🙂'); return; }
-  crewBusy=true; crewMsg='Connexion…'; render();
-  crewCall({action:'join', me:state.profile.id, code:code}).then(function(o){
-    crewBusy=false; crewMsg='';
-    if(o && o.ok && o.crew){
-      state.crews.push({code:o.crew.code, name:o.crew.nom}); save();
-      crewData.push(o.crew); crewI=crewData.length-1;
-      toast('Bienvenue dans '+o.crew.nom,'🤝'); buzz(30); syncNow(true);
-    }else toast(msgCrew(o),'⚠️');
-    closeSheet(); render();
-  }).catch(function(){ crewBusy=false; crewMsg=''; toast('Connexion impossible','⚠️'); render(); });
-}
-function msgCrew(o){
-  var e=o&&o.error;
-  if(e==='introuvable') return 'Aucun groupe à ce code';
-  if(e==='complet')     return 'Ce groupe est plein';
-  if(e==='no_store')    return 'Les groupes ne sont pas branchés sur ce déploiement';
-  if(e==='pas_membre')  return 'Tu n\'es pas dans ce groupe';
-  return 'Ça n\'a pas marché';
-}
-function crewQuitte(code){
-  crewCall({action:'leave', me:state.profile.id, code:code}).catch(function(){});
-  state.crews=state.crews.filter(function(c){ return c.code!==code; });
-  crewData=crewData.filter(function(g){ return g.code!==code; });
-  crewI=0; save(); render(); toast('Groupe quitté','👋');
-}
-
-/* ------------------------------------------------------------- les défis */
-var METRIQUES=[
-  {id:'rep', n:'Répétitions d\'un exercice', u:'rép.'},
-  {id:'sea', n:'Séances',                    u:'séances'},
-  {id:'ser', n:'Séries',                     u:'séries'},
-  {id:'pts', n:'Points Cadence',             u:'pts'}
-];
-function metrique(id){
-  for(var i=0;i<METRIQUES.length;i++) if(METRIQUES[i].id===id) return METRIQUES[i];
-  return METRIQUES[0];
-}
-/* Ce qu'un membre a fait cette semaine, selon la métrique du défi. Les
-   compteurs voyagent déjà dans sa fiche : rien à recalculer ici. */
-function defiValeur(d,m){
-  if(!m) return 0;
-  var semaine=dk(mondayOf(nowD()));
-  if(d.s && d.s!==semaine) return 0;            /* défi d'une autre semaine */
-  if(m.weekK && m.weekK!==semaine) return 0;    /* fiche pas encore à jour */
-  if(d.m==='pts') return +m.week||0;
-  if(d.m==='sea') return +m.sea ||0;
-  if(d.m==='ser') return +m.ser ||0;
-  return (m.exo && +m.exo[d.x]) || 0;
-}
-function defiHTML(d,g){
-  var l=g.membres.slice().map(function(m){
-    return {m:m, v:defiValeur(d,m)};
-  }).sort(function(a,b){ return b.v-a.v; });
-  var cumul=l.reduce(function(a,b){ return a+b.v; },0);
-  var quoi = d.m==='rep' ? exoOr(d.x).n : metrique(d.m).n;
-  return '<div class="defi">'+
-    '<div class="defihead"><span class="dn">'+esc(d.n)+'</span>'+
-      '<span class="dc">'+d.c+' '+esc(metrique(d.m).u)+'</span>'+
-      '<button class="del" data-act="defidel" data-i="'+esc(d.i)+'" aria-label="Retirer">'+ic('trash')+'</button>'+
-    '</div>'+
-    l.map(function(x){
-      var pct=clamp(Math.round(x.v*100/Math.max(1,d.c)),0,100);
-      return '<div class="defiline"><span class="av">'+ico(x.m.avatar,'dumbbell')+'</span>'+
-        '<span class="nm">'+esc(x.m.name||'—')+'</span>'+
-        '<span class="bar"><i class="'+(pct>=100?'full':'')+'" style="width:'+pct+'%"></i></span>'+
-        '<span class="pc">'+pct+'%</span></div>';
-    }).join('')+
-    '<div class="small muted" style="margin-top:7px">'+esc(quoi)+' · '+cumul+' au total cette semaine'+
-    (cumul>=d.c?' · <span class="grn">objectif atteint</span>':'')+'</div></div>';
-}
-
-/* ------------------------------------------------------------- la vue */
-function crewVide(){
-  return '<section class="card pop center" style="padding:26px 18px">'+
-    '<div style="font-size:44px;line-height:1;margin-bottom:10px">'+ic('users')+'</div>'+
-    '<h2 style="font-size:24px;margin-bottom:6px">Pas encore de groupe</h2>'+
-    '<p class="muted small" style="margin:0 0 16px">Crée-en un et donne le code à tes potes, '+
-    'ou colle le leur. Tout le monde se voit d\'un coup, et vous pouvez vous lancer des défis.</p>'+
-    '<button class="btn pri wide" data-act="crewnew">'+ic('plus')+' Créer un groupe</button>'+
-    '<button class="btn wide sm" data-act="crewjoin" style="margin-top:9px">'+ic('users')+' Rejoindre avec un code</button>'+
-    (netReady()?'':'<div class="small muted" style="margin-top:12px">'+ic('lock')+
-      ' Ouvre l\'app par son adresse web pour que les groupes marchent.</div>')+
-    '</section>';
-}
-function viewCrew(){
-  var h='<div class="sec"><h2>Crew</h2><span class="small">'+
-    (crewMsg?esc(crewMsg):(state.crews.length?state.crews.length+' groupe'+(state.crews.length>1?'s':''):'à monter'))+
-    '</span></div>';
-  if(!state.crews.length) return h+crewVide();
-
-  if(state.crews.length>1){
-    h+='<div class="crewtabs">'+state.crews.map(function(c,i){
-      return '<button class="'+(i===crewI?'on':'')+'" data-act="crewtab" data-i="'+i+'">'+esc(c.name)+'</button>';
-    }).join('')+'</div>';
-  }
-  var g=crewData[crewI];
-  if(!g){
-    return h+'<section class="card pop"><div class="empty" style="padding:14px 0">'+
-      'Groupe pas encore chargé.<br>Tire vers le bas ou reviens dans un instant.</div>'+
-      '<button class="btn wide sm" data-act="crewsync">'+ic('undo')+' Réessayer</button></section>';
-  }
-
-  var semaine=dk(mondayOf(nowD()));
-  var l=g.membres.slice().sort(function(a,b){ return (+b.week||0)-(+a.week||0); });
-  h+='<section class="card pop">'+
-    '<div class="crewcode"><div style="flex:1;min-width:0">'+
-      '<div class="small muted">Code du groupe</div><b>'+esc(g.code)+'</b></div>'+
-      '<button class="btn sm" data-act="crewcopy" data-c="'+esc(g.code)+'">'+ic('copy')+' Copier</button></div>'+
-    '<div class="sec" style="margin:2px 0 8px"><h2 style="font-size:17px">La semaine</h2>'+
-      '<span class="small">'+g.membres.length+' membre'+(g.membres.length>1?'s':'')+'</span></div>';
-  h+= l.length ? l.map(function(m,i){
-      var moi=m.id===state.profile.id, frais=(m.weekK===semaine);
-      return '<div class="lbrow crewrow'+(moi?' me':'')+'">'+
-        '<span class="pos">'+(i+1)+'</span>'+
-        '<span class="av">'+ico(m.avatar,'dumbbell')+'</span>'+
-        '<span class="nm"><b>'+esc(m.name||'—')+'</b><br>'+
-          '<span class="small muted">'+(frais?((+m.sea||0)+' séance'+((+m.sea||0)>1?'s':'')+' · '+
-            (+m.ser||0)+' séries · '+(+m.weekP||0)+'% de régularité'):'semaine pas encore remontée')+'</span></span>'+
-        '<span class="pt">'+(frais?(+m.week||0):0)+'</span></div>';
-    }).join('')
-    : '<div class="empty" style="padding:12px 0">Personne n\'a encore remonté sa semaine.</div>';
-  h+='</section>';
-
-  var actifs=(g.defis||[]).filter(function(d){ return !d.s || d.s===semaine; });
-  h+='<div class="sec"><h2>Défis</h2><span class="small">'+
-     (actifs.length?'cette semaine':'aucun')+'</span></div>';
-  h+='<section class="card pop">'+
-     (actifs.length ? actifs.map(function(d){ return defiHTML(d,g); }).join('')
-                    : '<div class="empty" style="padding:12px 0">Aucun défi en cours.<br>'+
-                      'Lancez-en un : ça se joue du lundi au dimanche.</div>')+
-     '<button class="btn wide sm" data-act="definew">'+ic('flag')+' Lancer un défi</button>'+
-     '</section>';
-
-  h+='<div class="grid2" style="margin-top:12px">'+
-     '<button class="btn ghost sm" data-act="crewjoin">'+ic('plus')+' Autre groupe</button>'+
-     '<button class="btn ghost sm" data-act="crewout" data-c="'+esc(g.code)+'">'+ic('close')+' Quitter</button>'+
-     '</div>';
-  return h;
-}
-
-/* ---------------------------------------------------- les feuilles du Crew */
-function openCrewNew(){
-  openSheet('<div class="shead"><span class="etile">'+ic('users')+'</span>'+
-    '<div style="flex:1;min-width:0"><h2>Un groupe</h2>'+
-    '<div class="muted small">Tu recevras un code à donner à tes potes</div></div>'+
-    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
-    '<div style="height:14px"></div>'+
-    '<div class="field"><label>Nom du groupe</label>'+
-      '<input id="cwn" maxlength="24" placeholder="ex. Les increvables"></div>'+
-    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
-    '<button class="btn pri" data-act="crewnewok">Créer</button></div>');
-  var i=$('#cwn'); if(i) i.focus();
-}
-function openCrewJoin(){
-  openSheet('<div class="shead"><span class="etile">'+ic('users')+'</span>'+
-    '<div style="flex:1;min-width:0"><h2>Rejoindre</h2>'+
-    '<div class="muted small">Six caractères, donnés par un membre</div></div>'+
-    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
-    '<div style="height:14px"></div>'+
-    '<div class="field"><label>Code du groupe</label>'+
-      '<input id="cwj" maxlength="7" autocapitalize="characters" autocomplete="off" '+
-      'placeholder="ex. K7RM2P" style="text-transform:uppercase;letter-spacing:.14em;font-weight:800"></div>'+
-    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
-    '<button class="btn pri" data-act="crewjoinok">Rejoindre</button></div>');
-  var i=$('#cwj'); if(i) i.focus();
-}
-var defiF=null;
-function openDefi(){
-  defiF={n:'', m:'rep', x:'tractions', c:100};
-  renderDefi();
-}
-function renderDefi(){
-  var f=defiF, m=metrique(f.m);
-  openSheet('<div class="shead"><span class="etile">'+ic('flag')+'</span>'+
-    '<div style="flex:1;min-width:0"><h2>Un défi</h2>'+
-    '<div class="muted small">Du lundi au dimanche, pour tout le groupe</div></div>'+
-    '<button class="iconbtn" data-act="closesheet" aria-label="Fermer">'+ic('close')+'</button></div>'+
-    '<div style="height:14px"></div>'+
-    '<div class="field"><label>Nom</label>'+
-      '<input id="dn" maxlength="34" placeholder="ex. 500 pompes" value="'+esc(f.n)+'"></div>'+
-    '<div class="field"><label>On compte quoi</label>'+
-      METRIQUES.map(function(x){
-        return '<button class="pickrow" data-act="dmet" data-m="'+x.id+'" style="border:1px solid '+
-          (f.m===x.id?'var(--acc)':'var(--line)')+';margin-bottom:7px;background:'+
-          (f.m===x.id?'var(--acc-soft)':'transparent')+'">'+
-          '<span class="ei"><span class="pn">'+esc(x.n)+'</span></span></button>';
-      }).join('')+'</div>'+
-    (f.m==='rep'
-      ? '<div class="field"><label>Quel exercice</label><div class="pickbar">'+
-        allExos().filter(function(x){ return x.u==='rep'; }).slice(0,24).map(function(x){
-          return '<button class="'+(f.x===x.id?'on':'')+'" data-act="dexo" data-x="'+esc(x.id)+'">'+esc(x.n)+'</button>';
-        }).join('')+'</div></div>'
-      : '')+
-    '<div class="setgrid" style="margin-bottom:14px">'+
-      nombre('Objectif', f.c, esc(m.u), 'dcible', 0)+
-    '</div>'+
-    '<div class="sactions"><button class="btn ghost" data-act="closesheet">Annuler</button>'+
-    '<button class="btn pri" data-act="defiok">Lancer</button></div>');
-}
-function saveDefi(){
-  var g=crewData[crewI]; if(!g) return;
-  var i=$('#dn'); if(i) defiF.n=i.value;
-  var n=String(defiF.n||'').trim();
-  if(!n) n = defiF.c+' '+(defiF.m==='rep'?exoOr(defiF.x).n.toLowerCase():metrique(defiF.m).u);
-  var d={i:String(Date.now()).slice(-8), n:n.slice(0,34), m:defiF.m, c:defiF.c,
-         s:dk(mondayOf(nowD()))};
-  if(defiF.m==='rep') d.x=defiF.x;
-  crewCall({action:'defi', me:state.profile.id, code:g.code, defi:d}).then(function(o){
-    if(o && o.ok){ g.defis=o.defis||[]; toast('Défi lancé','🚩'); buzz(30); }
-    else toast(msgCrew(o),'⚠️');
-    closeSheet(); render();
-  }).catch(function(){ toast('Envoi impossible','⚠️'); closeSheet(); });
-}
-
-function myCode(){
-  var s=periodScores(), p=state.profile;
-  return b64e(JSON.stringify({
-    i:p.id, n:p.name, a:p.avatar,
-    d:[s.day,s.dayK,s.dayP], w:[s.week,s.weekK,s.weekP], m:[s.month,s.monthK,s.monthP],
-    x:s.xp, t:today(), s:Date.now()
-  }));
-}
-function addFriend(code){
-  var raw=String(code||'').replace(/\s+/g,'');
-  if(!raw){ toast('Colle d\'abord un code ami','📋'); return; }
-  var o;
-  try{ o=JSON.parse(b64d(raw)); }catch(e){ toast('Code invalide','❌'); return; }
-  if(!o || !o.i || !o.n){ toast('Code invalide','❌'); return; }
-  if(o.i===state.profile.id){ toast('C\'est ton propre code','🙃'); return; }
-  var f={ id:o.i, name:String(o.n).slice(0,20), avatar:o.a||'dumbbell',
-          day:+(o.d&&o.d[0])||0,  dayK:(o.d&&o.d[1])||'',  dayP:+(o.d&&o.d[2])||0,
-          week:+(o.w&&o.w[0])||0, weekK:(o.w&&o.w[1])||'', weekP:+(o.w&&o.w[2])||0,
-          month:+(o.m&&o.m[0])||0,monthK:(o.m&&o.m[1])||'',monthP:+(o.m&&o.m[2])||0,
-          xp:+o.x||0, at:o.t||today(), ts:+o.s||Date.now() };
-  var idx=-1;
-  for(var i=0;i<state.friends.length;i++) if(state.friends[i].id===f.id) idx=i;
-  if(idx>-1){ state.friends[idx]=f; toast(f.name+' mis à jour','🔄'); }
-  else { state.friends.push(f); toast(f.name+' ajouté au classement','🤝'); }
-  var back=state.pendingDrop.indexOf(f.id);
-  if(back>-1) state.pendingDrop.splice(back,1);      /* on l'avait retiré : il revient */
-  save(); buzz(30); render();
-  /* le lien est posé dans les deux sens : lui n'aura rien à coller pour te voir */
-  api({action:'link', me:state.profile.id, target:f.id})
-    .then(function(){ toast('Il te verra apparaître de son côté','🔗'); return syncNow(true); })
-    .catch(function(){});
-}
-function ageTxt(k){
-  if(!k) return '';
-  var d=Math.round((fromKey(today())-fromKey(k))/86400000);
-  if(d<=0) return '';
-  return ' · code d\'il y a '+d+' j';
-}
-function leaderboard(){
-  var s=periodScores(), p=state.profile;
-  var field = lbTab==='day'?'day' : lbTab==='week'?'week':'month';
-  var pctf  = lbTab==='day'?'dayP': lbTab==='week'?'weekP':'monthP';
-  var keyf  = lbTab==='day'?'dayK': lbTab==='week'?'weekK':'monthK';
-  var mine  = lbTab==='day'?s.dayK: lbTab==='week'?s.weekK:s.monthK;
-  var rows=[{id:p.id,name:p.name,avatar:p.avatar,pts:s[field],pct:s[pctf],xp:s.xp,me:true,age:'',fresh:true}];
-  state.friends.forEach(function(f){
-    var fresh = f[keyf]===mine;              /* ses chiffres portent-ils sur la même période ? */
-    rows.push({ id:f.id, name:f.name, avatar:f.avatar,
-      pts: fresh ? (f[field]||0) : 0,
-      pct: fresh ? (f[pctf]==null?null:+f[pctf]) : null,
-      xp:f.xp||0, me:false, age:ageTxt(f.at), fresh:fresh });
-  });
-  rows.sort(function(a,b){ return b.pts-a.pts || b.xp-a.xp || a.name.localeCompare(b.name); });
-  /* Une seule médaille dessinée, trois métaux : le dessin dit le podium, la
-     couleur dit la place. Au-delà du troisième, un chiffre suffit. */
-  var med=['var(--gold)','#C6CFDC','#C2864F'];
-  return rows.map(function(r,i){
-    var rk=rankOf(r.xp).cur;
-    return '<div class="lbrow'+(r.me?' me':'')+'">'+
-      '<div class="pos"'+(med[i]?' style="color:'+med[i]+'"':'')+'>'+(med[i]?ic('medal'):(i+1))+'</div>'+
-      '<div class="av">'+ico(r.avatar,'dumbbell')+'</div>'+
-      '<div class="nm"><b>'+esc(r.name)+(r.me?' (toi)':'')+'</b>'+
-        '<small>'+ic(rk.e)+' '+esc(rk.n)+' · '+r.xp+' XP'+esc(r.age)+'</small></div>'+
-      '<div class="pt"><b>'+r.pts+'</b><small>'+(r.pct==null?'—':r.pct+' %')+'</small></div>'+
-      (r.me?'':'<button class="del" data-act="unfriend" data-id="'+r.id+'" aria-label="Retirer">'+ic('trash')+'</button>')+
-    '</div>';
-  }).join('');
-}
 function cloudLabel(){
   if(!state.cloudAt) return 'Pas encore sauvegardé';
   var m=Math.round((Date.now()-state.cloudAt)/60000);
@@ -4692,15 +3934,9 @@ function accountBox(){
     'Relie un compte Google et elles te suivent.</div>'+
     '<div id="gbtn" style="display:flex;justify-content:center;min-height:44px"></div>';
 }
-function syncLabel(){
-  if(diagMsg) return diagMsg;
-  if(location.protocol==='file:') return 'Fichier local : classement à la main';
-  if(netOff)   return 'Classement partagé non branché';
-  if(syncFail) return 'Serveur injoignable — réessai plus tard';
-  if(!state.syncAt) return 'Pas encore synchronisé';
-  var m=Math.round((Date.now()-state.syncAt)/60000);
-  return m<1 ? 'Synchronisé à l\'instant' : 'Synchronisé il y a '+m+' min';
-}
+/* Une page ouverte en fichier local ne peut rien demander au serveur : ni la
+   base d'aliments, ni la sauvegarde. */
+function netReady(){ return location.protocol==='http:' || location.protocol==='https:'; }
 /* ========================================================================= */
 /*                              L'ONGLET ATHLÈTE                             */
 /* ========================================================================= */
@@ -4800,37 +4036,35 @@ function saveSaison(){
 }
 
 /* ------------------------------------------------------ force et charge */
-function carteForce(){
-  var l=classementForce();
-  var h='<div class="sec"><h2>Force</h2><span class="small">'+
-        (l.length?l.length+' mouvement'+(l.length>1?'s':''):'rien à classer')+'</span></div>';
-  if(!dernierPoids()){
-    return h+'<section class="card pop"><div class="empty" style="padding:10px 0 14px">'+
-      '<span class="e">'+ic('scale')+'</span>Il faut ton poids pour rapporter les charges à quelque chose.</div>'+
-      '<button class="btn pri wide" data-act="corps">'+ic('profile')+' Renseigner mon gabarit</button></section>';
-  }
+/* Tes meilleurs efforts, et rien d'autre.
+
+   Cette carte affichait aussi un niveau — Débutant, Novice, Intermédiaire… —
+   tiré de seuils rapportés au poids de corps. Résultat : « Novice » sur les
+   cinq lignes, et « 130 kg pour Intermédiaire » en dessous. Une app qu'on
+   ouvre pour soi n'a pas à comparer à des inconnus ; les charges, elles,
+   valent la peine d'être suivies. */
+function carteRecords(){
+  var l = FORCE.map(function(f){
+    var e = meilleurEffort(f.x);
+    return e ? { f:f, val:e.v, key:e.key, unite:f.reps?'rép.':'kg' } : null;
+  }).filter(Boolean);
+  var h = '<div class="sec"><h2>Tes records</h2><span class="small">'+
+          (l.length ? l.length+' mouvement'+(l.length>1?'s':'') : 'rien encore')+'</span></div>';
   if(!l.length){
     return h+'<section class="card pop"><div class="empty" style="padding:10px 0 14px">'+
-      '<span class="e">'+ic('dumbbell')+'</span><b>Rien à classer pour l\'instant.</b><br>'+
-      'Le classement porte sur le squat barre, le développé couché, le soulevé de terre, '+
-      'le développé militaire et les tractions. Fais-en un dans une séance et ton niveau apparaît.</div></section>';
+      '<span class="e">'+ic('dumbbell')+'</span><b>Rien encore.</b><br>'+
+      'Déroule une séance avec du squat, du développé, du soulevé de terre ou des '+
+      'tractions et ton meilleur effort s\'inscrit ici.</div></section>';
   }
-  h+='<section class="card pop">'+l.map(function(r){
-      var niv=r.niv, prochain = niv.dernier ? null : niv.seuil;
+  h += '<section class="card pop">'+ l.map(function(r){
       return '<div class="frow">'+
         '<div class="fhead"><span class="fn">'+esc(r.f.n)+'</span>'+
           '<span class="fv">'+Math.round(r.val)+' '+r.unite+'</span></div>'+
-        '<div class="fsteps">'+niv.paliers.map(function(_,k){
-          return '<i class="'+(k<=niv.i ? (k===4?'top':'on') : '')+'"></i>';
-        }).join('')+'</div>'+
-        '<div class="flvl"><b>'+esc(niv.nom)+'</b>'+
-          '<span>'+(prochain ? Math.round(prochain)+' '+r.unite+' pour '+NIVEAUX[Math.min(niv.i+1,4)]
-                             : 'le dernier palier')+'</span></div>'+
+        '<div class="small muted">le '+esc(frShort(fromKey(r.key)))+'</div>'+
         '</div>';
     }).join('')+
-    '<div class="small muted" style="margin-top:4px">Estimation d\'un maximum à partir de tes séries '+
-    '(formule d\'Epley), rapportée à ton poids de corps et à ton sexe. <b>Ce sont des repères '+
-    'observés en salle, pas une note</b> : ils ne disent rien de ta technique ni de ta santé.</div>'+
+    '<div class="small muted" style="margin-top:4px">Maximum estimé à partir de tes séries '+
+    '(formule d\'Epley). Au-delà de dix répétitions elle dérive, on s\'y arrête.</div>'+
     '</section>';
   return h;
 }
@@ -4939,10 +4173,9 @@ function viewAthlete(){
 }
 
 function viewProfil(){
-  var s=periodScores(), b=badgeState(), r=rankOf(b.xp), p=state.profile;
-  var h='';
+  var p=state.profile, h='';
 
-  /* Deux écrans derrière un seul onglet : le joueur d'un côté, le corps de
+  /* Deux écrans derrière un seul onglet : les réglages d'un côté, le corps de
      l'autre. Tout mettre à la suite faisait une page interminable. */
   h+='<div class="seg" style="margin-bottom:14px">'+
      '<button class="'+(profVue==='profil'?'on':'')+'" data-act="pvue" data-v="profil">'+ic('profile')+' Profil</button>'+
@@ -4950,66 +4183,19 @@ function viewProfil(){
      '</div>';
   if(profVue==='athlete') return h+viewAthlete();
 
-  h+='<section class="card rankcard pop"><span class="re">'+ic(r.cur.e)+'</span>'+
-    '<div style="flex:1;min-width:0"><h2>'+esc(r.cur.n)+'</h2>'+
-      '<div class="small muted"><b class="gld">'+b.xp+' XP</b>'+
-        (r.next? ' · encore <b>'+r.need+'</b> pour '+ic(r.next.e)+' '+esc(r.next.n) : ' · rang maximal '+ic('crown'))+'</div>'+
-      '<div class="prog"><i style="width:'+r.pct+'%"></i></div>'+
-    '</div></section>';
-
-  h+='<section class="grid2" style="margin-top:10px">'+
-    '<div class="rec"><b>'+s.day+'</b><small>Points aujourd\'hui</small></div>'+
-    '<div class="rec"><b>'+s.week+'</b><small>Points cette semaine</small></div>'+
-  '</section>';
-
-  var n=0; for(var k in b.got) if(b.got[k]) n++;
-  h+='<div class="sec"><h2>Badges</h2><span>'+n+'/'+BADGES.length+'</span></div>';
-  h+='<section class="badges">'+BADGES.map(function(x){
-    return '<div class="badge '+(b.got[x.id]?'on':'off')+'" data-act="badge" data-b="'+x.id+'">'+
-      '<span class="be">'+ic(x.e)+'</span><small>'+esc(x.n)+'</small></div>';
-  }).join('')+'</section>';
-
   h+='<div class="sec"><h2>Mon compte</h2><span class="small">'+(logged()?'sauvegardé':'sur ce téléphone')+'</span></div>';
   h+='<section class="card pop" style="margin-bottom:10px">'+ accountBox() +'</section>';
   h+='<section class="card pop">'+
-    '<div class="field"><label>Blaze</label>'+
-      '<input id="pname" maxlength="20" value="'+esc(p.name)+'" placeholder="Ton blaze"></div>'+
+    '<div class="field"><label>Nom</label>'+
+      '<input id="pname" maxlength="20" value="'+esc(p.name)+'" placeholder="Ton nom"></div>'+
     '<div class="field"><label>Avatar</label><div class="avarow">'+AVATARS.map(function(a){
       return '<button class="echip'+(p.avatar===a?' on':'')+'" data-act="avatar" data-a="'+a+'">'+ic(a)+'</button>';
     }).join('')+'</div></div>'+
     '<button class="btn pri wide" data-act="psave">Enregistrer</button>'+
-    '<div class="small muted center" style="margin-top:9px">id : '+esc(p.id)+'</div>'+
   '</section>';
 
   h+='<div class="sec"><h2>Rappels</h2><span class="small">'+(pushOn?'actifs':'éteints')+'</span></div>';
   h+='<section class="card pop">'+ pushBox() +'</section>';
-
-  h+= viewCrew();
-
-  h+='<div class="sec"><h2>Classement</h2><span>'+(state.friends.length+1)+' joueur'+(state.friends.length?'s':'')+'</span></div>';
-  h+='<section class="card pop">'+
-    '<div class="lbtabs">'+
-      '<button class="'+(lbTab==='day'?'on':'')+'" data-act="lb" data-p="day">Jour</button>'+
-      '<button class="'+(lbTab==='week'?'on':'')+'" data-act="lb" data-p="week">Semaine</button>'+
-      '<button class="'+(lbTab==='month'?'on':'')+'" data-act="lb" data-p="month">Mois</button>'+
-    '</div>'+ leaderboard() +
-    '<div class="row" style="margin-top:12px;justify-content:space-between">'+
-      '<span class="small muted" style="flex:1;min-width:0">'+esc(syncLabel())+'</span>'+
-      '<button class="lnk" data-act="diag">Tester</button>'+
-      '<button class="lnk" data-act="resync">Rafraîchir</button>'+
-    '</div>'+
-  '</section>';
-
-  h+='<div class="sec"><h2>Amis</h2></div>';
-  h+='<section class="card pop">'+
-    '<button class="btn pri wide" data-act="mycode">'+ic('copy')+' Copier mon code ami</button>'+
-    '<div class="field" style="margin-top:12px"><label>Ajouter / mettre à jour un ami</label>'+
-      '<textarea id="fcode" rows="3" placeholder="Colle ici le code de ton pote…"></textarea></div>'+
-    '<button class="btn wide" data-act="addfriend">'+ic('plus')+' Ajouter au classement</button>'+
-    '<div class="small muted center" style="margin-top:9px">'+
-      'Un seul des deux a besoin de coller le code : dès que ton pote ajoute le tien, '+
-      'tu le vois apparaître ici tout seul.</div>'+
-  '</section>';
 
   h+='<div class="sec"><h2>Aide</h2></div>';
   h+='<div id="helpbox">';
@@ -5033,12 +4219,10 @@ function viewProfil(){
       '<button class="btn sm" data-act="ics">'+ic('day')+' Fichier .ics</button>'+
       '<button class="btn sm" data-act="notifperm">'+ic('bell')+' Autoriser les notifs</button>'+
     '</div></div></details>';
-  h+='<details>'+sum('dumbbell','L\'onglet Sport')+'<div class="dc">'+
-    'Le sport a son onglet, et ce n\'est <b>plus une tâche du jour</b>. Une séance ne se coche '+
-    'pas : on la compose, on la déroule, elle laisse des charges derrière elle. Elle rapporte '+
-    'toujours ses points — l\'XP, le rang, le classement et les défis du Crew la voient — mais '+
-    'elle n\'occupe plus un créneau du « 3 tâches sur 5 ». Ce sont deux comptes différents, et '+
-    'les mélanger faisait passer une heure de salle pour une case cochée.<br><br>'+
+  h+='<details>'+sum('dumbbell','L\'accueil')+'<div class="dc">'+
+    'Une séance ne se coche pas : on la compose, on la déroule, elle laisse des charges '+
+    'derrière elle. Elle ne prend donc pas un créneau du « 3 tâches sur 5 » — mélanger les '+
+    'deux faisait passer une heure de salle pour une case cochée.<br><br>'+
     '<b>Composer une séance.</b> Le <b>+</b> de l\'onglet Sport en crée une : un nom, une icône, '+
     'puis les exercices, pris dans le catalogue ('+EXOS.length+' pour l\'instant, cherchables par '+
     'nom ou par muscle). Pour chacun tu poses tes séries, tes répétitions, ta charge et ton repos. '+
@@ -5123,26 +4307,14 @@ function viewProfil(){
     '<b>Zones sensibles</b> — déclare ce qui te fait mal et les exercices qui chargent ces zones portent '+
     'un repère. Rien n\'est caché ni interdit : tu décides.'+
     '</div></details>';
-  h+='<details>'+sum('dumbbell','Le classement de force')+'<div class="dc">'+
-    'Il porte sur cinq mouvements : squat barre, développé couché, soulevé de terre, développé militaire '+
-    'et tractions. Fais-en un dans une séance et ton niveau apparaît.<br><br>'+
-    '<b>Comment c\'est calculé.</b> On estime ton maximum à partir de tes séries (formule d\'Epley : '+
-    'la charge multipliée par 1 + répétitions ÷ 30, au-delà de dix répétitions elle dérive et on '+
-    's\'arrête là). On rapporte ce maximum à ton poids de corps, et on le compare à des paliers '+
-    'observés en salle : débutant, novice, intermédiaire, avancé, élite. Les repères féminins sont '+
-    'plus bas, surtout sur le haut du corps.<br><br>'+
-    '<b>Ce que ça ne dit pas.</b> Rien sur ta technique, rien sur ta santé, rien sur ta valeur. '+
-    'Ce sont des ordres de grandeur, pas une note.'+
-    '</div></details>';
-  h+='<details>'+sum('users','Le Crew')+'<div class="dc">'+
-    'Un groupe a <b>un seul code</b>, à donner à tes potes. Tout le monde s\'y voit d\'un coup, '+
-    'sans avoir à s\'ajouter un par un — c\'est la différence avec le classement amis, qui reste '+
-    'là pour les liens à deux.<br><br>'+
-    '<b>Les défis</b> se jouent du lundi au dimanche : un nombre de répétitions sur un exercice, '+
-    'de séances, de séries ou de points. La progression de chacun se remplit toute seule avec ce '+
-    'qu\'il inscrit dans son carnet.<br><br>'+
-    'Ce qui part sur le serveur : ton blaze, ton avatar, tes points, ta régularité et tes '+
-    'compteurs de la semaine. Ni tes notes, ni tes habitudes, ni ce que tu manges.'+
+  h+='<details>'+sum('dumbbell','Tes records')+'<div class="dc">'+
+    'Cinq mouvements sont suivis : squat barre, développé couché, soulevé de terre, développé '+
+    'militaire et tractions. Fais-en un dans une séance et ton meilleur effort s\'inscrit.<br><br>'+
+    '<b>Comment c\'est calculé.</b> On estime ton maximum à partir de tes séries, par la formule '+
+    'd\'Epley : la charge multipliée par 1 + répétitions ÷ 30. Au-delà de dix répétitions elle '+
+    'dérive, on s\'y arrête.<br><br>'+
+    'Il y avait ici un niveau — débutant, novice, intermédiaire… — calculé par rapport à ton poids '+
+    'de corps. Il est parti : une app qu\'on ouvre pour soi n\'a pas à te comparer à des inconnus.'+
     '</div></details>';
   h+='<details>'+sum('save','Sauvegarde et restauration')+'<div class="dc">'+
     'Copie ce texte et garde-le au chaud (note, mail…). Pour restaurer : colle-le et appuie sur Restaurer.'+
@@ -5157,22 +4329,14 @@ function viewProfil(){
     'Les flèches changent d\'année. Le mois te donne le détail, l\'année te donne la forme générale — '+
     'les trous se voient mieux de loin.'+
     '</div></details>';
-  h+='<details>'+sum('gear','Comment marchent les points')+'<div class="dc">'+
-    '<b>10 points</b> par tâche validée — séance comprise, une séance vaut une tâche — '+
-    '<b>+5 bonus</b> si tu la valides dans l\'heure qui suit son horaire. '+
-    'La somme de tous tes points, c\'est ton <b>XP</b>, et l\'XP donne ton rang :<br>'+
-    RANKS.map(function(x){ return ic(x.e)+' '+x.n+' — '+x.xp+' XP'; }).join('<br>')+
-    '</div></details>';
   h+='</div>';
   h+='<button class="btn wide" data-act="retuto" style="margin-top:4px">'+ic('cap')+' Revoir le tutoriel</button>';
   h+='<details>'+sum('profile','Où vont tes données')+'<div class="dc">'+
-    '<b>Sans compte.</b> Tout vit dans le navigateur de ce téléphone. Seul le classement '+
-    'sort : blaze, avatar, points du jour, de la semaine et du mois, XP. Vider Safari ou '+
-    'changer de téléphone efface le reste.<br><br>'+
+    '<b>Sans compte.</b> Tout vit dans le navigateur de ce téléphone, et rien n\'en sort. '+
+    'Vider Safari ou changer de téléphone efface tout.<br><br>'+
     '<b>Avec un compte Google.</b> Tes habitudes, ton historique, tes notes, tes humeurs et '+
     'ton poids sont en plus enregistrés sur le serveur, pour que tu les retrouves ailleurs. '+
-    'Tu peux te déconnecter à tout moment : les données du téléphone ne sont pas effacées.<br><br>'+
-    'Ton code ami tient lieu de clé pour le classement : donne-le à tes potes, pas en public.'+
+    'Tu peux te déconnecter à tout moment : les données du téléphone ne sont pas effacées.'+
     '</div></details>';
   h+='<div class="center" style="margin:20px 0 6px"><div class="small muted">'+(logged()?'Tes données sont sauvegardées sur ton compte.':'Tes données vivent dans ce navigateur.')+'</div>'+
      '<div class="ver" style="margin-top:5px">CADENCE · '+esc(BUILD)+'</div></div>';
@@ -5701,7 +4865,7 @@ function focusRender(){
       '<span class="cnt">Mode focus</span><button class="iconbtn" data-act="fxclose" aria-label="Fermer">'+ic('close')+'</button></div>'+
       '<div class="fxbody"><div class="fxemo">'+ic(st.done===st.total&&st.total?'trophy':'fist')+'</div>'+
       '<div class="fxname">'+(st.done===st.total&&st.total?'Tout est fait':'Plus rien en file')+'</div>'+
-      '<p class="muted">'+st.done+'/'+st.total+' tâches · '+dayPoints(key)+' pts aujourd\'hui</p>'+
+      '<p class="muted">'+st.done+'/'+st.total+' tâches aujourd\'hui</p>'+
       '<button class="btn pri wide" data-act="fxclose" style="margin-top:14px">Terminer</button></div></div>';
     return;
   }
@@ -5879,7 +5043,7 @@ document.addEventListener('click', function(ev){
     var nt=el.getAttribute('data-tab');
     if(locked(nt)){ buzz([15,40,15]); toast('Valide d\'abord tes tâches du jour','🔒'); return; }
     state.tab=nt; pendingDel=null; save(); render(); toTop();
-    if(nt==='profil'){ syncNow(true); crewRefresh().then(render); pushRefresh().then(render); }
+    if(nt==='profil') pushRefresh().then(render);
     return;
   }
   if(a==='ptoggle'){
@@ -5927,7 +5091,7 @@ document.addEventListener('click', function(ev){
     var was=isDone(key,h.id);
     setDone(key,h,!was);
     if(!was){ justDone=h.id; buzz([25,40,25]); toast('+'+(entry(key,h.id).pts)+' pts — '+h.name,'✅'); }
-    render(); syncLater(); return;
+    render(); return;
   }
   if(a==='del'){
     if(pendingDel===id){ clearTimeout(delT); pendingDel=null; delHabit(id); }
@@ -5948,7 +5112,7 @@ document.addEventListener('click', function(ev){
     if(!openHabit) return;
     var r=toggleStep(key,openHabit,+el.getAttribute('data-i'));
     buzz(r==='done'?[30,50,30]:15);
-    if(r==='done'){ toast('Tâche validée — +'+(entry(key,openHabit.id).pts)+' pts','🔥'); syncLater(); }
+    if(r==='done') toast('Tâche validée','check');
     renderSheet(); render(); return;
   }
   if(a==='timer'){ toggleTimer(el.getAttribute('data-key'), +el.getAttribute('data-i')); return; }
@@ -6150,38 +5314,6 @@ document.addEventListener('click', function(ev){
     return;
   }
 
-  /* --- crew --- */
-  if(a==='crewnew'){  openCrewNew();  return; }
-  if(a==='crewjoin'){ openCrewJoin(); return; }
-  if(a==='crewnewok'){ var cn=$('#cwn'); crewCree(String(cn?cn.value:'').trim().slice(0,24) || 'Mon groupe'); return; }
-  if(a==='crewjoinok'){ var cj=$('#cwj'); crewRejoint(cj?cj.value:''); return; }
-  if(a==='crewtab'){ crewI=+el.getAttribute('data-i'); render(); return; }
-  if(a==='crewcopy'){ copyText(el.getAttribute('data-c'),'Code copié — envoie-le à tes potes'); return; }
-  if(a==='crewsync'){ crewRefresh().then(render); return; }
-  if(a==='crewout'){
-    var cc=el.getAttribute('data-c');
-    if(confirm('Quitter ce groupe ? Tu pourras y revenir avec le code.')) crewQuitte(cc);
-    return;
-  }
-  if(a==='definew'){ openDefi(); return; }
-  if(a==='dmet'){ var dd=$('#dn'); if(dd) defiF.n=dd.value; defiF.m=el.getAttribute('data-m'); renderDefi(); return; }
-  if(a==='dexo'){ var de=$('#dn'); if(de) defiF.n=de.value; defiF.x=el.getAttribute('data-x'); renderDefi(); return; }
-  if(a==='dcible'){
-    var dn2=$('#dn'); if(dn2) defiF.n=dn2.value;
-    var dz=+el.getAttribute('data-d');
-    defiF.c=clamp(defiF.c+dz*(defiF.c>=100?25:(defiF.c>=20?10:1)),1,100000);
-    renderDefi(); return;
-  }
-  if(a==='defiok'){ saveDefi(); return; }
-  if(a==='defidel'){
-    var gg=crewData[crewI]; if(!gg) return;
-    var di=el.getAttribute('data-i');
-    crewCall({action:'undefi', me:state.profile.id, code:gg.code, id:di}).then(function(o){
-      if(o && o.ok){ gg.defis=o.defis||[]; render(); }
-    }).catch(function(){});
-    return;
-  }
-
   if(a==='mealdel'){
     var t3=today(), im=+el.getAttribute('data-i');
     if(state.meals[t3]) state.meals[t3].splice(im,1);
@@ -6191,6 +5323,15 @@ document.addEventListener('click', function(ev){
   if(a==='bougedur'){ dureeLibre=clamp(dureeLibre+(+el.getAttribute('data-d'))*15,15,240); bougeToday(); return; }
   if(a==='editseance'){ var hs=habitById(el.getAttribute('data-id')); if(hs) openSeance(hs); return; }
   if(a==='gocarnet'||a==='gorecup'){ state.tab='sport'; save(); render(); toTop(); return; }
+  if(a==='habgerer'){ openHabitudes(); return; }
+  if(a==='carnettout'){ openCarnetTout(); return; }
+  if(a==='jtoggle'){
+    var jh=habitById(el.getAttribute('data-id')); if(!jh) return;
+    var jk=today(), jd=isDone(jk,jh.id);
+    setDone(jk, jh, !jd);
+    if(!jd){ buzz([20,40,20]); justDone=jh.id; }
+    render(); return;
+  }
   if(a==='bface'){ bodyFace=el.getAttribute('data-f'); render(); return; }
   if(a==='opencarnet'){ ficheCarnet(el.getAttribute('data-k'), el.getAttribute('data-id')); return; }
 
@@ -6203,7 +5344,7 @@ document.addEventListener('click', function(ev){
   if(a==='dayinfo'){
     var dkey=el.getAttribute('data-day'), s=dayStat(dkey);
     toast(frShort(fromKey(dkey))+' — '+(dkey>today() ? s.total+' tâche'+(s.total>1?'s':'')+' à venir'
-      : s.total ? s.done+'/'+s.total+' ('+s.pct+'%) · '+dayPoints(dkey)+' pts' : 'rien de prévu'),'📅');
+      : s.total ? s.done+'/'+s.total+' ('+s.pct+'%)' : 'rien de prévu'),'day');
     return;
   }
 
@@ -6222,31 +5363,6 @@ document.addEventListener('click', function(ev){
   }
 
   /* --- profil --- */
-  if(a==='lb'){ lbTab=el.getAttribute('data-p'); render(); return; }
-  if(a==='diag'){
-    if(location.protocol==='file:'){ toast('Ouvre l\'app par son adresse web pour ce test','📴'); return; }
-    diagMsg='Test en cours…'; render();
-    fetch(API+'?check=1',{cache:'no-store'})
-      .then(function(r){ return r.json(); })
-      .then(function(o){
-        var ok = o && o.redis==='ok';
-        var nb = (o && o.cles) || 0;
-        diagMsg = ok ? 'Base connectée — le classement se synchronise seul ('+nb+' entrée'+(nb>1?'s':'')+')'
-          : (o && o.cause==='aucune_variable')? 'Base pas reliée au déploiement — relie-la puis redéploie'
-          : (o && o.redis==='absente')       ? 'Aucune base branchée'
-          : (o && o.redis==='injoignable')   ? 'Base branchée mais elle ne répond pas'
-          : 'Réponse inattendue du serveur';
-        if(ok) netOff=false;          /* le test réussit : on relance les synchros */
-        toast(diagMsg, ok?'✅':'⚠️');
-        render();
-        if(ok) syncNow(true);
-      })
-      .catch(function(){
-        diagMsg='Serveur injoignable — vérifie ta connexion';
-        toast(diagMsg,'⚠️'); render();
-      });
-    return;
-  }
   if(a==='pushon'){  pushEnable();  return; }
   if(a==='pushoff'){ pushDisable(); return; }
   if(a==='pushtest'){ pushTest();   return; }
@@ -6273,15 +5389,6 @@ document.addEventListener('click', function(ev){
     cloudSave(true).then(function(ok){ toast(ok?'Ce téléphone fait foi désormais':'Sauvegarde impossible', ok?'✅':'⚠️'); });
     return;
   }
-  if(a==='resync'){
-    if(!netReady()){ toast('Classement hors ligne — codes à la main','📴'); return; }
-    toast('Synchronisation…','🔄'); diagMsg='';
-    syncNow(true).then(function(ch){
-      render();
-      toast(syncFail?'Serveur injoignable':(ch?'Classement à jour':'Rien de nouveau'), syncFail?'⚠️':'✅');
-    });
-    return;
-  }
   if(a==='avatar'){
     var pn=$('#pname'); if(pn) state.profile.name=pn.value.trim()||'Moi';
     state.profile.avatar=el.getAttribute('data-a'); save(); buzz(20); render(); return;
@@ -6289,28 +5396,7 @@ document.addEventListener('click', function(ev){
   if(a==='psave'){
     var p2=$('#pname');
     state.profile.name=(p2?p2.value.trim():'')||'Moi';
-    save(); toast('Profil enregistré','👤'); render(); syncNow(true); return;
-  }
-  if(a==='badge'){
-    var bid=el.getAttribute('data-b'), st2=badgeState();
-    for(var bi=0;bi<BADGES.length;bi++){
-      if(BADGES[bi].id===bid) toast(BADGES[bi].n+' — '+BADGES[bi].d, st2.got[bid]?'✅':'🔒');
-    }
-    return;
-  }
-  if(a==='mycode'){ copyText(myCode(),'Ton code ami est copié'); return; }
-  if(a==='addfriend'){ var fc=$('#fcode'); addFriend(fc?fc.value:''); return; }
-  if(a==='unfriend'){
-    if(!window.confirm('Retirer cet ami du classement ?')) return;
-    state.friends=state.friends.filter(function(f){ return f.id!==id; });
-    if(state.pendingDrop.indexOf(id)<0) state.pendingDrop.push(id);
-    save(); toast('Ami retiré','🗑️'); render();
-    /* sans effacer le lien, il reviendrait à la synchro suivante */
-    api({action:'unlink', me:state.profile.id, target:id})
-      .then(function(){
-        var i=state.pendingDrop.indexOf(id); if(i>-1) state.pendingDrop.splice(i,1); save();
-      }).catch(function(){});
-    return;
+    save(); toast('Profil enregistré','profile'); render(); return;
   }
   if(a==='ics'){ makeICS(); return; }
   if(a==='notifperm'){ askNotif(); return; }
@@ -6375,9 +5461,9 @@ var TOUR=[
  {tab:'jour', sel:'.dayhead', t:'Ta journée',
   x:"L'anneau montre ton avancement, à côté tes points et ta meilleure série. Touche une tâche pour cocher ses étapes une par une, ou la coche pour la valider d'un coup : 10 points, +5 si tu es dans l'heure. Le bouton éclair lance le mode focus."},
  {tab:'sport', sel:'.hrow|.empty', t:'Le sport a son onglet',
-  x:"Une séance n'est pas une case à cocher : tu la composes avec les exercices du catalogue, tu la déroules série par série, et elle laisse tes charges derrière elle. Elle rapporte ses points comme le reste, mais elle ne compte pas dans tes tâches du jour — ce sont deux choses différentes."},
+  x:"Une séance n'est pas une case à cocher : tu la composes avec les exercices du catalogue, tu la déroules série par série, et elle laisse tes charges derrière elle. Elle ne compte pas dans tes tâches du jour : ce sont deux choses différentes."},
  {tab:'jour', sel:'.tabs', t:'Le reste de l\'app',
-  x:"Stats : ta régularité mois par mois et tes records. Habitudes : réorganiser et modifier. Journal : humeur, note, poids et nutrition. Profil : ton rang, tes badges, et le classement — envoie ton code à un pote, dès qu'il l'ajoute vous apparaissez chacun chez l'autre."}
+  x:"Stats : ta régularité mois par mois et tes records. Habitudes : réorganiser et modifier. Journal : humeur, note, poids et nutrition. Profil : ton compte, les rappels et l'aide."}
 ];
 var PART1=4;                      /* étapes 0..3 : avant la validation du jour */
 var coachOn=false, coachI=0, coachTo=0;
@@ -6391,7 +5477,7 @@ function closeTour(done){
   coachOn=false;
   $('#coach').classList.remove('on');
   state.tutoStep=coachI;
-  if(done){ state.tutoSeen=true; state.tutoV=TUTO_V; state.tutoStep=TOUR.length; state.tab='jour'; }
+  if(done){ state.tutoSeen=true; state.tutoV=TUTO_V; state.tutoStep=TOUR.length; state.tab='sport'; }
   save(); render();
 }
 /* première cible présente parmi les sélecteurs séparés par | */
@@ -6507,13 +5593,11 @@ function boot(){
   load();
   poserAccent();
   seed();
-  if(TABS.map(function(t){return t[0];}).indexOf(state.tab)<0) state.tab='jour';
+  if(TABS.map(function(t){return t[0];}).indexOf(state.tab)<0) state.tab='sport';
   $('#banner').classList.add('hide');
   render();
   maybeTour();
 
-  syncNow(true);   /* on récupère ceux qui t'ont ajouté depuis la dernière fois */
-  crewRefresh().then(function(){ if(state.tab==='profil') render(); });
   if(logged()) cloudRestore();   /* un autre téléphone a pu prendre la main */
 
   /* rappels : toutes les 20 s tant que l'app est ouverte */
@@ -6530,7 +5614,7 @@ function boot(){
     if(document.visibilityState==='visible'){
       var t=today();
       if(t!==lastDay){ lastDay=t; statsMonth=null; planDate=null; }
-      render(); checkReminders(); syncNow(false);
+      render(); checkReminders();
     }
   });
 }

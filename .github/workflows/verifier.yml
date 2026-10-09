@@ -32,7 +32,7 @@ jobs:
       - name: Les fonctions
         run: |
           echec=0
-          for f in board crew account push food; do
+          for f in account push food; do
             reponse=$(curl -sS -m 30 -w '\n%{http_code}' "$SITE/api/$f")
             corps=$(echo "$reponse" | head -n -1)
             code=$(echo "$reponse" | tail -n 1)
