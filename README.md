@@ -247,7 +247,8 @@ Elle est refaite en **deux couches**, et c'est ce qui la rend lisible :
 
 1. un corps complet en teinte neutre — tête, cou, tronc, bras, jambes. Il est
    toujours là, donc la silhouette se lit comme un corps même quand aucun
-   muscle n'est coloré ;
+   muscle n'est coloré. Il a son propre jeton, `--corps` : tracé en `--line`,
+   il était à un cheveu du fond de la carte et la tête flottait dans le noir ;
 2. les muscles par-dessus, en retrait d'environ un point du bord. Ce lisieré
    neutre qui dépasse **est** le trait de séparation : on obtient la définition
    sans dessiner un seul contour.
@@ -255,20 +256,31 @@ Elle est refaite en **deux couches**, et c'est ce qui la rend lisible :
 La première version posait un fuseau par membre et une plaque par masse du
 tronc. C'était commode à régler, mais un pectoral rectangulaire ne ressemble à
 rien. Désormais chaque muscle porte sa forme, et surtout **ses chefs sont
-séparés** : les six faisceaux du grand droit, les trois masses de la cuisse
-(vaste externe, droit fémoral, et le vaste interne en goutte au-dessus du
-genou), les deux jumeaux du mollet dont l'interne descend plus bas, les deux
-colonnes de l'érecteur du rachis. Seize formes sur la face, quatorze sur le
-dos, là où il y en avait huit et neuf.
+séparés** : les quatre étages du grand droit plus l'oblique, les trois masses
+de la cuisse (vaste externe, droit fémoral, et le vaste interne en goutte
+au-dessus du genou), les deux jumeaux du mollet dont l'interne descend plus
+bas, les deux colonnes de l'érecteur du rachis. Dix-sept formes sur la face,
+quatorze sur le dos, là où il y en avait huit et neuf.
 
-Le tronc garde des tracés écrits à la main, où la forme compte (le pectoral et
-sa ligne du bas qui redescend vers le sternum, le V des dorsaux, le losange du
-trapèze). Les membres, eux, restent construits avec `fuseau()` — un chef de
-muscle est un fuseau, et c'est le bon outil.
+Trois outils de forme, parce qu'un muscle n'est pas un fuseau :
+
+- `chefLong()` — un chef de muscle long : un ventre renflé, une pointe
+  effilée, et une largeur réglable aux deux bouts. C'est ce qui donne aux
+  quadriceps, aux ischios et aux mollets leur galbe au lieu d'un bâton ;
+- `brique()` — un étage du grand droit : coins arrondis, **bord central
+  droit**, et un léger rétrécissement vers le bas. Les coins arrondis des deux
+  côtés donnaient une gaufre, pas des abdominaux ;
+- `goutte()` — la larme du vaste interne, juste au-dessus du genou.
+
+Le tronc garde des tracés écrits à la main, là où la forme porte le sens : le
+pectoral et sa ligne du bas qui remonte vers l'aisselle, le V des dorsaux qui
+se resserre sur les lombaires, le carré arrondi du fessier (un cercle en
+faisait une balle posée là).
 
 Un `<use>` qui pointe dans le vide ou un `d` mal fermé ne dessine rien du tout,
-et ça ne se voit qu'à l'œil : `sport.js` demande donc au navigateur la boîte
-englobante de chaque tracé rendu et échoue si l'un d'eux est plat.
+et ça ne se voit qu'à l'œil : `corps.js` demande donc au navigateur la boîte
+englobante de chaque tracé rendu, et échoue si l'un d'eux est plat ou sort du
+cadre 120×258.
 
 ### Comment elle est construite
 
@@ -285,9 +297,7 @@ vrai jour entre les deux — fusionné au tronc, il ferait une moufle.
 
 Une masse qui touche l'axe du corps passe par `contreAxe()` : on lisse le profil
 externe, et on referme d'un trait droit. Fermer la courbe sur elle-même ferait
-gonfler le bord central — un pectoral en forme de cœur. Les membres, eux,
-restent construits avec `fuseau()` : un chef de muscle est un fuseau, et c'est
-le bon outil.
+gonfler le bord central — un pectoral en forme de cœur.
 
 ### Le dessin d'un exercice
 
@@ -427,10 +437,55 @@ image absente ne se verrait qu'en production, sinon.
 
 Pour chaque muscle : quand il a travaillé pour la dernière fois, et à quel titre.
 Un muscle moteur prend la durée pleine, un muscle secondaire en prend 60 %. Les
-durées sont des ordres de grandeur admis, et l'écran le dit. Le code couleur est
-un feu tricolore et pas la palette de la marque : sur un muscle, le rouge veut
-dire « n'y touche pas » dans toutes les applis de sport, et c'est plus fort que
-la cohérence chromatique.
+durées sont des ordres de grandeur admis, et l'écran le dit.
+
+#### Pourquoi le feu tricolore est parti
+
+C'était rouge vif / ambre vif / vert printemps, à saturation maximale. Deux
+défauts, mesurés plutôt que supposés :
+
+- **le rouge et le vert se confondent sous daltonisme** — ΔE 4,1 en
+  deutéranopie, là où il en faut 8. Sur une carte dont le seul message est
+  « ce muscle est cuit / ce muscle est frais », c'est le message même qui
+  disparaît pour une personne sur douze. Toutes les variantes rouge-vert
+  essayées échouent pareil : le problème est la paire, pas la nuance ;
+- **l'ambre et le vert sortaient de la bande de luminosité du mode sombre**
+  (0,84 et 0,77 pour une bande 0,48–0,67). Un corps au repos était un
+  mannequin vert fluo : l'état le plus fréquent criait le plus fort.
+
+#### Ce qu'il y a à la place
+
+Les trois états sont **ordonnés** — chaud, en récupération, prêt — et
+intervertir cet ordre changerait le sens. Une grandeur ordonnée ne se code pas
+sur trois teintes qui se disputent l'attention, mais sur une **rampe d'une
+seule teinte** dont la clarté suit l'intensité. Plus de paire à confondre : la
+lecture tient à la clarté, qui survit à tous les daltonismes.
+
+Et c'est la **fatigue** qui porte la couleur, pas le repos. « Prêt » est le pas
+le plus proche du corps neutre, donc un corps reposé reste calme et le corps
+s'allume là où on a travaillé. L'état fréquent se tait, l'état rare se voit —
+c'est l'inverse de ce que faisait le feu tricolore.
+
+Rouge, parce que sur un muscle le rouge veut dire « n'y touche pas » dans
+toutes les applis de sport. Et il ne marche pas sur les plates-bandes du bleu
+de l'app, qui reste le signal « sélectionné ».
+
+Chaque thème a ses **propres pas**, choisis contre sa propre surface — un
+simple miroir du mode sombre ne tiendrait pas :
+
+| état | sombre | clair |
+|---|---|---|
+| prêt à travailler | `#6D4F4E` | `#B99896` |
+| en récupération | `#B45C5B` | `#B85F5E` |
+| chaud | `#FF6367` | `#AC0024` |
+
+Les deux rampes passent les quatre contrôles ordinaux : clarté monotone, écart
+entre pas ≥ 0,06 (0,12 ici), teinte unique (étalement 1° et 0°), et pas le plus
+proche du fond ≥ 2:1 (2,34:1 et 2,63:1). `corps.js` les refait à chaque
+exécution, donc une retouche qui casse la rampe échoue au test.
+
+La couleur n'est jamais seule à porter le sens : la légende et la liste
+« muscle par muscle » nomment chaque état en toutes lettres.
 
 ## La nutrition
 
@@ -646,7 +701,7 @@ ne conseille rien là-dessus.
 bash test/tout.sh
 ```
 
-Sept suites, 111 vérifications, pilotant Chromium avec Playwright. Elles ne
+Huit suites, 140 vérifications, pilotant Chromium avec Playwright. Elles ne
 dépendent d'aucun serveur : la page est ouverte en `file://` et toute requête
 sortante est coupée.
 
@@ -657,6 +712,7 @@ sortante est coupée.
 | `structure.js` | trois onglets, l'entraînement en accueil, aucune trace du jeu social |
 | `seance.js` | composer une séance, la dérouler série par série, la retrouver au carnet |
 | `images.js` | une image par exercice, jamais la même deux fois, jamais hors cadre |
+| `corps.js` | la rampe de récupération reste une rampe valide dans les deux thèmes, et les muscles tiennent dans la silhouette |
 | `journal.js` | poids, besoins caloriques, repas, humeur |
 | `fab.js` | le bouton + s'efface en descendant et revient en remontant |
 
