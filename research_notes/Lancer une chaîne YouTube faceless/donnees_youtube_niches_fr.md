@@ -1,6 +1,6 @@
 # Données YouTube France par niche (demande vs concurrence) — NON COLLECTÉES
 
-**Appels mcp__Youtube__* utilisés : 1 tentative sur 45 autorisés, 0 résultat** (date : 2026-10-09).
+**Appels mcp__Youtube__* utilisés : 2 tentatives sur 45 autorisés, 0 résultat** (date : 2026-10-09). La 2e tentative a été faite après que le coordinateur a signalé la réautorisation du connecteur ; elle a renvoyé la même erreur d'authentification.
 
 ## Données YouTube (vues, abonnés, dates, durées, Shorts vs long, outliers) pour 8 à 10 niches francophones
 
