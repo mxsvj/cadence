@@ -129,7 +129,30 @@ ok(peint.corps >= 1, 'le corps neutre est peint en --corps');
 ok(peint.etats >= 5, 'les muscles portent une couleur d\'état (' + peint.etats + ')');
 ok(peint.orphelins === 0, 'aucun hex en dur dans la silhouette');
 
-console.log('\n== 6. les muscles à plusieurs chefs gardent leurs chefs ==');
+console.log('\n== 6. le relief est bien posé sur chaque masse ==');
+const rel = await p.evaluate(() => {
+  bodyFace = 'av'; render();
+  const svg = document.querySelector('.bodywrap .silh');
+  const g = [...svg.querySelectorAll('g')];
+  return { degrades: svg.querySelectorAll('defs linearGradient').length,
+           plein: g.filter(x => !/^url\(/.test(x.getAttribute('fill') || '')).length,
+           relief: g.filter(x => /^url\(#rlf/.test(x.getAttribute('fill') || '')).length,
+           traits: g.filter(x => x.getAttribute('stroke')).length };
+});
+ok(rel.degrades === 2, 'les deux dégradés de relief sont définis (' + rel.degrades + ')');
+/* chaque masse est posée deux fois : l'aplat, puis le relief par-dessus */
+ok(rel.relief === rel.plein, 'chaque masse a son calque de relief (' +
+   rel.relief + ' pour ' + rel.plein + ' aplats)');
+ok(rel.traits >= 10, 'les muscles portent le trait qui creuse le sillon (' + rel.traits + ')');
+
+console.log('\n== 7. l\'ordre de tracé du dos est respecté ==');
+/* Les dorsaux doivent passer AVANT le trapèze : dans l'autre sens le trapèze
+   disparaît dessous et le dos n'est plus qu'un bouclier. */
+const ordre = await p.evaluate(() => Object.keys(SIL.ar.m));
+ok(ordre.indexOf('dos') < ordre.indexOf('trapezes'),
+   'les dorsaux sont tracés avant le trapèze (' + ordre.slice(0,3).join(', ') + '…)');
+
+console.log('\n== 8. les muscles à plusieurs chefs gardent leurs chefs ==');
 const chefs = await p.evaluate(() => {
   const out = {};
   for(const f of ['av','ar'])
@@ -141,7 +164,7 @@ for(const [m, n] of Object.entries({ abdos:5, quadris:3, mollets:3 }))
   if(chefs[m] !== undefined)
     ok(chefs[m] >= n - 1, m + ' a plusieurs tracés (' + chefs[m] + ')');
 
-console.log('\n== 7. rien ne casse ==');
+console.log('\n== 9. rien ne casse ==');
 ok(erreurs.length === 0, 'aucune erreur de page' + (erreurs.length ? ' : ' + erreurs[0] : ''));
 
 await b.close();

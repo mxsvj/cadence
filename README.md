@@ -256,13 +256,36 @@ Elle est refaite en **deux couches**, et c'est ce qui la rend lisible :
 La première version posait un fuseau par membre et une plaque par masse du
 tronc. C'était commode à régler, mais un pectoral rectangulaire ne ressemble à
 rien. Désormais chaque muscle porte sa forme, et surtout **ses chefs sont
-séparés** : les quatre étages du grand droit plus l'oblique, les trois masses
-de la cuisse (vaste externe, droit fémoral, et le vaste interne en goutte
-au-dessus du genou), les deux jumeaux du mollet dont l'interne descend plus
-bas, les deux colonnes de l'érecteur du rachis. Dix-sept formes sur la face,
-quatorze sur le dos, là où il y en avait huit et neuf.
+séparés** : les quatre étages du grand droit plus l'oblique, les deux
+faisceaux du deltoïde, les deux chefs du pectoral, les trois masses de la
+cuisse (vaste externe large en dehors, droit fémoral étroit au milieu, vaste
+interne bas en dedans), les deux jumeaux du mollet plus le soléaire, les trois
+chefs du triceps, les deux faisceaux du trapèze, les deux colonnes de
+l'érecteur du rachis. **Vingt-trois formes sur la face, vingt sur le dos**, là
+où il y en avait huit et neuf.
 
-Trois outils de forme, parce qu'un muscle n'est pas un fuseau :
+#### Le relief
+
+Un aplat de couleur reste un autocollant, si juste soit le contour : ce qui
+fait lire un muscle, c'est son **volume**. Chaque masse reçoit donc un dégradé
+clair-en-haut / sombre-en-bas, et un trait sombre sur le pourtour qui creuse
+le sillon entre deux chefs.
+
+Le dégradé est en **alpha pur** — du blanc et du noir transparents. Il se pose
+donc aussi bien sur la couleur d'état que sur le corps neutre, et il suit les
+deux thèmes sans qu'on ait à l'écrire deux fois. Il est en coordonnées de
+boîte englobante : chaque masse est éclairée pour elle-même. Un seul dégradé
+sur tout le corps n'aurait donné du volume à personne.
+
+Le sillon doit se lire comme une **ombre**, pas comme un trou. C'est tout
+l'enjeu des abdominaux : des étages séparés laissaient voir le corps entre
+eux, et le ventre devenait une gaufre. Ils sont maintenant **jointifs**,
+posés sur une colonne continue ; leurs traits se confondent en un seul sillon,
+et le dégradé de chaque étage fait le bombé.
+
+#### Les formes
+
+Trois outils, parce qu'un muscle n'est pas un fuseau :
 
 - `chefLong()` — un chef de muscle long : un ventre renflé, une pointe
   effilée, et une largeur réglable aux deux bouts. C'est ce qui donne aux
@@ -273,9 +296,15 @@ Trois outils de forme, parce qu'un muscle n'est pas un fuseau :
 - `goutte()` — la larme du vaste interne, juste au-dessus du genou.
 
 Le tronc garde des tracés écrits à la main, là où la forme porte le sens : le
-pectoral et sa ligne du bas qui remonte vers l'aisselle, le V des dorsaux qui
-se resserre sur les lombaires, le carré arrondi du fessier (un cercle en
-faisait une balle posée là).
+pectoral en éventail depuis le sternum, le V des dorsaux qui se resserre sur
+les lombaires, la masse ronde du fessier.
+
+**L'ordre de tracé fait partie du dessin.** Au dos, les dorsaux passent avant
+le trapèze : dans l'autre sens le trapèze disparaît dessous et il ne reste
+qu'un bouclier. C'est le chevauchement qui creuse le V. Le même procédé sert
+ailleurs : le chef claviculaire du pectoral et le faisceau antérieur du
+deltoïde sont posés **par-dessus** leur masse, et c'est leur trait qui dessine
+le sillon — on n'a jamais à tracer une rainure séparée.
 
 Un `<use>` qui pointe dans le vide ou un `d` mal fermé ne dessine rien du tout,
 et ça ne se voit qu'à l'œil : `corps.js` demande donc au navigateur la boîte
@@ -701,7 +730,7 @@ ne conseille rien là-dessus.
 bash test/tout.sh
 ```
 
-Huit suites, 140 vérifications, pilotant Chromium avec Playwright. Elles ne
+Huit suites, 144 vérifications, pilotant Chromium avec Playwright. Elles ne
 dépendent d'aucun serveur : la page est ouverte en `file://` et toute requête
 sortante est coupée.
 
