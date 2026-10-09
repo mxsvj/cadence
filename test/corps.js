@@ -115,7 +115,47 @@ for(const face of ['av','ar']){
   ok(hs.vide === 0, face + ' : aucun tracé dégénéré');
 }
 
-console.log('\n== 5. chaque muscle reçoit bien sa couleur d\'état ==');
+console.log('\n== 5. aucun muscle ne dépasse du corps ==');
+/* Un muscle qui sort de la silhouette ne se voit pas forcément à l'œil — il
+   peut sortir du côté de l'axe, là où le miroir le recouvre. On échantillonne
+   donc le contour de chaque tracé et on demande au navigateur s'il tombe dans
+   le corps. Quatre débordements réels sont passés sous le nez comme ça. */
+const fuite = await p.evaluate(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 120 258');
+  svg.style.cssText = 'position:absolute;left:-9999px;width:120px;height:258px';
+  document.body.appendChild(svg);
+  const tracer = d => { const e = document.createElementNS(NS,'path');
+                        e.setAttribute('d', d); svg.appendChild(e); return e; };
+  const out = {};
+  for (const f of ['av','ar']) {
+    const corps = SIL[f].neutre.map(tracer);
+    const fautifs = [];
+    for (const [id, v] of Object.entries(SIL[f].m)) {
+      let dehors = 0;
+      (Array.isArray(v) ? v : [v]).forEach(d => {
+        const e = tracer(d), L = e.getTotalLength();
+        for (let i = 0; i <= 160; i++) {
+          const pt = e.getPointAtLength(L * i / 160);
+          if (!corps.some(c => c.isPointInFill(pt))) dehors++;
+        }
+        e.remove();
+      });
+      if (dehors) fautifs.push(id + ' (' + dehors + ' pts)');
+    }
+    corps.forEach(c => c.remove());
+    out[f] = fautifs;
+  }
+  svg.remove();
+  return out;
+});
+ok(fuite.av.length === 0, 'face : aucun muscle hors du corps' +
+   (fuite.av.length ? ' — ' + fuite.av.join(', ') : ''));
+ok(fuite.ar.length === 0, 'dos : aucun muscle hors du corps' +
+   (fuite.ar.length ? ' — ' + fuite.ar.join(', ') : ''));
+
+console.log('\n== 6. chaque muscle reçoit bien sa couleur d\'état ==');
 const peint = await p.evaluate(() => {
   bodyFace = 'av'; render();
   const g = [...document.querySelectorAll('.bodywrap .silh g')];
@@ -129,7 +169,7 @@ ok(peint.corps >= 1, 'le corps neutre est peint en --corps');
 ok(peint.etats >= 5, 'les muscles portent une couleur d\'état (' + peint.etats + ')');
 ok(peint.orphelins === 0, 'aucun hex en dur dans la silhouette');
 
-console.log('\n== 6. le relief est bien posé sur chaque masse ==');
+console.log('\n== 7. le relief est bien posé sur chaque masse ==');
 const rel = await p.evaluate(() => {
   bodyFace = 'av'; render();
   const svg = document.querySelector('.bodywrap .silh');
@@ -145,14 +185,14 @@ ok(rel.relief === rel.plein, 'chaque masse a son calque de relief (' +
    rel.relief + ' pour ' + rel.plein + ' aplats)');
 ok(rel.traits >= 10, 'les muscles portent le trait qui creuse le sillon (' + rel.traits + ')');
 
-console.log('\n== 7. l\'ordre de tracé du dos est respecté ==');
+console.log('\n== 8. l\'ordre de tracé du dos est respecté ==');
 /* Les dorsaux doivent passer AVANT le trapèze : dans l'autre sens le trapèze
    disparaît dessous et le dos n'est plus qu'un bouclier. */
 const ordre = await p.evaluate(() => Object.keys(SIL.ar.m));
 ok(ordre.indexOf('dos') < ordre.indexOf('trapezes'),
    'les dorsaux sont tracés avant le trapèze (' + ordre.slice(0,3).join(', ') + '…)');
 
-console.log('\n== 8. les muscles à plusieurs chefs gardent leurs chefs ==');
+console.log('\n== 9. les muscles à plusieurs chefs gardent leurs chefs ==');
 const chefs = await p.evaluate(() => {
   const out = {};
   for(const f of ['av','ar'])
@@ -164,7 +204,7 @@ for(const [m, n] of Object.entries({ abdos:5, quadris:3, mollets:3 }))
   if(chefs[m] !== undefined)
     ok(chefs[m] >= n - 1, m + ' a plusieurs tracés (' + chefs[m] + ')');
 
-console.log('\n== 9. rien ne casse ==');
+console.log('\n== 10. rien ne casse ==');
 ok(erreurs.length === 0, 'aucune erreur de page' + (erreurs.length ? ' : ' + erreurs[0] : ''));
 
 await b.close();

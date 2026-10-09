@@ -1012,7 +1012,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v21 · 2026-10-09';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v22 · 2026-10-09';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 4;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -1294,14 +1294,6 @@ function lisse(p, fermee){
   }
   return d + (fermee ? 'Z' : '');
 }
-/* Un fuseau reste le bon outil pour un chef de muscle dans un membre. */
-function fuseau(x1,y1,w1,x2,y2,w2){
-  var k1=w1*1.25, k2=w2*1.25;
-  return 'M'+r2(x1-w1)+' '+r2(y1)+
-    'C'+r2(x1-w1)+' '+r2(y1-k1)+' '+r2(x1+w1)+' '+r2(y1-k1)+' '+r2(x1+w1)+' '+r2(y1)+
-    'L'+r2(x2+w2)+' '+r2(y2)+
-    'C'+r2(x2+w2)+' '+r2(y2+k2)+' '+r2(x2-w2)+' '+r2(y2+k2)+' '+r2(x2-w2)+' '+r2(y2)+'Z';
-}
 /* Une brique d'abdomino : un rectangle à coins ronds, plus large en haut
    qu'en bas. Le bord central reste droit — c'est la ligne blanche. */
 function brique(x1, y1, x2, y2, r){
@@ -1353,33 +1345,29 @@ function contreAxe(pts){
    contourne le pied, on remonte le dedans de la jambe. L'axe du corps referme
    la moitié d'un trait droit. */
 var PROFIL = [
-  [60, 4],    [52.8, 6.2],  [48.6, 12.4], [47.8, 21],   [49.4, 28.4], /* crâne, tempe   */
-  [52.4, 33.4],[53.2, 37.6],[52.8, 43],                               /* mâchoire, cou  */
-  [50.2, 46.4],[45.2, 49],  [43.8, 53],                               /* trapèze        */
-  [42.8, 61],  [41, 70],                                              /* aisselle, poitrine */
-  [40.6, 80],  [41.6, 90],  [43.4, 100],  [44.6, 108],                /* côtes, taille  */
-  [43.6, 116], [41.4, 124], [40, 132],                                /* hanche         */
-  [39, 144],   [39.2, 158], [40, 172],                                /* cuisse         */
-  [40.6, 184], [41.6, 192],                                           /* genou          */
-  [41, 200],   [40.4, 210], [41.2, 220],  [43.4, 232],  [45, 242],    /* mollet, tibia  */
-  [44.8, 247], [41, 250],   [36.6, 252.4],[36.4, 254.6],[40, 255.4],  /* pied           */
-  [54, 255.4], [56.8, 254.6],[57, 252],                               /* plante, dedans */
-  [56.4, 246], [55.6, 240], [55.4, 230],  [55.6, 220],  [55.4, 210],  /* mollet dedans  */
-  [54.8, 200], [54.4, 192], [54.6, 184],                              /* genou dedans   */
-  [55.6, 172], [56.8, 158], [58, 144],    [59, 136],    [60, 129]     /* cuisse, pubis  */
+  [60.0,4.0], [52.8,6.2], [48.8,12.4], [48.0,21.0], [49.6,28.4],
+  [52.4,33.4], [53.0,37.4], [51.8,42.6], [48.6,46.0], [44.0,48.8],
+  [41.6,52.6], [39.8,60.0], [38.2,69.0], [38.8,79.0], [40.6,89.0],
+  [43.0,99.0], [44.8,108.0], [43.8,115.0], [41.2,123.0], [38.8,131.0],
+  [36.8,143.0], [36.4,157.0], [37.8,171.0], [39.4,183.0], [41.0,192.0],
+  [39.8,199.0], [38.4,209.0], [39.4,219.0], [42.4,231.0], [44.4,242.0],
+  [44.6,247.0], [41.0,250.0], [36.6,252.4], [36.4,254.6], [40.0,255.4],
+  [54.0,255.4], [56.8,254.6], [57.0,252.0], [56.4,246.0], [56.0,240.0],
+  [56.4,230.0], [56.6,219.0], [56.2,209.0], [55.2,199.0], [54.8,192.0],
+  [55.0,183.0], [56.4,171.0], [57.6,157.0], [58.6,143.0], [59.2,135.0],
+  [60.0,128.0]
 ];
 
 /* Le bras, en boucle fermée : on descend le dehors du deltoïde à la main, on
    remonte le dedans jusqu'à l'aisselle, on referme sur le trapèze. */
 var BRAS = [
-  [46, 48],   [40, 50],   [34.5, 54],  [30.5, 59.5],[28.2, 66], [27.4, 73],  /* deltoïde   */
-  [27, 82],   [27.4, 92], [28.4, 101], [29, 108],                            /* bras, coude*/
-  [28.4, 116],[26.8, 124],[24.6, 134], [22.8, 143],                          /* avant-bras */
-  [21.8, 150],[21.8, 158],[23, 165],   [25.4, 169], [28, 169.6],             /* main       */
-  [30.4, 166],[31.2, 158],[31, 150],                                         /* main dedans*/
-  [31.8, 142],[33.4, 133],[35, 124],   [36.4, 116], [37, 108],               /* avant-bras */
-  [37.4, 100],[37.8, 90], [38.4, 80],  [39.6, 72],                           /* bras, aisselle */
-  [41.6, 64], [43.6, 56], [45.6, 50]                                         /* retour épaule */
+  [46.0,47.4], [39.2,49.0], [32.6,53.0], [27.4,59.0], [24.4,66.0],
+  [23.6,74.0], [23.8,83.0], [24.8,92.0], [26.2,101.0], [27.4,108.5],
+  [26.6,116.0], [24.8,124.0], [22.6,134.0], [20.8,143.0], [19.8,150.0],
+  [19.8,158.0], [21.0,165.0], [23.6,169.4], [26.4,170.0], [29.0,166.4],
+  [30.0,158.0], [29.8,150.0], [30.8,142.0], [32.6,133.0], [34.4,124.0],
+  [35.8,116.0], [36.6,108.5], [37.0,100.0], [37.2,90.0], [37.4,80.0],
+  [37.8,71.0], [40.4,63.0], [42.8,55.0], [45.4,49.0]
 ];
 
 var SIL_NEUTRE = [
@@ -1391,19 +1379,19 @@ var SIL_NEUTRE = [
 var SIL = {
   av:{ neutre:SIL_NEUTRE, m:{
   /* Trapèze, vu de face : la pente qui descend du cou vers l'acromion. */
-  trapezes: lisse([[54.2,38.4],[53.2,43.6],[50.4,47.4],[46,50],[42.8,53.2],
-                   [43.6,49.6],[46.4,45.8],[49.8,42.2],[52.4,39.2]], true),
+  trapezes: lisse([[53.74,38.4],[51.7,43.6],[48.5,47.4],[44.21,50],[42.39,53.2],
+                   [44.06,49.6],[49.44,45.8],[52.42,42.2],[53.22,39.2]], true),
 
   /* Deltoïde en deux faisceaux. Un seul croissant faisait une épaulette : le
      deltoïde coiffe l'épaule, et le sillon entre l'antérieur et le latéral
      est l'un des reliefs les plus reconnaissables du haut du corps. */
   epaules: [
     /* la coiffe entière : du bord de la clavicule au milieu du bras */
-    lisse([[45.4,50.6],[39.6,52],[34.4,55.4],[30.6,60.4],[28.6,67],[28.8,74.4],
-           [32.4,76],[36.4,73.6],[37.6,67.2],[39.6,61],[42.6,55.6],[45.8,52.4]], true),
+    lisse([[44.23,50.6],[37.23,52],[31.29,55.4],[27.36,60.4],[24.94,67],[25.07,74.4],
+           [29.7,76],[34.31,73.6],[35.45,67.2],[37.93,61],[41.53,55.6],[43.32,52.4]], true),
     /* le faisceau antérieur par-dessus : son trait fait le sillon du devant */
-    lisse([[45.6,50.8],[42.6,53.6],[39.8,57.6],[37.8,62.6],[36.8,68],[36.6,73.2],
-           [39.2,72],[40.4,66.6],[42.2,61],[44.4,56],[46.2,52.6]], true)
+    lisse([[44.14,50.8],[41.32,53.6],[38.16,57.6],[35.79,62.6],[34.49,68],[34.5,73.2],
+           [36.91,72],[38.32,66.6],[40.17,61],[41.77,56],[43.21,52.6]], true)
   ],
 
   /* Pectoral : le bord haut presque plat sous la clavicule, le bord externe
@@ -1411,12 +1399,12 @@ var SIL = {
      sternum. Deux chefs — le claviculaire est la bande du haut, et c'est lui
      qui donne la marche d'escalier sous la clavicule. */
   pecs: [
-    contreAxe([[59.2,51.6],[53,52.2],[48.2,53.6],[45,56],[43.8,59.6],
-               [43.4,64.2],[46.6,69],[50.8,71.6],[55,72.6],[59.2,72.4]]),
+    contreAxe([[59.2,51.6],[52.07,52.2],[46.23,53.6],[42.06,56],[40.96,59.6],
+               [40.01,64.2],[44.23,69],[49.51,71.6],[54.33,72.6],[59.2,72.4]]),
     /* posé par-dessus la masse : c'est son trait qui creuse la marche sous
        la clavicule, sans qu'on ait à dessiner un sillon séparé */
-    contreAxe([[59.2,51.6],[53,52.2],[48.2,53.6],[45,56],[45.8,59],
-               [50.2,58.2],[54.8,58],[59.2,58]])
+    contreAxe([[59.2,51.6],[52.07,52.2],[46.23,53.6],[42.06,56],[42.94,59],
+               [48.36,58.2],[53.87,58],[59.2,58]])
   ],
 
   /* Grand droit : quatre étages par côté, les sillons serrés. Des rainures
@@ -1425,26 +1413,26 @@ var SIL = {
      bas est le plus long, et la colonne se resserre vers le pubis. */
   abdos: [
     /* la colonne entière, posée dessous : plus aucun jour entre deux étages */
-    brique(50.4, 78.4, 58.9, 120.6, 3),
-    brique(50.6, 78.4, 58.9, 87.2), brique(50.2, 87.2, 58.9, 96),
-    brique(50.5, 96, 58.9, 104.6), brique(51.6, 104.6, 58.9, 120.6),
+    brique(50.22, 78.4, 58.9, 120.6, 3.0),
+    brique(49.94, 78.4, 58.9, 87.2), brique(49.78, 87.2, 58.9, 96.0),
+    brique(50.38, 96.0, 58.9, 104.6), brique(51.63, 104.6, 58.9, 120.6),
     /* l'oblique : la bande du flanc, large en haut, effilée vers la hanche */
-    lisse([[49.4,79.6],[46.4,85.4],[45.4,93.4],[45.8,102.6],[47.2,111.8],
-           [49.2,118.6],[50,114],[49.6,103],[49.2,92.4],[49.4,84.6]], true)
+    lisse([[48.43,79.6],[45.32,85.4],[44.68,93.4],[45.49,102.6],[47.12,111.8],
+           [48.94,118.6],[49.96,114],[49.48,103],[48.73,92.4],[48.68,84.6]], true)
   ],
 
   /* Biceps : deux chefs qui remplissent le bras, séparés d'un sillon étroit.
      Les deux fuseaux d'avant se chevauchaient et débordaient du bras : une
      seule masse avec un trait au milieu. */
   biceps: [
-    chefLong(30.8,74.4, 31.4,104.4, 2.1, 1.5, 2.5),
-    chefLong(35.8,75.2, 35.2,103.2, 1.9, 1.4, 2.3)
+    chefLong(27.53,74.4, 29.79,104.4, 2.58, 1.88, 3.18),
+    chefLong(33.82,75.2, 34.54,103.2, 2.36, 1.75, 2.44)
   ],
   /* Avant-bras : le long supinateur fait la bosse du dessus, les fléchisseurs
      la masse du dessous ; tous deux s'effilent au poignet. */
   avantbras: [
-    chefLong(28.6,114.4, 24.2,144.4, 2.2, 1.3, 2.6),
-    chefLong(33.4,115.4, 29.4,143.2, 2, 1.2, 2.4)
+    chefLong(28.9,116, 23.8,144, 1.8, 1.1, 2.1),
+    chefLong(33.2,117, 28.4,143, 1.9, 1.2, 2.2)
   ],
 
   /* Cuisse : trois masses qui ne se ressemblent pas, c'est tout l'enjeu.
@@ -1452,16 +1440,16 @@ var SIL = {
      une bande étroite au milieu, le vaste interne une goutte basse en dedans.
      Trois fuseaux de même largeur faisaient trois bananes parallèles. */
   quadris: [
-    chefLong(43.4,134.4, 45.2,180.2, 3.4, 2, 4.2),   /* vaste externe  */
-    chefLong(50,132.8, 49.2,179.4, 2.4, 1.7, 2.7),   /* droit fémoral  */
-    chefLong(55.2,148.6, 53.4,180.2, 1.3, 2.2, 2.2)  /* vaste interne  */
+    chefLong(42.39,134.4, 44.31,180.2, 3.22, 2.37, 5.06),   /* vaste externe  */
+    chefLong(49.3,132.8, 48.99,179.4, 2.71, 2.01, 3.4),   /* droit fémoral  */
+    chefLong(55.69,148.6, 52.93,180.2, 1.4, 1.52, 1.83)  /* vaste interne  */
   ],
   /* Mollet : les deux jumeaux, l'interne plus bas et plus charnu, et le
      soléaire qui dépasse sur le dehors au-dessus de la cheville. */
   mollets: [
-    chefLong(45.4,199.6, 46.6,224, 2.6, 1.2, 3),
-    chefLong(50.6,199.2, 49.4,228.4, 2.8, 1.2, 3.2),
-    chefLong(43.8,214, 44.8,232.6, 1.4, 0.9, 1.6)
+    chefLong(44.52,199.6, 46.04,224.0, 3.09, 1.46, 3.76),
+    chefLong(50.71,199.2, 49.51,228.4, 3.33, 1.45, 4.0),
+    chefLong(42.25,214.0, 44.28,232.6, 1.75, 0.79, 1.94)
   ]
 } },
   ar:{ neutre:SIL_NEUTRE, m:{
@@ -1471,62 +1459,62 @@ var SIL = {
      C'est le chevauchement qui creuse le V. */
 
   /* Dorsaux : larges sous l'aisselle, en pointe sur les lombes */
-  dos: contreAxe([[59.2,71],[53.6,68.8],[48,65.6],[43.2,62],
-                  [39.8,69.4],[39.2,79.2],[41.2,89],[45,96.6],
-                  [49.8,101],[54.4,99.4],[59.2,97]]),
+  dos: contreAxe([[59.2,71],[52.58,68.8],[45.71,65.6],[40.43,62],
+                  [39.29,69.4],[39.9,79.2],[41.57,89],[44.41,96.6],
+                  [49.64,101],[54.33,99.4],[59.2,97]]),
 
   /* Trapèze en deux faisceaux : la pente de l'épaule, puis le triangle qui
      descend en pointe entre les omoplates. Une seule plaque du cou au milieu
      du dos recouvrait tout et effaçait le relief le plus net du dos. */
   trapezes: [
-    contreAxe([[59.2,43.6],[55.2,41.4],[52.8,39.6],[49.2,46],[43.8,49.4],
-               [40.6,53],[45.4,57.2],[51,59.8],[55.6,61],[59.2,61.4]]),
-    contreAxe([[59.2,62.6],[54.8,63.2],[50.6,65.8],[47.8,69.8],
-               [51.4,78.2],[55.4,85.8],[57.8,90.6],[59.2,88]])
+    contreAxe([[59.2,44],[55.6,42],[54.6,40.6],[50.2,46.2],[44.6,49.6],
+               [42.6,53.2],[42.7,57.2],[49.4,59.8],[54.8,61],[59.2,61.4]]),
+    contreAxe([[59.2,62.6],[53.86,63.2],[48.92,65.8],[45.82,69.8],
+               [50.58,78.2],[55.12,85.8],[57.8,90.6],[59.2,88]])
   ],
 
   /* Lombaires : les deux colonnes de l'érecteur du rachis. Deux allumettes
      ne disaient rien ; elles comblent maintenant le creux entre la pointe
      des dorsaux et le haut du fessier. */
   lombaires: [
-    chefLong(51.8,99.6, 52.8,116.4, 2.4, 2.9, 2.6),
-    chefLong(56.8,98.6, 57.4,116.8, 2.1, 2.6, 2.3)
+    chefLong(51.65,99.6, 52.68,116.4, 2.48, 2.98, 2.63),
+    chefLong(56.75,98.6, 57.38,116.8, 2.15, 2.62, 2.27)
   ],
 
   /* Fessier : une masse ronde et haute, qui se referme en bas sur le pli
      fessier. Le carré à angles ronds faisait un short. */
-  fessiers: contreAxe([[59.2,114.8],[52.4,115.6],[46.8,118.6],[43.6,124.4],
-                       [42.9,131.4],[44.6,138.2],[48.6,142.6],[53.4,144.2],
-                       [59.2,144]]),
+  fessiers: contreAxe([[59.2,114.8],[52.4,115.6],[46.39,118.6],[42.8,124.4],
+                       [41.32,131.4],[43.0,137.6],[47.4,141.4],[52.6,142.4],
+                       [58.2,140.6]]),
 
   epaules: [
-    lisse([[45.4,51.2],[39.6,52.6],[34.4,56],[30.6,61],[28.6,67.6],[28.8,75],
-           [32.4,76.6],[36.4,74.2],[37.6,67.8],[39.6,61.6],[42.6,56.2],[45.8,53]], true),
-    lisse([[45.6,51.4],[42.6,54.2],[39.8,58.2],[37.8,63.2],[36.8,68.6],[36.6,73.8],
-           [39.2,72.6],[40.4,67.2],[42.2,61.6],[44.4,56.6],[46.2,53.2]], true)
+    lisse([[43.92,51.2],[37.45,52.6],[31.36,56],[27.03,61],[24.83,67.6],[25.11,75],
+           [29.76,76.6],[34.36,74.2],[35.44,67.8],[37.96,61.6],[41.54,56.2],[42.96,53]], true),
+    lisse([[43.79,51.4],[41.4,54.2],[38.19,58.2],[35.8,63.2],[34.51,68.6],[34.55,73.8],
+           [36.81,72.6],[38.09,67.2],[40.02,61.6],[41.6,56.6],[42.87,53.2]], true)
   ],
 
   /* Triceps : le fer à cheval. Le latéral en dehors, le long chef en dedans,
      et le médial qui remonte entre les deux juste au-dessus du coude. */
   triceps: [
-    chefLong(30.6,73.6, 31,101.4, 2.3, 1.7, 2.7),   /* chef latéral */
-    chefLong(35.8,74.2, 35.2,100.2, 2.1, 1.5, 2.5), /* long chef    */
-    chefLong(33.2,92.4, 33.2,104.6, 1.5, 1.4, 1.9)  /* chef médial  */
+    chefLong(27.24,73.6, 29.2,101.4, 2.81, 2.15, 3.42),   /* chef latéral */
+    chefLong(33.62,74.2, 34.51,100.2, 2.58, 1.89, 2.63), /* long chef    */
+    chefLong(31.83,92.4, 32.06,104.6, 1.9, 1.75, 2.38)  /* chef médial  */
   ],
   avantbras: [
-    chefLong(28.4,114.8, 24,144.6, 2.2, 1.3, 2.6),
-    chefLong(33.2,115.6, 29.2,143.4, 2, 1.2, 2.4)
+    chefLong(28.8,116.2, 23.7,144.2, 1.8, 1.1, 2.1),
+    chefLong(33.1,117.2, 28.3,143.2, 1.9, 1.2, 2.2)
   ],
   /* Ischio-jambiers : le biceps fémoral large en dehors, les fléchisseurs
      internes en une masse plus étroite qui descend plus bas. */
   ischios: [
-    chefLong(43.8,146.8, 45.2,180.8, 3.2, 2, 3.9),
-    chefLong(51.2,146, 50.2,182, 2.6, 1.8, 3)
+    chefLong(41.91,146.8, 44.37,180.8, 3.9, 2.34, 4.81),
+    chefLong(50.92,146.0, 50.17,182.0, 3.17, 2.09, 3.8)
   ],
   mollets: [
-    chefLong(45.4,198.6, 46.6,224.2, 2.8, 1.2, 3.2),
-    chefLong(51,198.2, 49.6,228.6, 3, 1.2, 3.4),
-    chefLong(43.6,213.4, 44.6,232.4, 1.5, 0.9, 1.7)
+    chefLong(44.52,198.6, 46.03,224.2, 3.33, 1.46, 4.02),
+    chefLong(51.0,198.2, 49.75,228.6, 3.35, 1.45, 4.26),
+    chefLong(41.94,213.4, 44.15,232.4, 1.88, 0.7, 1.92)
   ]
 } }
 };

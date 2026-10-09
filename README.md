@@ -264,6 +264,39 @@ chefs du triceps, les deux faisceaux du trapèze, les deux colonnes de
 l'érecteur du rachis. **Vingt-trois formes sur la face, vingt sur le dos**, là
 où il y en avait huit et neuf.
 
+#### Un corps d'athlète, pas un mannequin
+
+La silhouette était celle d'une personne mince : les muscles avaient beau
+être justes, ils n'avaient pas la place d'être gros. Le corps lui-même a donc
+été épaissi, mesures à l'appui (relevées sur le tracé rendu, pas estimées) :
+
+| | avant | après | |
+|---|---|---|---|
+| épaules (demi-largeur) | 31,8 | 35,6 | +12 % |
+| bras | 10,9 | 13,2 | +21 % |
+| avant-bras | 8,2 | 9,6 | +17 % |
+| dorsaux (demi-largeur) | 19,0 | 21,8 | +15 % |
+| **taille** (demi-largeur) | 15,4 | 15,2 | **−1 %** |
+| cuisse | 17,6 | 21,2 | +20 % |
+| mollet | 15,0 | 17,8 | +19 % |
+
+La taille ne bouge pas pendant que tout s'élargit : c'est ce rapport-là qui
+fait le V, pas la largeur d'épaules seule.
+
+Les quarante-trois formes n'ont pas été reprises à la main. Chaque point d'un
+muscle a été **reporté à sa position relative dans le membre** — du bord
+externe au bord interne. Un muscle qui occupait 70 % de la cuisse en occupe
+toujours 70 %, mais la cuisse est plus épaisse ; un facteur supplémentaire
+les fait mordre un peu plus sur les bords.
+
+Deux pièges s'y cachaient, tous deux attrapés à la mesure :
+
+- les bornes du membre doivent venir de la **géométrie rendue**, pas d'une
+  interpolation entre les repères du profil. `lisse()` trace une courbe qui
+  rentre en deçà de la corde, et un muscle calé sur la corde sort du corps ;
+- les jours de l'axe — écart sternal, ligne blanche — gardent leur largeur en
+  **absolu**. Les étirer avec le tronc soude les deux pectoraux.
+
 #### Le relief
 
 Un aplat de couleur reste un autocollant, si juste soit le contour : ce qui
@@ -310,6 +343,11 @@ Un `<use>` qui pointe dans le vide ou un `d` mal fermé ne dessine rien du tout,
 et ça ne se voit qu'à l'œil : `corps.js` demande donc au navigateur la boîte
 englobante de chaque tracé rendu, et échoue si l'un d'eux est plat ou sort du
 cadre 120×258.
+
+Il vérifie aussi qu'**aucun muscle ne sort du corps** : il échantillonne le
+contour de chaque tracé et demande au navigateur si le point tombe dans la
+silhouette. Ça n'est pas une précaution théorique — quatre débordements réels
+sont passés sous le nez, dont un du côté de l'axe où le miroir les recouvrait.
 
 ### Comment elle est construite
 
@@ -730,7 +768,7 @@ ne conseille rien là-dessus.
 bash test/tout.sh
 ```
 
-Huit suites, 144 vérifications, pilotant Chromium avec Playwright. Elles ne
+Huit suites, 146 vérifications, pilotant Chromium avec Playwright. Elles ne
 dépendent d'aucun serveur : la page est ouverte en `file://` et toute requête
 sortante est coupée.
 
