@@ -7,42 +7,48 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Cadence">
-<meta name="theme-color" content="#0E1116">
+<meta name="theme-color" content="#000000">
 <meta name="description" content="Cadence — tracker d'habitudes, discipline et régularité.">
 <title>Cadence</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230E1116'/%3E%3Ctext x='90' y='124' font-size='96' text-anchor='middle' fill='%233B82F6' font-family='Helvetica,Arial' font-weight='bold'%3EC%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23000000'/%3E%3Cpath d='M256 84 A172 172 0 1 0 428 256' fill='none' stroke='%23FFFFFF' stroke-width='34' stroke-linecap='round'/%3E%3Ctext x='256' y='330' font-size='236' text-anchor='middle' fill='%23FFFFFF' font-family='Helvetica,Arial' font-weight='bold'%3EC%3C/text%3E%3C/svg%3E">
 <style>
 /* ============================ 1. jetons ============================ */
 :root{
-  --bg:#0E1116; --surf:#171C24; --surf2:#1F2630; --nav:rgba(16,20,27,.86);
-  --line:#242C38; --line2:#333D4C; --corps:#2E3847;
+  --bg:#000000; --surf:#111113; --surf2:#1C1C20; --nav:rgba(0,0,0,.9);
+  --line:#292930; --line2:#3A3A43; --corps:#30303A;
   --et-pret:#6D4F4E; --et-recup:#B45C5B; --et-chaud:#FF6367;
-  --txt:#F2F5F9; --mut:#8C97A8; --mut2:#5F6B7C;
-  --acc:#3B82F6; --acc-hi:#5B9BFF; --acc-soft:rgba(59,130,246,.14);
+  --txt:#FFFFFF; --mut:#9C9CA5; --mut2:#6B6B74;
+  /* L'accent par défaut n'est pas une couleur : c'est l'encre du thème,
+     blanche sur le sombre et noire sur le clair. --acc-txt est ce qui se
+     pose DESSUS — sans lui, un accent blanc portait du texte blanc. */
+  --acc:#FFFFFF; --acc-hi:#E4E4E8; --acc-soft:rgba(255,255,255,.13);
+  --acc-mid:rgba(255,255,255,.58); --acc-txt:#0A0A0B;
   --ok:#34D399; --ok-soft:rgba(52,211,153,.14);
-  --gold:#FBBF24; --info:#22D3EE;
+  --gold:#FBBF24;
   --sh1:0 1px 2px rgba(0,0,0,.34), 0 3px 8px rgba(0,0,0,.22);
   --sh2:0 4px 10px rgba(0,0,0,.32), 0 14px 30px rgba(0,0,0,.34);
   --sh3:0 10px 24px rgba(0,0,0,.42), 0 30px 64px rgba(0,0,0,.5);
-  --glow:0 6px 18px rgba(59,130,246,.30);
+  --glow:0 6px 18px rgba(255,255,255,.16);
   --rl:20px; --r:14px; --rs:10px;
   --maxw:560px;
   --ease:cubic-bezier(.2,.7,.3,1);
 }
 html[data-theme="light"]{
-  --bg:#F6F8FB; --surf:#FFFFFF; --surf2:#EDF1F7; --nav:rgba(255,255,255,.88);
-  --line:#E2E8F0; --line2:#CDD7E4; --corps:#D3DCE8;
+  --bg:#F2F2F4; --surf:#FFFFFF; --surf2:#E9E9ED; --nav:rgba(255,255,255,.92);
+  --line:#E2E2E7; --line2:#C9C9D1; --corps:#D8D8DF;
   --et-pret:#B99896; --et-recup:#B85F5E; --et-chaud:#AC0024;
-  --txt:#0F1622; --mut:#59657A; --mut2:#8B97A6;
-  --acc-soft:rgba(59,130,246,.10); --ok-soft:rgba(52,211,153,.14);
+  --txt:#0A0A0B; --mut:#55555E; --mut2:#86868F;
+  --acc:#101014; --acc-hi:#2E2E38; --acc-soft:rgba(16,16,20,.07);
+  --acc-mid:rgba(16,16,20,.5); --acc-txt:#FFFFFF;
+  --ok-soft:rgba(52,211,153,.14);
   --sh1:0 1px 2px rgba(22,42,74,.07), 0 2px 6px rgba(22,42,74,.06);
   --sh2:0 3px 8px rgba(22,42,74,.09), 0 12px 26px rgba(22,42,74,.11);
   --sh3:0 8px 20px rgba(22,42,74,.13), 0 28px 56px rgba(22,42,74,.16);
-  --glow:0 6px 16px rgba(59,130,246,.26);
+  --glow:0 6px 16px rgba(16,16,20,.20);
 }
 
 /* ============================ 2. socle ============================ */
@@ -60,7 +66,7 @@ h1,h2,h3,.cond{font-family:'Barlow Condensed','Manrope',sans-serif;text-transfor
 button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
 button{background:none;border:0;padding:0;cursor:pointer;color:inherit}
 /* surfaces du navigateur : elles font partie du design */
-::selection{background:var(--acc);color:#fff}
+::selection{background:var(--acc);color:var(--acc-txt)}
 input,textarea{caret-color:var(--acc)}
 :focus{outline:none}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:6px}
@@ -93,6 +99,10 @@ textarea{resize:vertical;line-height:1.55}
 html[data-theme="light"] #topbar{background:linear-gradient(180deg,var(--bg) 0,var(--bg) 78%,rgba(246,248,251,0))}
 .logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:27px;
   letter-spacing:.15em;text-transform:uppercase;user-select:none;line-height:1}
+/* Le logo est bicolore : « CA » en retrait, « DENCE » dans l'accent. En noir
+   et blanc l'accent EST l'encre du texte, donc les deux moitiés se
+   confondaient — la première passe en gris sourd pour garder la coupure. */
+.logo{color:var(--mut)}
 .logo b{color:var(--acc);font-weight:700}
 .tbr{display:flex;gap:8px}
 .iconbtn{width:38px;height:38px;border-radius:12px;background:var(--surf);border:1px solid var(--line);
@@ -121,7 +131,7 @@ main{flex:1;padding:2px 16px 150px}
 .btn:active{transform:scale(.955)}
 @media (hover:hover){.btn:hover{background:var(--surf);border-color:var(--line2)}}
 .btn[disabled],.btn.off{opacity:.42;pointer-events:none}
-.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:var(--glow)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-txt);box-shadow:var(--glow)}
 @media (hover:hover){.btn.pri:hover{background:var(--acc-hi);border-color:var(--acc-hi)}}
 .btn.ok{background:var(--ok);border-color:var(--ok);color:#07120C;box-shadow:0 6px 18px rgba(52,211,153,.24)}
 .btn.ghost{background:transparent}
@@ -178,8 +188,8 @@ main{flex:1;padding:2px 16px 150px}
 /* ============================ 6. bouton + ============================ */
 #fab{position:fixed;z-index:46;right:max(16px,calc(50vw - var(--maxw)/2 + 16px));
   bottom:calc(env(safe-area-inset-bottom) + 88px);width:56px;height:56px;border-radius:19px;
-  background:var(--acc);color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 8px 22px rgba(59,130,246,.4);
+  background:var(--acc);color:var(--acc-txt);font-size:26px;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--glow);
   transition:transform .22s var(--ease),opacity .18s,background .16s}
 #fab:active{transform:scale(.88)}
 @media (hover:hover){#fab:hover{background:var(--acc-hi);transform:translateY(-2px)}}
@@ -190,7 +200,7 @@ main{flex:1;padding:2px 16px 150px}
 /* ============================ 7. bannière de rappel ============================ */
 #banner{position:sticky;top:calc(env(safe-area-inset-top) + 60px);z-index:39;margin:0 16px 10px;
   display:flex;align-items:center;gap:12px;padding:13px;border-radius:var(--r);
-  background:var(--acc);color:#fff;box-shadow:0 10px 24px rgba(59,130,246,.34);
+  background:var(--acc);color:var(--acc-txt);box-shadow:var(--glow);
   animation:rise .3s var(--ease) both}
 #banner .bn{font-weight:800;font-size:14px}
 #banner .bs{font-size:12px;opacity:.88}
@@ -229,7 +239,7 @@ main{flex:1;padding:2px 16px 150px}
   transition:transform .16s var(--ease),color .16s,background .16s,border-color .16s}
 .del:active{transform:scale(.87)}
 @media (hover:hover){.del:hover{color:var(--acc);border-color:var(--acc);background:var(--acc-soft)}}
-.del.sure{width:auto;padding:0 11px;background:var(--acc);border-color:var(--acc);color:#fff;
+.del.sure{width:auto;padding:0 11px;background:var(--acc);border-color:var(--acc);color:var(--acc-txt);
   font-size:12px;font-weight:800;font-family:'Manrope',sans-serif}
 .task.done{opacity:.58}
 .task.done .tname{text-decoration:line-through;text-decoration-color:var(--mut2)}
@@ -295,12 +305,12 @@ main{flex:1;padding:2px 16px 150px}
 .seg button{padding:12px;border-radius:var(--r);background:var(--surf2);border:1px solid var(--line);
   font-weight:700;font-size:13px;transition:transform .14s var(--ease),background .16s,border-color .16s}
 .seg button:active{transform:scale(.96)}
-.seg button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.seg button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-txt)}
 .dchips{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .dchip{height:42px;border-radius:12px;background:var(--surf2);border:1px solid var(--line);
   font-weight:800;font-size:13px;transition:transform .14s var(--ease),background .16s,border-color .16s}
 .dchip:active{transform:scale(.9)}
-.dchip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.dchip.on{background:var(--acc);border-color:var(--acc);color:var(--acc-txt)}
 .echips{display:flex;flex-wrap:wrap;gap:7px}
 .echip{width:44px;height:44px;border-radius:13px;background:var(--surf2);border:1px solid var(--line);
   font-size:22px;color:var(--mut);display:flex;align-items:center;justify-content:center;
@@ -333,7 +343,7 @@ main{flex:1;padding:2px 16px 150px}
 .mcell.l2{background:rgba(52,211,153,.40);color:#08160F}
 .mcell.l3{background:rgba(52,211,153,.66);color:#07120C}
 .mcell.l4{background:var(--ok);color:#07120C}
-.mcell.miss{background:rgba(59,130,246,.13);color:var(--mut)}
+.mcell.miss{background:var(--acc-soft);color:var(--mut)}
 .mcell.fut{background:transparent;border-color:var(--line);color:var(--mut2);opacity:.6}
 .mcell.pad{background:transparent}
 .mcell.today{border-color:var(--acc);color:var(--acc);font-weight:800}
@@ -345,7 +355,7 @@ main{flex:1;padding:2px 16px 150px}
 .barw{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:flex-end}
 .bar{width:100%;border-radius:6px 6px 3px 3px;background:var(--surf2);min-height:3px;
   transition:height .5s var(--ease)}
-.bar.has{background:rgba(59,130,246,.62)}
+.bar.has{background:var(--acc-mid)}
 .bar.best{background:var(--ok)}
 .barw small{font-size:9.5px;color:var(--mut2);font-weight:700}
 .barv{font-size:9.5px;color:var(--mut);font-weight:800}
@@ -501,7 +511,7 @@ details .dc li{margin-bottom:6px}
 .pickbar{display:flex;gap:7px;overflow-x:auto;padding-bottom:8px;margin-bottom:4px}
 .pickbar button{flex:0 0 auto;padding:7px 12px;border-radius:999px;background:var(--surf2);
   border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--mut);white-space:nowrap}
-.pickbar button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.pickbar button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-txt)}
 .picklist{max-height:46vh;overflow-y:auto;margin:0 -2px;padding:0 2px}
 .pickrow{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:9px 10px;
   border-radius:var(--r);border:1px solid transparent;transition:background .14s}
@@ -601,7 +611,7 @@ details .dc li{margin-bottom:6px}
 .objchips{display:flex;gap:7px;margin-bottom:12px}
 .objchips button{flex:1;padding:9px;border-radius:999px;background:var(--surf2);border:1px solid var(--line);
   font-size:12.5px;font-weight:700;color:var(--mut)}
-.objchips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.objchips button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-txt)}
 
 /* ============================ 14e. athlète ============================ */
 /* les années de salle : 53 colonnes de 7 jours */
@@ -707,11 +717,11 @@ details .dc li{margin-bottom:6px}
 #coach.on{display:block}
 #chole{position:fixed;left:50%;top:50%;width:0;height:0;border-radius:18px;
   border:2px solid var(--acc);pointer-events:none;
-  box-shadow:0 0 0 9999px rgba(6,9,14,.80), 0 0 26px rgba(59,130,246,.32);
+  box-shadow:0 0 0 9999px rgba(0,0,0,.84), 0 0 26px var(--acc-soft);
   transition:left .34s var(--ease),top .34s var(--ease),width .34s var(--ease),height .34s var(--ease)}
-#chole.none{border-color:transparent;box-shadow:0 0 0 9999px rgba(6,9,14,.88)}
-html[data-theme="light"] #chole{box-shadow:0 0 0 9999px rgba(15,22,34,.72), 0 0 26px rgba(59,130,246,.3)}
-html[data-theme="light"] #chole.none{box-shadow:0 0 0 9999px rgba(15,22,34,.8)}
+#chole.none{border-color:transparent;box-shadow:0 0 0 9999px rgba(0,0,0,.9)}
+html[data-theme="light"] #chole{box-shadow:0 0 0 9999px rgba(10,10,12,.7), 0 0 26px var(--acc-soft)}
+html[data-theme="light"] #chole.none{box-shadow:0 0 0 9999px rgba(10,10,12,.78)}
 #cbox{position:fixed;left:16px;right:16px;max-width:calc(var(--maxw) - 32px);margin:0 auto;
   overflow-y:auto;-webkit-overflow-scrolling:touch;
   background:var(--surf);border:1px solid var(--line2);border-radius:22px;box-shadow:var(--sh3);
@@ -1012,7 +1022,7 @@ var frShort= function(d){ return DSHORT[d.getDay()]+' '+d.getDate()+' '+MSHORT[d
 
 /* ------------------------------------------------------------- constantes */
 var LS = 'cadence_v1';
-var BUILD = 'v22 · 2026-10-09';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
+var BUILD = 'v23 · 2026-10-10';   /* visible en bas du profil : permet d'identifier le fichier ouvert */
 var TUTO_V = 4;                  /* à incrémenter quand le tutoriel change : il se rejoue une fois */
 
 var QUOTES = [
@@ -1195,14 +1205,19 @@ var UNITE = { rep:'rép.', sec:'s', min:'min' };
 /* ------------------------------------------------------ couleur d'accent */
 /* Le socle reste froid ; seul l'accent change. Chaque entrée porte sa teinte
    vive et sa version survolée — le reste (halo, fond doux) s'en déduit. */
+/* Chaque accent porte aussi son encre : c'est ce qui se pose SUR lui. Un
+   accent clair — cyan, or, vert — demande une encre sombre ; avec du blanc
+   partout, le libellé des boutons disparaissait purement et simplement.
+   Le premier n'a pas de couleur : il laisse parler le thème, donc l'accent
+   est blanc sur le sombre et noir sur le clair. */
 var ACCENTS = [
-  {id:'',       n:'Bleu',    c:'#3B82F6', h:'#5B9BFF'},
-  {id:'cyan',   n:'Cyan',    c:'#22D3EE', h:'#5BE2F5'},
-  {id:'violet', n:'Violet',  c:'#8B5CF6', h:'#A78BFA'},
-  {id:'vert',   n:'Vert',    c:'#34D399', h:'#5BE0AF'},
-  {id:'or',     n:'Or',      c:'#FBBF24', h:'#FCD34D'},
-  {id:'rose',   n:'Rose',    c:'#F472B6', h:'#F98FC8'},
-  {id:'blanc',  n:'Blanc',   c:'#E6EAF0', h:'#FFFFFF'}
+  {id:'',       n:'Noir & blanc', c:'var(--txt)', h:'',        t:''},
+  {id:'bleu',   n:'Bleu',    c:'#2563EB', h:'#1D6FE0', t:'#FFFFFF'},
+  {id:'cyan',   n:'Cyan',    c:'#22D3EE', h:'#5BE2F5', t:'#06232A'},
+  {id:'violet', n:'Violet',  c:'#7C3AED', h:'#7E4DF0', t:'#FFFFFF'},
+  {id:'vert',   n:'Vert',    c:'#34D399', h:'#5BE0AF', t:'#07120C'},
+  {id:'or',     n:'Or',      c:'#FBBF24', h:'#FCD34D', t:'#1C1403'},
+  {id:'rose',   n:'Rose',    c:'#F472B6', h:'#F98FC8', t:'#2B0A19'}
 ];
 function accentChoisi(){
   var id=state.accent||'';
@@ -1211,18 +1226,23 @@ function accentChoisi(){
 }
 /* On pose les jetons sur la racine : la feuille de style reste la référence,
    ce choix ne fait que la surcharger. */
+var JETONS_ACC = ['--acc','--acc-hi','--acc-soft','--acc-mid','--acc-txt','--glow'];
 function poserAccent(){
   var a=accentChoisi(), r=document.documentElement;
-  if(!a.id){ ['--acc','--acc-hi','--acc-soft','--glow'].forEach(function(k){ r.style.removeProperty(k); }); }
+  /* Sans identifiant, on retire tout : la feuille de style reprend la main,
+     et c'est elle qui sait que l'encre s'inverse d'un thème à l'autre. */
+  if(!a.id){ JETONS_ACC.forEach(function(k){ r.style.removeProperty(k); }); }
   else{
     r.style.setProperty('--acc', a.c);
     r.style.setProperty('--acc-hi', a.h);
     r.style.setProperty('--acc-soft', tint(a.c,.14));
+    r.style.setProperty('--acc-mid', tint(a.c,.58));
+    r.style.setProperty('--acc-txt', a.t);
     r.style.setProperty('--glow', '0 6px 18px '+tint(a.c,.30));
   }
   relireAccent();
   var mt=$('meta[name="theme-color"]');
-  if(mt) mt.setAttribute('content', state.theme==='dark'?'#0E1116':'#F6F8FB');
+  if(mt) mt.setAttribute('content', state.theme==='dark'?'#000000':'#F2F2F4');
 }
 
 /* ------------------------------------------------------------ compléments */
@@ -1881,7 +1901,7 @@ function silhouette(face,couleurs,w,cls){
 /* Les muscles d'un exercice, moteurs en plein, secondaires en demi-teinte. */
 /* L'accent est défini une seule fois, dans la feuille de style ; on le relit
    ici pour pouvoir en tirer des demi-teintes en JavaScript. */
-var ACC = '#3B82F6';
+var ACC = '#FFFFFF';
 function relireAccent(){
   try{
     var v=getComputedStyle(document.documentElement).getPropertyValue('--acc').trim();
@@ -2743,7 +2763,7 @@ function ring(pct,size){
     '<svg class="ring'+(full?' full':'')+'" viewBox="0 0 120 120"'+(size?' style="width:'+size+'px;height:'+size+'px"':'')+'>'+
       '<defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">'+
         (full ? '<stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#7BE8B8"/>'
-              : '<stop offset="0%" stop-color="#3B82F6"/><stop offset="100%" stop-color="#22D3EE"/>')+
+              : '<stop offset="0%" stop-color="var(--acc)"/><stop offset="100%" stop-color="var(--acc-hi)"/>')+
       '</linearGradient></defs>'+
       '<circle class="bgc" cx="60" cy="60" r="'+r+'"></circle>'+
       '<circle class="fgc" cx="60" cy="60" r="'+r+'" stroke="url(#rg)" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"></circle>'+
@@ -2767,8 +2787,12 @@ function schedLabel(h){
 
 function render(){
   document.documentElement.setAttribute('data-theme', state.theme);
+  /* L'accent par défaut s'inverse avec le thème : il faut le relire ici,
+     sinon les muscles d'un exercice restent peints avec l'encre de l'autre
+     thème. Tant qu'il était bleu des deux côtés, ça ne se voyait pas. */
+  relireAccent();
   $('[data-act="theme"]').innerHTML = ic(state.theme==='dark'?'moon':'sun');
-  var mt=$('meta[name="theme-color"]'); if(mt) mt.setAttribute('content', state.theme==='dark'?'#0E1116':'#F6F8FB');
+  var mt=$('meta[name="theme-color"]'); if(mt) mt.setAttribute('content', state.theme==='dark'?'#000000':'#F2F2F4');
   renderTabs();
   var v=$('#view');
   if(state.tab==='journal'){     v.innerHTML=viewJournal(); bindJournal(); }
@@ -3289,8 +3313,8 @@ function weightSpark(){
   var last=vals[vals.length-1], first=vals[0], diff=+(last-first).toFixed(1);
   return '<svg class="spark" viewBox="0 0 '+W+' '+H+'">'+
     '<defs><linearGradient id="wgrad" x1="0" y1="0" x2="0" y2="1">'+
-      '<stop offset="0%" stop-color="#3B82F6" stop-opacity=".45"/>'+
-      '<stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/></linearGradient></defs>'+
+      '<stop offset="0%" stop-color="var(--acc)" stop-opacity=".40"/>'+
+      '<stop offset="100%" stop-color="var(--acc)" stop-opacity="0"/></linearGradient></defs>'+
     '<line class="gl" x1="'+P+'" y1="'+PT+'" x2="'+(W-P)+'" y2="'+PT+'"/>'+
     '<line class="gl" x1="'+P+'" y1="'+(H-PB)+'" x2="'+(W-P)+'" y2="'+(H-PB)+'"/>'+
     '<path class="ar" d="'+area+'"/>'+
@@ -4309,7 +4333,8 @@ function carteGabarit(){
              '" aria-label="'+esc(c.n)+'"><span style="background:'+c.c+'"></span></button>';
     }).join('')+'</div>'+
     '<div class="small muted" style="margin-top:10px">Le fond ne bouge pas : seule la couleur '+
-    'qui souligne change, partout d\'un coup.</div></section>';
+    'qui souligne change, partout d\'un coup. Le premier suit le thème — '+
+    'blanc sur fond noir, noir sur fond clair.</div></section>';
 
   h+='<div class="sec"><h2>Zones sensibles</h2><span class="small">'+
      (state.gene.length?state.gene.length+' déclarée'+(state.gene.length>1?'s':''):'aucune')+'</span></div>';

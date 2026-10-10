@@ -28,6 +28,46 @@ tiennent en une bande sur l'accueil, et c'est assez.
   vrai code-barres à Open Food Facts. C'est la façon la plus rapide de savoir si
   une panne vient du code, de la base ou du déploiement.
 
+## Noir et blanc
+
+Le socle de l'app est monochrome : fond noir pur, cartes gris très sombre,
+encre blanche — et l'exact inverse en thème clair. L'accent par défaut n'est
+pas une couleur, c'est **l'encre du thème** : blanc sur fond noir, noir sur
+fond clair.
+
+Six accents colorés restent au choix dans Profil (bleu, cyan, violet, vert,
+or, rose). Le socle, lui, ne bouge pas.
+
+### Pourquoi teinter le fond ne servait à rien
+
+Trois premiers socles ont été essayés — encre chaude, forêt, noir neutre — en
+ne déplaçant que la teinte des gris très sombres. **Rendus côte à côte, ils
+donnaient une image rigoureusement identique à l'originale.** À cette clarté,
+un presque-noir n'a pas la place de porter une teinte. Pour qu'un socle change
+de style il faut soit monter les surfaces hors du noir, soit changer l'accent
+avec — ce qui a été fait ici.
+
+### L'encre sur l'accent
+
+Un jeton manquait : **`--acc-txt`**, la couleur de ce qui se pose *sur* un
+fond d'accent. Elle était écrite `#fff` en dur dans neuf règles. Tant que
+l'accent était bleu foncé, personne ne s'en apercevait ; avec un accent blanc,
+le libellé des boutons devenait blanc sur blanc — purement invisible.
+L'accent « Blanc » déjà présent dans le sélecteur avait donc ce défaut depuis
+le début.
+
+Chaque accent porte maintenant son encre, et `theme.js` la mesure : les huit
+passent **4,5:1 au repos comme au survol**. Deux ne passaient pas et ont été
+assombris d'un pas — le bleu (`#3B82F6` → `#2563EB`, 3,68:1 → 5,17:1) et le
+violet (`#8B5CF6` → `#7C3AED`, 4,23:1 → 5,70:1).
+
+Le logo garde sa coupure : « CA » en gris sourd, « DENCE » dans l'accent. En
+noir et blanc l'accent *est* l'encre du texte, donc sans ça les deux moitiés
+se confondaient.
+
+Les icônes de l'app se regénèrent avec `node outils/icones.js` — leur source
+avait été perdue, changer l'identité voulait dire les refaire à la main.
+
 ## Trois onglets
 
 Il y en avait six : Jour, Sport, Stats, Habitudes, Journal, Profil. Six endroits
@@ -768,7 +808,7 @@ ne conseille rien là-dessus.
 bash test/tout.sh
 ```
 
-Huit suites, 146 vérifications, pilotant Chromium avec Playwright. Elles ne
+Neuf suites, 167 vérifications, pilotant Chromium avec Playwright. Elles ne
 dépendent d'aucun serveur : la page est ouverte en `file://` et toute requête
 sortante est coupée.
 

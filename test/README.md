@@ -14,6 +14,7 @@ Chromium est déjà là (`/opt/pw-browsers`), seul `playwright-core` s'installe.
 | `seance.js` | composer une séance, la dérouler série par série, la retrouver au carnet |
 | `images.js` | une image par exercice, jamais la même deux fois, jamais hors cadre |
 | `corps.js` | la rampe de récupération reste une rampe valide, et les muscles tiennent dans la silhouette |
+| `theme.js` | noir et blanc par défaut, et l'encre reste lisible sur chaque accent |
 | `journal.js` | poids, besoins caloriques, repas, humeur |
 | `fab.js` | le bouton + s'efface en descendant et revient en remontant |
 
