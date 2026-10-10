@@ -9,6 +9,7 @@ Démo : « The real price of a €100,000 house in France ». La voix est une vo
 - **Habillage** : compteur « REAL COST » en haut à gauche, barre des chapitres en haut au centre, rappel « Abonne-toi » animé vers le premier tiers.
 - **Son** : musique lo-fi chill qui baisse automatiquement sous la voix. Bruitages (whoosh, pop, impact, tic-tac, clochette, clic) **baissés de 6 dB**. Volume final à −14 LUFS, le niveau standard de YouTube.
 - **Livrables** : vidéo 16:9 en 1080p, Short 9:16 (fond flouté, titre en haut), écran de fin de 20 s prêt pour YouTube Studio.
+- **Miniature : style A.** Panneau bleu nuit en diagonale à gauche avec le chiffre d'accroche barré en rouge, la question en 2 mots (le premier en jaune), une pastille jaune et une flèche jaune vers l'élément clé de l'illustration à droite.
 
 ## Fabrication
 
