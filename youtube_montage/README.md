@@ -16,3 +16,5 @@ Démo : « The real price of a €100,000 house in France ». La voix est une vo
 2. `python3 build_final.py` : ajoute les zooms punch, le compteur, la barre des chapitres, le rappel d'abonnement, la musique lo-fi et les sous-titres. Les vidéos finales vont dans `out5/`.
 
 Les scripts utilisent ffmpeg, Pillow, numpy et la police Inter. RHVoice n'est utilisé que pour la voix provisoire.
+
+3. `python3 build_thumbnails.py` : génère 3 miniatures dans le même style (prix barré, compteur, titre), à comparer avec l'outil « Test & compare » de YouTube Studio.
