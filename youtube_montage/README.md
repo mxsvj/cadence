@@ -28,3 +28,12 @@ Démo : « The real price of a €100,000 house in France ». La voix est une vo
 `build_finance_thumbnail.py` génère sa miniature en style A.
 
 Les scripts utilisent ffmpeg, Pillow, numpy et la police Inter. RHVoice n'est utilisé que pour la voix provisoire.
+
+`build_dark_style_test.py` est un essai de 20 s en style sombre, inspiré du montage de la chaîne EGO :
+
+- fond noir et texte tapé façon terminal ;
+- coupes sèches avec glitch, grain et vignette ;
+- nappe d'ambiance avec des silences ;
+- sous-titres karaoké discrets (gris → blanc, sans bandeau).
+
+Il réutilise la voix et les calculs de `build_finance_demo.py`.
