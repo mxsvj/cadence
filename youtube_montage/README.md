@@ -39,3 +39,5 @@ Les scripts utilisent ffmpeg, Pillow, numpy et la police Inter. RHVoice n'est ut
 - Short 9:16 sur fond noir, avec le titre en haut.
 
 Il réutilise la voix et les calculs de `build_finance_demo.py`.
+
+`build_finance_dark_thumbnail.py` génère sa miniature : le style A en version sombre, avec le rouge comme seule couleur d'accent et une fenêtre de terminal « ERROR » comme élément clé.
