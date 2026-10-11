@@ -84,3 +84,10 @@ Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `bu
 - A : « EVERY CRYPTO » en grand avec la pastille « IN 12 MIN », la grille des 12 boîtes, et une flèche vers la case rouge « scam coins » ;
 - B : une pièce « BTC » glitchée devant un mur de tickers, la plupart barrés en rouge.
 - C : des pièces BTC, ETH, USDT et DOGE autour d'une grosse pièce rouge « ??? », fêlée et glitchée.
+
+`build_every_crypto_thumbnails_dg.py` en génère quatre autres :
+
+- D : un terminal qui « explique » chaque boîte (`[ok] bitcoin`…), avec la ligne `[!!] scam coins` en rouge ;
+- E : un « 12 » géant à côté de « TYPES OF CRYPTO » ;
+- F : trois cartes de krach, LUNA −99 %, FTT −90 % et NFT −95 %, tirées de la vidéo ;
+- G : « ONE OF THESE ISN'T CRYPTO » avec BTC, ETH, USDT et une pièce € entourée des étoiles européennes (la réponse est l'euro numérique, chapitre 12).
