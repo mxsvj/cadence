@@ -78,6 +78,12 @@ Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `bu
 - une grille de 12 boîtes revient comme fil rouge, et chaque carte de chapitre montre la progression (« BOX 05 / 12 ») ;
 - nouveaux plans : pièce avec son ticker, chaîne de blocs (qui se casse en rouge pour une panne ou un piratage), colonnes du halving, mur de tickers qui s'éteignent, cercle d'étoiles européen (MiCA), regroupement des transactions par un layer 2, frise de l'euro numérique ;
 - le texte de la voix off est dans `scripts/every_crypto_12min_script.md`, avec les sources des faits. Ton éducatif, sans hype ni prédiction de prix.
+- plus de mouvement, sans changer le style :
+  - caméra : zoom avant plus marqué qui glisse doucement (une fois à gauche, une fois à droite), petit recul juste après chaque coupe, zoom « punch » avec une courte secousse sur les chiffres clés ;
+  - texte : les titres montent comme sortis d'un masque, les chiffres défilent jusqu'à leur valeur, les lignes du terminal glissent depuis la gauche ;
+  - animations continues : pièces qui flottent avec une couronne de traits qui tourne, impulsion qui parcourt la chaîne de blocs, étoiles européennes qui tournent, mur de tickers qui dérive, ligne de balayage sur la grille des 12 boîtes, point lumineux au bout des courbes ;
+  - décor : poussières qui flottent devant l'image, léger glitch sur toutes les coupes (plus fort aux chapitres) ;
+- `CRYPTO_SAMPLE=0:23 python3 build_every_crypto.py` ne rend que les plans 0 à 22 (environ 2 min 30), pour valider un réglage sans attendre le rendu complet.
 
 `build_every_crypto_thumbnails.py` génère trois miniatures sombres pour cette vidéo, à tester avec « Test & compare » :
 

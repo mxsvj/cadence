@@ -1736,9 +1736,16 @@ def k_cchap(n, title):
         lab = f"BOX {n:02d} / 12"
         typed(lab, 0, 0.1, 20, starts[i])
 
+        fbig = F(BLACK, 620)
+
         def frame(t):
             im = black()
             d = ImageDraw.Draw(im, "RGBA")
+            # giant chapter number drifting behind the card, and a scan line sweeping down after the cut
+            d.text((W / 2 + 140 - 160 * t / dur, 800), f"{n:02d}", font=fbig, fill=(20, 20, 25), anchor="ms")
+            ys = 120 + 840 * ease_out(prog(t, 0.0, 0.6))
+            if t < 0.6:
+                d.rectangle([0, ys - 2, W, ys + 2], fill=FG + (int(90 * (1 - t / 0.6)),))
             x0 = W / 2 - 12 * 40 / 2 + 7
             for k in range(12):
                 x = x0 + k * 40
@@ -1781,9 +1788,17 @@ def k_boxes(hi=(), cue=0.2, label=None, label_cue=None):
                 x, y = X0 + (k % 4) * SX, Y0 + (k // 4) * SY
                 on = k in lit
                 col = FG if on else (78, 78, 86)
+                y += 14 * (1 - ease_out(u))
                 d.rectangle([x, y, x + BW, y + BH], outline=col + (a,), width=3 if on and hi else 2)
+                if on and hi and hi != "all":
+                    p = 0.5 + 0.5 * math.sin(t * 4 + k)
+                    d.rectangle([x - 7, y - 7, x + BW + 7, y + BH + 7], outline=FG + (int(70 * p * u),), width=2)
                 d.text((x + 16, y + 30), f"{k + 1:02d}", font=fn, fill=(DIM if on else FAINT) + (a,), anchor="ls")
                 d.text((x + BW / 2, y + BH / 2 + 12), CATS[k], font=fl, fill=col + (a,), anchor="mm")
+            # a faint scan line keeps sweeping over the grid
+            if t >= t0:
+                ys = Y0 - 20 + ((t - t0) * 0.45 % 1) * (2 * SY + BH + 40)
+                d.rectangle([X0 - 30, ys - 1, X0 + 3 * SX + BW + 30, ys + 1], fill=FG + (40,))
             if label:
                 mid_text(d, 800, label, typed(label, t, tl, 30), F(MONO, 36), FG)
             return cam(im, t, dur, 500)
@@ -1806,16 +1821,25 @@ def k_coin(tick, name, cue=0.2, notes=()):
             im = black()
             d = ImageDraw.Draw(im, "RGBA")
             u = ease_out(prog(t, t0, t0 + 0.7))
+            cyf = cy + 8 * math.sin(t * 1.3)             # the coin floats
             if u > 0:
-                d.arc([cx - R, cy - R, cx + R, cy + R], -90, -90 + 360 * u, fill=FG, width=6)
+                d.arc([cx - R, cyf - R, cx + R, cyf + R], -90, -90 + 360 * u, fill=FG, width=6)
                 a = int(255 * prog(t, t0 + 0.3, t0 + 0.6))
-                d.ellipse([cx - R + 24, cy - R + 24, cx + R - 24, cy + R - 24], outline=FAINT + (a,), width=2)
-                d.text((cx, cy), tick, font=ft, fill=FG + (a,), anchor="mm")
+                d.ellipse([cx - R + 24, cyf - R + 24, cx + R - 24, cyf + R - 24], outline=FAINT + (a,), width=2)
+                # ring of ticks turning around the coin
+                for j in range(40):
+                    ang = math.radians(j * 9 + 22 * (t - t0))
+                    r0, r1 = R + 16, R + (30 if j % 5 == 0 else 23)
+                    d.line([(cx + r0 * math.cos(ang), cyf + r0 * math.sin(ang)), (cx + r1 * math.cos(ang), cyf + r1 * math.sin(ang))],
+                           fill=(DIM if j % 5 == 0 else FAINT) + (a,), width=2)
+                s = 1 + 0.25 * (1 - ease_back(prog(t, t0 + 0.3, t0 + 0.7)))
+                d.text((cx, cyf), tick, font=F(BLACK, int((110 if len(tick) <= 3 else 84) * s)), fill=FG + (a,), anchor="mm")
             mid_text(d, cy + R + 90, name, typed(name, t, t0 + 0.5, 24), fn, DIM, cx)
             for k, (txt, tn, col) in enumerate(N):
                 s = typed(txt, t, tn, 30)
                 if s:
-                    d.text((960, 400 + k * 90 - (len(N) - 1) * 30), s, font=fn, fill=col, anchor="ls")
+                    v = ease_out(prog(t, tn, tn + 0.35))
+                    d.text((960 + 40 * (1 - v), 400 + k * 90 - (len(N) - 1) * 30), s, font=fn, fill=col + (int(255 * (0.3 + 0.7 * v)),), anchor="ls")
             return cam(im, t, dur, 480)
         return frame, [("boom", t0, 0.5)]
     return build
@@ -1845,6 +1869,7 @@ def k_chain(n=6, label=None, label_cue=None, broken=None, label_col="FG"):
                 a = int(255 * u)
                 x = X0 + k * SP
                 dy = 18 * ease_out(prog(t, tb, tb + 0.3)) if bad and k >= n // 2 else 0
+                dy += -22 * (1 - ease_back(u)) + 4 * math.sin(t * 2.2 + k * 0.9)     # drops into place, then bobs
                 col = ERR if bad and k >= n // 2 else FG
                 if k:
                     xa, xb = x - SP + BW / 2, x - BW / 2
@@ -1858,6 +1883,17 @@ def k_chain(n=6, label=None, label_cue=None, broken=None, label_col="FG"):
                 for r in range(3):
                     yy = cy - 4 + r * 22 + dy
                     d.line([(x - BW / 2 + 16, yy), (x + BW / 2 - 16 - (50 if r == 2 else 0), yy)], fill=FAINT + (a,), width=6)
+            # a pulse runs along the links once the chain is built (it stops at the break)
+            t_built = 0.15 + n * step
+            if t >= t_built:
+                last = n // 2 - 1 if bad else n - 1
+                pos = ((t - t_built) * 1.6) % (last + 0.6)
+                if pos <= last:
+                    px = X0 + pos * SP
+                    k_ = int(pos)
+                    py = cy + 4 * math.sin(t * 2.2 + k_ * 0.9)
+                    d.ellipse([px - 16, py - 16, px + 16, py + 16], fill=FG + (45,))
+                    d.ellipse([px - 6, py - 6, px + 6, py + 6], fill=FG)
             if label:
                 mid_text(d, 760, label, typed(label, t, tl, 30), F(MONO, 38), COLS[label_col])
             return cam(im, t, dur, 480)
@@ -1886,7 +1922,7 @@ def k_cols(items, title=None, title_cue=0.2):
                     continue
                 x, h = X0 + k * SP, max(4, HM * fr * g)
                 d.rectangle([x - CW / 2, BASE - h, x + CW / 2, BASE], fill=col)
-                d.text((x, BASE - h - 22), top, font=F(MONOB, 34), fill=col, anchor="ms")
+                d.text((x, BASE - h - 22), count_text(top, g) if "." in top or float(top) >= 3 else top, font=F(MONOB, 34), fill=col, anchor="ms")
                 d.text((x, BASE + 50), bot, font=F(MONO, 28), fill=DIM, anchor="ms")
             if title:
                 mid_text(d, 250, title, typed(title, t, tt, 30), F(MONO, 34), DIM)
@@ -1918,9 +1954,12 @@ def k_tickers(names, die=None, keep=(), label=None, label_cue=None, cols=6):
                 a = prog(t, app[k], app[k] + 0.2)
                 if a <= 0:
                     continue
-                x, y = X0 + (k % cols) * SX, Y0 + (k // cols) * SY
+                row = k // cols
+                x = X0 + (k % cols) * SX + (1 if row % 2 else -1) * 9 * t
+                y = Y0 + row * SY - 7 * t
                 u = prog(t, td + order.index(k) * 0.02, td + order.index(k) * 0.02 + 0.3) if td is not None and nm not in keep else 0
-                d.text((x, y), nm, font=f, fill=mix(FG, FAINT, u) + (int(255 * a),), anchor="mm")
+                fl_ = u == 0 and (int(t * 10) + k * 7) % 31 == 0
+                d.text((x + (5 if fl_ else 0), y), nm, font=f, fill=(DIM if fl_ else mix(FG, FAINT, u)) + (int(255 * a),), anchor="mm")
                 if u > 0:
                     w = d.textlength(nm, font=f) + 16
                     d.line([(x - w / 2, y), (x - w / 2 + w * u, y)], fill=ERR, width=3)
@@ -1949,11 +1988,12 @@ def k_eu(center, cue=0.2, label=None, label_cue=None, center_col="FG"):
                 u = prog(t, t0 + k * 0.05, t0 + k * 0.05 + 0.25)
                 if u <= 0:
                     continue
-                ang = math.radians(-90 + 30 * k)
+                ang = math.radians(-90 + 30 * k + 7 * (t - t0))
                 d.polygon(star_pts(cx + R * math.cos(ang), cy + R * math.sin(ang), 22 * ease_back(u)), fill=FG + (int(255 * u),))
             a = prog(t, t0 + 0.6, t0 + 0.8)
             if a > 0:
-                d.text((cx, cy), center, font=fc, fill=COLS[center_col] + (int(255 * a),), anchor="mm")
+                sz = int((110 if len(center) <= 5 else 80) * (1.35 - 0.35 * ease_back(prog(t, t0 + 0.6, t0 + 0.95))))
+                d.text((cx, cy), center, font=F(BLACK, sz), fill=COLS[center_col] + (int(255 * a),), anchor="mm")
             if label:
                 mid_text(d, 800, label, typed(label, t, tl, 30), F(MONO, 36), FG)
             return cam(im, t, dur, 470)
@@ -2018,10 +2058,19 @@ def k_timeline(points):
             im = black()
             d = ImageDraw.Draw(im, "RGBA")
             d.line([(X0 - 80, Y), (X1 + 80, Y)], fill=FAINT, width=2)
+            # the bright part of the line grows to the latest point reached
+            xs_ = [X0 + k * (X1 - X0) / (n - 1) for k in range(n)]
+            reach = X0 - 80
+            for k, (_, _, tp, _) in enumerate(P):
+                if tp is not None and t >= tp - 0.4:
+                    reach = max(reach, (xs_[k - 1] if k else X0 - 80) + (xs_[k] - (xs_[k - 1] if k else X0 - 80)) * ease_out(prog(t, tp - 0.4, tp)))
+            d.line([(X0 - 80, Y), (reach, Y)], fill=DIM, width=3)
             for k, (dt, lab, tp, col) in enumerate(P):
                 x = X0 + k * (X1 - X0) / (n - 1)
                 on = tp is not None and t >= tp
                 if on:
+                    rr = 13 + 46 * prog(t, tp, tp + 0.7)
+                    d.ellipse([x - rr, Y - rr, x + rr, Y + rr], outline=col + (int(160 * (1 - prog(t, tp, tp + 0.7))),), width=3)
                     d.ellipse([x - 13, Y - 13, x + 13, Y + 13], fill=col)
                 else:
                     d.ellipse([x - 13, Y - 13, x + 13, Y + 13], outline=FAINT, width=3)
@@ -2057,6 +2106,190 @@ def k_end(title):
 
 KINDS.update(chap=k_cchap, boxes=k_boxes, coin=k_coin, chain=k_chain, cols=k_cols, tickers=k_tickers, eu=k_eu,
              bundle=k_bundle, timeline=k_timeline, end=k_end)
+# --------------------------------------------------------------------------- motion layer: more camera and text movement, same dark style
+# Loaded after the scene files: redefines cam(), bigs(), term() and k_chart() so every scene picks up the extra motion.
+ease_io = lambda u: u * u * (3 - 2 * u)
+_SD.update(i=0, hits=(), settle=0.045)
+
+
+def cam(im, t, dur, cy=500, z=0.035):
+    """Push-in with a slow drift (its direction alternates from scene to scene), a settle right after the hard cut,
+    and a punch-in with a short shake on each hit of the scene."""
+    i = _SD["i"]
+    u = clamp(t / max(dur, 0.1))
+    zz = 1.035 + max(z, 0.035) * 1.7 * ease_io(u)
+    zz += _SD["settle"] * (1 - ease_out(prog(t, 0, 0.45)))
+    sx = sy = 0.0
+    for at, g in _SD["hits"]:
+        if at - 0.01 <= t < at + 0.55:
+            g = min(g, 1.0)
+            zz += 0.05 * g * prog(t, at, at + 0.05) * (1 - ease_out(prog(t, at + 0.05, at + 0.55)))
+            if t < at + 0.18:
+                k = int(t * 60)
+                sx += ((k * 7919) % 13 - 6) * 1.3 * g
+                sy += ((k * 104729) % 11 - 5) * 1.3 * g
+    side = 1 if i % 2 else -1
+    cx = W / 2 + side * 70 * (u - 0.5) + sx
+    cyy = cy + ((i % 3) - 1) * 24 * (u - 0.5) + sy + 3 * math.sin(t * 0.9 + i)
+    return camera(im, zz, cx, cyy)
+
+
+_LAYERS = {}
+
+
+def text_layer(txt, font, size, col):
+    """Text pre-rendered on a transparent layer, with its offset from the (left, baseline) anchor point."""
+    key = (txt, font, size, col)
+    if key not in _LAYERS:
+        f = F(font, size)
+        x0, y0, x1, y1 = _tmp.textbbox((0, 0), txt, font=f, anchor="ls")
+        lay = Image.new("RGBA", (int(x1 - x0) + 10, int(y1 - y0) + 10), (0, 0, 0, 0))
+        ImageDraw.Draw(lay).text((5 - x0, 5 - y0), txt, font=f, fill=col + (255,), anchor="ls")
+        _LAYERS[key] = (lay, x0 - 5, y0 - 5)
+    return _LAYERS[key]
+
+
+def rise(im, txt, font, size, col, x, y, t, t0, span=0.45, lift=0.0):
+    """Centered text that slides up out of a mask line (its own baseline box), then keeps lifting slowly."""
+    u = ease_out(prog(t, t0, t0 + span))
+    if u <= 0:
+        return
+    lay, ox, oy = text_layer(txt, font, size, col)
+    w = _tmp.textlength(txt, font=F(font, size))
+    px, py = int(x - w / 2 + ox), int(y + oy - lift)
+    dy = int((1 - u) * lay.height * 0.9)
+    if lay.height - dy <= 0:
+        return
+    piece = lay.crop((0, 0, lay.width, lay.height - dy))
+    if u < 1:
+        piece = with_alpha(piece, 0.35 + 0.65 * u)
+    im.paste(piece, (px, py + dy), piece)
+
+
+_NUM = re.compile(r"\d[\d,]*(?:\.\d+)?")
+
+
+def counts(txt):
+    """Worth counting up: has a number of at least 3, or with decimals."""
+    return any(float(m.replace(",", "")) >= 3 or "." in m for m in _NUM.findall(txt))
+
+
+def count_text(txt, f):
+    """txt with every number scaled by f (0..1), keeping its decimals and thousands separators."""
+    def one(m):
+        s = m.group(0)
+        raw = s.replace(",", "")
+        dec = len(raw.split(".")[1]) if "." in raw else 0
+        v = float(raw) * f
+        return f"{v:,.{dec}f}" if "," in s else f"{v:.{dec}f}"
+    return _NUM.sub(one, txt)
+
+
+def bigs(items, events=()):
+    """Free layout: (text, cue, font, size, colour, x, y) items. Mono text is typed, numbers in the black font count up,
+    the rest slides up out of a mask; everything then lifts slowly, each item at its own speed."""
+    def build(dur, i):
+        R = []
+        for k, (txt, cue, font, size, col, x, y) in enumerate(items):
+            t0 = trig(i, cue)
+            if is_mono(font):
+                typed(txt, 0, t0, 30, starts[i])
+            R.append((k, txt, t0, F(font, size), font, size, col, x, y, font == BLACK and counts(txt)))
+
+        def frame(t):
+            im = black()
+            d = ImageDraw.Draw(im, "RGBA")
+            for k, txt, t0, f, font, size, col, x, y, cnt in R:
+                if t < t0:
+                    continue
+                lift = (10 + 6 * k) * prog(t, t0, dur)
+                if is_mono(font):
+                    mid_text(d, y - lift, txt, typed(txt, t, t0, 30), f, col, x)
+                elif cnt:
+                    a = prog(t, t0, t0 + 0.15)
+                    s = count_text(txt, ease_out(prog(t, t0, t0 + 0.9)))
+                    d.text((x, y + 14 * (1 - a) - lift), s, font=f, fill=col + (int(255 * a),), anchor="ms")
+                else:
+                    rise(im, txt, font, size, col, x, y, t, t0, lift=lift)
+            return cam(im, t, dur)
+        return frame, [(n, trig(i, cue), g) for n, cue, g in events]
+    return build
+
+
+def term(rows, size=44, cps=28, cy=480):
+    """Terminal block: each (text, cue, colour) row slides in from the left and is typed when its cue is said."""
+    def build(dur, i):
+        fm = F(MONO, size)
+        R = [(txt, trig(i, cue), col) for txt, cue, col in rows]
+        for txt, t0, _ in R:
+            typed(txt, 0, t0, cps, starts[i])
+        x0 = (W - max(_tmp.textlength(txt, font=fm) for txt, _, _ in R)) / 2
+        lh = size * 1.9
+        y0 = cy - (len(R) - 1) * lh / 2
+
+        def frame(t):
+            im = black()
+            d = ImageDraw.Draw(im, "RGBA")
+            last = None
+            for k, (txt, t0, col) in enumerate(R):
+                s = typed(txt, t, t0, cps)
+                if s:
+                    u = ease_out(prog(t, t0, t0 + 0.35))
+                    x = x0 - 36 * (1 - u)
+                    y = y0 + k * lh
+                    if u < 1:
+                        d.rectangle([x - 18, y - size * 0.95, x - 12, y + size * 0.25], fill=col + (int(255 * (1 - u)),))
+                    d.text((x, y), s, font=fm, fill=col + (int(255 * (0.3 + 0.7 * u)),), anchor="ls")
+                    last = (s, y, x)
+            if last:
+                caret(d, last[2] + d.textlength(last[0], font=fm), last[1], t, size)
+            return cam(im, t, dur, cy)
+        return frame, []
+    return build
+
+
+def k_chart(path, note=None, note_cue=None, note_col="FG"):
+    """Line chart drawn over time, with a glowing dot riding its tip; the note slides in from the right."""
+    def build(dur, i):
+        tn = trig(i, note_cue) if note else None
+        X0, X1, Y0, Y1 = 340, 1300, 300, 760
+        lo, hi = min(path), max(path)
+        pad = (hi - lo) * 0.12 or 1
+        lo, hi = lo - pad, hi + pad
+        n = len(path) - 1
+        pts = [(X0 + 30 + k * (X1 - X0 - 60) / n, Y1 - (v - lo) / (hi - lo) * (Y1 - Y0)) for k, v in enumerate(path)]
+        t_end = max(1.4, min(dur * 0.75, (tn + 0.3) if tn else dur * 0.75))
+        col = COLS.get(note_col, FG)
+
+        def frame(t):
+            im = black()
+            d = ImageDraw.Draw(im, "RGBA")
+            for g in range(1, 4):
+                gy = Y0 + g * (Y1 - Y0) / 4
+                d.line([(X0, gy), (X1, gy)], fill=FAINT + (60,), width=1)
+            d.line([(X0, Y0 - 20), (X0, Y1 + 20), (X1, Y1 + 20)], fill=FAINT, width=2)
+            d.text((X1, Y1 + 60), "(illustration)", font=F(MONO, 22), fill=FAINT, anchor="rs")
+            m = prog(t, 0.2, t_end) * n
+            k = int(m)
+            show = pts[: k + 1] + ([(pts[k][0] + (pts[k + 1][0] - pts[k][0]) * (m - k), pts[k][1] + (pts[k + 1][1] - pts[k][1]) * (m - k))] if k < n else [])
+            if len(show) > 1:
+                d.line(show, fill=FG, width=5, joint="curve")
+            if t >= 0.2:
+                tx, ty = show[-1]
+                tip = col if (tn is not None and t >= tn) else FG
+                r = 18 + 6 * math.sin(t * 6)
+                d.ellipse([tx - r, ty - r, tx + r, ty + r], fill=tip + (40,))
+                d.ellipse([tx - 8, ty - 8, tx + 8, ty + 8], fill=tip)
+            if tn is not None and t >= tn:
+                f = F(BLACK, 110) if len(note) <= 8 else F(MONO, 40)
+                u = ease_out(prog(t, tn, tn + 0.3))
+                d.text((1570 + 60 * (1 - u), 560), note, font=f, fill=col + (int(255 * u),), anchor="ms")
+            return cam(im, t, dur, 520)
+        return frame, ([("boom", tn, 0.6)] if tn is not None else [])
+    return build
+
+
+KINDS["chart"] = k_chart
 # --------------------------------------------------------------------------- overlays: disclaimer, terminal-style subscribe reminder
 E = os.path.join(D, "crypto")
 os.makedirs(E, exist_ok=True)
@@ -2073,8 +2306,16 @@ SUB_T0 = starts[CHN.index(4) + 1] + 1.0      # terminal-style subscribe reminder
 f_nfa, f_sub = F(MONO, 18), F(MONO, 26)
 
 
+_drng = np.random.default_rng(31)
+DUST = [(_drng.uniform(0, W), _drng.uniform(0, H), _drng.uniform(4, 16), _drng.uniform(-6, 6), _drng.uniform(0.8, 2.4), _drng.uniform(0, 6.3))
+        for _ in range(46)]
+
+
 def overlays(im, t):
     d = ImageDraw.Draw(im, "RGBA")
+    for x0, y0, vy, vx, r, ph in DUST:              # dust drifting in front of the scene (parallax with the camera)
+        x, y = (x0 + vx * t) % W, (y0 - vy * t) % H
+        d.ellipse([x - r, y - r, x + r, y + r], fill=(200, 200, 210, int(38 + 28 * math.sin(t * 1.3 + ph))))
     if t < NFA_OFF:
         a = min(prog(t, 0.3, 0.7), 1 - prog(t, NFA_OFF - 0.5, NFA_OFF))
         d.text((44, 56), "not financial advice · education only", font=f_nfa, fill=DIM + (int(255 * a),), anchor="ls")
@@ -2112,24 +2353,30 @@ if __name__ == "__main__" and os.environ.get("LONG_PREVIEW") is None:
             out[..., 2] = np.roll(out[..., 2], -k, axis=1)
         return out
 
-    fns, events = [], []
+    fns, events, HITS = [], [], []
     for i, l in enumerate(LINES):
         _SD["dur"] = frames[i] / FPS
         fn, ev = scene_of(l)(frames[i] / FPS, i)
         fns.append(fn)
+        HITS.append([(tt, g) for n_, tt, g in ev if n_ == "boom"])
         events += [(n, starts[i] + tt, g) for n, tt, g in ev]
     # glitch cuts into each chapter card and out of it; plain hard cuts elsewhere
     is_chap = [isinstance(s_, tuple) and s_[0] == "chap" for s_ in SCN]
     cut_g = [starts[j] for j in range(1, K) if is_chap[j] or is_chap[j - 1] or SCN[j] == "end"]
     G = [(at, 0.32, g) for n, at, g in events if n == "glitch"] + [(c - 0.05, 0.12, 0.6) for c in cut_g]
+    G += [(starts[j] - 0.03, 0.08, 0.3) for j in range(1, K) if starts[j] not in cut_g]     # a flick of glitch on every other cut
+    # CRYPTO_SAMPLE="a:b" renders only lines a..b-1 (to review the edit quickly)
+    SAMPLE = os.environ.get("CRYPTO_SAMPLE")
+    la, lb = (int(v) for v in SAMPLE.split(":")) if SAMPLE else (0, K)
+    K0, K1 = round(starts[la] * FPS), (round(starts[lb] * FPS) if lb < K else NF)
 
     vid = os.path.join(E, "video.mp4")
     enc = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
                             "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p", vid], stdin=subprocess.PIPE)
-    for k in range(NF):
+    for k in range(K0, K1):
         t = k / FPS
         i = max(j for j in range(K) if starts[j] <= t + 1e-6)
-        _SD["dur"] = frames[i] / FPS
+        _SD.update(dur=frames[i] / FPS, i=i, hits=HITS[i], settle=0.14 if is_chap[i] else 0.045)
         im = fns[i](t - starts[i]).convert("RGB")
         overlays(im, t)
         a = np.asarray(im, dtype=np.uint8)
@@ -2245,8 +2492,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     with open(subs, "w") as f:
         f.write(HEAD.format(w=W, h=H, styles="Style: Sub,Inter Medium,44,&H00F0F0F0,&H00707070,&H00000000,&H96000000,0,0,0,0,100,100,0.5,0,1,0,2,2,220,220,70,1")
                 + "\n".join(ev) + "\n")
-    final = os.path.join(O, "crypto_dark_16x9.mp4")
-    run(["ffmpeg", "-y", "-i", vid, "-i", mix, "-vf", f"ass={subs}:fontsdir={FD},fade=t=out:st={TOTAL - 0.8:.2f}:d=0.8",
+    final = os.path.join(O, "crypto_sample.mp4" if SAMPLE else "crypto_dark_16x9.mp4")
+    T0, T1 = K0 / FPS, K1 / FPS
+    run(["ffmpeg", "-y", "-i", vid, "-ss", f"{T0:.3f}", "-t", f"{T1 - T0:.3f}", "-i", mix, "-vf",
+         f"setpts=PTS+{T0:.3f}/TB,ass={subs}:fontsdir={FD},setpts=PTS-STARTPTS,fade=t=out:st={T1 - T0 - 0.8:.2f}:d=0.8",
          "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
          "-movflags", "+faststart", "-shortest", final])
     print(f"done total={TOTAL:.2f}s")
