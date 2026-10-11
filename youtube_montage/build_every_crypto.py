@@ -1737,12 +1737,13 @@ def k_cchap(n, title):
         typed(lab, 0, 0.1, 20, starts[i])
 
         fbig = F(BLACK, 620)
+        ac = CAT_COL[n - 1]
 
         def frame(t):
             im = black()
             d = ImageDraw.Draw(im, "RGBA")
             # giant chapter number drifting behind the card, and a scan line sweeping down after the cut
-            d.text((W / 2 + 140 - 160 * t / dur, 800), f"{n:02d}", font=fbig, fill=(20, 20, 25), anchor="ms")
+            d.text((W / 2 + 140 - 160 * t / dur, 800), f"{n:02d}", font=fbig, fill=mix(BG, ac, 0.16), anchor="ms")
             ys = 120 + 840 * ease_out(prog(t, 0.0, 0.6))
             if t < 0.6:
                 d.rectangle([0, ys - 2, W, ys + 2], fill=FG + (int(90 * (1 - t / 0.6)),))
@@ -1751,15 +1752,15 @@ def k_cchap(n, title):
                 x = x0 + k * 40
                 a = int(255 * prog(t, 0.05 + k * 0.03, 0.2 + k * 0.03))
                 if k < n - 1:
-                    d.rectangle([x, 318, x + 26, 344], fill=DIM + (a,))
+                    d.rectangle([x, 318, x + 26, 344], fill=CAT_COL[k] + (int(a * 0.75),))
                 elif k == n - 1:
-                    d.rectangle([x, 318, x + 26, 344], fill=(ERR if t % 0.8 < 0.4 and t < 1.6 else FG) + (a,))
+                    d.rectangle([x, 318, x + 26, 344], fill=(FG if t % 0.8 < 0.4 and t < 1.6 else ac) + (a,))
                 else:
                     d.rectangle([x, 318, x + 26, 344], outline=FAINT + (a,), width=2)
             mid_text(d, 450, lab, typed(lab, t, 0.1, 20), fk, DIM)
             letters(d, (W / 2, 590), title, ft, t, 0.35, step=0.035)
             w = 520 * ease_out(prog(t, 0.3, 1.0))
-            d.line([(W / 2 - w / 2, 650), (W / 2 + w / 2, 650)], fill=FG + (110,), width=2)
+            d.line([(W / 2 - w / 2, 650), (W / 2 + w / 2, 650)], fill=ac + (200,), width=3)
             return cam(im, t, dur, 470, 0.03)
         return frame, [("boom", 0.0, 0.45)]
     return build
@@ -1787,12 +1788,12 @@ def k_boxes(hi=(), cue=0.2, label=None, label_cue=None):
                 a = int(255 * u)
                 x, y = X0 + (k % 4) * SX, Y0 + (k // 4) * SY
                 on = k in lit
-                col = FG if on else (78, 78, 86)
+                col = CAT_COL[k] if on else (78, 78, 86)
                 y += 14 * (1 - ease_out(u))
                 d.rectangle([x, y, x + BW, y + BH], outline=col + (a,), width=3 if on and hi else 2)
                 if on and hi and hi != "all":
                     p = 0.5 + 0.5 * math.sin(t * 4 + k)
-                    d.rectangle([x - 7, y - 7, x + BW + 7, y + BH + 7], outline=FG + (int(70 * p * u),), width=2)
+                    d.rectangle([x - 7, y - 7, x + BW + 7, y + BH + 7], outline=col + (int(90 * p * u),), width=2)
                 d.text((x + 16, y + 30), f"{k + 1:02d}", font=fn, fill=(DIM if on else FAINT) + (a,), anchor="ls")
                 d.text((x + BW / 2, y + BH / 2 + 12), CATS[k], font=fl, fill=col + (a,), anchor="mm")
             # a faint scan line keeps sweeping over the grid
@@ -1815,6 +1816,7 @@ def k_coin(tick, name, cue=0.2, notes=()):
         for txt, tn, _ in N:
             typed(txt, 0, tn, 30, starts[i])
         cx, cy, R = (620 if N else W / 2), 460, 175
+        cc = COIN_COL.get(tick, _SD["acc"])
         ft, fn = F(BLACK, 110 if len(tick) <= 3 else 84), F(MONO, 40)
 
         def frame(t):
@@ -1823,7 +1825,7 @@ def k_coin(tick, name, cue=0.2, notes=()):
             u = ease_out(prog(t, t0, t0 + 0.7))
             cyf = cy + 8 * math.sin(t * 1.3)             # the coin floats
             if u > 0:
-                d.arc([cx - R, cyf - R, cx + R, cyf + R], -90, -90 + 360 * u, fill=FG, width=6)
+                d.arc([cx - R, cyf - R, cx + R, cyf + R], -90, -90 + 360 * u, fill=cc, width=6)
                 a = int(255 * prog(t, t0 + 0.3, t0 + 0.6))
                 d.ellipse([cx - R + 24, cyf - R + 24, cx + R - 24, cyf + R - 24], outline=FAINT + (a,), width=2)
                 # ring of ticks turning around the coin
@@ -1831,9 +1833,9 @@ def k_coin(tick, name, cue=0.2, notes=()):
                     ang = math.radians(j * 9 + 22 * (t - t0))
                     r0, r1 = R + 16, R + (30 if j % 5 == 0 else 23)
                     d.line([(cx + r0 * math.cos(ang), cyf + r0 * math.sin(ang)), (cx + r1 * math.cos(ang), cyf + r1 * math.sin(ang))],
-                           fill=(DIM if j % 5 == 0 else FAINT) + (a,), width=2)
+                           fill=(cc if j % 5 == 0 else mix(BG, cc, 0.35)) + (a,), width=2)
                 s = 1 + 0.25 * (1 - ease_back(prog(t, t0 + 0.3, t0 + 0.7)))
-                d.text((cx, cyf), tick, font=F(BLACK, int((110 if len(tick) <= 3 else 84) * s)), fill=FG + (a,), anchor="mm")
+                d.text((cx, cyf), tick, font=F(BLACK, int((110 if len(tick) <= 3 else 84) * s)), fill=cc + (a,), anchor="mm")
             mid_text(d, cy + R + 90, name, typed(name, t, t0 + 0.5, 24), fn, DIM, cx)
             for k, (txt, tn, col) in enumerate(N):
                 s = typed(txt, t, tn, 30)
@@ -1853,6 +1855,7 @@ def k_chain(n=6, label=None, label_cue=None, broken=None, label_col="FG"):
         if label:
             typed(label, 0, tl, 30, starts[i])
         BW, BH, SP, cy = 170, 130, 250, 460
+        ac = _SD["acc"]
         X0 = W / 2 - (n - 1) * SP / 2
         step = min(0.4, max(0.15, dur * 0.4 / n))
         fn = F(MONO, 22)
@@ -1870,7 +1873,7 @@ def k_chain(n=6, label=None, label_cue=None, broken=None, label_col="FG"):
                 x = X0 + k * SP
                 dy = 18 * ease_out(prog(t, tb, tb + 0.3)) if bad and k >= n // 2 else 0
                 dy += -22 * (1 - ease_back(u)) + 4 * math.sin(t * 2.2 + k * 0.9)     # drops into place, then bobs
-                col = ERR if bad and k >= n // 2 else FG
+                col = ERR if bad and k >= n // 2 else ac
                 if k:
                     xa, xb = x - SP + BW / 2, x - BW / 2
                     if bad and k == n // 2:
@@ -1892,7 +1895,7 @@ def k_chain(n=6, label=None, label_cue=None, broken=None, label_col="FG"):
                     px = X0 + pos * SP
                     k_ = int(pos)
                     py = cy + 4 * math.sin(t * 2.2 + k_ * 0.9)
-                    d.ellipse([px - 16, py - 16, px + 16, py + 16], fill=FG + (45,))
+                    d.ellipse([px - 16, py - 16, px + 16, py + 16], fill=ac + (60,))
                     d.ellipse([px - 6, py - 6, px + 6, py + 6], fill=FG)
             if label:
                 mid_text(d, 760, label, typed(label, t, tl, 30), F(MONO, 38), COLS[label_col])
@@ -1905,7 +1908,7 @@ def k_chain(n=6, label=None, label_cue=None, broken=None, label_col="FG"):
 def k_cols(items, title=None, title_cue=0.2):
     """Vertical columns: (value on top, label below, fraction, colour, cue)."""
     def build(dur, i):
-        R = [(top, bot, fr, COLS[col], trig(i, cue)) for top, bot, fr, col, cue in items]
+        R = [(top, bot, fr, accent(COLS[col]), trig(i, cue)) for top, bot, fr, col, cue in items]
         tt = trig(i, title_cue) if title else None
         if title:
             typed(title, 0, tt, 30, starts[i])
@@ -1959,7 +1962,8 @@ def k_tickers(names, die=None, keep=(), label=None, label_cue=None, cols=6):
                 y = Y0 + row * SY - 7 * t
                 u = prog(t, td + order.index(k) * 0.02, td + order.index(k) * 0.02 + 0.3) if td is not None and nm not in keep else 0
                 fl_ = u == 0 and (int(t * 10) + k * 7) % 31 == 0
-                d.text((x + (5 if fl_ else 0), y), nm, font=f, fill=(DIM if fl_ else mix(FG, FAINT, u)) + (int(255 * a),), anchor="mm")
+                tint = mix(FG, CAT_COL[sum(map(ord, nm)) % 10], 0.6)
+                d.text((x + (5 if fl_ else 0), y), nm, font=f, fill=(DIM if fl_ else mix(tint, FAINT, u)) + (int(255 * a),), anchor="mm")
                 if u > 0:
                     w = d.textlength(nm, font=f) + 16
                     d.line([(x - w / 2, y), (x - w / 2 + w * u, y)], fill=ERR, width=3)
@@ -1982,6 +1986,7 @@ def k_eu(center, cue=0.2, label=None, label_cue=None, center_col="FG"):
         fc = F(BLACK, 110 if len(center) <= 5 else 80)
 
         def frame(t):
+            _SD["glow"] = EU_BLUE
             im = black()
             d = ImageDraw.Draw(im, "RGBA")
             for k in range(12):
@@ -1989,7 +1994,7 @@ def k_eu(center, cue=0.2, label=None, label_cue=None, center_col="FG"):
                 if u <= 0:
                     continue
                 ang = math.radians(-90 + 30 * k + 7 * (t - t0))
-                d.polygon(star_pts(cx + R * math.cos(ang), cy + R * math.sin(ang), 22 * ease_back(u)), fill=FG + (int(255 * u),))
+                d.polygon(star_pts(cx + R * math.cos(ang), cy + R * math.sin(ang), 22 * ease_back(u)), fill=EU_YELLOW + (int(255 * u),))
             a = prog(t, t0 + 0.6, t0 + 0.8)
             if a > 0:
                 sz = int((110 if len(center) <= 5 else 80) * (1.35 - 0.35 * ease_back(prog(t, t0 + 0.6, t0 + 0.95))))
@@ -2009,6 +2014,7 @@ def k_bundle(top_cue, post_cue):
         span = max(0.6, t2 - t1 - 0.5)
         dots = sorted([(rng.uniform(0, 1), rng.uniform(-1, 1), t1 + 0.2 + rng.uniform(0, span)) for _ in range(44)], key=lambda q: q[2])
         bx, by, CY = W / 2, 300, 690
+        ac = _SD["acc"]
         XS = [W / 2 + (k - 2.5) * 190 for k in range(6)]
         f, fs = F(MONO, 34), F(MONO, 26)
 
@@ -2025,7 +2031,7 @@ def k_bundle(top_cue, post_cue):
             d.text((XS[0] - 55, CY + 90), "ETHEREUM  (layer 1)", font=fs, fill=DIM, anchor="ls")
             if t >= t1:
                 a = int(255 * prog(t, t1, t1 + 0.3))
-                d.rounded_rectangle([bx - 260, by - 65, bx + 260, by + 65], 12, outline=FG + (a,), width=3)
+                d.rounded_rectangle([bx - 260, by - 65, bx + 260, by + 65], 12, outline=ac + (a,), width=3)
                 d.text((bx, by + 12), "LAYER 2", font=f, fill=FG + (a,), anchor="ms")
                 got = sum(1 for *_, ts in dots if t >= ts + 0.8)
                 d.text((bx, by + 110), f"{got * 75:,} transactions bundled", font=fs, fill=DIM + (a,), anchor="ms")
@@ -2035,11 +2041,11 @@ def k_bundle(top_cue, post_cue):
                     sx, sy = (150 if side < 0.5 else W - 150), by + yo * 160
                     tx = bx - 262 if side < 0.5 else bx + 262
                     x, y = sx + (tx - sx) * ease_out(u), sy + (by - sy) * ease_out(u)
-                    d.ellipse([x - 7, y - 7, x + 7, y + 7], fill=FG + (int(255 * (1 - 0.5 * u)),))
+                    d.ellipse([x - 7, y - 7, x + 7, y + 7], fill=ac + (int(255 * (1 - 0.5 * u)),))
             if t >= t2:
                 u = ease_out(prog(t, t2, t2 + 0.6))
                 x, y = bx + (XS[5] - bx) * u, (by + 65) + (CY - by - 65) * u
-                d.rectangle([x - 55, y - 40, x + 55, y + 40], fill=FG)
+                d.rectangle([x - 55, y - 40, x + 55, y + 40], fill=ac)
             return cam(im, t, dur, 480)
         return frame, [("tick", ts + 0.8, 0.15) for *_, ts in dots[::4]] + [("boom", t2 + 0.6, 0.6)]
     return build
@@ -2048,7 +2054,7 @@ def k_bundle(top_cue, post_cue):
 def k_timeline(points):
     """Horizontal timeline: (date, label, cue or None, colour); points without a cue stay faint."""
     def build(dur, i):
-        P = [(dt, lab, (trig(i, c) if c is not None else None), COLS[col]) for dt, lab, c, col in points]
+        P = [(dt, lab, (trig(i, c) if c is not None else None), accent(COLS[col])) for dt, lab, c, col in points]
         for _, lab, tp, _ in P:
             if tp is not None:
                 typed(lab, 0, tp, 30, starts[i])
@@ -2194,6 +2200,7 @@ def bigs(items, events=()):
             t0 = trig(i, cue)
             if is_mono(font):
                 typed(txt, 0, t0, 30, starts[i])
+            col = accent(col) if font == BLACK else col
             R.append((k, txt, t0, F(font, size), font, size, col, x, y, font == BLACK and counts(txt)))
 
         def frame(t):
@@ -2220,7 +2227,7 @@ def term(rows, size=44, cps=28, cy=480):
     """Terminal block: each (text, cue, colour) row slides in from the left and is typed when its cue is said."""
     def build(dur, i):
         fm = F(MONO, size)
-        R = [(txt, trig(i, cue), col) for txt, cue, col in rows]
+        R = [(txt, trig(i, cue), accent(col) if txt[:1] in ">+" else col) for txt, cue, col in rows]
         for txt, t0, _ in R:
             typed(txt, 0, t0, cps, starts[i])
         x0 = (W - max(_tmp.textlength(txt, font=fm) for txt, _, _ in R)) / 2
@@ -2260,6 +2267,7 @@ def k_chart(path, note=None, note_cue=None, note_col="FG"):
         pts = [(X0 + 30 + k * (X1 - X0 - 60) / n, Y1 - (v - lo) / (hi - lo) * (Y1 - Y0)) for k, v in enumerate(path)]
         t_end = max(1.4, min(dur * 0.75, (tn + 0.3) if tn else dur * 0.75))
         col = COLS.get(note_col, FG)
+        lc = _SD["acc"]
 
         def frame(t):
             im = black()
@@ -2273,10 +2281,10 @@ def k_chart(path, note=None, note_cue=None, note_col="FG"):
             k = int(m)
             show = pts[: k + 1] + ([(pts[k][0] + (pts[k + 1][0] - pts[k][0]) * (m - k), pts[k][1] + (pts[k + 1][1] - pts[k][1]) * (m - k))] if k < n else [])
             if len(show) > 1:
-                d.line(show, fill=FG, width=5, joint="curve")
+                d.line(show, fill=lc, width=5, joint="curve")
             if t >= 0.2:
                 tx, ty = show[-1]
-                tip = col if (tn is not None and t >= tn) else FG
+                tip = col if (tn is not None and t >= tn) else lc
                 r = 18 + 6 * math.sin(t * 6)
                 d.ellipse([tx - r, ty - r, tx + r, ty + r], fill=tip + (40,))
                 d.ellipse([tx - 8, ty - 8, tx + 8, ty + 8], fill=tip)
@@ -2290,6 +2298,52 @@ def k_chart(path, note=None, note_cue=None, note_col="FG"):
 
 
 KINDS["chart"] = k_chart
+# --------------------------------------------------------------------------- colour layer: one accent colour per box and a soft glow behind each scene
+# Same edit, same black background: the accent of the current box colours the key element of each scene (big numbers,
+# coins, chains, curves, prompts), and a faint glow of that colour sits behind the scene. Red stays for losses and scams.
+CAT_COL = [(247, 147, 26), (130, 140, 255), (40, 210, 180), (0, 190, 255), (60, 200, 120), (243, 190, 50),
+           (255, 80, 170), (170, 220, 60), (175, 110, 255), (255, 120, 80), ERR, (70, 110, 255)]
+BRAND = (150, 120, 255)                       # intro and outro
+COIN_COL = {"BTC": (247, 147, 26), "ETH": (130, 140, 255), "DOGE": (216, 180, 74), "BNB": (243, 186, 47),
+            "XMR": (255, 102, 0), "ZEC": (244, 183, 40)}
+EU_BLUE, EU_YELLOW = (40, 80, 230), (255, 204, 0)
+_SD.update(acc=BRAND, glow=None)
+
+
+class _Cols(dict):
+    """COLS with an extra 'ACC' entry that always gives the accent of the scene being built."""
+    def __getitem__(self, k):
+        return _SD["acc"] if k == "ACC" else dict.__getitem__(self, k)
+
+    def get(self, k, default=None):
+        return _SD["acc"] if k == "ACC" else dict.get(self, k, default)
+
+
+COLS = _Cols(COLS)
+_GLOW = {}
+
+
+def glow_bg(col, k=0.13):
+    if (col, k) not in _GLOW:
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        f = np.exp(-(((xx - W / 2) / 820) ** 2 + ((yy - H * 0.44) / 520) ** 2))
+        img = np.array(BG, np.float32) + f[..., None] * np.array(col, np.float32) * k
+        _GLOW[(col, k)] = Image.fromarray(img.clip(0, 255).astype(np.uint8))
+    return _GLOW[(col, k)]
+
+
+def black():
+    return glow_bg(_SD["glow"] or _SD["acc"]).copy()
+
+
+def accent(col):
+    """FG becomes the scene's accent; every other colour is kept."""
+    return _SD["acc"] if col == FG else col
+
+
+def caret(d, x, y, t, size):
+    if t % 0.9 < 0.5:
+        d.rectangle([x + 4, y - size * 0.8, x + 4 + size * 0.55, y + size * 0.15], fill=_SD["acc"])
 # --------------------------------------------------------------------------- overlays: disclaimer, terminal-style subscribe reminder
 E = os.path.join(D, "crypto")
 os.makedirs(E, exist_ok=True)
@@ -2304,6 +2358,11 @@ for l in LINES:
     CHN.append(0 if l.get("hide") else c_)
 SUB_T0 = starts[CHN.index(4) + 1] + 1.0      # terminal-style subscribe reminder, early in box 4
 f_nfa, f_sub = F(MONO, 18), F(MONO, 26)
+
+
+def scene_ctx(i):
+    """Per-scene state read by the scene builders and frames: index, duration, accent colour of its box."""
+    _SD.update(i=i, dur=frames[i] / FPS, acc=CAT_COL[CHN[i] - 1] if CHN[i] else BRAND, glow=None)
 
 
 _drng = np.random.default_rng(31)
@@ -2323,7 +2382,8 @@ def overlays(im, t):
     n_ = CHN[i_]
     if n_ and not (isinstance(SCN[i_], tuple) and SCN[i_][0] == "chap"):
         a = min(prog(t - starts[i_], 0, 0.3), 1.0) if i_ and CHN[i_ - 1] != n_ else 1.0
-        d.text((44, 66), f"{n_:02d}/12 · {CATS[n_ - 1]}", font=F(MONO, 22), fill=DIM + (int(255 * a),), anchor="ls")
+        d.rectangle([44, 50, 60, 66], fill=CAT_COL[n_ - 1] + (int(255 * a),))
+        d.text((72, 66), f"{n_:02d}/12 · {CATS[n_ - 1]}", font=F(MONO, 22), fill=DIM + (int(255 * a),), anchor="ls")
     u = t - SUB_T0
     if 0 <= u <= 3.4:
         txt = "[ subscribed ✓ ]" if u >= 1.8 else "[ subscribe ]"
@@ -2355,7 +2415,7 @@ if __name__ == "__main__" and os.environ.get("LONG_PREVIEW") is None:
 
     fns, events, HITS = [], [], []
     for i, l in enumerate(LINES):
-        _SD["dur"] = frames[i] / FPS
+        scene_ctx(i)
         fn, ev = scene_of(l)(frames[i] / FPS, i)
         fns.append(fn)
         HITS.append([(tt, g) for n_, tt, g in ev if n_ == "boom"])
@@ -2376,7 +2436,8 @@ if __name__ == "__main__" and os.environ.get("LONG_PREVIEW") is None:
     for k in range(K0, K1):
         t = k / FPS
         i = max(j for j in range(K) if starts[j] <= t + 1e-6)
-        _SD.update(dur=frames[i] / FPS, i=i, hits=HITS[i], settle=0.14 if is_chap[i] else 0.045)
+        scene_ctx(i)
+        _SD.update(hits=HITS[i], settle=0.14 if is_chap[i] else 0.045)
         im = fns[i](t - starts[i]).convert("RGB")
         overlays(im, t)
         a = np.asarray(im, dtype=np.uint8)

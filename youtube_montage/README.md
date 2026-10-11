@@ -83,6 +83,11 @@ Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `bu
   - texte : les titres montent comme sortis d'un masque, les chiffres défilent jusqu'à leur valeur, les lignes du terminal glissent depuis la gauche ;
   - animations continues : pièces qui flottent avec une couronne de traits qui tourne, impulsion qui parcourt la chaîne de blocs, étoiles européennes qui tournent, mur de tickers qui dérive, ligne de balayage sur la grille des 12 boîtes, point lumineux au bout des courbes ;
   - décor : poussières qui flottent devant l'image, léger glitch sur toutes les coupes (plus fort aux chapitres) ;
+- de la couleur, toujours sur fond noir : chaque boîte a sa couleur (Bitcoin orange, Ethereum indigo, autres blockchains turquoise, layer 2 cyan, stablecoins vert, tokens d'exchange jaune, DeFi rose, memecoins vert anis, NFT violet, privacy coins corail, arnaques rouge, euro numérique bleu) :
+  - un halo discret de cette couleur derrière chaque plan ;
+  - les grands chiffres, les pièces (aux couleurs de chaque crypto), les chaînes de blocs, les courbes et les lignes `>` du terminal prennent la couleur du chapitre ;
+  - la grille des 12 boîtes et la barre de progression des chapitres sont multicolores, les étoiles de l'UE jaunes sur fond bleu ;
+  - le rouge reste réservé aux pertes et aux arnaques, les sous-titres restent blancs ;
 - `CRYPTO_SAMPLE=0:23 python3 build_every_crypto.py` ne rend que les plans 0 à 22 (environ 2 min 30), pour valider un réglage sans attendre le rendu complet.
 
 `build_every_crypto_thumbnails.py` génère trois miniatures sombres pour cette vidéo, à tester avec « Test & compare » :
