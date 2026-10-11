@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Focus">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Focus — une liste, un bouton : le téléphone te ramène à tes tâches tant qu'elles ne sont pas faites.">
+<title>Focus</title>
+<!-- Chemins absolus : servie à /focus sans barre finale, la page résoudrait
+     « manifest.json » à la racine, c'est-à-dire celui de Cadence. -->
+<link rel="manifest" href="/focus/manifest.json">
+<link rel="apple-touch-icon" href="/focus/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================ 1. jetons ============================ */
+/* Les mêmes que Cadence : fond noir, encre blanche, l'accent est l'encre.
+   Le thème suit celui du téléphone — il n'y a pas d'écran de réglages pour
+   le choisir, et une app qu'on ouvre pour se concentrer n'en a pas besoin. */
+:root{
+  --bg:#000000; --surf:#111113; --surf2:#1C1C20;
+  --line:#292930; --line2:#3A3A43;
+  --txt:#FFFFFF; --mut:#9C9CA5; --mut2:#6B6B74;
+  --acc:#FFFFFF; --acc-hi:#E4E4E8; --acc-soft:rgba(255,255,255,.10); --acc-txt:#0A0A0B;
+  --ok:#34D399; --ok-txt:#07120C; --ok-soft:rgba(52,211,153,.14);
+  --chaud:#FF6367; --chaud-soft:rgba(255,99,103,.12);
+  --voile:rgba(0,0,0,.62);
+  --sh1:0 1px 2px rgba(0,0,0,.34), 0 3px 8px rgba(0,0,0,.22);
+  --sh3:0 10px 24px rgba(0,0,0,.42), 0 30px 64px rgba(0,0,0,.5);
+  --glow:0 8px 28px rgba(255,255,255,.18);
+  --rl:20px; --r:14px;
+  --maxw:560px;
+  --ease:cubic-bezier(.2,.7,.3,1);
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#F2F2F4; --surf:#FFFFFF; --surf2:#E9E9ED;
+    --line:#E2E2E7; --line2:#C9C9D1;
+    --txt:#0A0A0B; --mut:#55555E; --mut2:#86868F;
+    --acc:#101014; --acc-hi:#2E2E38; --acc-soft:rgba(16,16,20,.07); --acc-txt:#FFFFFF;
+    --ok:#0E9F6E; --ok-txt:#FFFFFF; --ok-soft:rgba(14,159,110,.12);
+    --chaud:#C81E3A; --chaud-soft:rgba(200,30,58,.08);
+    --voile:rgba(10,10,12,.38);
+    --sh1:0 1px 2px rgba(22,42,74,.07), 0 2px 6px rgba(22,42,74,.06);
+    --sh3:0 8px 20px rgba(22,42,74,.13), 0 28px 56px rgba(22,42,74,.16);
+    --glow:0 8px 24px rgba(16,16,20,.22);
+  }
+}
+
+/* ============================ 2. socle ============================ */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:var(--bg);color:var(--txt);
+  font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:15px;line-height:1.45;letter-spacing:-.005em;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overscroll-behavior-y:none;
+}
+h1,h2,.cond{font-family:'Barlow Condensed','Manrope',sans-serif;text-transform:uppercase;
+  letter-spacing:.012em;font-weight:700;margin:0;line-height:1.04}
+button,input{font-family:inherit;font-size:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer;color:inherit}
+::selection{background:var(--acc);color:var(--acc-txt)}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:8px}
+/* 16 px au moins : en dessous, Safari zoome sur le champ dès qu'on le touche */
+input{background:var(--surf2);border:1px solid var(--line);border-radius:var(--r);
+  padding:13px 14px;width:100%;font-size:16px;caret-color:var(--acc);
+  transition:border-color .16s,background .16s}
+input::placeholder{color:var(--mut2)}
+input:focus{border-color:var(--acc);background:var(--surf)}
+.muted{color:var(--mut)} .small{font-size:12.5px}
+.num{font-variant-numeric:tabular-nums}
+.ic{width:1em;height:1em;flex:0 0 auto;display:inline-block;vertical-align:-.14em;
+  fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ============================ 3. structure ============================ */
+#app{max-width:var(--maxw);margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+#haut{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  padding:calc(env(safe-area-inset-top) + 14px) 16px 12px;background:var(--bg)}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:27px;letter-spacing:.15em;
+  text-transform:uppercase;line-height:1;color:var(--mut);user-select:none}
+.logo b{color:var(--acc);font-weight:700}
+.iconbtn{width:40px;height:40px;border-radius:12px;background:var(--surf);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--mut);position:relative;
+  transition:transform .16s var(--ease),color .16s}
+.iconbtn:active{transform:scale(.9)}
+.iconbtn .pastille{position:absolute;top:-3px;right:-3px;width:11px;height:11px;border-radius:50%;
+  background:var(--chaud);border:2px solid var(--bg)}
+/* L'ordre change avec le mode : avant le focus on écrit puis on lit la liste ;
+   pendant, on coche d'abord et on ajoute ensuite. Le champ reste le même
+   élément d'un mode à l'autre — un rendu ne vide jamais ce qu'on tape. */
+main{flex:1;display:flex;flex-direction:column;gap:14px;padding:4px 16px calc(env(safe-area-inset-bottom) + 40px)}
+#tete{order:1} #ajout{order:2} #liste{order:3} #pied{order:4;display:flex;flex-direction:column;gap:14px}
+body.enfocus #liste{order:2} body.enfocus #ajout{order:3}
+
+/* ============================ 4. boutons ============================ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 16px;
+  border-radius:var(--r);background:var(--surf2);border:1px solid var(--line);font-weight:700;font-size:14px;
+  transition:transform .14s var(--ease),background .16s,opacity .16s}
+.btn:active{transform:scale(.96)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-txt)}
+.btn.danger{background:var(--chaud);border-color:var(--chaud);color:#fff}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--mut)}
+.btn.wide{width:100%}
+.btn.sm{padding:9px 12px;font-size:13px;border-radius:11px}
+
+/* ============================ 5. avant le focus ============================ */
+.intro h1{font-size:34px}
+.intro p{margin:8px 0 0;color:var(--mut);max-width:34em}
+#ajout{display:flex;gap:8px}
+#ajout .plus{flex:0 0 50px;height:50px;border-radius:var(--r);background:var(--surf2);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:20px}
+#ajout .plus:active{transform:scale(.92)}
+
+.liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.tache{display:flex;align-items:center;gap:12px;width:100%;text-align:left;min-height:54px;
+  background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:12px 10px 12px 15px;
+  box-shadow:var(--sh1)}
+.tache .t{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
+.suppr{flex:0 0 36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  color:var(--mut2);font-size:17px}
+.suppr:active{background:var(--surf2);color:var(--txt)}
+.vide{margin:0;padding:18px;text-align:center;color:var(--mut2);border:1px dashed var(--line2);border-radius:var(--r)}
+
+.lanceur{display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 0 6px}
+.gros{width:min(60vw,216px);aspect-ratio:1;border-radius:50%;background:var(--acc);color:var(--acc-txt);
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:46px;letter-spacing:.14em;text-indent:.14em;
+  text-transform:uppercase;
+  box-shadow:var(--glow),0 0 0 12px var(--acc-soft);transition:transform .18s var(--ease),box-shadow .18s}
+.gros:active{transform:scale(.95)}
+.gros[disabled]{background:transparent;color:var(--mut2);border:2px dashed var(--line2);box-shadow:none;cursor:default}
+.lanceur p{margin:0;text-align:center;color:var(--mut);font-size:13.5px;max-width:28em}
+
+.alerte{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 15px;
+  border-radius:var(--r);background:var(--chaud-soft);border:1px solid var(--chaud);color:var(--txt);font-size:13.5px}
+.alerte .ic{font-size:20px;color:var(--chaud)}
+.alerte b{white-space:nowrap}
+.stats{margin:0;text-align:center;color:var(--mut);font-size:12.5px}
+
+/* ============================ 6. pendant le focus ============================ */
+.enc{display:flex;flex-direction:column;gap:10px;padding:8px 0 4px}
+.etiq{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ok)}
+.etiq i{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pouls 1.8s ease-in-out infinite}
+@keyframes pouls{50%{opacity:.25}}
+@media (prefers-reduced-motion: reduce){.etiq i{animation:none}}
+.chrono{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:78px;line-height:.95;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.barre{height:6px;border-radius:6px;background:var(--surf2);overflow:hidden}
+.barre i{display:block;height:100%;background:var(--ok);transition:width .4s var(--ease)}
+.compte{color:var(--mut);font-weight:600;font-size:13.5px}
+
+.case{flex:0 0 28px;height:28px;border-radius:9px;border:2px solid var(--line2);display:flex;
+  align-items:center;justify-content:center;color:transparent;font-size:16px;transition:background .16s,border-color .16s}
+.tache[aria-checked="true"] .case{background:var(--ok);border-color:var(--ok);color:var(--ok-txt)}
+.tache[aria-checked="true"] .t{color:var(--mut2);text-decoration:line-through}
+button.tache:active{transform:scale(.985)}
+
+.rappel{margin:0;color:var(--mut);font-size:12.5px;text-align:center}
+.horsligne{margin:0;padding:11px 13px;border-radius:12px;background:var(--chaud-soft);color:var(--txt);font-size:12.5px}
+.secours{align-self:center;margin-top:4px;padding:10px 14px;color:var(--mut2);font-size:12.5px;font-weight:700;
+  text-decoration:underline;text-underline-offset:3px}
+
+/* ============================ 7. feuilles ============================ */
+.voile{position:fixed;inset:0;background:var(--voile);opacity:0;pointer-events:none;transition:opacity .22s;z-index:50}
+.voile.open{opacity:1;pointer-events:auto}
+.feuille{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:var(--maxw);max-height:90vh;max-height:90dvh;
+  overflow:auto;overscroll-behavior:contain;background:var(--surf);border:1px solid var(--line);border-bottom:0;
+  border-radius:22px 22px 0 0;box-shadow:var(--sh3);padding:10px 18px calc(env(safe-area-inset-bottom) + 24px);
+  transform:translateY(105%);visibility:hidden;transition:transform .28s var(--ease),visibility 0s .28s;z-index:51}
+.feuille.open{transform:none;visibility:visible;transition:transform .28s var(--ease)}
+.poignee{width:38px;height:5px;border-radius:5px;background:var(--line2);margin:0 auto 14px}
+.feuille h2{font-size:26px;margin-bottom:8px}
+.feuille p{margin:8px 0}
+
+.etat{display:flex;flex-direction:column;gap:7px;margin:14px 0;padding:12px 14px;border-radius:var(--r);
+  background:var(--surf2);font-size:13.5px}
+.etat div{display:flex;align-items:center;gap:9px}
+.pt{flex:0 0 9px;height:9px;border-radius:50%;background:var(--mut2)}
+.pt.ok{background:var(--ok)} .pt.ko{background:var(--chaud)}
+
+.etapes{counter-reset:e;list-style:none;padding:0;margin:16px 0;display:flex;flex-direction:column;gap:14px}
+.etapes li{counter-increment:e;position:relative;padding-left:36px}
+.etapes li::before{content:counter(e);position:absolute;left:0;top:-1px;width:25px;height:25px;border-radius:50%;
+  background:var(--surf2);border:1px solid var(--line2);font-size:12px;font-weight:800;
+  display:flex;align-items:center;justify-content:center}
+.etapes li.fait{color:var(--mut2)}
+.etapes li.fait::before{content:'✓';background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.mot{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--surf2);border:1px solid var(--line);
+  border-radius:6px;padding:1px 6px}
+.url{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 8px 8px 11px;border-radius:12px;
+  background:var(--surf2);border:1px solid var(--line)}
+.url code{flex:1;min-width:0;font-family:ui-monospace,Menlo,monospace;font-size:12px;overflow-wrap:anywhere;
+  user-select:all;-webkit-user-select:all}
+.url .lettre{flex:0 0 auto;font-weight:800;font-size:12px;color:var(--mut)}
+
+.code{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.code .val{font-family:ui-monospace,Menlo,monospace;font-size:17px;font-weight:700;letter-spacing:.06em}
+.code form{display:flex;gap:8px;margin-top:10px}
+.code input{text-transform:lowercase;font-family:ui-monospace,Menlo,monospace}
+
+.fin{text-align:center;padding:14px 4px 4px}
+.fin .rond{width:84px;height:84px;margin:4px auto 16px;border-radius:50%;background:var(--ok);color:var(--ok-txt);
+  display:flex;align-items:center;justify-content:center;font-size:40px}
+.fin h2{font-size:38px}
+.fin .lead{font-size:17px;font-weight:700;margin:10px 0 4px}
+
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translate(-50%,16px);opacity:0;
+  max-width:calc(100% - 32px);width:max-content;background:var(--txt);color:var(--bg);padding:11px 16px;
+  border-radius:12px;font-weight:700;font-size:13.5px;text-align:center;box-shadow:var(--sh3);
+  transition:opacity .22s,transform .22s var(--ease);z-index:60;pointer-events:none}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<svg id="sprite" xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <symbol id="i-cadenas" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-alerte" viewBox="0 0 24 24"><path d="M12 3.5l9 16H3z"/><path d="M12 10v4.5M12 17.2v.1"/></symbol>
+</svg>
+
+<div id="app">
+  <header id="haut">
+    <div class="logo">FOC<b>US</b></div>
+    <button class="iconbtn" data-act="regl" aria-label="Brancher le blocage des apps">
+      <svg class="ic"><use href="#i-cadenas"/></svg><span id="pastille" class="pastille" hidden></span>
+    </button>
+  </header>
+  <main>
+    <section id="tete"></section>
+    <form id="ajout" autocomplete="off">
+      <input id="nv" maxlength="140" placeholder="Ajouter une tâche" enterkeyhint="done" aria-label="Nouvelle tâche">
+      <button class="plus" aria-label="Ajouter"><svg class="ic"><use href="#i-plus"/></svg></button>
+    </form>
+    <ul id="liste" class="liste"></ul>
+    <section id="pied"></section>
+  </main>
+</div>
+
+<div id="voile" class="voile" data-act="fermer"></div>
+<div id="feuille" class="feuille" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="poignee"></div>
+  <div id="fcontenu"></div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================================
+   Focus — une liste, un bouton.
+
+   On écrit ce qu'on doit finir, on appuie sur FOCUS, et tant qu'il reste une
+   case vide, les apps choisies renvoient ici. Le renvoi n'est pas fait par la
+   page : une page web n'a aucun pouvoir sur les autres apps du téléphone.
+   C'est une automatisation Raccourcis de l'iPhone qui demande à l'API, à
+   chaque ouverture d'Instagram ou de TikTok, si un focus est en cours.
+
+   D'où le seul vrai souci de cette page : que le serveur sache, à tout
+   moment, ce qu'elle sait. Chaque changement part tout de suite ; s'il ne
+   part pas, on le dit à l'écran au lieu de faire comme si de rien n'était.
+
+   L'état est rangé deux fois : dans le navigateur, pour s'ouvrir sans réseau,
+   et sous une clé côté serveur. Le renvoi du raccourci ouvre Safari, pas
+   l'app posée sur l'écran d'accueil — deux stockages distincts sur iPhone.
+   C'est le serveur, et la clé passée dans l'adresse, qui les accordent.
+   ========================================================================== */
+(function(){
+'use strict';
+
+var ORIGINE   = /^https?:$/.test(location.protocol) ? location.origin : 'https://cadence-ten-theta.vercel.app';
+var API       = ORIGINE + '/api/focus';
+var MAX_FOCUS = 12 * 60 * 60 * 1000;   /* le serveur lève un focus oublié au bout de 12 h, la page aussi */
+var MAX_TACHES = 40;
+/* La sortie de secours demande d'écrire une phrase. Ni apostrophe ni accent :
+   le clavier de l'iPhone remplace l'une par une apostrophe courbe et les
+   autres se tapent mal d'un pouce. La comparaison les tolère quand même. */
+var PHRASE    = 'je laisse tomber';
+var ALPHA     = 'abcdefghjkmnpqrstuvwxyz23456789';   /* ni l, ni 1, ni o, ni 0, ni i : un code se recopie */
+
+var etat = vide();
+var cfg  = { k:'', vu:0, serveur:'', sale:false };   /* serveur : '' (pas encore su), ok, sansbase, injoignable */
+var feuille = '';
+var finInfo = null;
+var toastT = 0;
+
+function $(s){ return document.querySelector(s); }
+function vide(){ return { maj:0, actif:false, debut:0, taches:[], hist:[] }; }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+  return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+function ic(n){ return '<svg class="ic"><use href="#i-' + n + '"/></svg>'; }
+function pl(n, mot){ return n + ' ' + mot + (n > 1 ? 's' : ''); }
+
+/* ------------------------------------------------------------ stockage */
+function lireLS(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function ecrireLS(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+
+function hasard(n){
+  var out = '', b = new Uint8Array(n);
+  if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(b);
+  else for(var i = 0; i < n; i++) b[i] = Math.floor(Math.random() * 256);
+  for(var j = 0; j < n; j++) out += ALPHA[b[j] % ALPHA.length];
+  return out;
+}
+function normCle(v){
+  v = String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return /^[a-z0-9]{8,24}$/.test(v) ? v : '';
+}
+function joliCle(k){ return (k.match(/.{1,4}/g) || []).join('-'); }
+function cleUrl(){ var m = /[?&]k=([^&#]*)/.exec(location.search); return m ? normCle(decodeURIComponent(m[1])) : ''; }
+
+/* L'état reçu, d'où qu'il vienne, est remis en forme avant d'être cru. */
+function forme(s){
+  s = s && typeof s === 'object' ? s : {};
+  return {
+    maj:    Number(s.maj) || 0,
+    actif:  !!s.actif && !!Number(s.debut),
+    debut:  s.actif ? Number(s.debut) || 0 : 0,
+    taches: (Array.isArray(s.taches) ? s.taches : []).filter(function(t){ return t && t.id && t.t; })
+              .map(function(t){ return { id:String(t.id), t:String(t.t), ok:!!t.ok }; }),
+    hist:   (Array.isArray(s.hist) ? s.hist : []).slice(-60)
+  };
+}
+
+function garder(){ ecrireLS('focus.etat', JSON.stringify(etat)); }
+function marquerSale(v){ cfg.sale = !!v; ecrireLS('focus.sale', v ? '1' : '0'); }
+
+/* L'adresse porte la clé : si on pose l'app sur l'écran d'accueil depuis
+   Safari, c'est cette adresse-là qu'elle rouvrira, et la liste suit. */
+function adresseAvecCle(){
+  try{
+    var chemin = location.pathname.replace(/\/focus$/, '/focus/');
+    history.replaceState(null, '', chemin + '?k=' + cfg.k);
+  }catch(e){ /* file:// refuse de toucher à l'adresse : sans importance */ }
+}
+
+/* ------------------------------------------------------------- réseau --- */
+function appel(corps){
+  var ctl = window.AbortController ? new AbortController() : null;
+  var t = setTimeout(function(){ if(ctl) ctl.abort(); }, 8000);
+  return fetch(API, { method:'POST', cache:'no-store', headers:{ 'Content-Type':'application/json' },
+                      body:JSON.stringify(corps), signal: ctl ? ctl.signal : undefined })
+    .then(function(r){
+      clearTimeout(t);
+      if(r.status === 501){ cfg.serveur = 'sansbase'; return null; }
+      if(!r.ok) throw new Error('http ' + r.status);
+      cfg.serveur = 'ok';
+      return r.json();
+    }, function(e){ clearTimeout(t); cfg.serveur = 'injoignable'; throw e; });
+}
+
+/* Un envoi à la fois. Ce qui change pendant qu'un envoi est en route repart
+   juste après, avec l'état du moment : rien ne se perd, rien ne double. */
+var enVol = false, encore = false;
+function pousser(){
+  if(enVol){ encore = true; return Promise.resolve(); }
+  enVol = true; encore = false;
+  return appel({ action:'ecrire', k:cfg.k, etat:etat }).then(function(o){
+    if(!o){ marquerSale(true); return; }
+    if(o.ok === false && o.cause === 'perime' && o.etat) adopter(o.etat);
+    marquerSale(false);
+  }).catch(function(){ marquerSale(true); }).then(function(){
+    enVol = false;
+    rendre();
+    if(encore) return pousser();
+  });
+}
+
+/* Le plus récent des deux gagne : le serveur s'il a été touché ailleurs
+   (Safari, après un renvoi), sinon c'est nous qui le mettons à jour. */
+function tirer(){
+  return appel({ action:'lire', k:cfg.k }).then(function(o){
+    if(!o) return;
+    cfg.vu = Number(o.vu) || 0;
+    var s = o.etat, smaj = s ? Number(s.maj) || 0 : 0;
+    if(s && smaj > etat.maj){ adopter(s); marquerSale(false); }
+    else if(etat.maj > smaj) return pousser();
+    else marquerSale(false);
+  }).catch(function(){}).then(function(){ rendre(); });
+}
+
+function adopter(s){
+  etat = forme(s);
+  garder();
+  verifierExpire();
+}
+
+/* -------------------------------------------------------------- actions --- */
+function changer(){
+  etat.maj = Math.max(Date.now(), etat.maj + 1);
+  garder();
+  rendre();
+  pousser();
+}
+function rid(){ return hasard(8); }
+function trouve(id){ for(var i = 0; i < etat.taches.length; i++) if(etat.taches[i].id === id) return etat.taches[i]; return null; }
+function restantes(){ return etat.taches.filter(function(t){ return !t.ok; }).length; }
+
+function ajouter(txt){
+  txt = String(txt || '').replace(/\s+/g, ' ').trim().slice(0, 140);
+  if(!txt) return false;
+  if(etat.taches.length >= MAX_TACHES){ toast('Quarante tâches, c\'est le maximum.'); return false; }
+  etat.taches.push({ id:rid(), t:txt, ok:false });
+  changer();
+  return true;
+}
+/* Pendant un focus, on ne retire rien : ce serait la sortie la plus facile. */
+function supprimer(id){
+  if(etat.actif) return;
+  etat.taches = etat.taches.filter(function(t){ return t.id !== id; });
+  changer();
+}
+function cocher(id){
+  if(!etat.actif) return;
+  var t = trouve(id);
+  if(!t) return;
+  t.ok = !t.ok;
+  if(restantes() === 0) return terminer(true);
+  changer();
+}
+function lancer(){
+  if(etat.actif || !etat.taches.length) return;
+  etat.actif = true;
+  etat.debut = Date.now();
+  etat.taches.forEach(function(t){ t.ok = false; });
+  changer();
+  window.scrollTo(0, 0);
+}
+/* Fini ou abandonné, ce qui est coché est rangé et ce qui reste attend le
+   prochain focus. Seule la différence est notée : tenu, ou pas. */
+function terminer(tenu){
+  /* Le focus a pu se lever ailleurs (Safari) pendant qu'une feuille restait ouverte ici. */
+  if(!etat.actif) return;
+  var now = Date.now(), d = etat.debut || now;
+  var faites = etat.taches.filter(function(t){ return t.ok; }).length;
+  etat.hist.push({ d:d, f:now, n:faites, tenu:!!tenu });
+  etat.hist = etat.hist.slice(-60);
+  etat.taches = etat.taches.filter(function(t){ return !t.ok; });
+  etat.actif = false;
+  etat.debut = 0;
+  if(tenu){ finInfo = { duree:now - d, n:faites }; ouvrir('fin'); }
+  changer();
+}
+function verifierExpire(){
+  if(etat.actif && etat.debut && Date.now() - etat.debut >= MAX_FOCUS){
+    terminer(false);
+    toast('Le focus durait depuis plus de 12 h : il s\'est levé tout seul.');
+  }
+}
+
+/* ---------------------------------------------------------------- temps --- */
+function deux(n){ return (n < 10 ? '0' : '') + n; }
+function chrono(ms){
+  var s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60;
+  return (h ? h + ':' + deux(m) : String(m)) + ':' + deux(s % 60);
+}
+function duree(ms){
+  var m = Math.round(ms / 60000);
+  if(m < 1) return 'moins d\'une minute';
+  if(m < 60) return m + ' min';
+  return Math.floor(m / 60) + ' h ' + deux(m % 60);
+}
+function depuis(ts){
+  var s = (Date.now() - ts) / 1000;
+  if(s < 90) return 'à l\'instant';
+  if(s < 3600) return 'il y a ' + Math.round(s / 60) + ' min';
+  if(s < 86400) return 'il y a ' + Math.round(s / 3600) + ' h';
+  var d = new Date(ts);
+  return 'le ' + deux(d.getDate()) + '/' + deux(d.getMonth() + 1);
+}
+
+/* ---------------------------------------------------------------- rendu --- */
+function rendre(){
+  document.body.classList.toggle('enfocus', !!etat.actif);
+  $('#tete').innerHTML  = etat.actif ? teteFocus()  : teteLibre();
+  $('#liste').innerHTML = etat.actif ? listeFocus() : listeLibre();
+  $('#pied').innerHTML  = etat.actif ? piedFocus()  : piedLibre();
+  $('#nv').placeholder  = etat.actif ? 'Une tâche de plus' : 'Ajouter une tâche';
+  $('#pastille').hidden = !!cfg.vu;
+  if(feuille === 'regl') majEtat();
+}
+
+function teteLibre(){
+  return '<div class="intro"><h1>Ta liste</h1>' +
+    '<p>Écris ce que tu dois finir. Une fois le focus lancé, le téléphone te ramène ici ' +
+    'tant qu\'il reste une case vide.</p></div>';
+}
+function listeLibre(){
+  if(!etat.taches.length) return '<li><p class="vide">Rien pour l\'instant.</p></li>';
+  return etat.taches.map(function(t){
+    return '<li class="tache"><span class="t">' + esc(t.t) + '</span>' +
+      '<button class="suppr" data-act="suppr" data-id="' + esc(t.id) + '" aria-label="Retirer « ' + esc(t.t) + ' »">' +
+      ic('x') + '</button></li>';
+  }).join('');
+}
+function piedLibre(){
+  var n = etat.taches.length, h = '';
+  h += '<div class="lanceur"><button class="gros" data-act="lancer"' + (n ? '' : ' disabled') + '>Focus</button>' +
+       '<p>' + (n ? 'Le téléphone reste fermé jusqu\'à ce que ' + (n > 1 ? 'les ' + n + ' tâches soient faites.' : 'la tâche soit faite.')
+                  : 'Ajoute au moins une tâche.') + '</p></div>';
+  if(!cfg.vu){
+    h += '<button class="alerte" data-act="regl">' + ic('alerte') +
+         '<span>Le blocage n\'est pas encore branché : le focus ne ferme rien. <b>Le brancher</b></span></button>';
+  }
+  var tenus = etat.hist.filter(function(x){ return x.tenu; }).length, lach = etat.hist.length - tenus;
+  if(etat.hist.length){
+    var der = etat.hist[etat.hist.length - 1];
+    h += '<p class="stats">' + pl(tenus, 'focus tenu') +
+         (lach ? ' · ' + lach + ' abandonné' + (lach > 1 ? 's' : '') : '') +
+         ' · dernier : ' + duree(der.f - der.d) + '</p>';
+  }
+  return h;
+}
+
+function teteFocus(){
+  var n = etat.taches.length, r = restantes(), pc = n ? Math.round((n - r) / n * 100) : 0;
+  return '<div class="enc"><div class="etiq"><i></i>Focus en cours</div>' +
+    '<div class="chrono" id="chrono">' + chrono(Date.now() - etat.debut) + '</div>' +
+    '<div class="barre" role="progressbar" aria-valuemin="0" aria-valuemax="' + n + '" aria-valuenow="' + (n - r) + '">' +
+    '<i style="width:' + pc + '%"></i></div>' +
+    '<div class="compte">' + (n - r) + ' sur ' + n + ' · encore ' + pl(r, 'tâche') + '</div></div>';
+}
+function listeFocus(){
+  return etat.taches.map(function(t){
+    return '<li><button class="tache" role="checkbox" aria-checked="' + t.ok + '" data-act="cocher" data-id="' + esc(t.id) + '">' +
+      '<span class="case">' + ic('ok') + '</span><span class="t">' + esc(t.t) + '</span></button></li>';
+  }).join('');
+}
+function piedFocus(){
+  var h = '';
+  if(cfg.sale){
+    h += '<p class="horsligne">' + (cfg.serveur === 'sansbase'
+      ? 'La base n\'est pas branchée sur ce déploiement : rien n\'est bloqué.'
+      : 'Hors ligne : le blocage ne voit pas encore ce focus. Il le verra dès que le réseau revient.') + '</p>';
+  }
+  h += '<p class="rappel">Les apps choisies dans Raccourcis te renvoient ici tant qu\'il reste une case vide.</p>';
+  h += '<button class="secours" data-act="secours">Sortie de secours</button>';
+  return h;
+}
+
+/* -------------------------------------------------------------- feuilles --- */
+function ouvrir(nom){
+  feuille = nom;
+  var c = $('#fcontenu');
+  if(nom === 'regl')    c.innerHTML = feuilleRegl();
+  if(nom === 'secours') c.innerHTML = feuilleSecours();
+  if(nom === 'fin')     c.innerHTML = feuilleFin();
+  $('#feuille').classList.add('open');
+  $('#feuille').setAttribute('aria-hidden', 'false');
+  $('#voile').classList.add('open');
+  if(nom === 'regl'){ majEtat(); tirer(); }
+}
+function fermer(){
+  feuille = '';
+  $('#feuille').classList.remove('open');
+  $('#feuille').setAttribute('aria-hidden', 'true');
+  $('#voile').classList.remove('open');
+}
+
+function adresseA(){ return API + '?k=' + cfg.k; }
+function adresseB(){ return ORIGINE + '/focus/?k=' + cfg.k + '&r=1'; }
+function installee(){ return navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); }
+
+function feuilleRegl(){
+  return '<h2>Brancher le blocage</h2>' +
+    '<p class="muted">Une app web ne peut pas fermer les autres apps. C\'est une automatisation <b>Raccourcis</b> ' +
+    'qui s\'en charge : à chaque ouverture d\'une app que tu choisis, elle demande à Focus si tu es en plein ' +
+    'focus, et si oui, elle te renvoie ici. Cinq minutes de réglage, une seule fois.</p>' +
+    '<div class="etat" id="etat"></div>' +
+    '<ol class="etapes">' +
+      '<li' + (installee() ? ' class="fait"' : '') + '>Dans Safari : <b>Partager › Sur l\'écran d\'accueil</b>, pour avoir Focus comme une app.</li>' +
+      '<li>Ouvre <b>Raccourcis</b> › onglet <b>Automatisation</b> › <b>+</b> › <b>App</b>.</li>' +
+      '<li><b>Choisir</b> : Instagram, TikTok, YouTube… tout ce qui te happe. <b>Jamais Safari</b> : c\'est là que ' +
+        'le renvoi atterrit, ça tournerait en boucle.</li>' +
+      '<li>Coche <b>Est ouverte</b>, choisis <b>Exécuter immédiatement</b>, coupe <b>Me notifier</b>, puis ' +
+        '<b>Suivant</b> › <b>Nouveau raccourci vide</b>.</li>' +
+      '<li>Ajoute l\'action <b>Obtenir le contenu de l\'URL</b> avec l\'adresse A :' +
+        '<div class="url"><span class="lettre">A</span><code id="urlA">' + esc(adresseA()) + '</code>' +
+        '<button class="btn sm" data-act="copier" data-v="A">Copier</button></div></li>' +
+      '<li>Ajoute <b>Si</b> : <i>Contenu de l\'URL</i> <b>contient</b> <span class="mot">bloque</span>.</li>' +
+      '<li>Dans le <b>Si</b>, ajoute <b>Ouvrir les URL</b> avec l\'adresse B :' +
+        '<div class="url"><span class="lettre">B</span><code id="urlB">' + esc(adresseB()) + '</code>' +
+        '<button class="btn sm" data-act="copier" data-v="B">Copier</button></div></li>' +
+      '<li>Ouvre une des apps choisies : la ligne <b>Raccourci</b> ci-dessus doit passer à « vu à l\'instant ».</li>' +
+    '</ol>' +
+    '<p class="small muted">C\'est un garde-fou, pas une prison : tu peux toujours couper l\'automatisation ' +
+    'dans Raccourcis. Et un focus oublié se lève tout seul au bout de 12 h.</p>' +
+    '<div class="code"><div class="small muted">Ton code</div><div class="val" id="cle">' + esc(joliCle(cfg.k)) + '</div>' +
+    '<p class="small muted">Il relie le raccourci à ta liste. Sur un autre appareil, ou si l\'app repart de zéro, ' +
+    'entre ici le code d\'origine : ta liste actuelle sera remplacée par la sienne.</p>' +
+    '<form id="fcode" autocomplete="off"><input id="nvcode" placeholder="xxxx-xxxx-xxxx" autocapitalize="none" ' +
+    'spellcheck="false" aria-label="Code à utiliser"><button class="btn">Utiliser</button></form></div>' +
+    '<button class="btn ghost wide" data-act="fermer" style="margin-top:12px">Fermer</button>';
+}
+/* La ligne d'état est la seule partie de la feuille qui bouge : la récrire
+   seule évite de vider le champ du code pendant qu'on le tape. */
+function majEtat(){
+  var el = $('#etat');
+  if(!el) return;
+  var s = cfg.serveur, srv =
+    s === 'ok'         ? ['ok', 'Serveur : joignable']
+  : s === 'sansbase'   ? ['ko', 'Serveur : la base n\'est pas branchée, le raccourci répondra toujours « libre »']
+  : s === 'injoignable'? ['ko', 'Serveur : injoignable pour l\'instant']
+  :                      ['',   'Serveur : on demande…'];
+  var rac = cfg.vu ? ['ok', 'Raccourci : vu ' + depuis(cfg.vu)] : ['', 'Raccourci : jamais vu — il n\'est pas encore branché'];
+  el.innerHTML = '<div id="etat-srv"><span class="pt ' + srv[0] + '"></span>' + esc(srv[1]) + '</div>' +
+                 '<div id="etat-rac"><span class="pt ' + rac[0] + '"></span>' + esc(rac[1]) + '</div>';
+}
+
+function feuilleSecours(){
+  return '<h2>Sortie de secours</h2>' +
+    '<p class="muted">Le focus s\'arrête sans que la liste soit finie. Ce qui est coché est rangé, ' +
+    'le reste t\'attend pour la prochaine fois.</p>' +
+    '<p>Pour confirmer, écris : <b>' + PHRASE + '</b></p>' +
+    '<input id="phrase" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Phrase de confirmation">' +
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">' +
+    '<button class="btn danger wide" data-act="abandon" id="abandon" disabled>Arrêter le focus</button>' +
+    '<button class="btn pri wide" data-act="fermer">Je continue</button></div>';
+}
+function norm(s){
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[‘’ʼ]/g, "'").replace(/\s+/g, ' ').trim();
+}
+
+function feuilleFin(){
+  var f = finInfo || { duree:0, n:0 };
+  return '<div class="fin"><div class="rond">' + ic('ok') + '</div><h2>Liste vide</h2>' +
+    '<p class="lead">Le téléphone est à toi.</p>' +
+    '<p class="muted">' + pl(f.n, 'tâche') + ' en ' + duree(f.duree) + '.</p>' +
+    '<button class="btn pri wide" data-act="fermer" style="margin-top:14px">Fermer</button></div>';
+}
+
+function copier(v){
+  var txt = v === 'A' ? adresseA() : adresseB();
+  var ok = function(){ toast('Adresse ' + v + ' copiée'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(ok, function(){ selectionner(v); });
+  } else selectionner(v);
+}
+function selectionner(v){
+  var el = $('#url' + v);
+  if(!el) return;
+  var r = document.createRange(); r.selectNodeContents(el);
+  var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+  toast('Adresse sélectionnée : touche Copier');
+}
+
+function changerCode(v){
+  var k = normCle(v);
+  if(!k){ toast('Un code compte 12 lettres et chiffres.'); return; }
+  if(k === cfg.k){ toast('C\'est déjà ton code.'); return; }
+  cfg.k = k;
+  ecrireLS('focus.cle', k);
+  etat = vide();
+  garder();
+  marquerSale(false);
+  cfg.vu = 0;
+  adresseAvecCle();
+  tirer().then(function(){
+    if(feuille === 'regl'){ ouvrir('regl'); }
+    toast('Code changé : liste rechargée');
+  });
+}
+
+function toast(txt){
+  var t = $('#toast');
+  t.textContent = txt;
+  t.classList.add('on');
+  clearTimeout(toastT);
+  toastT = setTimeout(function(){ t.classList.remove('on'); }, 3400);
+}
+
+/* ------------------------------------------------------------ événements --- */
+document.addEventListener('click', function(ev){
+  var el = ev.target.closest('[data-act]');
+  if(!el) return;
+  var a = el.getAttribute('data-act'), id = el.getAttribute('data-id');
+  if(a === 'suppr')   supprimer(id);
+  if(a === 'cocher')  cocher(id);
+  if(a === 'lancer')  lancer();
+  if(a === 'regl')    ouvrir('regl');
+  if(a === 'secours') ouvrir('secours');
+  if(a === 'fermer' && feuille){ fermer(); }
+  if(a === 'copier')  copier(el.getAttribute('data-v'));
+  if(a === 'abandon' && norm($('#phrase').value) === PHRASE){ fermer(); terminer(false); toast('Focus arrêté.'); }
+});
+document.addEventListener('input', function(ev){
+  if(ev.target.id === 'phrase') $('#abandon').disabled = norm(ev.target.value) !== PHRASE;
+});
+document.addEventListener('submit', function(ev){
+  ev.preventDefault();
+  if(ev.target.id === 'ajout'){
+    var i = $('#nv');
+    if(ajouter(i.value) || !i.value.trim()) i.value = '';
+    i.focus();
+  }
+  if(ev.target.id === 'fcode') changerCode($('#nvcode').value);
+});
+document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape' && feuille) fermer(); });
+
+/* Revenir sur l'app (depuis Safari, après un renvoi, ou au réveil) relit le
+   serveur : ce qui a été coché ailleurs apparaît ici. */
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') tirer(); });
+window.addEventListener('online', function(){ tirer(); });
+setInterval(function(){
+  if(!etat.actif) return;
+  var c = $('#chrono');
+  if(c) c.textContent = chrono(Date.now() - etat.debut);
+  verifierExpire();
+}, 1000);
+setInterval(function(){ if(document.visibilityState === 'visible') tirer(); }, 30000);
+
+/* -------------------------------------------------------------- départ --- */
+(function demarrer(){
+  var k = normCle(lireLS('focus.cle'));
+  try{ var e = JSON.parse(lireLS('focus.etat') || 'null'); if(e) etat = forme(e); }catch(err){}
+  /* Une clé dans l'adresse l'emporte : c'est le renvoi du raccourci, ou un
+     autre appareil. L'état gardé ici appartenait à une autre clé. */
+  var ku = cleUrl();
+  cfg.sale = lireLS('focus.sale') === '1';
+  if(ku && ku !== k){ k = ku; etat = vide(); garder(); marquerSale(false); }
+  if(!k) k = hasard(12);
+  cfg.k = k;
+  ecrireLS('focus.cle', k);
+  var renvoi = /[?&]r=1(&|$)/.test(location.search);
+  adresseAvecCle();
+  verifierExpire();
+  rendre();
+  tirer().then(function(){
+    if(renvoi && etat.actif && restantes()) toast('Pas maintenant : encore ' + pl(restantes(), 'tâche') + '.');
+  });
+})();
+
+})();
+</script>
+</body>
+</html>

@@ -15,6 +15,11 @@ tiennent en une bande sur l'accueil, et c'est assez.
 - `api/account.js` — le compte Google et la sauvegarde des données.
 - `api/push.js` — les notifications : abonnements, minuteur, envoi.
 - `api/food.js` — les aliments : recherche et code-barres, via Open Food Facts.
+- `api/focus.js` — Focus : la liste du moment, et le mot que lit le raccourci
+  de l'iPhone, « bloque » ou « libre ».
+- `focus/` — **Focus**, une seconde app servie par le même déploiement, à
+  `/focus/` : une liste, un bouton, et le téléphone qui ramène à la liste tant
+  qu'elle n'est pas finie. Voir la section *Focus* plus bas.
 - `sw.js` — le service worker. Il n'a qu'un rôle, afficher les notifications
   reçues ; il ne met **rien** en cache, exprès (voir plus bas).
 - `manifest.json`, `icon-192.png`, `icon-512.png` — ce qu'il faut pour que
@@ -802,15 +807,102 @@ différentes :
 Les compléments, eux, sont là — c'est une case à cocher, Cadence ne dose rien et
 ne conseille rien là-dessus.
 
+## Focus
+
+Une seconde app, posée à côté de Cadence sur le même déploiement : on écrit ce
+qu'on doit finir, on appuie sur **FOCUS**, et tant qu'il reste une case vide,
+ouvrir Instagram ou TikTok ramène sur la liste. La dernière case cochée lève le
+focus toute seule.
+
+- `focus/index.html` — toute l'app, comme Cadence : un fichier, aucune
+  dépendance hors les deux polices.
+- `focus/manifest.json` et les deux icônes — pour la poser sur l'écran
+  d'accueil. L'icône est l'anneau de Cadence, fermé, avec un point au centre.
+- `api/focus.js` — l'état, rangé sous une clé, et la réponse au raccourci.
+
+### Pourquoi un raccourci, et pas l'app elle-même
+
+Une page web n'a aucun pouvoir sur les autres apps du téléphone, et sur iPhone
+une app native non plus, sauf à passer par le Temps d'écran d'Apple — ce qui
+demande un Mac, Xcode et un compte développeur payant. Le blocage passe donc par
+**Raccourcis**, qui sait réagir à l'ouverture d'une app :
+
+1. Raccourcis › Automatisation › **App** › les apps qui distraient › **Est
+   ouverte** › **Exécuter immédiatement**.
+2. **Obtenir le contenu de l'URL** : `GET /api/focus?k=<code>`. La réponse est
+   un seul mot en texte brut, `bloque` ou `libre` — dans Raccourcis, « contient
+   bloque » se règle en deux touches, un booléen JSON beaucoup moins.
+3. **Si** le contenu contient `bloque` : **Ouvrir les URL** sur
+   `/focus/?k=<code>&r=1`.
+
+L'app affiche ces étapes, avec les deux adresses prêtes à copier, sous le
+cadenas en haut à droite.
+
+**Jamais Safari dans la liste des apps.** Le renvoi s'ouvre dans Safari :
+l'ouvrir relancerait l'automatisation, qui rouvrirait Safari, et ainsi de suite.
+
+### Savoir si c'est branché
+
+Le défaut d'un raccourci, c'est qu'il échoue en silence : rien ne dit s'il
+tourne. Le serveur note donc l'heure de chaque appel du raccourci, et l'app
+l'affiche (« Raccourci : vu il y a 2 min »). Tant qu'il n'a jamais appelé, un
+avertissement le dit sur l'écran principal, et le cadenas porte une pastille.
+
+### Deux stockages, une clé
+
+Sur iPhone, l'app posée sur l'écran d'accueil et Safari ne partagent **pas**
+leur stockage. Or c'est dans Safari qu'atterrit le renvoi. Le serveur tient
+donc l'état complet, sous une clé de 12 caractères tirée au hasard par l'app,
+et la clé voyage dans l'adresse :
+
+- l'adresse de la page porte toujours `?k=<code>`. Le manifeste n'a pas de
+  `start_url`, exprès : l'app installée rouvre l'adresse d'où on l'a posée,
+  code compris ;
+- le renvoi porte le code, donc Safari retrouve la liste et on peut cocher
+  depuis là ;
+- revenir sur l'app relit le serveur : ce qui a été coché dans Safari apparaît.
+
+Le plus récent des deux gagne. Un onglet resté ouvert depuis hier n'écrase pas
+ce qui a été coché entre-temps : le serveur refuse un état plus ancien que le
+sien et renvoie le sien.
+
+Le code s'affiche dans la feuille de réglage. Sur un autre appareil, ou si l'app
+repart de zéro, on y entre le code d'origine. Il n'y a pas de compte : la clé
+ne protège qu'une liste de tâches.
+
+### Dans le doute, on laisse passer
+
+Le raccourci lit `libre` sans base branchée, avec une clé inconnue, sur une
+erreur, pour une liste entièrement cochée, et pour un focus de plus de douze
+heures. Un garde-fou qui enferme quelqu'un à cause d'une panne serait pire que
+pas de garde-fou du tout.
+
+Si l'app perd le réseau au moment de lancer un focus, elle le lance quand même
+et **le dit** : « Hors ligne : le blocage ne voit pas encore ce focus. » Le
+changement part dès que le réseau revient.
+
+### Ce qui retient, et ce qui ne retient pas
+
+- Pendant un focus, on peut ajouter une tâche, cocher et décocher. On ne peut
+  plus en retirer : ce serait la sortie la plus facile.
+- La **sortie de secours** existe, parce qu'une tâche peut devenir impossible.
+  Elle demande d'écrire « je laisse tomber ». Ce qui était coché est rangé, le
+  reste attend le prochain focus, et l'abandon est compté à part des focus
+  tenus.
+- Rien n'empêche de couper l'automatisation dans Raccourcis. C'est un
+  garde-fou, pas une prison, et l'app le dit telle quelle.
+
 ## Développement
 
 ```bash
 bash test/tout.sh
 ```
 
-Neuf suites, 167 vérifications, pilotant Chromium avec Playwright. Elles ne
-dépendent d'aucun serveur : la page est ouverte en `file://` et toute requête
-sortante est coupée.
+Dix suites, pilotant Chromium avec Playwright. Celles de Cadence ne dépendent
+d'aucun serveur : la page est ouverte en `file://` et toute requête sortante est
+coupée. Celle de Focus monte le sien — les fichiers du dépôt et la vraie
+fonction `api/focus.js`, sur un Redis en mémoire — parce que le blocage tient
+justement à ce que le serveur répond.
 
 | suite | ce qu'elle garde |
 |---|---|
@@ -822,6 +914,7 @@ sortante est coupée.
 | `corps.js` | la rampe de récupération reste une rampe valide dans les deux thèmes, et les muscles tiennent dans la silhouette |
 | `journal.js` | poids, besoins caloriques, repas, humeur |
 | `fab.js` | le bouton + s'efface en descendant et revient en remontant |
+| `focus.js` | Focus : la liste, le focus, le renvoi dans Safari, la sortie de secours, et le mot que lit le raccourci à chaque étape |
 
 `fumee.js` est la plus bête et la plus utile : elle énumère tous les `data-act`
 de chaque onglet et appuie dessus. Une fonction supprimée mais encore appelée ne
@@ -832,6 +925,7 @@ dans un dossier temporaire de session. Un redémarrage de machine l'a effacée.
 D'où celle-ci, dans le dépôt : plus petite, mais elle existera encore demain.
 
 Le déploiement se vérifie à part, avec `.github/workflows/verifier.yml` : il
-appelle le vrai site, les quatre fonctions, cinq photos d’exercices et un vrai
-code-barres chez Open Food Facts. C'est la façon la plus rapide de savoir si une
-panne vient du code, de la base ou du déploiement.
+appelle le vrai site et la page de Focus, chaque fonction, cinq photos
+d’exercices, un vrai code-barres chez Open Food Facts, et demande au raccourci
+de Focus son mot. C'est la façon la plus rapide de savoir si une panne vient du
+code, de la base ou du déploiement.

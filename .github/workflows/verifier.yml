@@ -46,10 +46,20 @@ jobs:
           echo "le site sert encore une autre version au bout de 200 s"
           exit 1
 
+      - name: La page de Focus
+        run: |
+          code=$(curl -sS -m 30 -o /tmp/focus.html -w '%{http_code}' "$SITE/focus/")
+          echo "focus : $code"
+          [ "$code" = "200" ] || exit 1
+          grep -q 'data-act="lancer"' /tmp/focus.html || { echo "ce n'est pas la page de Focus"; exit 1; }
+          code=$(curl -sS -m 30 -o /dev/null -w '%{http_code}' "$SITE/focus/manifest.json")
+          echo "manifeste : $code"
+          [ "$code" = "200" ] || exit 1
+
       - name: Les fonctions
         run: |
           echec=0
-          for f in account push food; do
+          for f in account push food focus; do
             reponse=$(curl -sS -m 30 -w '\n%{http_code}' "$SITE/api/$f")
             corps=$(echo "$reponse" | head -n -1)
             code=$(echo "$reponse" | tail -n 1)
@@ -57,6 +67,14 @@ jobs:
             [ "$code" = "200" ] || echec=1
           done
           exit $echec
+
+      - name: Le mot que lit le raccourci de Focus
+        run: |
+          # Une clé que personne n'utilise : la réponse doit être « libre »,
+          # en texte brut. C'est exactement ce que demande l'iPhone.
+          mot=$(curl -sS -m 30 "$SITE/api/focus?k=verificateur01")
+          echo "raccourci : « $mot »"
+          [ "$mot" = "libre" ] || exit 1
 
       - name: Les photos d'exercices
         run: |
