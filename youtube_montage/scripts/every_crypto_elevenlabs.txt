@@ -1,0 +1,288 @@
+TEXTE À COLLER DANS ELEVENLABS — « Every Crypto Explained in 12 Minutes »
+
+Mode d'emploi
+- Modèle : Eleven Multilingual v2 (il comprend les balises <break> ; ne les enlève pas, elles me servent à recouper chaque phrase).
+- Réglages de départ : Stability ≈ 45, Similarity ≈ 75, Style 0 à 10, Speaker boost activé, vitesse légèrement réduite.
+- Une génération par bloc ci-dessous = un fichier audio. Colle uniquement le texte entre les lignes ----- (pas le titre).
+- Télécharge en MP3 (la meilleure qualité proposée) et nomme le fichier exactement comme indiqué : 00_intro.mp3, 01_bitcoin.mp3, etc.
+- Si un mot sonne mal, regénère seulement ce bloc. Ne change pas le texte : les sous-titres sont calés dessus.
+- Envoie-moi les 14 fichiers : je recale tout le montage sur ta voix.
+
+
+========================================================================
+INTRO  →  fichier : 00_intro.mp3   (5 phrases, 452 caractères)
+------------------------------------------------------------------------
+There are tens of thousands of cryptocurrencies. By some counts, millions. <break time="1.2s" />
+
+But almost all of them fit into one of twelve boxes. <break time="1.2s" />
+
+Learn the boxes, and you'll understand almost any coin you hear about. In twelve minutes. <break time="1.2s" />
+
+No hype, and no price predictions. Crypto can lose most of its value, fast. This is education, not financial advice. <break time="1.2s" />
+
+Let's open the first box.
+------------------------------------------------------------------------
+
+========================================================================
+01 · BITCOIN  →  fichier : 01_bitcoin.mp3   (10 phrases, 1 198 caractères)
+------------------------------------------------------------------------
+Box one. Bitcoin. <break time="1.2s" />
+
+Bitcoin is the first cryptocurrency. It launched in two thousand nine, created by someone called Satoshi Nakamoto. <break time="1.2s" />
+
+Nobody knows who Satoshi really is. They disappeared in twenty eleven, and never came back. <break time="1.2s" />
+
+The idea is a public ledger, copied on thousands of computers, where nobody can secretly rewrite the past. <break time="1.2s" />
+
+New blocks are added by miners. They burn electricity to solve a puzzle, and the winner earns new bitcoin. <break time="1.2s" />
+
+And here's the key rule. There will never be more than twenty-one million bitcoin. <break time="1.2s" />
+
+About every four years, the reward for miners is cut in half. This is called the halving. <break time="1.2s" />
+
+The last one, in April twenty twenty-four, cut it to three point one two five bitcoin per block. The very last bitcoin should be mined around twenty-one forty. <break time="1.2s" />
+
+That's why people call it digital gold. Scarce, hard to change, and it doesn't pay you anything. <break time="1.2s" />
+
+But it's volatile. Bitcoin has lost more than seventy percent of its value several times, and recovered each time, so far.
+------------------------------------------------------------------------
+
+========================================================================
+02 · ETHEREUM  →  fichier : 02_ethereum.mp3   (8 phrases, 912 caractères)
+------------------------------------------------------------------------
+Box two. Ethereum. <break time="1.2s" />
+
+Ethereum launched in twenty fifteen. Its big idea was simple. What if a blockchain could run programs, not just payments? <break time="1.2s" />
+
+These programs are called smart contracts. Once they're live, they run exactly as written, with no company in the middle. <break time="1.2s" />
+
+Every action on Ethereum costs a small fee, called gas, paid in its own coin, ether. <break time="1.2s" />
+
+A lot of what's in the next boxes, stablecoins, DeFi, NFTs, grew up on Ethereum. <break time="1.2s" />
+
+In September twenty twenty-two, Ethereum changed how it works. It stopped mining, and switched to proof of stake. <break time="1.2s" />
+
+Instead of burning electricity, people lock up their ether as a guarantee. Energy use fell by about ninety-nine point nine five percent. <break time="1.2s" />
+
+And one big difference with Bitcoin. Ether has no fixed maximum supply.
+------------------------------------------------------------------------
+
+========================================================================
+03 · OTHER CHAINS  →  fichier : 03_other_chains.mp3   (7 phrases, 718 caractères)
+------------------------------------------------------------------------
+Box three. The other blockchains. <break time="1.2s" />
+
+Solana, Cardano, Avalanche, Tron, and many more. Each one is its own blockchain, with its own coin. <break time="1.2s" />
+
+Most of them make the same promise. Faster and cheaper than Ethereum. <break time="1.2s" />
+
+The trade-off is usually decentralisation. Fewer, more powerful computers run the network. <break time="1.2s" />
+
+Solana is the best known example. It's fast and cheap, but its network has gone down several times. <break time="1.2s" />
+
+In twenty seventeen, dozens of coins were sold as the next Ethereum. Many are now barely used. <break time="1.2s" />
+
+So when a new chain promises to change everything, ask one question. Who actually uses it?
+------------------------------------------------------------------------
+
+========================================================================
+04 · LAYER 2S  →  fichier : 04_layer_2s.mp3   (7 phrases, 673 caractères)
+------------------------------------------------------------------------
+Box four. Layer twos. <break time="1.2s" />
+
+Ethereum can get slow and expensive when it's busy. So people built networks on top of it. <break time="1.2s" />
+
+These layer twos collect thousands of transactions, bundle them together, and post the result back on Ethereum. <break time="1.2s" />
+
+The big ones are called Arbitrum, Optimism, and Base, which was built by Coinbase. <break time="1.2s" />
+
+On a layer two, a fee can drop from a few dollars to a few cents. <break time="1.2s" />
+
+Bitcoin has its own version too, the Lightning Network, made for small and fast payments. <break time="1.2s" />
+
+The point is, layer twos aren't a new coin to bet on. They're plumbing.
+------------------------------------------------------------------------
+
+========================================================================
+05 · STABLECOINS  →  fichier : 05_stablecoins.mp3   (11 phrases, 1 220 caractères)
+------------------------------------------------------------------------
+Box five. Stablecoins. <break time="1.2s" />
+
+A stablecoin is a token that's meant to always be worth one dollar, or one euro. <break time="1.2s" />
+
+How? The company behind it holds real money in reserve, mostly cash and short-term government bonds. <break time="1.2s" />
+
+The two giants are USDT, from a company called Tether, and USDC, from Circle. <break time="1.2s" />
+
+Traders use them to park money between trades, without going back to the bank. <break time="1.2s" />
+
+But not every stablecoin holds real money. In twenty twenty-two, one called Terra USD used an algorithm instead. <break time="1.2s" />
+
+In May twenty twenty-two, it lost its peg. In a few days, about forty billion dollars of value vanished. <break time="1.2s" />
+
+Its sister coin, Luna, fell more than ninety-nine percent. Many people lost their savings. <break time="1.2s" />
+
+Europe reacted. Under Mee-ka, the EU's crypto law, stablecoin issuers have needed authorisation since June twenty twenty-four. <break time="1.2s" />
+
+Tether's USDT doesn't have that authorisation. So the big exchanges removed or restricted it for users in Europe. <break time="1.2s" />
+
+Circle's USDC is authorised. And there are euro stablecoins too, like E-U-R-C.
+------------------------------------------------------------------------
+
+========================================================================
+06 · EXCHANGE TOKENS  →  fichier : 06_exchange_tokens.mp3   (9 phrases, 862 caractères)
+------------------------------------------------------------------------
+Box six. Exchange tokens. <break time="1.2s" />
+
+Some crypto exchanges create their own coin. The best known is BNB, from Binance. <break time="1.2s" />
+
+Holding it can give you perks, like lower trading fees. But its value depends a lot on the exchange itself. <break time="1.2s" />
+
+That link can be deadly. Remember FTX? <break time="1.2s" />
+
+In November twenty twenty-two, FTX, one of the biggest exchanges in the world, collapsed in a matter of days. <break time="1.2s" />
+
+Its own token, FTT, crashed by more than ninety percent in a few days. <break time="1.2s" />
+
+Then the truth came out. Around eight billion dollars of customer money was missing. <break time="1.2s" />
+
+Its founder, Sam Bankman-Fried, was later sentenced to twenty-five years in prison. <break time="1.2s" />
+
+So remember. A token tied to one company is only as safe as that company.
+------------------------------------------------------------------------
+
+========================================================================
+07 · DEFI  →  fichier : 07_defi.mp3   (7 phrases, 767 caractères)
+------------------------------------------------------------------------
+Box seven. DeFi, short for decentralised finance. <break time="1.2s" />
+
+It's banking without a bank. Lending, borrowing and trading, all run by smart contracts. <break time="1.2s" />
+
+On Uniswap, you swap one token for another, with no company holding your money. On Ah-vay, you can lend and earn interest. <break time="1.2s" />
+
+Their tokens often give holders a vote on how the app is run. <break time="1.2s" />
+
+The catch? If there's a bug in the code, there's no bank to call, and nobody to refund you. <break time="1.2s" />
+
+And hackers know it. In twenty twenty-two alone, billions of dollars were stolen from crypto projects, much of it from DeFi. <break time="1.2s" />
+
+DeFi is a real experiment in finance without middlemen. Just know there's no safety net.
+------------------------------------------------------------------------
+
+========================================================================
+08 · MEMECOINS  →  fichier : 08_memecoins.mp3   (8 phrases, 836 caractères)
+------------------------------------------------------------------------
+Box eight. Memecoins. <break time="1.2s" />
+
+It started in twenty thirteen with Dogecoin, a coin made as a joke, with a Shiba Inu dog as its logo. <break time="1.2s" />
+
+Then came Shiba Inu, Pepe, and thousands more, named after dogs, frogs, and internet jokes. <break time="1.2s" />
+
+A memecoin has no product, and no profits. Its price depends on one thing only, attention. <break time="1.2s" />
+
+Today, anyone can create one in about a minute, for almost nothing. Millions have been launched. <break time="1.2s" />
+
+Most of them fade to almost nothing, often within days. Some were built from day one to take your money. <break time="1.2s" />
+
+A few early buyers make a fortune. Most people who buy after the hype lose money. <break time="1.2s" />
+
+So buying a memecoin isn't investing. It's a game, and the odds aren't on your side.
+------------------------------------------------------------------------
+
+========================================================================
+09 · NFTS  →  fichier : 09_nfts.mp3   (7 phrases, 721 caractères)
+------------------------------------------------------------------------
+Box nine. NFTs. <break time="1.2s" />
+
+NFT stands for non-fungible token. It's a token that's one of a kind, like a certificate of ownership. <break time="1.2s" />
+
+Usually, the image itself isn't on the blockchain. Often, the token is just a link to it. <break time="1.2s" />
+
+In March twenty twenty-one, an NFT by the artist Beeple sold at Christie's for about sixty-nine million dollars. <break time="1.2s" />
+
+Then the hype faded. NFT trading volumes fell more than ninety-five percent from their twenty twenty-one peak. <break time="1.2s" />
+
+Some uses may survive, like event tickets, or items in video games. <break time="1.2s" />
+
+But most NFTs bought during the hype are now worth a fraction of what people paid.
+------------------------------------------------------------------------
+
+========================================================================
+10 · PRIVACY COINS  →  fichier : 10_privacy_coins.mp3   (8 phrases, 788 caractères)
+------------------------------------------------------------------------
+Box ten. Privacy coins. <break time="1.2s" />
+
+On Bitcoin, every transaction is public. Anyone can follow the money from wallet to wallet. <break time="1.2s" />
+
+Privacy coins hide that. Monero hides who sent the money, who received it, and how much. <break time="1.2s" />
+
+Zee-cash works in a similar way, but there, privacy is optional. <break time="1.2s" />
+
+Privacy has real, legal uses. But regulators worry about money laundering. <break time="1.2s" />
+
+In the EU, new anti-money laundering rules apply from July twenty twenty-seven. <break time="1.2s" />
+
+From then on, regulated crypto platforms won't be allowed to handle privacy coins. <break time="1.2s" />
+
+Several big exchanges already dropped them in Europe. Owning one isn't banned, but buying or selling is getting harder.
+------------------------------------------------------------------------
+
+========================================================================
+11 · SCAM COINS  →  fichier : 11_scam_coins.mp3   (9 phrases, 1 016 caractères)
+------------------------------------------------------------------------
+Box eleven. Scam coins. <break time="1.2s" />
+
+Some coins exist for one reason only. To take your money. <break time="1.2s" />
+
+The classic is the rug pull. The creators hype a new token, wait for people to buy, then sell everything and vanish. <break time="1.2s" />
+
+In twenty twenty-one, a token named after Squid Game shot up for days. Then buyers noticed they couldn't sell it. <break time="1.2s" />
+
+The creators cashed out, and the price fell to almost zero in minutes. <break time="1.2s" />
+
+And then there's OneCoin. It was sold across Europe as the next Bitcoin, but it never even had a real blockchain. <break time="1.2s" />
+
+Investors put in more than four billion dollars. Its founder disappeared in twenty seventeen, and has never been found. <break time="1.2s" />
+
+The red flags are always the same. Guaranteed returns, pressure to buy fast, a famous face, and a story that's too good to be true. <break time="1.2s" />
+
+If someone promises to double your money, the only thing that doubles is the risk.
+------------------------------------------------------------------------
+
+========================================================================
+12 · THE DIGITAL EURO  →  fichier : 12_digital_euro.mp3   (7 phrases, 853 caractères)
+------------------------------------------------------------------------
+Box twelve. The digital euro. <break time="1.2s" />
+
+It's the last box because it's the odd one out. The digital euro isn't crypto at all. <break time="1.2s" />
+
+It would be issued by the European Central Bank. One digital euro would always be one euro, because it is the euro. <break time="1.2s" />
+
+Think of it as digital cash. Like the banknotes in your wallet, but on your phone. <break time="1.2s" />
+
+In December twenty twenty-five, EU governments agreed on their position. In twenty twenty-six, the European Parliament agreed on its own. <break time="1.2s" />
+
+Now they're negotiating the final law. If it passes, the ECB plans tests from twenty twenty-seven, and a possible first launch in twenty twenty-nine. <break time="1.2s" />
+
+So if someone calls the digital euro a crypto, you'll know. It's the opposite. It's money run by a central bank.
+------------------------------------------------------------------------
+
+========================================================================
+OUTRO  →  fichier : 13_outro.mp3   (7 phrases, 871 caractères)
+------------------------------------------------------------------------
+Those are the twelve boxes. Almost every coin you'll hear about fits in one of them. <break time="1.2s" />
+
+And if you live in Europe, one thing changed. Since July twenty twenty-six, crypto platforms serving EU customers need a Mee-ka licence. <break time="1.2s" />
+
+Before you sign up anywhere, you can check if a platform is on the official EU register. <break time="1.2s" />
+
+Some European stock exchanges also list crypto ETPs, often backed by real coins, that you can buy through a regular broker. <break time="1.2s" />
+
+Remember, crypto can drop seventy percent or more. Nothing here is a recommendation. This is not financial advice. <break time="1.2s" />
+
+Twelve boxes, twelve minutes. Now, when you hear about a new coin, you'll know which box it goes in, and what to ask. <break time="1.2s" />
+
+If this helped, subscribe. Next up, every type of ETF, explained.
+------------------------------------------------------------------------
+
+Total : 11 887 caractères (≈ autant de crédits ElevenLabs avec Multilingual v2, hors reprises).

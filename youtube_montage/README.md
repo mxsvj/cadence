@@ -90,6 +90,12 @@ Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `bu
   - le rouge reste réservé aux pertes et aux arnaques, les sous-titres restent blancs ;
 - `CRYPTO_SAMPLE=0:23 python3 build_every_crypto.py` ne rend que les plans 0 à 22 (environ 2 min 30), pour valider un réglage sans attendre le rendu complet.
 
+`scripts/every_crypto_elevenlabs.txt` est le texte à coller dans ElevenLabs pour la vraie voix off :
+
+- 14 blocs (intro, 12 chapitres, outro), chacun donnant un fichier audio (`00_intro.mp3` … `13_outro.mp3`) ;
+- les chiffres sont écrits en toutes lettres et les sigles délicats épelés (« Mee-ka », « Ah-vay »…) pour être bien prononcés ;
+- une balise `<break time="1.2s" />` sépare les phrases, pour recouper chaque plan dans le fichier du chapitre.
+
 `build_every_crypto_thumbnails.py` génère trois miniatures sombres pour cette vidéo, à tester avec « Test & compare » :
 
 - A : « EVERY CRYPTO » en grand avec la pastille « IN 12 MIN », la grille des 12 boîtes, et une flèche vers la case rouge « scam coins » ;
