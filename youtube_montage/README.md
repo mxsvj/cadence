@@ -29,11 +29,13 @@ Démo : « The real price of a €100,000 house in France ». La voix est une vo
 
 Les scripts utilisent ffmpeg, Pillow, numpy et la police Inter. RHVoice n'est utilisé que pour la voix provisoire.
 
-`build_dark_style_test.py` est un essai de 20 s en style sombre, inspiré du montage de la chaîne EGO :
+`build_finance_dark.py` monte la même vidéo VOO en style sombre, inspiré du montage de la chaîne EGO :
 
 - fond noir et texte tapé façon terminal ;
 - coupes sèches avec glitch, grain et vignette ;
-- nappe d'ambiance avec des silences ;
-- sous-titres karaoké discrets (gris → blanc, sans bandeau).
+- nappe d'ambiance qui change d'accord à chaque partie, avec des silences avant les révélations ;
+- sous-titres karaoké discrets (gris → blanc, sans bandeau) ;
+- mention « not financial advice » au début et rappel d'abonnement façon terminal ;
+- Short 9:16 sur fond noir, avec le titre en haut.
 
 Il réutilise la voix et les calculs de `build_finance_demo.py`.
