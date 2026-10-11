@@ -19,4 +19,12 @@ Démo : « The real price of a €100,000 house in France ». La voix est une vo
 
 `build_sport_demo.py` est la démo sport (« The right way to combine running and calisthenics ») : même style, silhouettes animées, tout en un seul script.
 
+`build_finance_demo.py` est la démo finance (« Can Europeans buy VOO? »). C'est la base la plus à jour : partir de ce script pour les prochaines vidéos. Par rapport aux autres démos :
+
+- les fondus sur le texte et les formes semi-transparentes fonctionnent ;
+- le karaoké reste calé quand le sous-titre affiche un chiffre (« 0.07% ») alors que la voix le dit en toutes lettres (table `SAY`) ;
+- une mention « Not financial advice » s'affiche au début, et un récap « KEY POINTS » remplace le compteur.
+
+`build_finance_thumbnail.py` génère sa miniature en style A.
+
 Les scripts utilisent ffmpeg, Pillow, numpy et la police Inter. RHVoice n'est utilisé que pour la voix provisoire.
