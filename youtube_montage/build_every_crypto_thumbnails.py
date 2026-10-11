@@ -1,6 +1,7 @@
 """Dark thumbnails for 'Every Crypto Explained in 12 Minutes', in the look of the dark edit (black, monospace, red as the only accent).
 A = style A layout: 'EVERY CRYPTO' on the left panel, the 12 boxes on the right, arrow to the red 'scam coins' box.
-B = a glitched BTC coin over a wall of tickers, most of them struck through in red."""
+B = a glitched BTC coin over a wall of tickers, most of them struck through in red.
+C = a cascade of coins (BTC, ETH, USDT, DOGE), the last one red, cracked and glitched."""
 import math
 import os
 
@@ -131,9 +132,36 @@ a = np.asarray(im.convert("RGB")).copy()
 a = glitch_rgb(a, (cx - R - 40, cy - 120, cx + R + 40, cy + 150), 8, 0.45)
 b_img = finish(Image.fromarray(a), "thumb_B_crypto_dark_coin.jpg")
 
+# ---------------------------------------------------------------- C: a cascade of coins, the last one red and cracked
+COINS = [("BTC", 1060, 300, 175), ("ETH", 1480, 210, 125), ("USDT", 960, 770, 120), ("DOGE", 1765, 430, 120), ("???", 1420, 650, 215)]
+cv = Cv(BG)
+for tick, x, y, r in COINS:
+    bad = tick == "???"
+    col = ERR if bad else FG
+    cv.ellipse([x - r - 22, y - r - 22, x + r + 22, y + r + 22], BG)
+    cv.ellipse([x - r, y - r, x + r, y + r], (24, 8, 10) if bad else (14, 14, 17), outline=col, width=14)
+    cv.ellipse([x - r + 30, y - r + 30, x + r - 30, y + r - 30], None, outline=(110, 34, 38) if bad else (70, 70, 78), width=3)
+    cv.text((x, y + r * 0.27), tick, BLACK, fit(cv, tick, BLACK, r * 1.45, int(r * 0.78)), col, anchor="ms")
+    if bad:
+        cv.line([(x + 60, y - r - 6), (x + 92, y - r + 70), (x + 70, y - r + 110), (x + 120, y - r + 170)], BG, 10)
+cv.text((72, 150), "> explained, box by box", MONO, 34, DIM, anchor="ls")
+s_ = fit(cv, "CRYPTO", BLACK, 680, 240)
+cv.text((64, 400), "EVERY", BLACK, s_, FG, anchor="ls")
+cv.text((64, 620), "CRYPTO", BLACK, s_, FG, anchor="ls")
+cv.text((72, 760), "in 12 minutes", MONOB, 58, ERR, anchor="ls")
+x0_, y0_ = 72, 840
+for k in range(12):
+    cv.rect([x0_ + k * 44, y0_, x0_ + k * 44 + 30, y0_ + 30], ERR if k == 10 else (78, 78, 86) if k > 10 else FG)
+a = np.asarray(cv.out().convert("RGB")).copy()
+x, y, r = COINS[-1][1:]
+a = glitch_rgb(a, (x - r - 10, y - r - 20, x + r + 10, y - r + 90), 13, 0.35)
+a = glitch_rgb(a, (x - r - 10, y + r - 90, x + r + 10, y + r + 30), 17, 0.3)
+c_img = finish(Image.fromarray(a), "thumb_C_crypto_dark_coins.jpg")
+
 # ---------------------------------------------------------------- comparison sheet (full size + YouTube sizes)
-sheet = Image.new("RGB", (1280 * 2 + 20, 720 + 20 + 180), (255, 255, 255))
-for j, t in enumerate((a_img, b_img)):
+imgs = (a_img, b_img, c_img)
+sheet = Image.new("RGB", (1280 * 3 + 40, 720 + 20 + 180), (255, 255, 255))
+for j, t in enumerate(imgs):
     sheet.paste(t, (j * 1300, 0))
     sheet.paste(t.resize((320, 180), Image.LANCZOS), (j * 1300, 740))
     sheet.paste(t.resize((168, 94), Image.LANCZOS), (j * 1300 + 340, 740))
