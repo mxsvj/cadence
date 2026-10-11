@@ -17,6 +17,7 @@ Chromium est déjà là (`/opt/pw-browsers`), seul `playwright-core` s'installe.
 | `theme.js` | noir et blanc par défaut, et l'encre reste lisible sur chaque accent |
 | `journal.js` | poids, besoins caloriques, repas, humeur |
 | `fab.js` | le bouton + s'efface en descendant et revient en remontant |
+| `focus.js` | Focus : la liste, le focus, le renvoi dans Safari, la sortie de secours, et le mot (« bloque » ou « libre ») que lit le raccourci à chaque étape — sur un vrai petit serveur local |
 
 Une première version de ces suites vivait dans un dossier temporaire de session.
 Un redémarrage de machine l'a effacée — d'où celle-ci, dans le dépôt.
