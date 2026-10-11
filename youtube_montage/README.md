@@ -71,3 +71,10 @@ Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `bu
 - 141 plans répartis en 15 chapitres, de 25 à 55 ans : crash, dettes, logement, frais cachés, arnaques, licenciement, records…
 - une grille de 360 cases revient comme fil rouge : une case par mois de 200 € ;
 - le texte de la voix off est dans `scripts/pov_25_europe_15min_script.md`, avec tous les chiffres et hypothèses.
+
+`build_every_crypto.py` monte « Every Crypto Explained in 12 Minutes » (environ 11 min 40), en style sombre :
+
+- format « Every… explained » : 12 chapitres, une « boîte » par catégorie (Bitcoin, Ethereum, autres blockchains, layer 2, stablecoins, tokens d'exchange, DeFi, memecoins, NFT, privacy coins, arnaques, euro numérique) ;
+- une grille de 12 boîtes revient comme fil rouge, et chaque carte de chapitre montre la progression (« BOX 05 / 12 ») ;
+- nouveaux plans : pièce avec son ticker, chaîne de blocs (qui se casse en rouge pour une panne ou un piratage), colonnes du halving, mur de tickers qui s'éteignent, cercle d'étoiles européen (MiCA), regroupement des transactions par un layer 2, frise de l'euro numérique ;
+- le texte de la voix off est dans `scripts/every_crypto_12min_script.md`, avec les sources des faits. Ton éducatif, sans hype ni prédiction de prix.
