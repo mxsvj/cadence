@@ -59,3 +59,9 @@ Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `bu
 - 50 plans, 5 parties ;
 - le texte de la voix off est dans `scripts/voo_long_script.md`, avec les sources des faits ;
 - le script est autonome : voix provisoire, plans, son et sous-titres dans un seul fichier.
+
+`build_pov_demo.py` est une démo du format histoire « POV » (1 min), dans le style sombre :
+
+- sujet : « POV: you're 25 in Europe and invest €200 a month » ;
+- compteur d'âge en haut à droite, chiffres hypothétiques à 7 % par an signalés comme tels, disclaimer à la fin ;
+- format inspiré des chaînes « POV » qui cartonnent en finance (par exemple Ollie Finance), avec notre propre montage.
