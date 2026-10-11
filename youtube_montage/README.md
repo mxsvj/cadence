@@ -65,3 +65,9 @@ Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `bu
 - sujet : « POV: you're 25 in Europe and invest €200 a month » ;
 - compteur d'âge en haut à droite, chiffres hypothétiques à 7 % par an signalés comme tels, disclaimer à la fin ;
 - format inspiré des chaînes « POV » qui cartonnent en finance (par exemple Ollie Finance), avec notre propre montage.
+
+`build_pov_long.py` monte la version longue (environ 15 min) de l'histoire POV, en style sombre :
+
+- 141 plans répartis en 15 chapitres, de 25 à 55 ans : crash, dettes, logement, frais cachés, arnaques, licenciement, records…
+- une grille de 360 cases revient comme fil rouge : une case par mois de 200 € ;
+- le texte de la voix off est dans `scripts/pov_25_europe_15min_script.md`, avec tous les chiffres et hypothèses.
