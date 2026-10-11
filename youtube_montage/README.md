@@ -53,3 +53,9 @@ Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `bu
 
 - D : « €4 / year » en très grand, avec « VOO vs EU TWIN » et « THE ONLY DIFFERENCE » ;
 - E : une appli de broker en mode sombre où VOO est verrouillé, avec « LOCKED OUT? » et « EU INVESTORS ».
+
+`build_finance_long.py` monte la version longue (environ 6 min) de la vidéo VOO en style sombre :
+
+- 50 plans, 5 parties ;
+- le texte de la voix off est dans `scripts/voo_long_script.md`, avec les sources des faits ;
+- le script est autonome : voix provisoire, plans, son et sous-titres dans un seul fichier.
