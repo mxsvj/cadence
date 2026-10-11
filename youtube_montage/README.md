@@ -41,3 +41,10 @@ Les scripts utilisent ffmpeg, Pillow, numpy et la police Inter. RHVoice n'est ut
 Il réutilise la voix et les calculs de `build_finance_demo.py`.
 
 `build_finance_dark_thumbnail.py` génère sa miniature : le style A en version sombre, avec le rouge comme seule couleur d'accent et une fenêtre de terminal « ERROR » comme élément clé.
+
+`build_finance_dark_thumbnails_bc.py` génère deux autres miniatures sombres à tester contre la première avec « Test & compare » :
+
+- B : « VOO » glitché au centre du cercle d'étoiles européen, avec un tampon rouge « BLOCKED » ;
+- C : « VOO » barré → « ??? », avec deux grilles de points et « SAME 500 STOCKS ».
+
+Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `build_finance_dark_thumbnail.py` avant.
