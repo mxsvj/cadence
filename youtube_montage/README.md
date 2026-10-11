@@ -78,3 +78,8 @@ Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `bu
 - une grille de 12 boîtes revient comme fil rouge, et chaque carte de chapitre montre la progression (« BOX 05 / 12 ») ;
 - nouveaux plans : pièce avec son ticker, chaîne de blocs (qui se casse en rouge pour une panne ou un piratage), colonnes du halving, mur de tickers qui s'éteignent, cercle d'étoiles européen (MiCA), regroupement des transactions par un layer 2, frise de l'euro numérique ;
 - le texte de la voix off est dans `scripts/every_crypto_12min_script.md`, avec les sources des faits. Ton éducatif, sans hype ni prédiction de prix.
+
+`build_every_crypto_thumbnails.py` génère deux miniatures sombres pour cette vidéo, à tester avec « Test & compare » :
+
+- A : « EVERY CRYPTO » en grand avec la pastille « IN 12 MIN », la grille des 12 boîtes, et une flèche vers la case rouge « scam coins » ;
+- B : une pièce « BTC » glitchée devant un mur de tickers, la plupart barrés en rouge.
