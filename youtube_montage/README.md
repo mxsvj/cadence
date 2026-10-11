@@ -48,3 +48,8 @@ Il réutilise la voix et les calculs de `build_finance_demo.py`.
 - C : « VOO » barré → « ??? », avec deux grilles de points et « SAME 500 STOCKS ».
 
 Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `build_finance_dark_thumbnail.py` avant.
+
+`build_finance_dark_thumbnails_de.py` en génère deux de plus :
+
+- D : « €4 / year » en très grand, avec « VOO vs EU TWIN » et « THE ONLY DIFFERENCE » ;
+- E : une appli de broker en mode sombre où VOO est verrouillé, avec « LOCKED OUT? » et « EU INVESTORS ».
