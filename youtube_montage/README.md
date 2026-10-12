@@ -129,3 +129,14 @@ La voix off de `build_every_crypto.py` est générée gratuitement avec Kokoro, 
 - S3 : un « 12. » géant avec le point carré orange du logo, et « types of crypto, explained. ».
 
 `build_channel_banner.py` génère la bannière de la chaîne « Euro Unboxed » (2560×1440, texte centré dans la zone visible sur TV, ordinateur et mobile), en noir (avec le logo 1) ou en sable (avec le logo 3), et le filigrane vidéo « eu. ». La description de la chaîne, l'identifiant et les mots clés sont dans `scripts/channel_bio.txt`.
+
+`build_every_etf.py` monte « Every ETF Explained in 11 Minutes » (10 min 52), avec le même style et la même voix que la vidéo crypto :
+
+- 12 chapitres, une « boîte » par type d'ETF : indiciels, pays et régions, sectoriels, thématiques, factoriels (smart beta), dividendes, obligations, monétaires, matières premières (ETC sur l'or), à levier et inverses, gestion active, ETP crypto ;
+- angle européen : règles UCITS, pourquoi les courtiers européens ne vendent pas VOO (pas de document d'informations clés), parts Acc et Dist, ETC sur l'or, ETP crypto ;
+- nouveaux plans : un panier qui se remplit de petits carrés (1 ETF = une part de chaque entreprise), un décodeur de nom d'ETF (fournisseur, indice, UCITS, devise, Acc), un graphique à plusieurs courbes (growth contre value, indice contre ETF 2x) ;
+- la durée suit le contenu : les lignes de remplissage ont été coupées et le titre annonce la vraie durée (11 minutes), même si la vidéo crypto en annonçait 12 ;
+- le texte de la voix off est dans `scripts/every_etf_11min_script.md`, avec les sources des faits ; le titre, la description avec les chapitres, les tags et les réglages sont dans `scripts/every_etf_youtube_upload.txt`, et les sous-titres dans `scripts/every_etf_subtitles_en.srt` ;
+- `ETF_SAMPLE=0:20 python3 build_every_etf.py` ne rend qu'une partie des plans, comme `CRYPTO_SAMPLE`.
+
+`build_every_etf_thumbnails_sober.py` génère les trois miniatures sobres de cette vidéo, dans le même système que celles de la vidéo crypto : S1 « EVERY ETF » avec la liste des 12 boîtes (« Leveraged » en orange), S2 « Every ETF, explained. » sur fond sable, S3 un « 12. » géant avec « types of ETFs, explained. ».
