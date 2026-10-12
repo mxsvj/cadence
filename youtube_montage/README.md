@@ -121,3 +121,9 @@ La voix off de `build_every_crypto.py` est générée gratuitement avec Kokoro, 
 - 2, « EURO / UNBOXED » sur deux lignes, filet orange ;
 - 3, « eu » en italique à empattements (Charter), noir sur sable ;
 - 4, « dm_ » (Dark Mode Money) : blanc sur noir, curseur vert.
+
+`build_every_crypto_thumbnails_sober.py` génère trois miniatures sobres, assorties aux logos (noir, blanc et une touche d'orange, sans néon ni glitch) :
+
+- S1 : « EVERY CRYPTO » en grand et la liste des 12 boîtes, « Scam coins » en orange ;
+- S2 : « Every crypto, explained. » en italique à empattements sur fond sable, avec 12 carrés dont un orange ;
+- S3 : un « 12. » géant avec le point carré orange du logo, et « types of crypto, explained. ».
