@@ -114,3 +114,8 @@ La voix off de `build_every_crypto.py` est générée gratuitement avec Kokoro, 
 - E : un « 12 » géant à côté de « TYPES OF CRYPTO » ;
 - F : trois cartes de krach, LUNA −99 %, FTT −90 % et NFT −95 %, tirées de la vidéo ;
 - G : « ONE OF THESE ISN'T CRYPTO » avec BTC, ETH, USDT et une pièce € entourée des étoiles européennes (la réponse est l'euro numérique, chapitre 12).
+
+`build_channel_logos.py` génère deux logos de chaîne (photo de profil 1024×1024) et un aperçu aux tailles YouTube :
+
+- A, « Euro Unboxed » : un € qui sort d'une boîte ouverte, chaque côté dans une couleur de boîte ;
+- B, « Dark Mode Money » : une invite de terminal `> €` avec un curseur vert et la barre des couleurs de chapitre.
