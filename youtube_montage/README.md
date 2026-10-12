@@ -138,5 +138,6 @@ La voix off de `build_every_crypto.py` est générée gratuitement avec Kokoro, 
 - la durée suit le contenu : les lignes de remplissage ont été coupées et le titre annonce la vraie durée (11 minutes), même si la vidéo crypto en annonçait 12 ;
 - le texte de la voix off est dans `scripts/every_etf_11min_script.md`, avec les sources des faits ; le titre, la description avec les chapitres, les tags et les réglages sont dans `scripts/every_etf_youtube_upload.txt`, et les sous-titres dans `scripts/every_etf_subtitles_en.srt` ;
 - `ETF_SAMPLE=0:20 python3 build_every_etf.py` ne rend qu'une partie des plans, comme `CRYPTO_SAMPLE`.
+- `python3 ass_to_srt.py etf/subs.ass scripts/every_etf_subtitles_en.srt` convertit les sous-titres karaoké de la vidéo finale en fichier SRT à importer sur YouTube (sans chevauchement entre deux sous-titres).
 
 `build_every_etf_thumbnails_sober.py` génère les trois miniatures sobres de cette vidéo, dans le même système que celles de la vidéo crypto : S1 « EVERY ETF » avec la liste des 12 boîtes (« Leveraged » en orange), S2 « Every ETF, explained. » sur fond sable, S3 un « 12. » géant avec « types of ETFs, explained. ».
