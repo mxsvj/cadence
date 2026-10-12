@@ -1,0 +1,32 @@
+NOM DE LA CHAÎNE
+Euro Unboxed
+
+IDENTIFIANT (@)
+@EuroUnboxed   (sinon : @EuroUnboxedTV, @EuroUnboxedHQ)
+
+DESCRIPTION (Personnaliser la chaîne → Infos de base → Description)
+Money, explained for Europeans.
+
+Euro Unboxed takes one big money topic at a time (crypto, ETFs, pensions, savings, the digital euro) and opens it up box by box, in plain English and in a few minutes.
+
+Made for people who live in Europe: EU rules like MiCA and UCITS, prices in euros, and the products you can actually buy here.
+
+No hype. No price predictions. No "get rich quick". Just clear explanations, with the sources in every description.
+
+New explainers every week.
+
+Education only, not financial advice.
+
+MOTS CLÉS DE LA CHAÎNE (Paramètres → Chaîne → Infos de base → Mots clés)
+personal finance europe, investing in europe, money explained, crypto explained, etf explained, ucits etf, mica regulation, digital euro, finance for beginners, euro unboxed
+
+LIENS
+Aucun pour l'instant. Plus tard : une newsletter ou une page qui regroupe les sources.
+
+ADRESSE E-MAIL DE CONTACT
+Crée une adresse dédiée à la chaîne (par ex. un Gmail « euro.unboxed… »), pas ton adresse perso : elle sera visible des sponsors.
+
+IMAGES
+- Photo de profil : logos/logo_1_eu_dot.png (1024×1024, YouTube la recadre en cercle)
+- Bannière : logos/banner_dark_euro_unboxed.jpg (2560×1440, texte dans la zone visible sur tous les écrans)
+- Filigrane vidéo : logos/watermark_eu.png (Personnaliser la chaîne → Branding → Filigrane, « fin de la vidéo » ou « durée personnalisée »)

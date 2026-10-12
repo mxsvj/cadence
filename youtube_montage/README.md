@@ -127,3 +127,5 @@ La voix off de `build_every_crypto.py` est générée gratuitement avec Kokoro, 
 - S1 : « EVERY CRYPTO » en grand et la liste des 12 boîtes, « Scam coins » en orange ;
 - S2 : « Every crypto, explained. » en italique à empattements sur fond sable, avec 12 carrés dont un orange ;
 - S3 : un « 12. » géant avec le point carré orange du logo, et « types of crypto, explained. ».
+
+`build_channel_banner.py` génère la bannière de la chaîne « Euro Unboxed » (2560×1440, texte centré dans la zone visible sur TV, ordinateur et mobile), en noir (avec le logo 1) ou en sable (avec le logo 3), et le filigrane vidéo « eu. ». La description de la chaîne, l'identifiant et les mots clés sont dans `scripts/channel_bio.txt`.
