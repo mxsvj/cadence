@@ -141,3 +141,14 @@ La voix off de `build_every_crypto.py` est générée gratuitement avec Kokoro, 
 - `python3 ass_to_srt.py etf/subs.ass scripts/every_etf_subtitles_en.srt` convertit les sous-titres karaoké de la vidéo finale en fichier SRT à importer sur YouTube (sans chevauchement entre deux sous-titres).
 
 `build_every_etf_thumbnails_sober.py` génère les trois miniatures sobres de cette vidéo, dans le même système que celles de la vidéo crypto : S1 « EVERY ETF » avec la liste des 12 boîtes (« Leveraged » en orange), S2 « Every ETF, explained. » sur fond sable, S3 un « 12. » géant avec « types of ETFs, explained. ».
+
+`build_pov_25_200.py` refait « POV: You're 25 and Invest €200 a Month » (13 min 31) dans le style des vidéos crypto et ETF :
+
+- voix Emma (Kokoro) à la place de l'ancienne voix, mêmes mouvements de caméra et de texte ;
+- une couleur par décennie de la vie racontée : vingtaine orange, trentaine turquoise, quarantaine violette, cinquantaine dorée ; le rouge reste pour les pertes ;
+- nouvelle carte de chapitre : une rangée de 31 carrés (un par année, de 25 à 55 ans) remplie jusqu'à l'âge du chapitre, dans les couleurs des décennies, avec l'âge en grand derrière ;
+- le chapitre « The comparison trap » et 13 phrases redondantes sont coupés (15 min → 13 min 31) ; la fin renvoie maintenant vers la vidéo ETF ;
+- texte dans `scripts/pov_25_200_13min_script.md`, titre, description avec chapitres, tags et réglages dans `scripts/pov_25_200_youtube_upload.txt`, sous-titres dans `scripts/pov_25_200_subtitles_en.srt` ;
+- `POV_SAMPLE=0:20 python3 build_pov_25_200.py` ne rend qu'une partie des plans.
+
+`build_pov_25_200_thumbnails_sober.py` génère ses trois miniatures sobres : P1 « €200 / month » puis « 30 years later: €244,000 » en orange, P2 « 200 euros a month, for 30 years. » sur fond sable avec 30 carrés dont le dernier orange, P3 « 25 → 55. » avec le point carré orange du logo.

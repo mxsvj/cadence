@@ -1,0 +1,1484 @@
+1
+00:00:00,500 --> 00:00:02,000
+POV: you're 25,
+
+2
+00:00:02,020 --> 00:00:04,060
+you live in Europe, and every month,
+
+3
+00:00:04,080 --> 00:00:06,180
+you quietly put €200
+
+4
+00:00:06,200 --> 00:00:08,320
+into an S&P 500 ETF.
+
+5
+00:00:09,670 --> 00:00:10,890
+Thirty years later,
+
+6
+00:00:10,910 --> 00:00:12,100
+the account says almost
+
+7
+00:00:12,120 --> 00:00:13,770
+a quarter of a million euros.
+
+8
+00:00:15,130 --> 00:00:17,470
+But this isn't a story about getting rich.
+
+9
+00:00:17,490 --> 00:00:19,910
+It's a story about what happens in between.
+
+10
+00:00:21,270 --> 00:00:21,870
+The doubts.
+
+11
+00:00:21,890 --> 00:00:22,650
+The crashes.
+
+12
+00:00:22,670 --> 00:00:24,500
+The friends who seem to do better.
+
+13
+00:00:24,520 --> 00:00:26,790
+And the boring months nobody talks about.
+
+14
+00:00:28,130 --> 00:00:30,630
+Every number in this story is a hypothesis:
+
+15
+00:00:30,650 --> 00:00:33,020
+7% a year, after fees.
+
+16
+00:00:33,040 --> 00:00:34,750
+Real life will be different.
+
+17
+00:00:34,770 --> 00:00:36,800
+This is not financial advice.
+
+18
+00:00:38,130 --> 00:00:39,730
+Let's go back to the beginning.
+
+19
+00:00:41,070 --> 00:00:42,160
+Age 25.
+
+20
+00:00:42,180 --> 00:00:43,330
+The first paycheck.
+
+21
+00:00:44,670 --> 00:00:46,780
+You just got your first real salary.
+
+22
+00:00:46,800 --> 00:00:47,790
+After rent, food and transport,
+
+23
+00:00:47,810 --> 00:00:49,550
+there's a little left at
+
+24
+00:00:49,570 --> 00:00:50,700
+the end of the month.
+
+25
+00:00:52,070 --> 00:00:53,700
+Your friends know exactly
+
+26
+00:00:53,720 --> 00:00:54,450
+what to do with it.
+
+27
+00:00:54,470 --> 00:00:55,450
+New phone.
+
+28
+00:00:55,470 --> 00:00:56,430
+Weekend trips.
+
+29
+00:00:56,450 --> 00:00:57,470
+A car on credit.
+
+30
+00:00:58,830 --> 00:00:59,920
+You don't judge them.
+
+31
+00:00:59,940 --> 00:01:01,700
+You just want something different:
+
+32
+00:01:01,720 --> 00:01:03,730
+to stop worrying about money one day.
+
+33
+00:01:05,070 --> 00:01:06,040
+Your bank says:
+
+34
+00:01:06,060 --> 00:01:07,920
+leave it in the savings account.
+
+35
+00:01:07,940 --> 00:01:09,050
+It pays almost nothing,
+
+36
+00:01:09,070 --> 00:01:10,380
+but at least it's safe.
+
+37
+00:01:11,730 --> 00:01:13,390
+But prices keep rising.
+
+38
+00:01:13,410 --> 00:01:16,320
+So money that sits still slowly loses value,
+
+39
+00:01:16,340 --> 00:01:17,960
+even if the number never moves.
+
+40
+00:01:19,300 --> 00:01:21,200
+So one evening, you make a decision.
+
+41
+00:01:21,220 --> 00:01:22,250
+Not a big one.
+
+42
+00:01:22,270 --> 00:01:23,950
+Just €200 a month.
+
+43
+00:01:25,300 --> 00:01:26,520
+Before that, you put
+
+44
+00:01:26,540 --> 00:01:28,150
+three months of expenses aside.
+
+45
+00:01:28,170 --> 00:01:29,670
+An emergency fund.
+
+46
+00:01:29,690 --> 00:01:30,890
+Because life happens.
+
+47
+00:01:32,230 --> 00:01:33,280
+The first buy.
+
+48
+00:01:34,630 --> 00:01:36,120
+You open your broker app,
+
+49
+00:01:36,140 --> 00:01:37,280
+you type VOO, and...
+
+50
+00:01:37,300 --> 00:01:39,530
+nothing. Not available in your region.
+
+51
+00:01:40,870 --> 00:01:42,660
+That's the fund every American
+
+52
+00:01:42,680 --> 00:01:43,890
+video tells you to buy.
+
+53
+00:01:43,910 --> 00:01:45,830
+But Europe has its own rules,
+
+54
+00:01:45,850 --> 00:01:47,460
+and VOO doesn't follow them.
+
+55
+00:01:48,800 --> 00:01:50,930
+So you search for the European version:
+
+56
+00:01:50,950 --> 00:01:54,940
+an S&P 500 UCITS ETF, based in Ireland.
+
+57
+00:01:54,960 --> 00:01:56,800
+Same 500 companies.
+
+58
+00:01:58,130 --> 00:02:01,210
+The yearly fee is 0.07%.
+
+59
+00:02:01,230 --> 00:02:02,640
+On your first €200,
+
+60
+00:02:02,660 --> 00:02:04,300
+that's 14 cents a year.
+
+61
+00:02:05,670 --> 00:02:07,560
+The app shows €200.00.
+
+62
+00:02:07,580 --> 00:02:10,580
+The next day, €199.40.
+
+63
+00:02:10,600 --> 00:02:12,000
+Welcome to investing.
+
+64
+00:02:13,330 --> 00:02:14,760
+For comparison, many bank
+
+65
+00:02:14,780 --> 00:02:16,830
+funds charge more than 1%.
+
+66
+00:02:16,850 --> 00:02:18,950
+Remember that number, it'll come back.
+
+67
+00:02:20,300 --> 00:02:22,050
+You set up an automatic plan:
+
+68
+00:02:22,070 --> 00:02:25,230
+every month, on payday, €200 goes in.
+
+69
+00:02:25,250 --> 00:02:26,960
+You don't have to think about it.
+
+70
+00:02:28,300 --> 00:02:30,360
+You now own a tiny piece of Apple,
+
+71
+00:02:30,380 --> 00:02:33,850
+Microsoft, Nvidia, and almost 500 other companies.
+
+72
+00:02:33,870 --> 00:02:35,200
+It feels like nothing.
+
+73
+00:02:36,570 --> 00:02:37,150
+Age 26.
+
+74
+00:02:37,170 --> 00:02:38,620
+The boring years.
+
+75
+00:02:39,970 --> 00:02:40,900
+The first months,
+
+76
+00:02:40,920 --> 00:02:42,380
+you check the app every day.
+
+77
+00:02:42,400 --> 00:02:43,150
+Up a little.
+
+78
+00:02:43,170 --> 00:02:43,940
+Down a little.
+
+79
+00:02:43,960 --> 00:02:44,460
+Up again.
+
+80
+00:02:45,800 --> 00:02:48,320
+One day the account is down €30.
+
+81
+00:02:48,340 --> 00:02:50,520
+You lose sleep over thirty euros.
+
+82
+00:02:50,540 --> 00:02:52,240
+It's almost funny, looking back.
+
+83
+00:02:53,600 --> 00:02:55,420
+After a while, you stop checking.
+
+84
+00:02:55,440 --> 00:02:56,970
+The plan runs on its own.
+
+85
+00:02:58,300 --> 00:03:00,320
+Your friend Max tells you about a coin
+
+86
+00:03:00,340 --> 00:03:01,380
+that tripled in a week.
+
+87
+00:03:01,400 --> 00:03:02,950
+He made more in seven days
+
+88
+00:03:02,970 --> 00:03:03,960
+than you in a year.
+
+89
+00:03:05,300 --> 00:03:06,130
+You feel stupid.
+
+90
+00:03:06,150 --> 00:03:07,570
+Slow. Old-fashioned.
+
+91
+00:03:08,930 --> 00:03:12,230
+Three months later, Max's coin is down 80%.
+
+92
+00:03:12,250 --> 00:03:13,940
+He doesn't talk about it anymore.
+
+93
+00:03:15,300 --> 00:03:16,240
+You didn't win big.
+
+94
+00:03:16,260 --> 00:03:17,790
+But you didn't lose big either.
+
+95
+00:03:17,810 --> 00:03:19,190
+That's the deal you signed.
+
+96
+00:03:20,530 --> 00:03:23,240
+Some months you forget the plan even exists.
+
+97
+00:03:23,260 --> 00:03:24,680
+That's when it works best.
+
+98
+00:03:26,030 --> 00:03:27,090
+Age 28.
+
+99
+00:03:27,110 --> 00:03:28,060
+Love and debt.
+
+100
+00:03:29,400 --> 00:03:30,720
+At 28, you move
+
+101
+00:03:30,740 --> 00:03:31,940
+in with someone you love.
+
+102
+00:03:31,960 --> 00:03:33,470
+One evening, they show you
+
+103
+00:03:33,490 --> 00:03:34,750
+a number they've been hiding:
+
+104
+00:03:34,770 --> 00:03:37,190
+€4,000 of credit card debt.
+
+105
+00:03:38,530 --> 00:03:41,160
+The interest is around 20% a year.
+
+106
+00:03:41,180 --> 00:03:43,600
+That's money leaking out every single month.
+
+107
+00:03:44,970 --> 00:03:46,210
+Here's a simple rule:
+
+108
+00:03:46,230 --> 00:03:47,970
+no investment reliably beats
+
+109
+00:03:47,990 --> 00:03:49,810
+paying off debt like that.
+
+110
+00:03:49,830 --> 00:03:52,950
+Paying it off is like earning 20%, guaranteed.
+
+111
+00:03:54,300 --> 00:03:56,700
+So you keep your €200 going,
+
+112
+00:03:56,720 --> 00:03:57,630
+and together you throw
+
+113
+00:03:57,650 --> 00:03:59,110
+everything else at the debt.
+
+114
+00:04:00,470 --> 00:04:02,340
+Eight months later, it's gone.
+
+115
+00:04:02,360 --> 00:04:03,520
+You celebrate with pizza
+
+116
+00:04:03,540 --> 00:04:05,760
+on the floor of a half-empty apartment.
+
+117
+00:04:07,100 --> 00:04:07,620
+Age 30.
+
+118
+00:04:07,640 --> 00:04:08,880
+The first crash.
+
+119
+00:04:10,230 --> 00:04:13,290
+Five years in, you've put in €12,000.
+
+120
+00:04:13,310 --> 00:04:16,560
+Your account shows about €14,300.
+
+121
+00:04:17,900 --> 00:04:19,250
+Then the news changes.
+
+122
+00:04:19,270 --> 00:04:20,170
+A virus.
+
+123
+00:04:20,190 --> 00:04:20,940
+Cities closing.
+
+124
+00:04:20,960 --> 00:04:22,730
+Markets falling every day.
+
+125
+00:04:24,070 --> 00:04:25,560
+It's like 2020:
+
+126
+00:04:25,580 --> 00:04:26,580
+in just a few weeks,
+
+127
+00:04:26,600 --> 00:04:28,310
+the S&P 500 lost
+
+128
+00:04:28,330 --> 00:04:29,880
+about a third of its value.
+
+129
+00:04:31,230 --> 00:04:37,480
+Your €14,300 becomes €9,450.
+
+130
+00:04:37,500 --> 00:04:37,960
+On paper, you just
+
+131
+00:04:37,980 --> 00:04:39,910
+lost almost five thousand euros.
+
+132
+00:04:41,270 --> 00:04:43,110
+Your finger is on the sell button.
+
+133
+00:04:44,470 --> 00:04:46,340
+But you remember why you started.
+
+134
+00:04:46,360 --> 00:04:48,160
+You didn't need this money for years.
+
+135
+00:04:48,180 --> 00:04:49,130
+So you do nothing.
+
+136
+00:04:50,470 --> 00:04:52,980
+And your €200 keeps buying every month,
+
+137
+00:04:53,000 --> 00:04:54,310
+at lower prices.
+
+138
+00:04:54,330 --> 00:04:56,050
+Same money, more shares.
+
+139
+00:04:57,400 --> 00:05:00,470
+In 2020, about five months after the bottom,
+
+140
+00:05:00,490 --> 00:05:02,480
+the market was back at its old high.
+
+141
+00:05:03,830 --> 00:05:06,590
+Nobody can promise it'll always be that fast.
+
+142
+00:05:06,610 --> 00:05:08,440
+Sometimes it takes years.
+
+143
+00:05:08,460 --> 00:05:09,240
+But the people who
+
+144
+00:05:09,260 --> 00:05:10,850
+sold locked in their loss.
+
+145
+00:05:12,200 --> 00:05:12,890
+Age 32.
+
+146
+00:05:12,910 --> 00:05:13,940
+The raise.
+
+147
+00:05:15,300 --> 00:05:16,210
+You get a raise.
+
+148
+00:05:16,230 --> 00:05:17,840
+Your colleague Tom gets one too.
+
+149
+00:05:17,860 --> 00:05:19,100
+He buys a new car.
+
+150
+00:05:19,120 --> 00:05:19,560
+You buy...
+
+151
+00:05:19,580 --> 00:05:20,280
+nothing new.
+
+152
+00:05:21,630 --> 00:05:22,880
+Tom's car loses value
+
+153
+00:05:22,900 --> 00:05:24,720
+the day he drives it away.
+
+154
+00:05:24,740 --> 00:05:27,790
+Your €200 doesn't come with a monthly payment.
+
+155
+00:05:29,130 --> 00:05:30,240
+Not because you're cheap.
+
+156
+00:05:30,260 --> 00:05:32,170
+Because you already like your life.
+
+157
+00:05:32,190 --> 00:05:34,410
+And extra money gives you something better:
+
+158
+00:05:34,430 --> 00:05:35,070
+options.
+
+159
+00:05:36,430 --> 00:05:37,390
+This is the most
+
+160
+00:05:37,410 --> 00:05:39,590
+underrated move in personal finance:
+
+161
+00:05:39,610 --> 00:05:42,360
+when you earn more, don't automatically spend more.
+
+162
+00:05:43,700 --> 00:05:44,590
+Age 34.
+
+163
+00:05:44,610 --> 00:05:45,690
+The house question.
+
+164
+00:05:47,030 --> 00:05:48,960
+At 34, everyone around you
+
+165
+00:05:48,980 --> 00:05:50,370
+is buying an apartment.
+
+166
+00:05:50,390 --> 00:05:52,450
+You wonder if you should stop investing
+
+167
+00:05:52,470 --> 00:05:53,690
+to save for a deposit.
+
+168
+00:05:55,030 --> 00:05:56,670
+Here's how you think about it.
+
+169
+00:05:56,690 --> 00:05:57,660
+Money you need in two
+
+170
+00:05:57,680 --> 00:05:58,930
+or three years shouldn't
+
+171
+00:05:58,950 --> 00:06:00,120
+be in the stock market.
+
+172
+00:06:01,470 --> 00:06:02,780
+Because the market can drop
+
+173
+00:06:02,800 --> 00:06:04,410
+by a third right when you need it.
+
+174
+00:06:05,770 --> 00:06:08,030
+So you split your money into two buckets.
+
+175
+00:06:08,050 --> 00:06:10,960
+The €200 keeps going for the long run,
+
+176
+00:06:10,980 --> 00:06:11,980
+and a separate savings
+
+177
+00:06:12,000 --> 00:06:13,520
+account grows for the house.
+
+178
+00:06:14,870 --> 00:06:16,700
+Different goals, different places.
+
+179
+00:06:16,720 --> 00:06:18,250
+That one idea saves people
+
+180
+00:06:18,270 --> 00:06:19,400
+from a lot of panic.
+
+181
+00:06:20,770 --> 00:06:21,750
+Age 35.
+
+182
+00:06:21,770 --> 00:06:23,030
+The quiet milestone.
+
+183
+00:06:24,370 --> 00:06:24,900
+Ten years.
+
+184
+00:06:24,920 --> 00:06:26,520
+120 squares.
+
+185
+00:06:27,870 --> 00:06:30,140
+You've put in €24,000.
+
+186
+00:06:30,160 --> 00:06:33,240
+Your account shows almost €35,000.
+
+187
+00:06:34,600 --> 00:06:36,280
+And something quiet happens:
+
+188
+00:06:36,300 --> 00:06:37,610
+this year, your money earns
+
+189
+00:06:37,630 --> 00:06:39,660
+about as much as you put in yourself.
+
+190
+00:06:41,000 --> 00:06:42,340
+From here, you're no longer
+
+191
+00:06:42,360 --> 00:06:43,610
+doing all the work alone.
+
+192
+00:06:44,970 --> 00:06:46,620
+Nobody throws you a party.
+
+193
+00:06:46,640 --> 00:06:48,330
+There's no notification.
+
+194
+00:06:48,350 --> 00:06:50,720
+Just a number on a screen, growing quietly.
+
+195
+00:06:52,070 --> 00:06:53,140
+Age 37.
+
+196
+00:06:53,160 --> 00:06:54,540
+The fee nobody sees.
+
+197
+00:06:55,900 --> 00:06:56,930
+At a family dinner,
+
+198
+00:06:56,950 --> 00:06:58,810
+your cousin says she invests too.
+
+199
+00:06:58,830 --> 00:07:00,470
+Her bank picked a fund for her.
+
+200
+00:07:01,830 --> 00:07:03,000
+You ask about the fee.
+
+201
+00:07:03,020 --> 00:07:03,980
+She doesn't know.
+
+202
+00:07:04,000 --> 00:07:05,210
+You look it up together:
+
+203
+00:07:05,230 --> 00:07:06,890
+1.8% a year.
+
+204
+00:07:08,230 --> 00:07:09,350
+It sounds small.
+
+205
+00:07:09,370 --> 00:07:12,590
+1.8 versus 0.07.
+
+206
+00:07:12,610 --> 00:07:13,240
+But over thirty years,
+
+207
+00:07:13,260 --> 00:07:16,220
+on €200 a month, here's the gap.
+
+208
+00:07:17,570 --> 00:07:21,050
+You end up with about €244,000.
+
+209
+00:07:21,070 --> 00:07:24,760
+She ends up with about €175,000,
+
+210
+00:07:24,780 --> 00:07:25,910
+in the same market.
+
+211
+00:07:27,270 --> 00:07:29,140
+Almost seventy thousand euros,
+
+212
+00:07:29,160 --> 00:07:29,920
+gone in fees she
+
+213
+00:07:29,940 --> 00:07:31,070
+never saw on a bill.
+
+214
+00:07:32,430 --> 00:07:33,910
+She switches the next week.
+
+215
+00:07:33,930 --> 00:07:36,350
+It's never too late, but every year counts.
+
+216
+00:07:37,700 --> 00:07:38,460
+Age 40.
+
+217
+00:07:38,480 --> 00:07:39,890
+Taxes and choices.
+
+218
+00:07:41,230 --> 00:07:42,480
+At 40, you finally
+
+219
+00:07:42,500 --> 00:07:43,550
+look at the boring part:
+
+220
+00:07:43,570 --> 00:07:47,210
+taxes. Every European country handles this differently.
+
+221
+00:07:48,570 --> 00:07:50,690
+Some countries have special accounts
+
+222
+00:07:50,710 --> 00:07:51,060
+that cut the tax,
+
+223
+00:07:51,080 --> 00:07:52,860
+if you follow their rules.
+
+224
+00:07:52,880 --> 00:07:55,520
+In France, for example, there's the PEA.
+
+225
+00:07:56,870 --> 00:07:58,560
+Your fund is accumulating:
+
+226
+00:07:58,580 --> 00:08:01,320
+the dividends are reinvested automatically.
+
+227
+00:08:01,340 --> 00:08:03,920
+In some countries, that can save tax.
+
+228
+00:08:03,940 --> 00:08:05,670
+In others, it changes nothing.
+
+229
+00:08:07,030 --> 00:08:08,260
+So the right account
+
+230
+00:08:08,280 --> 00:08:10,160
+can matter as much as the right fund.
+
+231
+00:08:10,180 --> 00:08:12,300
+Check your tax office's website,
+
+232
+00:08:12,320 --> 00:08:13,760
+or ask a local adviser.
+
+233
+00:08:15,100 --> 00:08:17,040
+You also check your fund once a year:
+
+234
+00:08:17,060 --> 00:08:18,140
+the fee, the size,
+
+235
+00:08:18,160 --> 00:08:20,000
+and that it still does what it says.
+
+236
+00:08:20,020 --> 00:08:20,860
+Ten minutes.
+
+237
+00:08:20,880 --> 00:08:22,420
+That's all the maintenance.
+
+238
+00:08:23,770 --> 00:08:24,830
+Age 42.
+
+239
+00:08:24,850 --> 00:08:26,020
+The guaranteed offer.
+
+240
+00:08:27,370 --> 00:08:29,860
+At 42, an ad follows you everywhere.
+
+241
+00:08:29,880 --> 00:08:31,930
+A man in a rented sports car,
+
+242
+00:08:31,950 --> 00:08:33,490
+promising 20% a month.
+
+243
+00:08:33,510 --> 00:08:34,330
+Guaranteed.
+
+244
+00:08:35,670 --> 00:08:36,630
+You do the math.
+
+245
+00:08:36,650 --> 00:08:39,380
+20% a month would turn €1,000
+
+246
+00:08:39,400 --> 00:08:42,000
+into almost €9,000 in a year.
+
+247
+00:08:42,020 --> 00:08:43,200
+If that were real,
+
+248
+00:08:43,220 --> 00:08:44,300
+he wouldn't need your money.
+
+249
+00:08:45,670 --> 00:08:46,870
+The rule is simple.
+
+250
+00:08:46,890 --> 00:08:49,810
+High returns and a guarantee never come together.
+
+251
+00:08:49,830 --> 00:08:51,480
+When you see both, it's a trap.
+
+252
+00:08:52,830 --> 00:08:55,970
+Your boring ETF has never promised you anything.
+
+253
+00:08:55,990 --> 00:08:58,000
+That's exactly why you trust it.
+
+254
+00:08:59,330 --> 00:09:00,300
+Age 44.
+
+255
+00:09:00,320 --> 00:09:01,040
+The layoff.
+
+256
+00:09:02,400 --> 00:09:04,870
+At 44, your company announces cuts.
+
+257
+00:09:04,890 --> 00:09:06,410
+Your name is on the list.
+
+258
+00:09:07,770 --> 00:09:08,490
+It's scary.
+
+259
+00:09:08,510 --> 00:09:09,660
+But this is exactly
+
+260
+00:09:09,680 --> 00:09:11,660
+what the emergency fund was for.
+
+261
+00:09:11,680 --> 00:09:13,590
+Three months of expenses,
+
+262
+00:09:13,610 --> 00:09:15,370
+waiting since you were 25.
+
+263
+00:09:16,730 --> 00:09:17,990
+You don't sell anything.
+
+264
+00:09:18,010 --> 00:09:19,950
+The emergency fund pays the bills,
+
+265
+00:09:19,970 --> 00:09:22,090
+and the €200 keeps going.
+
+266
+00:09:23,430 --> 00:09:25,680
+Four months later, you find a new job.
+
+267
+00:09:25,700 --> 00:09:27,910
+Your investments never even noticed.
+
+268
+00:09:29,270 --> 00:09:31,890
+That's the real job of an emergency fund.
+
+269
+00:09:31,910 --> 00:09:34,240
+It protects your investments from your life.
+
+270
+00:09:35,600 --> 00:09:36,580
+Age 45.
+
+271
+00:09:36,600 --> 00:09:37,460
+The snowball.
+
+272
+00:09:38,800 --> 00:09:39,520
+Twenty years.
+
+273
+00:09:39,540 --> 00:09:41,310
+240 squares.
+
+274
+00:09:41,330 --> 00:09:43,570
+You've put in €48,000.
+
+275
+00:09:44,900 --> 00:09:48,060
+Your account shows about €104,000.
+
+276
+00:09:48,080 --> 00:09:49,800
+More than double what you put in.
+
+277
+00:09:51,170 --> 00:09:54,780
+This year, your money earns about €7,300.
+
+278
+00:09:54,800 --> 00:09:57,480
+You only add €2,400.
+
+279
+00:09:57,500 --> 00:09:59,280
+It earns three times more than you.
+
+280
+00:10:00,630 --> 00:10:01,780
+That's compounding.
+
+281
+00:10:01,800 --> 00:10:03,560
+Your gains make their own gains.
+
+282
+00:10:03,580 --> 00:10:05,060
+At first it's invisible.
+
+283
+00:10:05,080 --> 00:10:06,230
+Then it's all you see.
+
+284
+00:10:07,600 --> 00:10:08,660
+If you had started
+
+285
+00:10:08,680 --> 00:10:10,620
+at 35 instead of 25,
+
+286
+00:10:10,640 --> 00:10:12,660
+with the same €200,
+
+287
+00:10:12,680 --> 00:10:19,000
+you'd have about €104,000 at 55, not €244,000.
+
+288
+00:10:20,330 --> 00:10:22,820
+That's why starting early matters so much.
+
+289
+00:10:22,840 --> 00:10:25,390
+The first euros you invest work the longest.
+
+290
+00:10:26,730 --> 00:10:27,850
+Age 47.
+
+291
+00:10:27,870 --> 00:10:28,850
+The record high.
+
+292
+00:10:30,200 --> 00:10:32,880
+At 47, the market hits a new record.
+
+293
+00:10:32,900 --> 00:10:35,890
+On TV, experts say it's too expensive.
+
+294
+00:10:35,910 --> 00:10:37,480
+Wait for the crash, they say.
+
+295
+00:10:38,830 --> 00:10:40,660
+The problem is that nobody knows
+
+296
+00:10:40,680 --> 00:10:41,760
+when the crash comes.
+
+297
+00:10:41,780 --> 00:10:44,480
+Waiting often costs more than the crash itself.
+
+298
+00:10:45,830 --> 00:10:47,040
+Records are normal.
+
+299
+00:10:47,060 --> 00:10:48,380
+A market that grows over
+
+300
+00:10:48,400 --> 00:10:50,040
+time keeps setting new ones.
+
+301
+00:10:51,400 --> 00:10:52,350
+So you don't wait.
+
+302
+00:10:52,370 --> 00:10:53,200
+You don't guess.
+
+303
+00:10:53,220 --> 00:10:54,820
+The €200 goes in,
+
+304
+00:10:54,840 --> 00:10:56,890
+like every month for twenty-two years.
+
+305
+00:10:58,230 --> 00:10:58,910
+Age 50.
+
+306
+00:10:58,930 --> 00:11:00,040
+The second drop.
+
+307
+00:11:01,400 --> 00:11:05,520
+At 50, your account is around €162,000.
+
+308
+00:11:05,540 --> 00:11:08,900
+Then the market falls again, like in 2022:
+
+309
+00:11:08,920 --> 00:11:10,730
+about 20% in a year.
+
+310
+00:11:12,070 --> 00:11:15,100
+This time, 20% isn't a few thousand euros.
+
+311
+00:11:15,120 --> 00:11:17,480
+It's about €32,000.
+
+312
+00:11:17,500 --> 00:11:19,440
+More than you saved in ten years.
+
+313
+00:11:20,800 --> 00:11:21,890
+Your hands are calm.
+
+314
+00:11:21,910 --> 00:11:23,290
+You've seen this before.
+
+315
+00:11:23,310 --> 00:11:24,510
+You know the only real loss
+
+316
+00:11:24,530 --> 00:11:26,290
+is the one you lock in by selling.
+
+317
+00:11:27,630 --> 00:11:28,990
+About two years later,
+
+318
+00:11:29,010 --> 00:11:31,010
+the market is back above its old high.
+
+319
+00:11:32,370 --> 00:11:34,090
+But it makes you think about something:
+
+320
+00:11:34,110 --> 00:11:37,480
+the S&P 500 is only American companies.
+
+321
+00:11:38,830 --> 00:11:41,490
+Some Europeans prefer a world ETF,
+
+322
+00:11:41,510 --> 00:11:44,250
+with thousands of companies from many countries.
+
+323
+00:11:44,270 --> 00:11:45,820
+It's a valid choice,
+
+324
+00:11:45,840 --> 00:11:47,910
+explained in our ETF video.
+
+325
+00:11:49,270 --> 00:11:50,250
+Age 55.
+
+326
+00:11:50,270 --> 00:11:51,000
+The number.
+
+327
+00:11:52,370 --> 00:11:53,230
+Thirty years.
+
+328
+00:11:53,250 --> 00:11:55,010
+360 squares.
+
+329
+00:11:55,030 --> 00:11:56,570
+Every single one filled.
+
+330
+00:11:57,930 --> 00:12:00,370
+You've put in €72,000.
+
+331
+00:12:00,390 --> 00:12:03,940
+The account says about €244,000.
+
+332
+00:12:05,300 --> 00:12:06,000
+Is that rich?
+
+333
+00:12:06,020 --> 00:12:06,730
+Not really.
+
+334
+00:12:06,750 --> 00:12:07,560
+But it's freedom.
+
+335
+00:12:08,900 --> 00:12:10,600
+A common rule of thumb says you
+
+336
+00:12:10,620 --> 00:12:12,630
+could take out about 4% a year.
+
+337
+00:12:12,650 --> 00:12:15,650
+That's around €9,800 a year,
+
+338
+00:12:15,670 --> 00:12:17,420
+or €800 a month.
+
+339
+00:12:18,770 --> 00:12:19,840
+Not a fortune.
+
+340
+00:12:19,860 --> 00:12:21,350
+But €800 a month,
+
+341
+00:12:21,370 --> 00:12:23,400
+every month, without working for it.
+
+342
+00:12:23,420 --> 00:12:25,710
+That changes how you say yes and no.
+
+343
+00:12:27,070 --> 00:12:28,650
+And remember inflation:
+
+344
+00:12:28,670 --> 00:12:30,050
+in today's money,
+
+345
+00:12:30,070 --> 00:12:36,560
+€244,000 in thirty years is worth about €135,000.
+
+346
+00:12:37,900 --> 00:12:39,760
+So no, you're not a millionaire.
+
+347
+00:12:39,780 --> 00:12:41,360
+You're something quieter:
+
+348
+00:12:41,380 --> 00:12:42,410
+someone who doesn't panic
+
+349
+00:12:42,430 --> 00:12:43,820
+when the car breaks down.
+
+350
+00:12:45,170 --> 00:12:46,580
+And the strangest part?
+
+351
+00:12:46,600 --> 00:12:47,590
+The hardest thing you
+
+352
+00:12:47,610 --> 00:12:48,980
+did wasn't picking a fund.
+
+353
+00:12:49,000 --> 00:12:50,160
+It was staying still.
+
+354
+00:12:51,500 --> 00:12:52,770
+If you remember one thing:
+
+355
+00:12:52,790 --> 00:12:54,960
+time, a cheap fund, and not stopping.
+
+356
+00:12:54,980 --> 00:12:56,200
+That's the whole trick.
+
+357
+00:12:57,530 --> 00:12:58,780
+And if you're 35,
+
+358
+00:12:58,800 --> 00:13:00,570
+45 or 50 right now,
+
+359
+00:13:00,590 --> 00:13:01,650
+it's not too late.
+
+360
+00:13:01,670 --> 00:13:03,870
+The squares just start from where you are.
+
+361
+00:13:05,230 --> 00:13:06,710
+All numbers here assume
+
+362
+00:13:06,730 --> 00:13:08,590
+7% a year after fees.
+
+363
+00:13:08,610 --> 00:13:10,560
+Markets can go down for years,
+
+364
+00:13:10,580 --> 00:13:12,060
+and nothing is guaranteed.
+
+365
+00:13:12,080 --> 00:13:14,000
+This is not financial advice.
+
+366
+00:13:15,370 --> 00:13:17,340
+Maybe you're 25 right now.
+
+367
+00:13:17,360 --> 00:13:19,060
+Maybe this is your first month.
+
+368
+00:13:19,080 --> 00:13:20,160
+Square number one.
+
+369
+00:13:21,500 --> 00:13:23,930
+If this story felt familiar, subscribe.
+
+370
+00:13:23,950 --> 00:13:24,820
+Next up:
+
+371
+00:13:24,840 --> 00:13:26,950
+every type of ETF, explained.
+
