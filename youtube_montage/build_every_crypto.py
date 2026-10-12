@@ -68,10 +68,11 @@ SAY = {"1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six
        "2009": "two thousand nine", "2011": "twenty eleven", "2013": "twenty thirteen", "2015": "twenty fifteen",
        "2017": "twenty seventeen", "2021": "twenty twenty-one", "2022": "twenty twenty-two", "2024": "twenty twenty-four",
        "2025": "twenty twenty-five", "2026": "twenty twenty-six", "2027": "twenty twenty-seven", "2029": "twenty twenty-nine",
-       "2140": "twenty-one forty", "NFT": "N F T", "NFTs": "N F Ts", "DeFi": "dee-fye", "MiCA": "meeka", "EU": "E U",
-       "EU's": "E U's", "ECB": "E C B", "ETPs": "E T Ps", "ETF": "E T F", "USDT": "U S D T", "USDC": "U S D C",
+       "2140": "twenty-one forty", "NFT": "N F T", "NFTs": "N F T's", "DeFi": "dee-fye", "MiCA": "meeka", "EU": "E U",
+       "EU's": "E U's", "ECB": "E C B", "ETPs": "E T P's", "ETF": "E T F", "USDT": "U S D T", "USDC": "U S D C",
        "EURC": "E U R C", "FTX": "F T X", "FTT": "F T T", "BNB": "B N B", "LUNA": "Luna", "TerraUSD": "Terra U S D",
-       "Aave": "ah-vay", "Zcash": "zee-cash", "Tether's": "Tethers", "Circle's": "Circles"}
+       "Aave": "ah-vay", "Zcash": "zee-cash", "Tether's": "Tethers", "Circle's": "Circles",
+       "memecoin": "meme coin", "memecoins": "meme coins", "Memecoins": "Meme coins", "Pepe": "Peh-peh", "Inu": "Ee-noo"}
 
 
 def speak(sub):
@@ -330,12 +331,30 @@ LINES = [
     L(("end", "Every ETF Explained"), "If this helped, subscribe. Next up, every type of ETF, explained.", True),
 ]
 TRANS = []
-LEAD, GAP, TAIL = 0.5, 1.35, 3.0
+LEAD, GAP, TAIL = 0.5, 1.30, 3.0
 SHORT_LAST = 2
+# voice: Kokoro (open-source, Apache 2.0, free for commercial use), British voice 'bf_emma'
+KOKORO_DIR = os.environ.get("KOKORO_DIR", os.path.join(D, "kokoro"))
+VOICE, VOICE_LANG, VOICE_SPEED = "bf_emma", "en-gb", 0.92
+_KOKORO = []
+
+
+def kokoro_say(text, path):
+    if not _KOKORO:
+        from kokoro_onnx import Kokoro
+        _KOKORO.append(Kokoro(os.path.join(KOKORO_DIR, "kokoro-v1.0.onnx"), os.path.join(KOKORO_DIR, "voices-v1.0.bin")))
+    a, sr = _KOKORO[0].create(text, voice=VOICE, speed=VOICE_SPEED, lang=VOICE_LANG)
+    pcm = (np.clip(a, -1, 1) * 32767).astype(np.int16)
+    with wave.open(path, "w") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(sr)
+        w.writeframes(pcm.tobytes())
+
+
 def tts(i, text):
     raw, out = os.path.join(A, "voice", f"l{i:02d}_raw.wav"), os.path.join(A, "voice", f"l{i:02d}.wav")
-    subprocess.run(["RHVoice-test", "-p", "slt", "-r", "105", "-o", raw], input=text.encode(), check=True,
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    kokoro_say(text, raw)
     run(["ffmpeg", "-y", "-i", raw, "-af",
          "silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse",
          "-ar", str(SR), "-ac", "1", out])

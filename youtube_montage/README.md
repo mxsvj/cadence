@@ -90,6 +90,12 @@ Il lit `thumbs/thumb_A_voo_dark.jpg` pour la planche de comparaison : lancer `bu
   - le rouge reste réservé aux pertes et aux arnaques, les sous-titres restent blancs ;
 - `CRYPTO_SAMPLE=0:23 python3 build_every_crypto.py` ne rend que les plans 0 à 22 (environ 2 min 30), pour valider un réglage sans attendre le rendu complet.
 
+La voix off de `build_every_crypto.py` est générée gratuitement avec Kokoro, une voix de synthèse open source (licence Apache 2.0, usage commercial autorisé), voix britannique « Emma » (`bf_emma`) :
+
+- installation : `pip install kokoro-onnx`, puis télécharger `kokoro-v1.0.onnx` et `voices-v1.0.bin` depuis les releases GitHub de `thewh1teagle/kokoro-onnx` dans un dossier `kokoro/` à côté du script (ou indiquer le dossier avec `KOKORO_DIR`) ;
+- la voix, la langue et la vitesse se règlent en haut de la partie voix du script (`VOICE`, `VOICE_LANG`, `VOICE_SPEED`) ;
+- la table `SAY` écrit les chiffres en toutes lettres et corrige la prononciation de quelques mots (« meme coin », « Peh-peh », sigles épelés).
+
 `scripts/every_crypto_elevenlabs.txt` est le texte à coller dans ElevenLabs pour la vraie voix off :
 
 - 14 blocs (intro, 12 chapitres, outro), chacun donnant un fichier audio (`00_intro.mp3` … `13_outro.mp3`) ;
