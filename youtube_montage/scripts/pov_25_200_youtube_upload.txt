@@ -1,0 +1,57 @@
+TITRE (≤ 100 caractères, les 60 premiers sont les plus visibles)
+POV: You're 25 and Invest €200 a Month
+
+Variantes à tester :
+POV: You Invest €200 a Month From 25 to 55
+I Invested €200 a Month for 30 Years (What Really Happens)
+
+
+DESCRIPTION (à coller telle quelle)
+You're 25, you live in Europe, and every month you quietly put €200 into an S&P 500 ETF. Thirty years later, the account says almost a quarter of a million euros. But this isn't a story about getting rich. It's about what happens in between: the first crash, the friends who seem to do better, the debt, the layoff, the fee nobody sees, and the boring months nobody talks about.
+
+A story, not a promise. Every number is a hypothesis. Education only, not financial advice.
+
+CHAPTERS
+0:00 Intro
+0:41 Age 25 · The first paycheck
+1:32 Age 25 · The first buy
+2:36 Age 26 · The boring years
+3:26 Age 28 · Love and debt
+4:07 Age 30 · The first crash
+5:12 Age 32 · The raise
+5:43 Age 34 · The house question
+6:20 Age 35 · The quiet milestone
+6:52 Age 37 · The fee nobody sees
+7:37 Age 40 · Taxes and choices
+8:23 Age 42 · The guaranteed offer
+8:59 Age 44 · The layoff
+9:35 Age 45 · The snowball
+10:26 Age 47 · The record high
+10:58 Age 50 · The second drop
+11:49 Age 55 · The number
+
+THE HYPOTHESES
+€200 a month for 30 years, 7% a year after the ETF's fee, compounded monthly: about €244,000 for €72,000 put in.
+Bank fund at 1.8% a year instead of 0.07%: about €175,000 (≈ €69,000 less).
+Started at 35 instead of 25: about €104,000 at 55.
+4% a year taken out of €244,000: about €9,800 a year. €244,000 in 30 years at 2% inflation: about €135,000 in today's money.
+Market facts used in the story: the S&P 500 fell about 34% in February–March 2020 and was back at its old high about five months after the bottom; it fell about 20% in 2022 and set a new high about two years later.
+Real returns go up and down, and nothing is guaranteed. Charts marked "illustration" are illustrations, not real price data. Taxes depend on your country; check your local rules.
+
+Voice-over: synthetic (AI) voice.
+
+#investing #personalfinance #etf
+
+
+TAGS (YouTube → Détails → Afficher plus → Tags ; 500 caractères max, 302 ici)
+invest 200 a month, investing for beginners, s&p 500 etf, compound interest, investing in europe, ucits etf, how to start investing, etf investing, long term investing, dollar cost averaging, emergency fund, stock market crash, personal finance europe, financial freedom, pov investing, investing at 25
+
+
+RÉGLAGES
+- Public : Non, cette vidéo n'est pas conçue pour les enfants.
+- Catégorie : Éducation.
+- Langue de la vidéo : anglais. Sous-titres : importe pov_25_200_subtitles_en.srt (Sous-titres → Ajouter une langue → Anglais → Importer un fichier → Avec minutage).
+- Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
+- Écran de fin : « vidéo suivante » à gauche (la vidéo ETF, annoncée dans la voix off), « s'abonner » à droite, sur les 10 dernières secondes.
+- Miniatures « Test & compare » : P1, P3 et P2.
+- Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris).
