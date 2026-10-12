@@ -1,0 +1,58 @@
+TITRE (≤ 100 caractères, les 60 premiers sont les plus visibles)
+Every Crypto Explained in 12 Minutes
+
+Variantes à tester :
+Every Type of Crypto Explained in 12 Minutes (Bitcoin to the Digital Euro)
+12 Types of Crypto Explained (and the One That Isn't Crypto)
+
+
+DESCRIPTION (à coller telle quelle)
+Bitcoin, Ethereum, stablecoins, memecoins, NFTs, DeFi… there are tens of thousands of cryptocurrencies, but almost all of them fit into 12 boxes. Here's every box, explained in 12 minutes, with a focus on what changes for people living in Europe (MiCA, USDT, privacy coins, the digital euro).
+
+No hype, no price predictions. Education only, not financial advice. Crypto can lose most of its value, fast.
+
+CHAPTERS
+0:00 Intro
+0:27 01 · Bitcoin
+1:38 02 · Ethereum
+2:33 03 · Other blockchains
+3:16 04 · Layer 2s
+3:55 05 · Stablecoins
+5:11 06 · Exchange tokens
+6:04 07 · DeFi
+6:50 08 · Memecoins
+7:40 09 · NFTs
+8:25 10 · Privacy coins
+9:12 11 · Scam coins
+10:12 12 · The digital euro
+11:03 Recap & how Europeans hold crypto
+
+SOURCES (checked October 2026)
+Bitcoin halving and 21M supply: https://ishares.com/us/insights/what-is-the-bitcoin-halving
+Ethereum's Merge and energy use: https://ethereum.org/roadmap/merge/
+TerraUSD / LUNA collapse: https://corporatefinanceinstitute.com/resources/cryptocurrency/what-happened-to-terra
+USDT and MiCA in the EU: https://degate.com/playbook/usdt-eu-mica-delisting/
+MiCA transitional period: https://elvingerhoss.lu/insights/publications/mica-end-transitional-period-1-july-2026
+EU rules on privacy coins from 2027: https://cointelegraph.com/news/eu-crypto-ban-anonymous-privacy-tokens-2027
+NFT trading volumes: https://vysyn.substack.com/p/nft-volume-drops-95
+Digital euro: https://en.wikipedia.org/wiki/Digital_euro
+
+All charts marked "illustration" are illustrations, not real price data. Nothing in this video is a recommendation to buy or sell anything. Do your own research and check your country's tax rules.
+
+Voice-over: synthetic (AI) voice.
+
+#crypto #bitcoin #personalfinance
+
+
+TAGS (YouTube → Détails → Afficher plus → Tags ; 500 caractères max, environ 390 ici)
+every crypto explained, crypto explained, cryptocurrency explained, types of crypto, bitcoin explained, ethereum explained, stablecoins explained, memecoins, nft explained, defi explained, layer 2 explained, privacy coins, crypto scams, digital euro, mica regulation, crypto europe, crypto for beginners, how crypto works, usdt mica, crypto 2026
+
+
+RÉGLAGES
+- Public : Non, cette vidéo n'est pas conçue pour les enfants.
+- Catégorie : Éducation.
+- Langue de la vidéo : anglais. Sous-titres : ceux de la vidéo sont incrustés ; tu peux aussi laisser YouTube générer les sous-titres automatiques.
+- Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
+- Écran de fin : « vidéo suivante » à gauche, « s'abonner » à droite, sur les 10 dernières secondes.
+- Miniatures « Test & compare » : G, E et A.
+- Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris).
