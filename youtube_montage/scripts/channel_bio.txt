@@ -26,7 +26,7 @@ Aucun pour l'instant. Plus tard : une newsletter ou une page qui regroupe les so
 ADRESSE E-MAIL DE CONTACT
 Crée une adresse dédiée à la chaîne (par ex. un Gmail « euro.unboxed… »), pas ton adresse perso : elle sera visible des sponsors.
 
-IMAGES
+IMAGES (choix : logo 1 « eu. » + bannière noire)
 - Photo de profil : logos/logo_1_eu_dot.png (1024×1024, YouTube la recadre en cercle)
 - Bannière : logos/banner_dark_euro_unboxed.jpg (2560×1440, texte dans la zone visible sur tous les écrans)
 - Filigrane vidéo : logos/watermark_eu.png (Personnaliser la chaîne → Branding → Filigrane, « fin de la vidéo » ou « durée personnalisée »)
