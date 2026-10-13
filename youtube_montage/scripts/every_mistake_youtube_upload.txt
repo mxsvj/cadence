@@ -51,5 +51,5 @@ RÉGLAGES
 - Langue de la vidéo : anglais. Sous-titres : importe every_mistake_subtitles_en.srt (Sous-titres → Ajouter une langue → Anglais → Importer un fichier → Avec minutage).
 - Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
 - Écran de fin : « vidéo suivante » à gauche (la vidéo des comptes d'investissement, annoncée dans la voix off), « s'abonner » à droite, sur les 10 dernières secondes.
-- Miniatures « Test & compare » : M1, M3 et M2.
+- Miniatures « Test & compare » : M4 (bouton SELL), M5 (citation orange) et M6 (cases à cocher).
 - Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris).

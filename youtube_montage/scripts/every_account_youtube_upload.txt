@@ -55,5 +55,5 @@ RÉGLAGES
 - Langue de la vidéo : anglais. Sous-titres : importe every_account_subtitles_en.srt (Sous-titres → Ajouter une langue → Anglais → Importer un fichier → Avec minutage).
 - Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
 - Écran de fin : « vidéo suivante » à gauche (la vidéo ETF, annoncée dans la voix off), « s'abonner » à droite, sur les 10 dernières secondes.
-- Miniatures « Test & compare » : A1, A3 et A2.
+- Miniatures « Test & compare » : A4 (cartes), A1 (liste) et A3 (acronymes).
 - Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris).
