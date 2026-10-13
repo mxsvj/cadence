@@ -49,7 +49,7 @@ Voice-over: synthetic (AI) voice.
 
 tags = ("how to save money, save money fast, saving money tips, pay yourself first, automatic savings, money psychology, behavioral finance, "
         "72 hour rule, sinking funds, savings pots, lifestyle creep, save more tomorrow, future self, emergency fund, personal finance europe, "
-        "frugal living, money habits, simple, budgeting without budget")
+        "frugal living, money habits, budgeting without budget")
 assert len(tags) <= 500
 
 kit = f"""TITRE (≤ 100 caractères, les 60 premiers sont les plus visibles)
@@ -90,5 +90,5 @@ for i, l in enumerate(B.LINES):
     last = l["g"]
     md.append(f"{mmss(B.starts[i])} {l['sub']}")
 open(os.path.join(OUTD, f"{SLUG}_script.md"), "w").write("\n".join(md) + "\n")
-shutil.copy(os.path.join(B.E, "subtitles_en.srt"), os.path.join(OUTD, f"{SLUG}_subtitles_en.srt"))
+B.write_srt(os.path.join(OUTD, f"{SLUG}_subtitles_en.srt"))
 print(kit)

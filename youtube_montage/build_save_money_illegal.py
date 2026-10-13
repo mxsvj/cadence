@@ -1041,6 +1041,19 @@ def overlay(ctx, t, fns=[]):
         fns[0](ctx, t)
 
 
+def write_srt(path):
+    """Captions as a separate .srt (YouTube CC), nothing burnt in; a caption never overlaps the next one."""
+    def srt_time(t):
+        ms = int(round(t * 1000))
+        return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
+    cues = [(part, a, b) for i in range(len(LINES)) for part, a, b in timed_chunks(i)]
+    out = []
+    for c, (part, a, b) in enumerate(cues):
+        end = min(b + 0.05, cues[c + 1][1] - 0.02) if c + 1 < len(cues) else b + 0.05
+        out.append(f"{c + 1}\n{srt_time(a)} --> {srt_time(end)}\n{part}\n")
+    open(path, "w").write("\n".join(out))
+
+
 def still(t, surf, paper, PW, PH):
     g = max(j for j in range(len(SC)) if GSTART[j] <= t + 1e-6)
     sc = SC[g]
@@ -1219,16 +1232,7 @@ if __name__ == "__main__" and not os.environ.get("STILLS"):
          "[v2][md][fx]amix=inputs=3:duration=first:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[out]",
          "-map", "[out]", "-ar", str(SR), mix])
 
-    # ----------------------------------------------------------------------- captions as a separate .srt (YouTube CC), nothing burnt in
-    def srt_time(t):
-        ms = int(round(t * 1000))
-        return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
-    out, c = [], 1
-    for i in range(len(LINES)):
-        for part, a, b in timed_chunks(i):
-            out.append(f"{c}\n{srt_time(a)} --> {srt_time(b + 0.05)}\n{part}\n")
-            c += 1
-    open(os.path.join(E, "subtitles_en.srt"), "w").write("\n".join(out))
+    write_srt(os.path.join(E, "subtitles_en.srt"))
 
     final = os.path.join(O, "save_money_sample.mp4" if SAMPLE else "save_money_16x9.mp4")
     T0, T1 = K0 / FPS, K1 / FPS
