@@ -180,3 +180,22 @@ Quatre vidéos au même format « boîtes », faites d'une traite (même style s
 - coupes : plus de glitch à chaque coupe ; quelques chapitres seulement en ont un, d'autres une image noire, le reste en coupe franche ;
 - son : plus de bruit à chaque coupe ni à chaque touche ; certains chiffres tombent dans un silence brutal, d'autres n'ont aucun son, et la musique fait un « tape-stop » avant un ou deux chapitres ;
 - sous-titres : plus de karaoké centré ; des étiquettes papier à gauche, placées et inclinées légèrement différemment à chaque fois.
+
+## Style « doodle » (inspiré de la chaîne « simple, actually »)
+
+`build_save_money_illegal.py` fabrique « How to Save Money So Easily It Feels Illegal » dans un style complètement différent des vidéos sombres : un explainer dessiné à la main, avec peu de mots à l'écran et un personnage bâton. Le moteur de dessin est dans `doodle.py` (cairo) :
+
+- papier crème légèrement texturé, encre presque noire, l'orange de la chaîne comme seule couleur forte, quelques aplats pastel posés un peu à côté du trait (comme une mise en couleur rapide) ;
+- chaque trait est tremblé à la main et « vibre » : il est redessiné de 3 façons légèrement différentes, en boucle, 8 fois par seconde, comme une vraie animation image par image ; tout ce qui bouge est à 12 images par seconde, seule la caméra à l'épaule tourne à 30 ;
+- lettrage manuscrit Gochi Hand, écrit lettre par lettre à un rythme irrégulier, avec Patrick Hand pour les petites notes et le « 1 » de Caveat Brush (celui de Gochi ressemble à un 7). Les trois polices sont libres (SIL OFL) et se téléchargent toutes seules depuis Google Fonts au premier lancement ;
+- un personnage bâton (avec une mèche, sa signature) : 19 poses (montrer, hausser les épaules, réfléchir, bras levés, marcher, allongé…), des visages (sourire, inquiet, surpris, endormi…), clignements des yeux et respiration, transitions de pose avec un léger dépassement ;
+- une petite bibliothèque d'objets dessinés : pièce, billet, tirelire, bocal, enveloppe, téléphone, carte, calendrier, horloge, caddie, café, maison, voiture, cerveau, bulle, barres qui poussent ;
+- pas de sous-titres incrustés (les mots clés sont écrits dans le dessin) : le texte dit est livré en `.srt` pour YouTube ;
+- son : piano doux et basse ronde générés, joués légèrement à côté du temps ; coupe sèche à « here's the part nobody tells you », « tape-stop » avant « Final message » ; bruit de feutre ou petit « pop » seulement sur une partie des dessins.
+
+Le script suit la structure de « simple, actually » : ouverture sur une scène (« You get paid. For about a week, you feel rich. »), « here's the part nobody tells you », 8 systèmes numérotés, « Final message ». Les chiffres viennent de 5 études (Madrian & Shea 2001, Prelec & Simester 2001, Soman & Cheema 2011, Thaler & Benartzi 2004, Hershfield et al. 2011), listées dans `scripts/save_money_illegal_script.md`.
+
+- `STILLS=1 python3 build_save_money_illegal.py` dessine une planche de contrôle avec la fin de chaque scène (`qa_save/`) sans rendre la vidéo ;
+- `SAMPLE=0:22 python3 build_save_money_illegal.py` ne rend que les lignes 0 à 21 ;
+- `python3 kit_save_money.py` écrit le titre, la description avec les vrais chapitres, les tags et les réglages ;
+- `build_save_money_thumbnails.py` dessine trois miniatures dans le même style : S1 « feels ILLEGAL », S2 « saving on autopilot », S3 « your brain: NOW ».
