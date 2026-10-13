@@ -1,0 +1,836 @@
+1
+00:00:00,500 --> 00:00:01,700
+ISA, ISK, PEA, Depot.
+
+2
+00:00:01,720 --> 00:00:04,020
+Every country in Europe seems
+
+3
+00:00:04,040 --> 00:00:06,730
+to have its own investment accounts,
+
+4
+00:00:06,750 --> 00:00:08,270
+with their own strange letters.
+
+5
+00:00:09,570 --> 00:00:10,990
+But almost all of them fit
+
+6
+00:00:11,010 --> 00:00:12,180
+into one of ten boxes.
+
+7
+00:00:13,500 --> 00:00:14,420
+Some save you tax.
+
+8
+00:00:14,440 --> 00:00:16,450
+Some lock your money for decades.
+
+9
+00:00:16,470 --> 00:00:17,480
+And some are traps.
+
+10
+00:00:18,770 --> 00:00:20,570
+The account you pick can matter as
+
+11
+00:00:20,590 --> 00:00:22,210
+much as what you put inside it.
+
+12
+00:00:23,500 --> 00:00:26,420
+Rules change every year and differ by country.
+
+13
+00:00:26,440 --> 00:00:29,920
+This is education, not tax or financial advice.
+
+14
+00:00:31,230 --> 00:00:32,900
+Let's open the first box.
+
+15
+00:00:34,200 --> 00:00:34,730
+Box 1.
+
+16
+00:00:34,750 --> 00:00:36,110
+The savings account.
+
+17
+00:00:37,400 --> 00:00:38,570
+The simplest one.
+
+18
+00:00:38,590 --> 00:00:39,850
+Your money sits at the bank,
+
+19
+00:00:39,870 --> 00:00:41,420
+earns a little interest,
+
+20
+00:00:41,440 --> 00:00:43,010
+and you can take it out any time.
+
+21
+00:00:44,300 --> 00:00:44,940
+In the EU,
+
+22
+00:00:44,960 --> 00:00:48,510
+deposits are protected up to €100,000 per person,
+
+23
+00:00:48,530 --> 00:00:50,520
+per bank, if the bank fails.
+
+24
+00:00:51,800 --> 00:00:54,480
+Some countries add tax-free savings accounts,
+
+25
+00:00:54,500 --> 00:00:55,990
+like the Livret A in France,
+
+26
+00:00:56,010 --> 00:00:57,070
+but with a ceiling.
+
+27
+00:00:58,370 --> 00:00:59,970
+The catch is inflation.
+
+28
+00:00:59,990 --> 00:01:02,640
+When prices rise faster than your interest,
+
+29
+00:01:02,660 --> 00:01:04,450
+your money quietly loses value.
+
+30
+00:01:05,770 --> 00:01:06,740
+A savings account
+
+31
+00:01:06,760 --> 00:01:08,270
+is for money you need soon,
+
+32
+00:01:08,290 --> 00:01:09,900
+not for the next thirty years.
+
+33
+00:01:11,200 --> 00:01:11,690
+Box 2.
+
+34
+00:01:11,710 --> 00:01:13,120
+The brokerage account.
+
+35
+00:01:14,430 --> 00:01:16,560
+A brokerage account lets you buy shares,
+
+36
+00:01:16,580 --> 00:01:18,330
+ETFs and bonds.
+
+37
+00:01:18,350 --> 00:01:19,990
+No limits, no lock-up,
+
+38
+00:01:20,010 --> 00:01:22,020
+but usually no tax advantage either.
+
+39
+00:01:23,330 --> 00:01:25,670
+In Germany, the first €1,000
+
+40
+00:01:25,690 --> 00:01:28,250
+of investment income each year is tax-free.
+
+41
+00:01:28,270 --> 00:01:31,100
+After that, you pay about 26%.
+
+42
+00:01:32,400 --> 00:01:34,490
+In France, gains on a regular account
+
+43
+00:01:34,510 --> 00:01:38,340
+are taxed at 31.4% since 2026.
+
+44
+00:01:39,630 --> 00:01:42,980
+And in Ireland, ETFs are taxed at 38%,
+
+45
+00:01:43,000 --> 00:01:44,100
+and every eight years,
+
+46
+00:01:44,120 --> 00:01:45,420
+even if you never sell.
+
+47
+00:01:46,730 --> 00:01:49,190
+Most countries tax your gains when you sell.
+
+48
+00:01:49,210 --> 00:01:50,990
+Others, like the Netherlands,
+
+49
+00:01:51,010 --> 00:01:52,150
+tax an assumed return
+
+50
+00:01:52,170 --> 00:01:53,730
+on your savings every year.
+
+51
+00:01:55,030 --> 00:01:56,810
+It's the most flexible box.
+
+52
+00:01:56,830 --> 00:01:59,240
+But flexibility usually costs you tax.
+
+53
+00:02:00,530 --> 00:02:01,100
+Box 3.
+
+54
+00:02:01,120 --> 00:02:02,990
+The tax-free investment account.
+
+55
+00:02:04,300 --> 00:02:06,300
+This is the box many people miss:
+
+56
+00:02:06,320 --> 00:02:07,810
+an investment account with
+
+57
+00:02:07,830 --> 00:02:09,070
+a tax break built in.
+
+58
+00:02:10,370 --> 00:02:12,030
+Sweden has the ISK.
+
+59
+00:02:12,050 --> 00:02:13,760
+Britain has the ISA.
+
+60
+00:02:13,780 --> 00:02:15,430
+France has the PEA.
+
+61
+00:02:15,450 --> 00:02:18,080
+Denmark, Finland and Italy have their own versions.
+
+62
+00:02:19,370 --> 00:02:20,580
+In Sweden's ISK,
+
+63
+00:02:20,600 --> 00:02:22,470
+you don't pay tax on your gains.
+
+64
+00:02:22,490 --> 00:02:23,600
+You pay a small flat
+
+65
+00:02:23,620 --> 00:02:25,210
+tax on the account's value,
+
+66
+00:02:25,230 --> 00:02:26,980
+about 1% a year.
+
+67
+00:02:27,000 --> 00:02:31,350
+Since 2026, the first 300,000 kronor are tax-free.
+
+68
+00:02:32,670 --> 00:02:34,100
+In Britain, you can put up
+
+69
+00:02:34,120 --> 00:02:36,730
+to £20,000 a year into an ISA,
+
+70
+00:02:36,750 --> 00:02:38,800
+and never pay tax on what it earns.
+
+71
+00:02:40,100 --> 00:02:42,290
+Denmark's share savings account taxes
+
+72
+00:02:42,310 --> 00:02:44,630
+gains at 17% every year.
+
+73
+00:02:44,650 --> 00:02:47,010
+That's still less than on a normal account.
+
+74
+00:02:48,300 --> 00:02:50,860
+In France, after five years in a PEA,
+
+75
+00:02:50,880 --> 00:02:52,630
+your gains skip income tax.
+
+76
+00:02:52,650 --> 00:02:54,600
+You only pay social charges.
+
+77
+00:02:55,900 --> 00:02:57,900
+In 2025, the European
+
+78
+00:02:57,920 --> 00:02:59,970
+Commission asked every member state
+
+79
+00:02:59,990 --> 00:03:01,720
+to create accounts like these.
+
+80
+00:03:03,000 --> 00:03:04,470
+So if your country has one,
+
+81
+00:03:04,490 --> 00:03:05,480
+it's worth a look.
+
+82
+00:03:05,500 --> 00:03:07,790
+Just check the rules and the limits first.
+
+83
+00:03:09,100 --> 00:03:09,750
+Box 4.
+
+84
+00:03:09,770 --> 00:03:10,890
+Life insurance.
+
+85
+00:03:12,200 --> 00:03:13,270
+In some countries,
+
+86
+00:03:13,290 --> 00:03:15,750
+life insurance isn't really about dying.
+
+87
+00:03:15,770 --> 00:03:17,370
+It's an investment wrapper.
+
+88
+00:03:18,670 --> 00:03:20,580
+In France, people hold about two
+
+89
+00:03:20,600 --> 00:03:22,970
+trillion euros in the assurance-vie.
+
+90
+00:03:22,990 --> 00:03:24,500
+After eight years,
+
+91
+00:03:24,520 --> 00:03:26,130
+up to €4,600
+
+92
+00:03:26,150 --> 00:03:28,060
+of gains you withdraw each year
+
+93
+00:03:28,080 --> 00:03:29,470
+are free of income tax.
+
+94
+00:03:30,770 --> 00:03:32,810
+It's also used for inheritance.
+
+95
+00:03:32,830 --> 00:03:35,180
+In France, each beneficiary can receive up
+
+96
+00:03:35,200 --> 00:03:41,040
+to €152,500 without inheritance tax, under conditions.
+
+97
+00:03:42,330 --> 00:03:45,430
+Belgium, Italy and Luxembourg have similar contracts,
+
+98
+00:03:45,450 --> 00:03:48,200
+with funds and sometimes ETFs inside.
+
+99
+00:03:49,500 --> 00:03:50,730
+The catch is fees.
+
+100
+00:03:50,750 --> 00:03:52,500
+The insurer takes a yearly fee,
+
+101
+00:03:52,520 --> 00:03:54,420
+on top of the funds' own costs.
+
+102
+00:03:55,730 --> 00:03:57,590
+A cheap contract can be great.
+
+103
+00:03:57,610 --> 00:04:00,270
+An expensive one quietly eats your returns.
+
+104
+00:04:01,570 --> 00:04:02,140
+Box 5.
+
+105
+00:04:02,160 --> 00:04:03,530
+The personal pension.
+
+106
+00:04:04,830 --> 00:04:06,620
+Personal pension accounts give
+
+107
+00:04:06,640 --> 00:04:07,840
+you a tax break today,
+
+108
+00:04:07,860 --> 00:04:10,950
+in exchange for locking your money until retirement.
+
+109
+00:04:12,270 --> 00:04:13,890
+France has the PER.
+
+110
+00:04:13,910 --> 00:04:16,500
+Germany has Riester and Rürup plans.
+
+111
+00:04:16,520 --> 00:04:18,300
+Spain has pension plans,
+
+112
+00:04:18,320 --> 00:04:20,990
+and Poland has the IKE and IKZE.
+
+113
+00:04:22,300 --> 00:04:23,990
+Each country sets a limit.
+
+114
+00:04:24,010 --> 00:04:26,280
+In Spain, it's just €1,500
+
+115
+00:04:26,300 --> 00:04:27,910
+a year for a personal plan.
+
+116
+00:04:29,200 --> 00:04:31,910
+The EU even created a pan-European pension,
+
+117
+00:04:31,930 --> 00:04:33,860
+the PEPP, in 2022.
+
+118
+00:04:33,880 --> 00:04:36,870
+Four years later, only two providers offer it.
+
+119
+00:04:38,170 --> 00:04:39,750
+The tax break is real.
+
+120
+00:04:39,770 --> 00:04:40,960
+But these accounts are built
+
+121
+00:04:40,980 --> 00:04:43,020
+for money you won't need for decades.
+
+122
+00:04:44,330 --> 00:04:44,850
+Box 6.
+
+123
+00:04:44,870 --> 00:04:46,150
+The workplace plan.
+
+124
+00:04:47,470 --> 00:04:50,320
+Many employers offer a pension or savings plan,
+
+125
+00:04:50,340 --> 00:04:52,340
+and some add money on top of yours.
+
+126
+00:04:53,630 --> 00:04:55,150
+In Germany, if you put part
+
+127
+00:04:55,170 --> 00:04:57,320
+of your salary into a company pension,
+
+128
+00:04:57,340 --> 00:05:00,110
+your employer usually has to add 15%.
+
+129
+00:05:01,400 --> 00:05:03,230
+In France, many companies top up
+
+130
+00:05:03,250 --> 00:05:05,690
+what you put into the company savings plan.
+
+131
+00:05:05,710 --> 00:05:07,950
+That top-up is called the abondement.
+
+132
+00:05:09,230 --> 00:05:10,960
+Free money from your employer
+
+133
+00:05:10,980 --> 00:05:13,220
+is the closest thing to a guaranteed return.
+
+134
+00:05:13,240 --> 00:05:14,650
+Read your contract.
+
+135
+00:05:15,930 --> 00:05:16,510
+Box 7.
+
+136
+00:05:16,530 --> 00:05:17,830
+Accounts for children.
+
+137
+00:05:19,130 --> 00:05:22,050
+Some countries have investment accounts for children.
+
+138
+00:05:22,070 --> 00:05:24,590
+In Britain, the Junior ISA takes up
+
+139
+00:05:24,610 --> 00:05:26,460
+to £9,000 a year.
+
+140
+00:05:27,770 --> 00:05:29,560
+Germany plans to put €10
+
+141
+00:05:29,580 --> 00:05:31,600
+a month into an investment account
+
+142
+00:05:31,620 --> 00:05:33,500
+for every child from 6 to 18,
+
+143
+00:05:33,520 --> 00:05:37,170
+starting in 2027, if parliament approves it.
+
+144
+00:05:38,470 --> 00:05:39,880
+Money invested early has
+
+145
+00:05:39,900 --> 00:05:41,400
+the longest time to grow.
+
+146
+00:05:41,420 --> 00:05:42,470
+And time is the one
+
+147
+00:05:42,490 --> 00:05:43,980
+thing kids have plenty of.
+
+148
+00:05:45,270 --> 00:05:45,950
+Box 8.
+
+149
+00:05:45,970 --> 00:05:47,160
+The robo-advisor.
+
+150
+00:05:48,470 --> 00:05:50,590
+A robo-advisor invests for you.
+
+151
+00:05:50,610 --> 00:05:52,340
+You answer a few questions,
+
+152
+00:05:52,360 --> 00:05:54,030
+and it picks a mix of ETFs
+
+153
+00:05:54,050 --> 00:05:55,190
+and rebalances it.
+
+154
+00:05:56,500 --> 00:05:57,690
+It's convenient.
+
+155
+00:05:57,710 --> 00:06:00,290
+But the service often costs between a quarter
+
+156
+00:06:00,310 --> 00:06:02,230
+and three quarters of a percent a year,
+
+157
+00:06:02,250 --> 00:06:04,620
+on top of the ETFs' own fees.
+
+158
+00:06:05,930 --> 00:06:07,920
+Over decades, that fee adds up.
+
+159
+00:06:07,940 --> 00:06:10,020
+You're paying for not having to decide.
+
+160
+00:06:11,330 --> 00:06:14,600
+Some robo-advisors work inside a tax-free account
+
+161
+00:06:14,620 --> 00:06:16,240
+or a life insurance contract.
+
+162
+00:06:16,260 --> 00:06:18,030
+So two boxes can stack.
+
+163
+00:06:19,330 --> 00:06:19,900
+Box 9.
+
+164
+00:06:19,920 --> 00:06:21,220
+The trading account.
+
+165
+00:06:22,500 --> 00:06:25,110
+This box looks like investing, but it isn't.
+
+166
+00:06:25,130 --> 00:06:27,540
+CFD and leveraged trading accounts let
+
+167
+00:06:27,560 --> 00:06:29,840
+you bet on prices with borrowed money.
+
+168
+00:06:31,130 --> 00:06:33,460
+When EU regulators looked at the data,
+
+169
+00:06:33,480 --> 00:06:34,460
+between 74
+
+170
+00:06:34,480 --> 00:06:37,500
+and 89% of retail accounts lost money.
+
+171
+00:06:38,800 --> 00:06:40,610
+That's why these brokers must show
+
+172
+00:06:40,630 --> 00:06:42,210
+that percentage in their ads.
+
+173
+00:06:42,230 --> 00:06:42,460
+If you see it,
+
+174
+00:06:42,480 --> 00:06:44,400
+you know which box you're in.
+
+175
+00:06:45,700 --> 00:06:47,610
+Some apps make it feel like a game.
+
+176
+00:06:47,630 --> 00:06:50,160
+Notifications, bright colours, quick trades.
+
+177
+00:06:50,180 --> 00:06:51,520
+That's not an accident.
+
+178
+00:06:52,800 --> 00:06:53,310
+Box 10.
+
+179
+00:06:53,330 --> 00:06:54,580
+The foreign broker.
+
+180
+00:06:55,870 --> 00:06:57,840
+Many Europeans open an account with
+
+181
+00:06:57,860 --> 00:06:59,440
+a broker in another country,
+
+182
+00:06:59,460 --> 00:07:00,580
+because it's cheaper.
+
+183
+00:07:01,870 --> 00:07:03,990
+But a foreign broker usually doesn't
+
+184
+00:07:04,010 --> 00:07:05,750
+handle your home country's taxes.
+
+185
+00:07:05,770 --> 00:07:07,730
+So the paperwork becomes yours.
+
+186
+00:07:09,030 --> 00:07:11,730
+In France, forgetting to declare a foreign account
+
+187
+00:07:11,750 --> 00:07:14,580
+can cost €1,500 per account, per year.
+
+188
+00:07:15,870 --> 00:07:17,710
+In Germany, you declare the gains
+
+189
+00:07:17,730 --> 00:07:19,130
+yourself in your tax return.
+
+190
+00:07:19,150 --> 00:07:20,850
+Cheaper fees, more homework.
+
+191
+00:07:22,130 --> 00:07:24,010
+And Spain asks for a special form if
+
+192
+00:07:24,030 --> 00:07:27,090
+your assets abroad are worth more than €50,000.
+
+193
+00:07:28,400 --> 00:07:30,040
+Those are the ten boxes.
+
+194
+00:07:30,060 --> 00:07:31,300
+Most people only use two
+
+195
+00:07:31,320 --> 00:07:32,330
+or three of them.
+
+196
+00:07:33,630 --> 00:07:34,700
+A common order:
+
+197
+00:07:34,720 --> 00:07:35,840
+a savings cushion first,
+
+198
+00:07:35,860 --> 00:07:38,340
+then any free money from your employer,
+
+199
+00:07:38,360 --> 00:07:39,430
+then a tax-free account
+
+200
+00:07:39,450 --> 00:07:40,820
+if your country has one.
+
+201
+00:07:42,100 --> 00:07:43,600
+Rules change every year,
+
+202
+00:07:43,620 --> 00:07:45,280
+and every country is different.
+
+203
+00:07:45,300 --> 00:07:47,560
+Check your tax office's website.
+
+204
+00:07:47,580 --> 00:07:49,450
+This is not financial advice.
+
+205
+00:07:50,730 --> 00:07:51,670
+Ten boxes.
+
+206
+00:07:51,690 --> 00:07:54,460
+Now, when someone says ISA, PEA or Depot,
+
+207
+00:07:54,480 --> 00:07:56,140
+you'll know which box it belongs in.
+
+208
+00:07:57,430 --> 00:07:59,000
+If this helped, subscribe.
+
+209
+00:07:59,020 --> 00:08:01,760
+Next up, every type of ETF, explained.
+
