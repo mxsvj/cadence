@@ -16,7 +16,8 @@ BLACKF, SEMI = INTER + "InterDisplay-Black.otf", INTER + "Inter-SemiBold.otf"
 W, H = 1080, 1920
 BG, WHITE, GREY, ORANGE, INK = (10, 10, 10), (245, 245, 242), (130, 130, 130), (247, 147, 26), (17, 17, 17)
 VY = 640                     # top of the clip (the 16:9 frame, cropped to 1920x960 and scaled to 1080x540)
-LEAD, TAIL = 0.35, 1.0
+TIKTOK = "--tiktok" in sys.argv          # TikTok version: points to the YouTube channel, with an end card
+LEAD, TAIL = 0.35, (2.4 if TIKTOK else 1.0)
 
 SRC = {"crypto": ("out/crypto_dark_16x9.mp4", "crypto/mix.wav", "crypto/subs.ass", "Every Crypto Explained in 12 Minutes"),
        "etf": ("etf/video.mp4", "etf/mix.wav", "etf/subs.ass", "Every ETF Explained in 11 Minutes"),
@@ -58,10 +59,11 @@ def overlay(hook, title, path):
     d.text((70, VY + 597), "eu", font=fe, fill=WHITE, anchor="ls")
     d.rectangle([ex1 + 2, VY + 589, ex1 + 9, VY + 596], fill=ORANGE)
     ft = font(SEMI, 30)
-    t = "full video: " + title
-    while d.textlength(t, font=ft) > W - 200:
-        t = t[:-2]
-    d.text((132, VY + 597), t if t.endswith(title[-3:]) else t + "…", font=ft, fill=GREY, anchor="ls")
+    t = "full video on YouTube · Euro Unboxed" if TIKTOK else "full video: " + title
+    full = t
+    while d.textlength(t + "…", font=ft) > W - 200:
+        t = t[:-1]
+    d.text((132, VY + 597), t if t == full else t.rstrip() + "…", font=ft, fill=GREY, anchor="ls")
     im.save(path)
 
 
@@ -96,6 +98,9 @@ Style: Big,Inter Display Black,70,&H00F2F5F5,&H00808080,&H00000000,&H00000000,0,
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
+    if TIKTOK:                                     # end card: where to find the full video
+        e0 = t1 - t0 + LEAD + 0.15
+        ev.append(f"Dialogue: 1,{ass_time(e0)},{ass_time(e0 + TAIL)},Big,,0,0,0,,{{\\fad(150,0)\\c&H001A93F7&}}Full video on YouTube\\N{{\\c&H00F2F5F5&}}Euro Unboxed")
     open(path, "w", encoding="utf-8").write(head + "\n".join(ev) + "\n")
 
 
@@ -109,7 +114,7 @@ def make(name, vid, start, end, hook):
     fc = (f"[0:v]crop=1920:960:0:0,scale={W}:540,pad={W}:{H}:0:{VY}:black[v];[v][2:v]overlay=0:0[o];"
           f"[o]ass={ass}:fontsdir={INTER},fade=t=in:st=0:d=0.25,fade=t=out:st={dur - 0.5:.2f}:d=0.5[vout];"
           f"[1:a]afade=t=in:st=0:d=0.25,afade=t=out:st={dur - 0.7:.2f}:d=0.7[aout]")
-    out = os.path.join(OUT, f"short_{name}.mp4")
+    out = os.path.join(OUT, f"short_{'tiktok_' if TIKTOK else ''}{name}.mp4")
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", f"{a:.3f}", "-t", f"{dur:.3f}", "-i", os.path.join(D, video),
                     "-ss", f"{a:.3f}", "-t", f"{dur:.3f}", "-i", os.path.join(D, mix), "-i", ov, "-filter_complex", fc,
                     "-map", "[vout]", "-map", "[aout]", "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-pix_fmt", "yuv420p",
@@ -118,7 +123,7 @@ def make(name, vid, start, end, hook):
 
 
 if __name__ == "__main__":
-    want = set(sys.argv[1:])
+    want = set(a for a in sys.argv[1:] if not a.startswith("--"))
     for s in SHORTS:
         if not want or s[0] in want or s[1] in want:
             make(*s)
