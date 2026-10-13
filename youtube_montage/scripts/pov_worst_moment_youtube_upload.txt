@@ -1,0 +1,46 @@
+TITRE (≤ 100 caractères, les 60 premiers sont les plus visibles)
+POV: You Invest €10,000 at the Worst Possible Moment
+
+Variantes à tester :
+POV: You Invested €10,000 the Day Before the 2008 Crash
+I Bought the Top in 2007. Here's What Happened Next
+
+
+DESCRIPTION (à coller telle quelle)
+It's October 2007. You've saved €10,000 and you put it all into the stock market, on the very day of the record. Then comes 2008: Lehman Brothers, Iceland, Fortis, a 57% drop. Two versions of you: one sells at the bottom, one does nothing. Here's what happened to both, with real S&P 500 data.
+
+Education only, not financial advice. Rules and prices change; check your own country's rules.
+
+CHAPTERS
+0:00 Intro
+0:33 01 · The record
+1:04 02 · The fall
+1:51 03 · The bottom
+2:30 04 · The wait
+3:20 05 · The new high
+4:00 06 · Today
+4:52 What decided it
+
+SOURCES (checked October 2026)
+S&P 500 drawdown history: https://dqydj.com/sp-500-drawdown-history/
+S&P 500 total return back to its 2007 peak in April 2012 (Bloomberg data): https://www.washoecounty.gov/humanresources/board_committees/deferred_compensation/2024/files/02-14-2024%20Item%2012%20SP500%20Growth%20Drawdown%20and%20Trading%20Days%20Chart%20Set.pdf
+
+Charts marked "illustration" are illustrations, not real price data. Nothing in this video is a recommendation to buy or sell anything.
+
+Voice-over: synthetic (AI) voice.
+
+#investing #personalfinance #stockmarket
+
+
+TAGS (YouTube → Détails → Afficher plus → Tags ; 500 caractères max, 241 ici)
+pov investing, worst time to invest, invested at the top, 2008 financial crisis, stock market crash 2008, lehman brothers, s&p 500 2007 2009, should i sell in a crash, stay invested, buy and hold, investing in europe, personal finance europe
+
+
+RÉGLAGES
+- Public : Non, cette vidéo n'est pas conçue pour les enfants.
+- Catégorie : Éducation.
+- Langue de la vidéo : anglais. Sous-titres : importe pov_worst_moment_subtitles_en.srt (Sous-titres → Ajouter une langue → Anglais → Importer un fichier → Avec minutage).
+- Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
+- Écran de fin : « vidéo suivante » à gauche (la vidéo POV 200 € par mois, annoncée dans la voix off), « s'abonner » à droite, sur les 10 dernières secondes.
+- Miniatures « Test & compare » : W1, W3 et W2.
+- Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris).
