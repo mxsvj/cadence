@@ -245,6 +245,8 @@ _KOKORO = []
 
 
 def kokoro_say(text, path):
+    if os.path.exists(path) and os.path.exists(path + ".txt") and open(path + ".txt").read() == text:
+        return                                     # same line, same text: reuse the audio already made
     if not _KOKORO:
         from kokoro_onnx import Kokoro
         _KOKORO.append(Kokoro(os.path.join(KOKORO_DIR, "kokoro-v1.0.onnx"), os.path.join(KOKORO_DIR, "voices-v1.0.bin")))
@@ -255,6 +257,7 @@ def kokoro_say(text, path):
         w.setsampwidth(2)
         w.setframerate(sr)
         w.writeframes(pcm.tobytes())
+    open(path + ".txt", "w").write(text)
 
 
 def tts(i, text):
