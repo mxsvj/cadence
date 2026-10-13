@@ -42,5 +42,5 @@ RÉGLAGES
 - Langue de la vidéo : anglais. Sous-titres : importe pov_worst_moment_subtitles_en.srt (Sous-titres → Ajouter une langue → Anglais → Importer un fichier → Avec minutage).
 - Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
 - Écran de fin : « vidéo suivante » à gauche (la vidéo POV 200 € par mois, annoncée dans la voix off), « s'abonner » à droite, sur les 10 dernières secondes.
-- Miniatures « Test & compare » : W4 (calendrier), W5 (« you bought here ») et W1 (€10,000).
+- Miniatures « Test & compare » : X6 (« YOU BOUGHT HERE »), W4 (calendrier) et W1 (€10,000).
 - Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris).

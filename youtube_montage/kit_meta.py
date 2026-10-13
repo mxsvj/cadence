@@ -33,7 +33,7 @@ META = {
                   "Allemagne : en cas de conversion de salaire vers une retraite d'entreprise, l'employeur verse en général 15 % en plus."],
         tags="every investment account explained, investment accounts europe, isa explained, pea explained, isk sweden, tax free investment account, assurance vie, depot germany, personal pension europe, pepp, robo advisor, cfd trading, foreign broker tax, investing in europe, personal finance europe, savings account europe",
         hashtags="#investing #personalfinance #europe",
-        thumbs="A4 (cartes), A1 (liste) et A3 (acronymes)", next="la vidéo ETF, annoncée dans la voix off"),
+        thumbs="X3 (cartes sur fond bleu UE), A4 (cartes) et A1 (liste)", next="la vidéo ETF, annoncée dans la voix off"),
     "mistakes": dict(
         slug="every_mistake", title="Every Investing Mistake Explained",
         variants=["12 Investing Mistakes That Cost Europeans Thousands", "Every Investing Mistake (and How to Avoid It)"],
@@ -49,7 +49,7 @@ META = {
                   "Wirecard (insolvable en juin 2020, 1,9 milliard d'euros introuvables) et GameStop (janvier 2021) : faits connus."],
         tags="investing mistakes, every investing mistake explained, beginner investing mistakes, panic selling, market timing, investing fees, emergency fund, diversification, overtrading, investing in europe, personal finance europe, etf investing, long term investing, behavioural finance",
         hashtags="#investing #personalfinance #etf",
-        thumbs="M4 (bouton SELL), M5 (citation orange) et M6 (cases à cocher)", next="la vidéo des comptes d'investissement, annoncée dans la voix off"),
+        thumbs="X4 (« DON'T press it »), M5 (citation orange) et M6 (cases à cocher)", next="la vidéo des comptes d'investissement, annoncée dans la voix off"),
     "fees": dict(
         slug="every_fee", title="Every Bank Fee Explained",
         variants=["Every Bank Fee Europeans Pay (and How to Avoid Them)", "10 Bank Fees You Pay Without Noticing"],
@@ -68,7 +68,7 @@ META = {
                   "ETF monde autour de 0,2 % par an de frais courants ; fonds bancaires souvent 1,5 % ou plus : ordres de grandeur."],
         tags="bank fees, every bank fee explained, hidden bank fees, currency conversion fee, dynamic currency conversion, pay in euros or local currency, overdraft fees, fund fees, entry fees, broker fees, payment for order flow, instant payments eu, personal finance europe, save money europe",
         hashtags="#personalfinance #banking #europe",
-        thumbs="F5 (distributeur), F4 (relevé surligné) et F3 (« Pay in euros? » No.)", next="la vidéo des erreurs d'investissement, annoncée dans la voix off"),
+        thumbs="X5 (« NEVER press this »), F4 (relevé surligné) et F5 (distributeur)", next="la vidéo des erreurs d'investissement, annoncée dans la voix off"),
     "worst": dict(
         slug="pov_worst_moment", title="POV: You Invest €10,000 at the Worst Possible Moment",
         variants=["POV: You Invested €10,000 the Day Before the 2008 Crash", "I Bought the Top in 2007. Here's What Happened Next"],
@@ -81,5 +81,5 @@ META = {
                   "Faits connus : faillite de Lehman Brothers (15 septembre 2008), banques islandaises (octobre 2008), sauvetage de Fortis (2008), aides à la Grèce (2010), à l'Irlande (2010) et au Portugal (2011), « whatever it takes » de Mario Draghi (juillet 2012), baisse d'environ 19 % en 2011, Nikkei (34 ans pour retrouver le record de 1989)."],
         tags="pov investing, worst time to invest, invested at the top, 2008 financial crisis, stock market crash 2008, lehman brothers, s&p 500 2007 2009, should i sell in a crash, stay invested, buy and hold, investing in europe, personal finance europe",
         hashtags="#investing #personalfinance #stockmarket",
-        thumbs="W4 (calendrier), W5 (« you bought here ») et W1 (€10,000)", next="la vidéo POV 200 € par mois, annoncée dans la voix off"),
+        thumbs="X6 (« YOU BOUGHT HERE »), W4 (calendrier) et W1 (€10,000)", next="la vidéo POV 200 € par mois, annoncée dans la voix off"),
 }
