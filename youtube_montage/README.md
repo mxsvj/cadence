@@ -203,3 +203,19 @@ Le script suit la structure de « simple, actually » : ouverture sur une scène
 ## Livraison sur le PC
 
 `package_videos.py` prépare un zip par vidéo (moins de 30 Mo chacun) : dedans, un dossier avec la vidéo, les 3 miniatures (la recommandée en premier), `titre.txt`, `description.txt`, `sous-titres anglais.srt` et `tags et reglages.txt`, plus un zip pour les Shorts YouTube et un pour TikTok. `ranger_mes_videos.bat` (Windows, il lance `ranger_mes_videos.ps1`) ou `ranger_mes_videos.command` (Mac), posé à côté des zips, les range dans Bureau/YouTube : chaque vidéo devient un dossier numéroté à la suite des dossiers déjà présents, et une vidéo déjà rangée (même nom de dossier) est ignorée. `kit_etf_human.py` refait les chapitres et les sous-titres de la version « passe humaine » de la vidéo ETF.
+
+### Vidéos doodle de la nuit du 13 au 14 octobre
+
+`doodle_video.py` regroupe tout ce qui ne change pas d'une vidéo doodle à l'autre : voix en cache, respirations entre les phrases, repères sur les mots, scènes, cartes de chapitre, rendu, piano et basse (accords et tempo différents par vidéo), bruitages rares, sous-titres `.srt`. Une vidéo ne contient plus que son texte et ses dessins :
+
+| Vidéo | Fichier | Durée |
+|---|---|---|
+| Compound Interest Explained So Simply It Feels Illegal | `build_compound.py` | 4 min 25 |
+| 7 Tricks Shops Use to Make You Spend More (and How to Beat Them) | `build_tricks.py` | 4 min 22 |
+| How to Invest Your First €1,000 So Simply It Feels Illegal | `build_first1000.py` | 3 min 30 |
+| How to Pay Off Debt So Fast It Feels Illegal | `build_debt.py` | 3 min 34 |
+
+- `STILLS=1 python3 build_x.py` dessine la planche de contrôle (`qa_<nom>/`), `SAMPLE=a:b` ne rend que les lignes a à b−1 ;
+- `python3 kit_doodle.py compound|tricks|first1000|debt` écrit le titre, la description avec les vrais chapitres et les sources, les tags, les réglages et les sous-titres ;
+- `thumbs_doodle.py` dessine trois miniatures par vidéo (A1–A3, B1–B3, C1–C3, D1–D3) ;
+- `python3 package_videos.py night2` fait les zips de ces vidéos (numérotés à partir de 9) ; le même `ranger_mes_videos.bat` les range dans Bureau\YouTube à la suite.

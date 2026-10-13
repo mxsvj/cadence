@@ -4,14 +4,17 @@ unpack every zip into Desktop/YouTube, numbered after the folders already there,
 import os
 import re
 import shutil
+import sys
 import zipfile
 
 D = os.path.dirname(os.path.abspath(__file__))
 R = "/home/user/cadence/youtube_montage/scripts"
 T = os.path.join(D, "thumbs")
-OUT = os.path.join(D, "livraison")
+BATCH = sys.argv[1] if len(sys.argv) > 1 else "night1"
+OUT = os.path.join(D, "livraison" if BATCH == "night1" else "livraison_" + BATCH)
 shutil.rmtree(OUT, ignore_errors=True)
 os.makedirs(OUT)
+TD = os.path.join(D, "thumbs_doodle")
 
 VIDEOS = [
     dict(name="Every ETF Explained (version humaine)", video="web/etf_human.mp4", file="Every ETF Explained in 11 Minutes",
@@ -88,7 +91,25 @@ def build(k, v):
     return zp
 
 
-zips = [build(k + 1, v) for k, v in enumerate(VIDEOS)]
+NIGHT2 = [
+    dict(name="Compound Interest Explained So Simply It Feels Illegal", video="web/compound_interest.mp4",
+         kit="kit_compound/compound_interest_youtube_upload.txt", srt="kit_compound/compound_interest_subtitles_en.srt",
+         thumbs=[("A1", TD + "/A1_time.jpg"), ("A2", TD + "/A2_anna_ben.jpg"), ("A3", TD + "/A3_rule_72.jpg")]),
+    dict(name="7 Tricks Shops Use to Make You Spend More", video="web/shop_tricks.mp4",
+         kit="kit_tricks/shop_tricks_youtube_upload.txt", srt="kit_tricks/shop_tricks_subtitles_en.srt",
+         thumbs=[("B1", TD + "/B1_999.jpg"), ("B2", TD + "/B2_fake_timer.jpg"), ("B3", TD + "/B3_decoy.jpg")]),
+    dict(name="How to Invest Your First 1,000 euros So Simply It Feels Illegal", video="web/first_1000.mp4",
+         kit="kit_first1000/first_1000_youtube_upload.txt", srt="kit_first1000/first_1000_subtitles_en.srt",
+         thumbs=[("C1", TD + "/C1_now_what.jpg"), ("C2", TD + "/C2_8_steps.jpg"), ("C3", TD + "/C3_buy_everything.jpg")]),
+    dict(name="How to Pay Off Debt So Fast It Feels Illegal", video="web/pay_off_debt.mp4",
+         kit="kit_debt/pay_off_debt_youtube_upload.txt", srt="kit_debt/pay_off_debt_subtitles_en.srt",
+         thumbs=[("D1", TD + "/D1_boulder.jpg"), ("D2", TD + "/D2_minimum_button.jpg"), ("D3", TD + "/D3_which_order.jpg")]),
+]
+if BATCH == "night2":
+    VIDEOS = [v for v in NIGHT2 if os.path.exists(os.path.join(D, v["video"]))]
+    zips = [build(9 + k, v) for k, v in enumerate(VIDEOS)]
+else:
+    zips = [build(k + 1, v) for k, v in enumerate(VIDEOS)]
 
 # Shorts and TikTok: one folder each, with their titles, descriptions and calendar
 plan = open(os.path.join(D, "shorts", "shorts_upload.txt"), encoding="utf-8").read()
@@ -97,7 +118,7 @@ packs = [("Shorts YouTube - semaine 1", [f for f in sorted(os.listdir(os.path.jo
          ("TikTok - semaine 1", [f for f in sorted(os.listdir(os.path.join(D, "shorts"))) if f.startswith("short_tiktok_") and f.endswith(".mp4")],
           "legendes TikTok.txt", "Mêmes textes que les Shorts YouTube, sans « #shorts » ; les fichiers short_tiktok_* finissent sur « Full video on YouTube · "
           "Euro Unboxed ». Active l'étiquette « contenu généré par l'IA » (voix synthétique).\n\n" + plan)]
-for k, (name, vids, tname, ttxt) in enumerate(packs, len(VIDEOS) + 1):
+for k, (name, vids, tname, ttxt) in enumerate(packs if BATCH == "night1" else [], len(VIDEOS) + 1):
     zp = os.path.join(OUT, f"EuroUnboxed {k} - {name}.zip")
     with zipfile.ZipFile(zp, "w", zipfile.ZIP_STORED) as z:
         for f in vids:

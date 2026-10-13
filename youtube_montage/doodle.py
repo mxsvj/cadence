@@ -413,7 +413,7 @@ POSES = {
     "cross": dict(la=(-18, 80), ra=(18, -80), ll=(-12, -6), rl=(12, 6), lean=0, tilt=-4),
     "hips": dict(la=(-40, 30), ra=(40, -30), ll=(-12, -6), rl=(12, 6), lean=0, tilt=-3),
     "reach": dict(la=(-14, -6), ra=(95, 110), ll=(-6, -14), rl=(24, 10), lean=10, tilt=6),
-    "sit": dict(la=(-10, 60), ra=(10, -60), ll=(-80, 0), rl=(80, 0), lean=0, tilt=0),
+    "sit": dict(la=(28, 96), ra=(36, 102), ll=(82, 2), rl=(88, 6), lean=-6, tilt=-4),
     "lie": dict(la=(-30, -20), ra=(30, 20), ll=(-6, -3), rl=(6, 3), lean=0, tilt=0),
     "old": dict(la=(-12, -6), ra=(26, 6), ll=(-8, -3), rl=(10, 4), lean=9, tilt=10),
 }

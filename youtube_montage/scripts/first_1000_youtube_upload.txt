@@ -1,0 +1,48 @@
+TITRE (≤ 100 caractères, les 60 premiers sont les plus visibles)
+How to Invest Your First €1,000 So Simply It Feels Illegal
+
+Variantes à tester :
+How to Invest Your First €1,000 (Step by Step, for Europeans)
+8 Steps to Invest Your First €1,000
+
+
+DESCRIPTION (à coller telle quelle)
+You've saved your first €1,000. Now what? Here are 8 steps, in order: kill expensive debt, keep a small cushion, use the right account (PEA, ISA, ISK…), pick a regulated low-cost broker, buy the whole market with one global index ETF, automate it, don't touch it, and keep learning.
+
+Education only, not financial advice.
+
+CHAPTERS
+0:00 Your first €1,000: now what?
+0:29 1 · Kill expensive debt first
+0:44 2 · Keep a small safety cushion
+1:01 3 · Use the right account
+1:20 4 · Pick a regulated, low-cost broker
+1:43 5 · Buy the whole market
+2:02 6 · Automate it
+2:28 7 · Then don't touch it
+2:48 8 · Keep learning, slowly
+3:00 Final message
+
+SOURCES (checked October 2026)
+Investor Compensation Schemes Directive 97/9/EC (at least €20,000 per investor): https://eur-lex.europa.eu/eli/dir/1997/9/oj
+S&P 500 drawdown history (2020: −34%, record again in August 2020): https://dqydj.com/sp-500-drawdown-history/
+UCITS Directive 2009/65/EC: https://eur-lex.europa.eu/eli/dir/2009/65/oj
+Hypothetical examples at 7% a year: €1,000 left alone for 30 years ≈ €7,600; with €100 a month added ≈ €130,000. No brand, broker or fund is recommended. Tax accounts and rules differ by country.
+
+Voice-over: synthetic (AI) voice.
+
+#investing #personalfinance #europe
+
+
+TAGS (YouTube → Détails → Afficher plus → Tags ; 500 caractères max, 244 ici)
+how to invest 1000 euros, invest your first 1000, investing for beginners europe, how to start investing, index fund, global etf, ucits etf, pea, isa, isk, broker europe, emergency fund, pay off debt first, savings plan, personal finance europe
+
+
+RÉGLAGES
+- Public : Non, cette vidéo n'est pas conçue pour les enfants.
+- Catégorie : Éducation.
+- Langue de la vidéo : anglais. Sous-titres : importe first_1000_subtitles_en.srt (Sous-titres → Ajouter une langue → Anglais → Importer un fichier → Avec minutage).
+- Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
+- Écran de fin (dernières 14 s) : « s'abonner » sur le bouton orange dessiné à gauche, « vidéo suivante » (Compound Interest Explained So Simply It Feels Illegal) sur le cadre dessiné à droite.
+- Miniatures « Test & compare » : C1 (« €1,000 → ? »), C2 (« 8 steps ») et C3 (« buy everything »).
+- Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris).
