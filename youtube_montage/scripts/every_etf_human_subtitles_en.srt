@@ -1,0 +1,1144 @@
+1
+00:00:00,500 --> 00:00:03,750
+There are about 16,000 ETFs in the world.
+
+2
+00:00:03,770 --> 00:00:06,920
+Together, they hold around 24 trillion dollars.
+
+3
+00:00:08,130 --> 00:00:09,490
+But almost all of them fit
+
+4
+00:00:09,510 --> 00:00:10,780
+into one of twelve boxes.
+
+5
+00:00:11,970 --> 00:00:12,840
+Learn the boxes,
+
+6
+00:00:12,860 --> 00:00:14,960
+and you'll know exactly what you're buying.
+
+7
+00:00:14,980 --> 00:00:16,270
+In 11 minutes.
+
+8
+00:00:17,530 --> 00:00:19,390
+No hype, and no stock picks.
+
+9
+00:00:19,410 --> 00:00:21,290
+ETFs can lose value.
+
+10
+00:00:21,310 --> 00:00:23,780
+This is education, not financial advice.
+
+11
+00:00:25,070 --> 00:00:26,830
+First, what is an ETF?
+
+12
+00:00:26,850 --> 00:00:28,760
+It's a basket of investments.
+
+13
+00:00:28,780 --> 00:00:29,600
+One share gives you
+
+14
+00:00:29,620 --> 00:00:31,830
+a small slice of everything inside.
+
+15
+00:00:33,130 --> 00:00:36,020
+ETF stands for exchange-traded fund.
+
+16
+00:00:36,040 --> 00:00:36,990
+It trades on a stock
+
+17
+00:00:37,010 --> 00:00:38,890
+exchange like a normal share,
+
+18
+00:00:38,910 --> 00:00:39,760
+all day long.
+
+19
+00:00:40,900 --> 00:00:42,600
+Instead of buying hundreds
+
+20
+00:00:42,620 --> 00:00:43,510
+of shares one by one,
+
+21
+00:00:43,530 --> 00:00:45,460
+you buy a single ETF,
+
+22
+00:00:45,480 --> 00:00:47,280
+and pay one small yearly fee.
+
+23
+00:00:48,700 --> 00:00:50,500
+In Europe, most ETFs follow
+
+24
+00:00:50,520 --> 00:00:53,100
+the EU's fund rules, called UCITS.
+
+25
+00:00:53,120 --> 00:00:53,950
+That's why their names
+
+26
+00:00:53,970 --> 00:00:55,730
+often end with those letters.
+
+27
+00:00:57,070 --> 00:00:59,460
+UCITS funds keep your investments separate
+
+28
+00:00:59,480 --> 00:01:01,050
+from the company that runs them.
+
+29
+00:01:01,070 --> 00:01:02,950
+If that company goes bust,
+
+30
+00:01:02,970 --> 00:01:05,040
+the investments still belong to the fund.
+
+31
+00:01:06,530 --> 00:01:09,210
+American ETFs like VOO usually don't
+
+32
+00:01:09,230 --> 00:01:12,320
+publish the EU's key information document.
+
+33
+00:01:12,340 --> 00:01:13,580
+So most European brokers
+
+34
+00:01:13,600 --> 00:01:15,080
+won't sell them to you.
+
+35
+00:01:16,270 --> 00:01:17,930
+Let's open the first box.
+
+36
+00:01:19,570 --> 00:01:20,310
+Box 1.
+
+37
+00:01:20,330 --> 00:01:21,660
+Index ETFs.
+
+38
+00:01:22,170 --> 00:01:23,340
+The biggest box.
+
+39
+00:01:23,360 --> 00:01:24,800
+An index ETF simply
+
+40
+00:01:24,820 --> 00:01:26,710
+copies a list of companies,
+
+41
+00:01:26,730 --> 00:01:30,270
+like the S&P 500 or the MSCI World.
+
+42
+00:01:31,670 --> 00:01:35,430
+The MSCI World holds around 1,300 companies,
+
+43
+00:01:35,450 --> 00:01:37,480
+from 23 developed countries.
+
+44
+00:01:39,030 --> 00:01:40,780
+But more than two-thirds of it
+
+45
+00:01:40,800 --> 00:01:41,840
+is American companies.
+
+46
+00:01:41,860 --> 00:01:43,860
+The rest is spread across Japan,
+
+47
+00:01:43,880 --> 00:01:44,900
+Europe and others.
+
+48
+00:01:46,270 --> 00:01:48,170
+Bigger companies get a bigger weight.
+
+49
+00:01:48,190 --> 00:01:49,500
+When a company grows,
+
+50
+00:01:49,520 --> 00:01:50,060
+its share
+
+51
+00:01:50,080 --> 00:01:52,380
+of the index grows with it, automatically.
+
+52
+00:01:53,630 --> 00:01:54,830
+Nobody picks the stocks.
+
+53
+00:01:54,850 --> 00:01:56,670
+A computer follows the list,
+
+54
+00:01:56,690 --> 00:01:58,690
+which is why the fees can be tiny.
+
+55
+00:01:59,970 --> 00:02:02,690
+Some S&P 500 ETFs cost as
+
+56
+00:02:02,710 --> 00:02:06,030
+little as 0.03% a year.
+
+57
+00:02:06,050 --> 00:02:10,020
+A typical bank fund often charges around 1.8%.
+
+58
+00:02:11,470 --> 00:02:13,900
+Invest €200 a month for 30
+
+59
+00:02:13,920 --> 00:02:15,600
+years at 7% a year,
+
+60
+00:02:15,620 --> 00:02:16,530
+and that fee gap
+
+61
+00:02:16,550 --> 00:02:19,010
+can cost you more than €60,000.
+
+62
+00:02:20,770 --> 00:02:23,250
+Some index ETFs buy the shares directly.
+
+63
+00:02:23,270 --> 00:02:25,260
+That's called physical.
+
+64
+00:02:25,280 --> 00:02:27,040
+Others get the same return through
+
+65
+00:02:27,060 --> 00:02:28,470
+a contract with a bank.
+
+66
+00:02:28,490 --> 00:02:29,990
+That's called synthetic.
+
+67
+00:02:31,230 --> 00:02:34,870
+The first ETF launched in America in 1993.
+
+68
+00:02:34,890 --> 00:02:36,470
+Europe got its first
+
+69
+00:02:36,490 --> 00:02:38,420
+ones in 2000, in Frankfurt.
+
+70
+00:02:38,440 --> 00:02:40,460
+Today, it's a giant industry.
+
+71
+00:02:42,330 --> 00:02:43,110
+Box 2.
+
+72
+00:02:43,130 --> 00:02:44,920
+Country and region ETFs.
+
+73
+00:02:45,470 --> 00:02:46,630
+Some ETFs zoom
+
+74
+00:02:46,650 --> 00:02:48,350
+in on one part of the world.
+
+75
+00:02:48,370 --> 00:02:50,430
+Europe, Japan, emerging markets,
+
+76
+00:02:50,450 --> 00:02:52,090
+or even a single country.
+
+77
+00:02:53,300 --> 00:02:56,790
+Emerging markets, like China, India, Taiwan or Brazil,
+
+78
+00:02:56,810 --> 00:02:58,140
+can offer more growth,
+
+79
+00:02:58,160 --> 00:03:00,280
+but also more risk and bigger swings.
+
+80
+00:03:01,530 --> 00:03:03,060
+And when you buy another country,
+
+81
+00:03:03,080 --> 00:03:04,970
+you also buy its currency.
+
+82
+00:03:04,990 --> 00:03:07,420
+A Japan ETF moves with the yen.
+
+83
+00:03:08,670 --> 00:03:11,230
+Some investors combine a world ETF
+
+84
+00:03:11,250 --> 00:03:13,420
+with an emerging markets ETF.
+
+85
+00:03:13,440 --> 00:03:16,770
+Others pick one all-world ETF that holds both.
+
+86
+00:03:17,970 --> 00:03:19,290
+Many people mostly buy
+
+87
+00:03:19,310 --> 00:03:21,110
+companies from their own country.
+
+88
+00:03:21,130 --> 00:03:23,050
+That's called home bias.
+
+89
+00:03:23,070 --> 00:03:25,020
+But even big European countries are only
+
+90
+00:03:25,040 --> 00:03:27,490
+a few percent of the world's stock market.
+
+91
+00:03:28,830 --> 00:03:31,780
+The catch with a single country is concentration.
+
+92
+00:03:31,800 --> 00:03:35,090
+Japan's stock market peaked in 1989,
+
+93
+00:03:35,110 --> 00:03:37,420
+and took 34 years to get back there.
+
+94
+00:03:39,170 --> 00:03:39,980
+Box 3.
+
+95
+00:03:40,000 --> 00:03:41,250
+Sector ETFs.
+
+96
+00:03:42,000 --> 00:03:44,730
+Sector ETFs hold just one industry.
+
+97
+00:03:44,750 --> 00:03:47,740
+Technology, healthcare, banks, energy, and so on.
+
+98
+00:03:49,000 --> 00:03:49,740
+They can soar
+
+99
+00:03:49,760 --> 00:03:51,540
+when their industry is in fashion,
+
+100
+00:03:51,560 --> 00:03:52,930
+and crash when it isn't.
+
+101
+00:03:54,170 --> 00:03:56,710
+Energy stocks fell hard in 2020,
+
+102
+00:03:56,730 --> 00:03:59,970
+then became the best performing sector of 2022.
+
+103
+00:04:01,400 --> 00:04:03,750
+And if you already own a world ETF,
+
+104
+00:04:03,770 --> 00:04:05,430
+a tech ETF on top means
+
+105
+00:04:05,450 --> 00:04:07,770
+buying the same big companies twice.
+
+106
+00:04:08,900 --> 00:04:11,910
+A world ETF already holds every sector.
+
+107
+00:04:11,930 --> 00:04:13,450
+A sector ETF is a bet
+
+108
+00:04:13,470 --> 00:04:14,870
+on just one of them.
+
+109
+00:04:16,600 --> 00:04:17,320
+Box 4.
+
+110
+00:04:17,340 --> 00:04:18,740
+Thematic ETFs.
+
+111
+00:04:19,570 --> 00:04:21,870
+Thematic ETFs follow a story.
+
+112
+00:04:21,890 --> 00:04:25,870
+Artificial intelligence, robots, clean energy, cybersecurity.
+
+113
+00:04:27,230 --> 00:04:28,190
+They often launch
+
+114
+00:04:28,210 --> 00:04:29,760
+when the story is already hot,
+
+115
+00:04:29,780 --> 00:04:31,830
+and the stocks are already expensive.
+
+116
+00:04:33,030 --> 00:04:35,310
+Morningstar found that over 15 years,
+
+117
+00:04:35,330 --> 00:04:38,800
+only about 9% of thematic funds both survived
+
+118
+00:04:38,820 --> 00:04:40,180
+and beat global stocks.
+
+119
+00:04:41,870 --> 00:04:42,670
+Many closed,
+
+120
+00:04:42,690 --> 00:04:45,260
+or lagged behind a simple world ETF,
+
+121
+00:04:45,280 --> 00:04:47,320
+partly because of higher fees.
+
+122
+00:04:47,340 --> 00:04:49,900
+A good story isn't always a good investment.
+
+123
+00:04:51,770 --> 00:04:52,540
+Box 5.
+
+124
+00:04:52,560 --> 00:04:53,870
+Factor ETFs.
+
+125
+00:04:54,670 --> 00:04:57,270
+Factor ETFs, also called smart beta,
+
+126
+00:04:57,290 --> 00:04:58,880
+tilt toward one trait.
+
+127
+00:04:58,900 --> 00:05:02,220
+Cheap stocks, small companies, momentum, or quality.
+
+128
+00:05:03,530 --> 00:05:05,130
+There's also equal weight.
+
+129
+00:05:05,150 --> 00:05:07,450
+Every company gets the same slice,
+
+130
+00:05:07,470 --> 00:05:09,470
+instead of letting the giants dominate.
+
+131
+00:05:10,830 --> 00:05:13,480
+Academic research found that some of these traits
+
+132
+00:05:13,500 --> 00:05:15,790
+paid a little extra over very long periods.
+
+133
+00:05:16,970 --> 00:05:18,620
+But they can lag for years.
+
+134
+00:05:18,640 --> 00:05:20,530
+Value stocks trailed growth stocks
+
+135
+00:05:20,550 --> 00:05:22,160
+for most of the 2010s.
+
+136
+00:05:23,430 --> 00:05:24,960
+A factor ETF only works if
+
+137
+00:05:24,980 --> 00:05:26,130
+you have the patience
+
+138
+00:05:26,150 --> 00:05:27,910
+to hold it through the bad years.
+
+139
+00:05:29,670 --> 00:05:30,330
+Box 6.
+
+140
+00:05:30,350 --> 00:05:31,820
+Dividend ETFs.
+
+141
+00:05:32,430 --> 00:05:34,800
+Dividend ETFs pick companies that pay out
+
+142
+00:05:34,820 --> 00:05:36,730
+a lot of cash to their shareholders.
+
+143
+00:05:37,930 --> 00:05:39,800
+But a dividend isn't free money.
+
+144
+00:05:39,820 --> 00:05:40,770
+When it's paid out,
+
+145
+00:05:40,790 --> 00:05:42,010
+the share price drops
+
+146
+00:05:42,030 --> 00:05:43,430
+by about the same amount.
+
+147
+00:05:44,630 --> 00:05:45,600
+A very high yield
+
+148
+00:05:45,620 --> 00:05:47,260
+can even be a warning sign.
+
+149
+00:05:47,280 --> 00:05:48,770
+Sometimes the price has fallen
+
+150
+00:05:48,790 --> 00:05:50,710
+because the business is in trouble.
+
+151
+00:05:51,930 --> 00:05:54,980
+In Europe, many ETFs come in two versions.
+
+152
+00:05:55,000 --> 00:05:57,430
+Distributing pays the dividends to you.
+
+153
+00:05:57,450 --> 00:06:00,080
+Accumulating reinvests them automatically.
+
+154
+00:06:01,270 --> 00:06:02,810
+Which one suits you depends
+
+155
+00:06:02,830 --> 00:06:04,380
+on how your country taxes them,
+
+156
+00:06:04,400 --> 00:06:06,020
+so check your local rules.
+
+157
+00:06:07,870 --> 00:06:08,690
+Box 7.
+
+158
+00:06:08,710 --> 00:06:09,800
+Bond ETFs.
+
+159
+00:06:10,570 --> 00:06:12,070
+Bond ETFs hold loans,
+
+160
+00:06:12,090 --> 00:06:14,180
+to governments or to companies.
+
+161
+00:06:14,200 --> 00:06:16,400
+You earn interest instead of profits.
+
+162
+00:06:17,530 --> 00:06:19,790
+Government bonds from strong countries
+
+163
+00:06:19,810 --> 00:06:21,110
+are usually the safest.
+
+164
+00:06:21,130 --> 00:06:22,990
+Company bonds pay more interest,
+
+165
+00:06:23,010 --> 00:06:24,590
+because the risk is higher.
+
+166
+00:06:25,800 --> 00:06:27,730
+They usually move less than stocks,
+
+167
+00:06:27,750 --> 00:06:29,820
+which is why many people mix the two.
+
+168
+00:06:31,130 --> 00:06:32,590
+When interest rates go up,
+
+169
+00:06:32,610 --> 00:06:33,950
+older bonds lose value,
+
+170
+00:06:33,970 --> 00:06:35,530
+because new bonds pay more.
+
+171
+00:06:37,170 --> 00:06:38,340
+But not always.
+
+172
+00:06:38,360 --> 00:06:41,180
+In 2022, interest rates jumped,
+
+173
+00:06:41,200 --> 00:06:43,810
+and global bonds lost about 16%,
+
+174
+00:06:43,830 --> 00:06:45,170
+their worst year on record.
+
+175
+00:06:46,430 --> 00:06:48,300
+Short-term bonds move less.
+
+176
+00:06:48,320 --> 00:06:49,970
+Long-term bonds move a lot more
+
+177
+00:06:49,990 --> 00:06:51,620
+when interest rates change.
+
+178
+00:06:53,030 --> 00:06:55,810
+Bonds in another currency add currency risk.
+
+179
+00:06:55,830 --> 00:06:57,750
+That's why many bond ETFs come
+
+180
+00:06:57,770 --> 00:06:59,530
+in a version hedged to euros.
+
+181
+00:07:01,270 --> 00:07:01,990
+Box 8.
+
+182
+00:07:02,010 --> 00:07:03,580
+Money market ETFs.
+
+183
+00:07:04,200 --> 00:07:06,940
+Money market ETFs follow the interest rate
+
+184
+00:07:06,960 --> 00:07:08,800
+that banks pay each other overnight.
+
+185
+00:07:08,820 --> 00:07:10,750
+In euros, it's called €STR.
+
+186
+00:07:11,930 --> 00:07:14,870
+Their value climbs slowly, almost every day.
+
+187
+00:07:14,890 --> 00:07:16,160
+It's the closest thing
+
+188
+00:07:16,180 --> 00:07:18,430
+to a savings account in ETF form.
+
+189
+00:07:19,600 --> 00:07:21,170
+But it's not a bank account.
+
+190
+00:07:21,190 --> 00:07:22,930
+There's no deposit guarantee.
+
+191
+00:07:24,330 --> 00:07:26,670
+When rates are low, they earn almost nothing.
+
+192
+00:07:26,690 --> 00:07:28,140
+When rates were negative,
+
+193
+00:07:28,160 --> 00:07:29,230
+they even lost a little.
+
+194
+00:07:29,250 --> 00:07:31,210
+When rates rise, they earn more.
+
+195
+00:07:33,230 --> 00:07:33,930
+Box 9.
+
+196
+00:07:33,950 --> 00:07:34,910
+Commodities.
+
+197
+00:07:35,570 --> 00:07:37,080
+Gold is the classic.
+
+198
+00:07:37,100 --> 00:07:37,330
+But in Europe,
+
+199
+00:07:37,350 --> 00:07:39,400
+a regular fund isn't allowed
+
+200
+00:07:39,420 --> 00:07:41,070
+to hold just one commodity.
+
+201
+00:07:42,230 --> 00:07:44,230
+So gold trades as an ETC,
+
+202
+00:07:44,250 --> 00:07:46,400
+an exchange-traded commodity.
+
+203
+00:07:46,420 --> 00:07:48,000
+Often, each share is backed
+
+204
+00:07:48,020 --> 00:07:49,690
+by real gold in a vault.
+
+205
+00:07:51,130 --> 00:07:53,280
+Gold has long dry spells too.
+
+206
+00:07:53,300 --> 00:07:55,550
+In dollars, it peaked in 2011,
+
+207
+00:07:55,570 --> 00:07:57,650
+and only got back there in 2020.
+
+208
+00:07:58,970 --> 00:08:02,240
+Other commodities, like oil, often use futures contracts.
+
+209
+00:08:02,260 --> 00:08:04,230
+Their returns can drift away from
+
+210
+00:08:04,250 --> 00:08:06,030
+the price you see on the news.
+
+211
+00:08:07,370 --> 00:08:10,480
+And commodities pay no interest and no dividends.
+
+212
+00:08:10,500 --> 00:08:12,440
+You only gain if the price goes up.
+
+213
+00:08:14,200 --> 00:08:14,760
+Box 10.
+
+214
+00:08:14,780 --> 00:08:16,380
+Leveraged and inverse.
+
+215
+00:08:17,130 --> 00:08:18,880
+Leveraged products promise two
+
+216
+00:08:18,900 --> 00:08:19,740
+or three times
+
+217
+00:08:19,760 --> 00:08:21,240
+the daily move of an index.
+
+218
+00:08:21,260 --> 00:08:22,370
+Inverse ones go up
+
+219
+00:08:22,390 --> 00:08:23,870
+when the market goes down.
+
+220
+00:08:25,130 --> 00:08:26,480
+The key word is daily.
+
+221
+00:08:26,500 --> 00:08:28,280
+They reset every single day.
+
+222
+00:08:29,900 --> 00:08:31,840
+If an index rises 10%,
+
+223
+00:08:31,860 --> 00:08:34,740
+then falls 10%, it's down 1%.
+
+224
+00:08:34,760 --> 00:08:37,890
+A two times leveraged product is down 4%.
+
+225
+00:08:39,270 --> 00:08:41,880
+This loss is often called volatility decay.
+
+226
+00:08:41,900 --> 00:08:43,440
+The more the market zigzags,
+
+227
+00:08:43,460 --> 00:08:44,580
+the bigger it gets.
+
+228
+00:08:45,730 --> 00:08:46,840
+In a choppy market,
+
+229
+00:08:46,860 --> 00:08:48,250
+they can lose money even
+
+230
+00:08:48,270 --> 00:08:49,850
+if the index ends flat.
+
+231
+00:08:49,870 --> 00:08:52,660
+They're built for short-term traders, not for holding.
+
+232
+00:08:54,570 --> 00:08:55,460
+Box 11.
+
+233
+00:08:55,480 --> 00:08:56,710
+Active ETFs.
+
+234
+00:08:57,330 --> 00:08:58,630
+Active ETFs have
+
+235
+00:08:58,650 --> 00:09:00,340
+a manager who picks the stocks,
+
+236
+00:09:00,360 --> 00:09:02,260
+inside an ETF wrapper.
+
+237
+00:09:03,500 --> 00:09:04,950
+They usually cost more,
+
+238
+00:09:04,970 --> 00:09:06,960
+and the manager has to beat the market
+
+239
+00:09:06,980 --> 00:09:07,940
+after those fees.
+
+240
+00:09:09,170 --> 00:09:11,910
+According to S&P's long-running research,
+
+241
+00:09:11,930 --> 00:09:13,550
+most active funds lag their
+
+242
+00:09:13,570 --> 00:09:15,020
+index over the long run.
+
+243
+00:09:16,470 --> 00:09:18,170
+Some managers do beat it.
+
+244
+00:09:18,190 --> 00:09:19,440
+The hard part is knowing
+
+245
+00:09:19,460 --> 00:09:20,780
+which ones, in advance.
+
+246
+00:09:22,430 --> 00:09:23,330
+Box 12.
+
+247
+00:09:23,350 --> 00:09:24,590
+Crypto ETPs.
+
+248
+00:09:25,300 --> 00:09:26,420
+The last box isn't
+
+249
+00:09:26,440 --> 00:09:28,120
+technically an ETF at all.
+
+250
+00:09:29,400 --> 00:09:30,750
+In Europe, a regular
+
+251
+00:09:30,770 --> 00:09:32,980
+ETF can't hold bitcoin directly.
+
+252
+00:09:33,000 --> 00:09:35,410
+So crypto products are ETPs,
+
+253
+00:09:35,430 --> 00:09:38,180
+debt-like notes, often backed by real coins.
+
+254
+00:09:39,400 --> 00:09:41,490
+America approved its first spot
+
+255
+00:09:41,510 --> 00:09:44,170
+bitcoin ETFs in January 2024.
+
+256
+00:09:44,190 --> 00:09:46,670
+In Europe, they're still ETPs.
+
+257
+00:09:48,100 --> 00:09:49,050
+You get the same
+
+258
+00:09:49,070 --> 00:09:50,860
+wild price swings as crypto,
+
+259
+00:09:50,880 --> 00:09:52,320
+plus the risk of the company
+
+260
+00:09:52,340 --> 00:09:53,540
+that issues the note.
+
+261
+00:09:54,970 --> 00:09:56,330
+If you want the full story,
+
+262
+00:09:56,350 --> 00:09:58,830
+our last video explains every crypto,
+
+263
+00:09:58,850 --> 00:09:59,920
+box by box.
+
+264
+00:10:01,070 --> 00:10:03,780
+Before you buy any ETF, read its name.
+
+265
+00:10:03,800 --> 00:10:05,380
+It tells you the provider,
+
+266
+00:10:05,400 --> 00:10:06,160
+the index, the EU rules,
+
+267
+00:10:06,180 --> 00:10:08,220
+the fund currency,
+
+268
+00:10:08,240 --> 00:10:09,920
+and what happens to the dividends.
+
+269
+00:10:11,330 --> 00:10:12,770
+Then check three things.
+
+270
+00:10:12,790 --> 00:10:14,080
+The yearly fee, called TER.
+
+271
+00:10:14,100 --> 00:10:16,160
+The size of the fund.
+
+272
+00:10:16,180 --> 00:10:18,280
+And how closely it follows its index.
+
+273
+00:10:19,470 --> 00:10:21,200
+Those are the twelve boxes.
+
+274
+00:10:21,220 --> 00:10:22,780
+Almost every ETF you'll see
+
+275
+00:10:22,800 --> 00:10:24,090
+fits into one of them.
+
+276
+00:10:25,570 --> 00:10:27,820
+Remember, ETFs can lose value,
+
+277
+00:10:27,840 --> 00:10:30,050
+and nothing here is a recommendation.
+
+278
+00:10:30,070 --> 00:10:32,130
+This is not financial advice.
+
+279
+00:10:33,570 --> 00:10:35,110
+Twelve boxes, eleven minutes.
+
+280
+00:10:35,130 --> 00:10:36,910
+Now, when you see a new ETF,
+
+281
+00:10:36,930 --> 00:10:38,690
+you'll know which box it's in,
+
+282
+00:10:38,710 --> 00:10:39,650
+and what to ask.
+
+283
+00:10:40,900 --> 00:10:42,600
+If this helped, subscribe.
+
+284
+00:10:42,620 --> 00:10:43,880
+Next up, what really happens
+
+285
+00:10:43,900 --> 00:10:45,810
+when you invest €200
+
+286
+00:10:45,830 --> 00:10:47,250
+a month for 30 years.
+

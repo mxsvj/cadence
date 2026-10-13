@@ -1,0 +1,60 @@
+TITRE (≤ 100 caractères, les 60 premiers sont les plus visibles)
+Every ETF Explained in 11 Minutes
+
+Variantes à tester :
+Every Type of ETF Explained in 11 Minutes (for Europeans)
+12 Types of ETFs Explained (and the One That Isn't an ETF)
+
+
+DESCRIPTION (à coller telle quelle)
+Index, sector, thematic, bonds, gold, leveraged, crypto… there are about 16,000 ETFs in the world, but almost all of them fit into 12 boxes. Here's every box, explained in 11 minutes, with a focus on what's different for investors in Europe (UCITS, Acc vs Dist, ETCs, ETPs, why most European brokers won't sell you VOO).
+
+No hype, no stock picks. ETFs can lose value. Education only, not financial advice.
+
+CHAPTERS
+0:00 Intro
+1:19 01 · Index ETFs
+2:42 02 · Country & region ETFs
+3:39 03 · Sector ETFs
+4:16 04 · Thematic ETFs
+4:51 05 · Factor ETFs (smart beta)
+5:29 06 · Dividend ETFs
+6:07 07 · Bond ETFs
+7:01 08 · Money market ETFs
+7:33 09 · Commodities (gold ETCs)
+8:14 10 · Leveraged & inverse
+8:54 11 · Active ETFs
+9:22 12 · Crypto ETPs
+10:01 How to read an ETF name
+
+SOURCES (checked October 2026)
+Global ETF assets ≈ $24 trillion (ETFGI): https://www.marketsmedia.com/global-etf-assets-top-24-trillion-for-first-time/
+First ETF (SPY, 1993): https://www.etfstrategy.com/ssga-celebrates-ground-breaking-spdr-sp-500-etf-spy-73154
+First European ETFs (Xetra, 2000): https://xetra.com/xetra-en/newsroom/press-releases/list-press-releases/20-years-of-ETF-trading-in-Europe-1911250
+US ETFs and the EU key information document: https://www.etfstream.com/articles/etf-insight-european-investors-set-to-be-impacted-by-kid-requirements
+MSCI World factsheet: https://www.msci.com/documents/10199/149ed7bc-316e-4b4c-8ea4-43fcb5bd6523
+Nikkei back above its 1989 peak in 2024: https://www.bloomberg.com/news/articles/2024-02-22/nikkei-225-heads-to-close-above-record-high-reached-in-1989
+Energy, worst sector of 2020 and best of 2022: https://ftportfolios.com/Commentary/MarketCommentary/2023/1/3/the-only-constant-is-change
+Thematic funds, Morningstar: https://www.morningstar.ca/ca/news/212585/may-not-pay-to-invest-in-themes.aspx
+Bonds in 2022: https://www.nasdaq.com/articles/firsts-and-worsts:-4-reasons-why-2022-wont-happen-again
+Active vs passive (S&P SPIVA Europe): https://www.spglobal.com/spdji/en/spiva/article/spiva-europe-year-end-2019
+
+The fee example (€200 a month, 30 years, 7% a year, 0.03% vs 1.8% in fees) is hypothetical. Charts marked "illustration" are illustrations, not real price data. The ETF name shown at the end is an example of how to read a name, not a recommendation. Do your own research and check your country's tax rules.
+
+Voice-over: synthetic (AI) voice.
+
+#etf #investing #personalfinance
+
+
+TAGS (YouTube → Détails → Afficher plus → Tags ; 500 caractères max, 309 ici)
+every etf explained, etf explained, types of etf, etfs for beginners, ucits etf, index fund, msci world, s&p 500 etf, accumulating vs distributing, bond etf, money market etf, gold etc, leveraged etf, thematic etf, dividend etf, active etf, crypto etp, investing in europe, etf europe, personal finance europe
+
+
+RÉGLAGES
+- Public : Non, cette vidéo n'est pas conçue pour les enfants.
+- Catégorie : Éducation.
+- Langue de la vidéo : anglais. Sous-titres : importe every_etf_human_subtitles_en.srt (Sous-titres → Ajouter une langue → Anglais → Importer un fichier → Avec minutage).
+- Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
+- Écran de fin : « vidéo suivante » à gauche (la vidéo crypto), « s'abonner » à droite, sur les 10 dernières secondes.
+- Miniatures « Test & compare » : S1, S3 et S2.
+- Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris), comme la vidéo crypto.

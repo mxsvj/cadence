@@ -199,3 +199,7 @@ Le script suit la structure de « simple, actually » : ouverture sur une scène
 - `SAMPLE=0:22 python3 build_save_money_illegal.py` ne rend que les lignes 0 à 21 ;
 - `python3 kit_save_money.py` écrit le titre, la description avec les vrais chapitres, les tags et les réglages ;
 - `build_save_money_thumbnails.py` dessine trois miniatures dans le même style : S1 « feels ILLEGAL », S2 « saving on autopilot », S3 « your brain: NOW ».
+
+## Livraison sur le PC
+
+`package_videos.py` prépare un zip par vidéo (moins de 30 Mo chacun) : dedans, un dossier avec la vidéo, les 3 miniatures (la recommandée en premier), `titre.txt`, `description.txt`, `sous-titres anglais.srt` et `tags et reglages.txt`, plus un zip pour les Shorts YouTube et un pour TikTok. `ranger_mes_videos.bat` (Windows, il lance `ranger_mes_videos.ps1`) ou `ranger_mes_videos.command` (Mac), posé à côté des zips, les range dans Bureau/YouTube : chaque vidéo devient un dossier numéroté à la suite des dossiers déjà présents, et une vidéo déjà rangée (même nom de dossier) est ignorée. `kit_etf_human.py` refait les chapitres et les sous-titres de la version « passe humaine » de la vidéo ETF.
