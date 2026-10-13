@@ -1,0 +1,51 @@
+TITRE (≤ 100 caractères, les 60 premiers sont les plus visibles)
+7 Tricks Shops Use to Make You Spend More (and How to Beat Them)
+
+Variantes à tester :
+Why You Buy Things You Don't Need
+How Shops Hack Your Brain Into Spending More
+
+
+DESCRIPTION (à coller telle quelle)
+You go online to buy one thing and leave with four. That's not bad luck, it's design. Here are 7 tricks shops use: prices ending in 9, decoys, fake countdowns, fake discounts, free-shipping thresholds, buy now pay later and the store map. The research behind each one, the EU rules that protect you, and how to beat them.
+
+Education only, not financial advice.
+
+CHAPTERS
+0:00 Why you buy things you don't need
+0:27 1 · The price that ends in 9
+0:58 2 · The decoy
+1:32 3 · The fake countdown
+2:03 4 · The fake discount
+2:32 5 · Free shipping
+2:54 6 · Buy now, pay later
+3:29 7 · The store map
+3:50 Final message
+
+SOURCES (checked October 2026)
+Anderson & Simester (2003), Effects of $9 price endings on retail sales: https://doi.org/10.1023/A:1023581927405
+Dan Ariely, Predictably Irrational (2008), the Economist subscription decoy: https://en.wikipedia.org/wiki/Decoy_effect
+European Commission (Jan 2023): sweep of 399 online shops, 148 with manipulative practices, 42 fake timers: https://ec.europa.eu/commission/presscorner/detail/en/ip_23_418
+Directive (EU) 2019/2161 (Omnibus): announced discounts vs the lowest price of the previous 30 days: https://eur-lex.europa.eu/eli/dir/2019/2161/oj
+Di Maggio, Katz & Williams (2022), Buy Now, Pay Later Credit (NBER w30508): https://www.nber.org/papers/w30508
+Directive (EU) 2023/2225, the new Consumer Credit Directive (applies from 20 November 2026): https://eur-lex.europa.eu/eli/dir/2023/2225/oj
+The Food (Promotion and Placement) (England) Regulations 2021: https://www.legislation.gov.uk/uksi/2021/1368/contents/made
+The catalogue experiment and the decoy experiment were run in the US (prices in dollars). National rules implementing EU directives can differ.
+
+Voice-over: synthetic (AI) voice.
+
+#personalfinance #savemoney #psychology
+
+
+TAGS (YouTube → Détails → Afficher plus → Tags ; 500 caractères max, 274 ici)
+shopping tricks, how shops trick you, psychology of pricing, charm pricing, decoy effect, fake discounts, countdown timer, dark patterns, buy now pay later, free shipping trick, impulse buying, stop impulse buying, consumer rights europe, save money europe, personal finance
+
+
+RÉGLAGES
+- Public : Non, cette vidéo n'est pas conçue pour les enfants.
+- Catégorie : Éducation.
+- Langue de la vidéo : anglais. Sous-titres : importe shop_tricks_subtitles_en.srt (Sous-titres → Ajouter une langue → Anglais → Importer un fichier → Avec minutage).
+- Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
+- Écran de fin (dernières 11 s) : « s'abonner » sur le bouton orange dessiné à gauche, « vidéo suivante » (How to Save Money So Easily It Feels Illegal) sur le cadre dessiné à droite.
+- Miniatures « Test & compare » : B1 (« €9.99 »), B2 (faux compte à rebours) et B3 (le leurre).
+- Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris).

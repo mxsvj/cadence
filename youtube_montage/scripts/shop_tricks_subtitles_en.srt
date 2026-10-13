@@ -1,0 +1,515 @@
+1
+00:00:00,600 --> 00:00:02,350
+You go online to buy one thing.
+
+2
+00:00:02,370 --> 00:00:03,436
+You leave with four.
+
+3
+00:00:03,700 --> 00:00:05,867
+And somehow, it felt like you saved money.
+
+4
+00:00:06,533 --> 00:00:07,498
+That's not bad luck.
+
+5
+00:00:07,518 --> 00:00:08,520
+It's design.
+
+6
+00:00:09,300 --> 00:00:10,738
+Shops test prices, buttons,
+
+7
+00:00:10,758 --> 00:00:13,335
+colours and timers on millions of people.
+
+8
+00:00:13,355 --> 00:00:15,351
+Your brain is the thing they're testing.
+
+9
+00:00:16,133 --> 00:00:18,122
+And here's the part nobody tells you.
+
+10
+00:00:19,300 --> 00:00:20,749
+Once you can see the tricks,
+
+11
+00:00:20,769 --> 00:00:22,183
+most of them stop working.
+
+12
+00:00:22,967 --> 00:00:24,198
+Here are seven of them,
+
+13
+00:00:24,218 --> 00:00:25,292
+and how to beat each one.
+
+14
+00:00:25,312 --> 00:00:26,280
+Let's begin.
+
+15
+00:00:27,400 --> 00:00:27,630
+One.
+
+16
+00:00:27,650 --> 00:00:29,374
+The price that ends in nine.
+
+17
+00:00:30,367 --> 00:00:33,647
+€9.99 feels much closer to nine than to ten.
+
+18
+00:00:33,667 --> 00:00:35,366
+Your brain reads the first digit,
+
+19
+00:00:35,386 --> 00:00:36,748
+and mostly stops there.
+
+20
+00:00:37,500 --> 00:00:38,560
+In one experiment,
+
+21
+00:00:38,580 --> 00:00:40,607
+a clothing catalogue raised the price
+
+22
+00:00:40,627 --> 00:00:43,670
+of a dress from $34 to $39.
+
+23
+00:00:43,690 --> 00:00:45,480
+It sold about a third more.
+
+24
+00:00:45,900 --> 00:00:49,444
+At $44, it sold the same as at $34.
+
+25
+00:00:50,300 --> 00:00:50,799
+The fix:
+
+26
+00:00:50,819 --> 00:00:52,435
+round prices up in your head.
+
+27
+00:00:52,455 --> 00:00:54,735
+€9.99 is ten euros.
+
+28
+00:00:54,755 --> 00:00:56,771
+€49.95 is fifty.
+
+29
+00:00:58,000 --> 00:00:58,307
+Two.
+
+30
+00:00:58,327 --> 00:00:59,195
+The decoy.
+
+31
+00:01:00,100 --> 00:01:02,440
+A magazine once offered three options.
+
+32
+00:01:02,460 --> 00:01:03,660
+Online only:
+
+33
+00:01:03,680 --> 00:01:04,870
+$59.
+
+34
+00:01:04,890 --> 00:01:05,120
+Print only:
+
+35
+00:01:05,140 --> 00:01:06,965
+$125.
+
+36
+00:01:06,985 --> 00:01:07,635
+Print and online:
+
+37
+00:01:07,655 --> 00:01:10,499
+$125.
+
+38
+00:01:11,000 --> 00:01:12,670
+Nobody picks print only.
+
+39
+00:01:12,690 --> 00:01:13,610
+It's there to make the
+
+40
+00:01:13,630 --> 00:01:15,079
+bundle look like a steal.
+
+41
+00:01:15,933 --> 00:01:17,663
+In a famous class experiment,
+
+42
+00:01:17,683 --> 00:01:20,267
+84% of students chose the bundle.
+
+43
+00:01:20,533 --> 00:01:22,003
+When the decoy was removed,
+
+44
+00:01:22,023 --> 00:01:25,328
+68% chose the cheap online option instead.
+
+45
+00:01:26,000 --> 00:01:26,407
+The fix:
+
+46
+00:01:26,427 --> 00:01:27,794
+when you see three prices,
+
+47
+00:01:27,814 --> 00:01:29,840
+ask which one is only there to push you.
+
+48
+00:01:29,860 --> 00:01:31,437
+Then compare the other two.
+
+49
+00:01:32,667 --> 00:01:33,019
+Three.
+
+50
+00:01:33,039 --> 00:01:34,270
+The fake countdown.
+
+51
+00:01:35,033 --> 00:01:36,033
+Only two left.
+
+52
+00:01:36,053 --> 00:01:37,758
+Offer ends in nine minutes.
+
+53
+00:01:37,778 --> 00:01:39,682
+Someone in Paris just bought this.
+
+54
+00:01:40,067 --> 00:01:41,748
+Urgency switches off the slow,
+
+55
+00:01:41,768 --> 00:01:43,349
+careful part of your brain.
+
+56
+00:01:43,967 --> 00:01:46,102
+In a check published in 2023,
+
+57
+00:01:46,122 --> 00:01:51,037
+EU consumer authorities looked at 399 online shops.
+
+58
+00:01:51,057 --> 00:01:54,411
+148 used at least one manipulative trick.
+
+59
+00:01:54,767 --> 00:01:57,695
+42 of them had countdown timers that were fake.
+
+60
+00:01:58,367 --> 00:01:58,826
+The fix:
+
+61
+00:01:58,846 --> 00:02:00,607
+if a timer says hurry, wait.
+
+62
+00:02:00,627 --> 00:02:02,793
+A real deal survives a night of sleep.
+
+63
+00:02:03,900 --> 00:02:04,209
+Four.
+
+64
+00:02:04,229 --> 00:02:05,464
+The fake discount.
+
+65
+00:02:06,333 --> 00:02:08,318
+Was €199.
+
+66
+00:02:08,338 --> 00:02:10,088
+Now €99.
+
+67
+00:02:10,108 --> 00:02:10,338
+Half price!
+
+68
+00:02:10,358 --> 00:02:14,083
+But was it ever really €199?
+
+69
+00:02:14,400 --> 00:02:16,295
+A high before price is an anchor.
+
+70
+00:02:16,315 --> 00:02:18,288
+It makes the new price feel small.
+
+71
+00:02:19,033 --> 00:02:21,228
+In the EU, since 2022,
+
+72
+00:02:21,248 --> 00:02:23,600
+a shop announcing a discount has to compare it
+
+73
+00:02:23,620 --> 00:02:26,466
+with its lowest price in the previous thirty days.
+
+74
+00:02:26,933 --> 00:02:29,558
+So check that small line, or a price tracker,
+
+75
+00:02:29,578 --> 00:02:31,242
+before you believe the percentage.
+
+76
+00:02:32,433 --> 00:02:32,742
+Five.
+
+77
+00:02:32,762 --> 00:02:33,732
+Free shipping.
+
+78
+00:02:34,467 --> 00:02:36,402
+Shipping costs €4.90.
+
+79
+00:02:36,422 --> 00:02:38,207
+It's free above €50.
+
+80
+00:02:38,227 --> 00:02:40,449
+Your basket is at €38.
+
+81
+00:02:40,867 --> 00:02:43,682
+So you add a €15 thing you didn't plan to buy,
+
+82
+00:02:43,702 --> 00:02:45,495
+to save €4.90.
+
+83
+00:02:46,100 --> 00:02:49,522
+You just spent €10 more to avoid paying €4.90.
+
+84
+00:02:49,900 --> 00:02:50,314
+The fix:
+
+85
+00:02:50,334 --> 00:02:51,320
+pay the shipping,
+
+86
+00:02:51,340 --> 00:02:53,209
+or wait until you really need more.
+
+87
+00:02:54,533 --> 00:02:54,823
+Six.
+
+88
+00:02:54,843 --> 00:02:56,289
+Buy now, pay later.
+
+89
+00:02:57,233 --> 00:02:59,507
+Four payments of €25 feel
+
+90
+00:02:59,527 --> 00:03:01,863
+lighter than one payment of €100.
+
+91
+00:03:01,883 --> 00:03:03,821
+It's the same €100.
+
+92
+00:03:04,267 --> 00:03:08,976
+One large study of US bank data found that once people start using buy now,
+
+93
+00:03:08,996 --> 00:03:11,667
+pay later, their total spending goes up,
+
+94
+00:03:11,687 --> 00:03:12,967
+and stays up for months.
+
+95
+00:03:13,800 --> 00:03:19,695
+New EU consumer credit rules, due to apply from November 2026, bring most buy now,
+
+96
+00:03:19,715 --> 00:03:21,695
+pay later under credit rules,
+
+97
+00:03:21,715 --> 00:03:23,583
+with checks on whether you can afford it.
+
+98
+00:03:24,067 --> 00:03:24,667
+The fix:
+
+99
+00:03:24,687 --> 00:03:25,992
+if you can't pay for it today,
+
+100
+00:03:26,012 --> 00:03:27,854
+you probably can't afford it today.
+
+101
+00:03:29,133 --> 00:03:29,524
+Seven.
+
+102
+00:03:29,544 --> 00:03:30,552
+The store map.
+
+103
+00:03:31,300 --> 00:03:33,280
+Milk and bread are usually at the back.
+
+104
+00:03:33,300 --> 00:03:35,803
+To reach them, you walk past everything else.
+
+105
+00:03:36,133 --> 00:03:37,943
+And the sweets wait at the checkout,
+
+106
+00:03:37,963 --> 00:03:40,348
+right where you stand still with nothing to do.
+
+107
+00:03:41,167 --> 00:03:43,575
+England even banned less healthy snacks from
+
+108
+00:03:43,595 --> 00:03:46,450
+the checkouts of larger stores in 2022.
+
+109
+00:03:46,767 --> 00:03:47,136
+The fix:
+
+110
+00:03:47,156 --> 00:03:47,964
+shop with a list,
+
+111
+00:03:47,984 --> 00:03:49,689
+and walk straight to what's on it.
+
+112
+00:03:50,833 --> 00:03:52,012
+Final message.
+
+113
+00:03:53,200 --> 00:03:54,670
+Some of these tricks are banned.
+
+114
+00:03:54,690 --> 00:03:56,280
+Most are perfectly legal.
+
+115
+00:03:56,300 --> 00:03:57,974
+They're just very good design.
+
+116
+00:03:58,667 --> 00:03:59,747
+Round prices up.
+
+117
+00:03:59,767 --> 00:03:59,997
+Spot the decoy.
+
+118
+00:04:00,017 --> 00:04:01,384
+Ignore the timer.
+
+119
+00:04:01,404 --> 00:04:03,092
+Check the real old price.
+
+120
+00:04:03,112 --> 00:04:03,342
+Pay the shipping.
+
+121
+00:04:03,362 --> 00:04:04,464
+Pay in full.
+
+122
+00:04:04,484 --> 00:04:05,276
+Bring a list.
+
+123
+00:04:06,000 --> 00:04:07,515
+Your brain isn't stupid.
+
+124
+00:04:07,535 --> 00:04:08,791
+It's just being tested by
+
+125
+00:04:08,811 --> 00:04:10,379
+people who do this all day.
+
+126
+00:04:11,167 --> 00:04:13,687
+This is education, not financial advice.
+
+127
+00:04:13,707 --> 00:04:15,467
+If this helped, subscribe.
+
+128
+00:04:15,487 --> 00:04:15,717
+Next up:
+
+129
+00:04:15,737 --> 00:04:18,760
+how to save money so easily it feels illegal.
