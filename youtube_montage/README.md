@@ -166,3 +166,5 @@ Quatre vidéos au même format « boîtes », faites d'une traite (même style s
 - la voix de chaque ligne est mise en cache : relancer un rendu ou le kit ne régénère que les lignes modifiées ;
 - pour chaque vidéo, `scripts/` contient le texte avec ses sources (`*_script.md`), le titre, la description avec les vrais chapitres, les tags et les réglages (`*_youtube_upload.txt`, produit par `kit.py` à partir de `kit_meta.py`) et les sous-titres (`*_subtitles_en.srt`) ;
 - `build_boxes_thumbnails_sober.py` génère trois miniatures sobres par vidéo (liste des boîtes, version sable, une idée forte : « ISA. PEA. ISK. Depot? », « 12. », « “Pay in euros?” No. », « −57% »).
+
+`make_shorts.py` découpe des Shorts verticaux (1080×1920) dans les vidéos finies : une accroche en haut (un mot clé sur fond orange), l'extrait au milieu, de gros sous-titres karaoké en dessous et le titre de la vidéo complète. `shorts_seg.py` trouve le début et la fin de l'extrait dans les sous-titres à partir de deux phrases. Les 9 premiers (3 par vidéo : crypto, ETF, POV 200 €) et leur calendrier sont dans `scripts/shorts_week1_upload.txt`.
