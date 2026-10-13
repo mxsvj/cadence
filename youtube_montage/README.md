@@ -152,3 +152,17 @@ La voix off de `build_every_crypto.py` est générée gratuitement avec Kokoro, 
 - `POV_SAMPLE=0:20 python3 build_pov_25_200.py` ne rend qu'une partie des plans.
 
 `build_pov_25_200_thumbnails_sober.py` génère ses trois miniatures sobres : P1 « €200 / month » puis « 30 years later: €244,000 » en orange, P2 « 200 euros a month, for 30 years. » sur fond sable avec 30 carrés dont le dernier orange, P3 « 25 → 55. » avec le point carré orange du logo.
+
+Quatre vidéos au même format « boîtes », faites d'une traite (même style sombre, une couleur par boîte, voix Emma) :
+
+| Vidéo | Fichier de montage | Durée | Boîtes |
+|---|---|---|---|
+| Every Investment Account in Europe Explained | `build_every_account.py` | 8 min 06 | 10 : épargne, compte-titres, compte défiscalisé (ISA, ISK, PEA…), assurance-vie, retraite individuelle, plan d'entreprise, comptes enfants, robo-advisor, compte de trading (CFD), courtier étranger |
+| Every Investing Mistake Explained | `build_every_mistake.py` | 7 min 34 | 12 erreurs, de « attendre pour commencer » au « mauvais compte » |
+| Every Bank Fee Explained | `build_every_fee.py` | 6 min 34 | 10 frais, dont le piège « Pay in euros? » au distributeur et le trading « gratuit » |
+| POV: You Invest €10,000 at the Worst Possible Moment | `build_pov_worst_moment.py` | 5 min 31 | 6 parties, du record d'octobre 2007 à 2024, avec les vraies données du S&P 500 |
+
+- Le nombre de boîtes suit le sujet (10, 12 ou 6) : la grille des boîtes et la carte de chapitre s'adaptent toutes seules, et le mot de la carte change (« BOX », « MISTAKE », « PART ») ;
+- la voix de chaque ligne est mise en cache : relancer un rendu ou le kit ne régénère que les lignes modifiées ;
+- pour chaque vidéo, `scripts/` contient le texte avec ses sources (`*_script.md`), le titre, la description avec les vrais chapitres, les tags et les réglages (`*_youtube_upload.txt`, produit par `kit.py` à partir de `kit_meta.py`) et les sous-titres (`*_subtitles_en.srt`) ;
+- `build_boxes_thumbnails_sober.py` génère trois miniatures sobres par vidéo (liste des boîtes, version sable, une idée forte : « ISA. PEA. ISK. Depot? », « 12. », « “Pay in euros?” No. », « −57% »).
