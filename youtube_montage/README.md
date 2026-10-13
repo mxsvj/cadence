@@ -168,3 +168,15 @@ Quatre vidéos au même format « boîtes », faites d'une traite (même style s
 - `build_boxes_thumbnails_sober.py` génère trois miniatures sobres par vidéo (liste des boîtes, version sable, une idée forte : « ISA. PEA. ISK. Depot? », « 12. », « “Pay in euros?” No. », « −57% »).
 
 `make_shorts.py` découpe des Shorts verticaux (1080×1920) dans les vidéos finies : une accroche en haut (un mot clé sur fond orange), l'extrait au milieu, de gros sous-titres karaoké en dessous et le titre de la vidéo complète. `shorts_seg.py` trouve le début et la fin de l'extrait dans les sous-titres à partir de deux phrases. Les 9 premiers (3 par vidéo : crypto, ETF, POV 200 €) et leur calendrier sont dans `scripts/shorts_week1_upload.txt`. `python3 make_shorts.py --tiktok` fait les versions TikTok : la mention renvoie vers « YouTube · Euro Unboxed » et une carte de fin de 2 secondes l'affiche en grand.
+
+`humanize.py` applique une « passe humaine » à n'importe quel montage assemblé (`python3 humanize.py build_etf.py` → `build_etf_h.py`), pour retirer ce qui faisait « généré automatiquement » :
+
+- typo : plus d'Inter ; une seule famille, FreeSans (Helvetica libre), toujours un peu resserrée (approche négative) ;
+- mise en page : les grands textes ne sont plus centrés, chaque plan a sa propre colonne à gauche avec quelques pixels de décalage ; certaines phrases clés sont collées comme un sticker papier, légèrement de travers ; la carte de chapitre est asymétrique (titre à gauche, grand numéro à droite) ;
+- couleur : plus de halo derrière les plans ni de violet ; les couleurs de chapitre sont un peu désaturées ; plus de poussières ;
+- mouvement : les graphismes bougent à 12 images par seconde (comme « posterize time »), la caméra est « à l'épaule » (dérive lente, micro-tremblement, recadrage avec dépassement, zooms à ressort) ;
+- frappe : rythme irrégulier, pauses sur les espaces et la ponctuation ;
+- rythme : la pause entre deux phrases varie (plus courte après un chapitre, plus longue avant un nouveau chapitre ou après un grand chiffre) ;
+- coupes : plus de glitch à chaque coupe ; quelques chapitres seulement en ont un, d'autres une image noire, le reste en coupe franche ;
+- son : plus de bruit à chaque coupe ni à chaque touche ; certains chiffres tombent dans un silence brutal, d'autres n'ont aucun son, et la musique fait un « tape-stop » avant un ou deux chapitres ;
+- sous-titres : plus de karaoké centré ; des étiquettes papier à gauche, placées et inclinées légèrement différemment à chaque fois.
