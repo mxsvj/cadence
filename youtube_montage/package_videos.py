@@ -70,7 +70,9 @@ def build(k, v):
     thumb_names = []
     for j, (lab, _) in enumerate(v["thumbs"]):
         thumb_names.append(f"miniature {j + 1} - {lab}" + (" (recommandee)" if j == 0 else "") + ".jpg")
-    settings += "\n- Fichiers miniatures : " + ", ".join(thumb_names) + "."
+    line = "\n- Fichiers miniatures : " + ", ".join(thumb_names) + "."
+    pin = settings.find("\n\n\nCOMMENTAIRE")
+    settings = settings + line if pin < 0 else settings[:pin] + line + settings[pin:]
     files = {
         f"{v.get('file', v['name'])}.mp4": ("file", os.path.join(D, v["video"])),
         "titre.txt": ("bytes", txt(("NOTE : " + v["note"] + "\n\n" if v.get("note") else "") + "TITRE\n" + title +
