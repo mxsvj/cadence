@@ -14,18 +14,20 @@ W, H = 1920, 1080
 D = os.path.dirname(os.path.abspath(__file__))
 FH = os.path.join(D, "fonts_hand")
 HAND = os.path.join(FH, "GochiHand-Regular.ttf")          # marker lettering (has €)
-HAND2 = os.path.join(FH, "PatrickHand-Regular.ttf")       # smaller notes and labels
-ONE = os.path.join(FH, "CaveatBrush-Regular.ttf")         # Gochi's "1" reads like a 7: borrow a plainer one
+HAND2 = HAND                                              # one hand only: the typed-looking second font read as Comic Sans
+ONE = os.path.join(FH, "CaveatBrush-Regular.ttf")
+DIGIT = ONE                                               # Gochi's 1/5/9 read as 7/S/q, Kalam's 1 reads as "/": Caveat Brush digits
 PAPER = (244, 240, 231)
 INK = (35, 32, 30)
 ORANGE = (234, 126, 34)
 HL = (251, 211, 156)          # highlighter
 PINK = (240, 186, 180)
-GREY = (160, 154, 144)
+GREY = (110, 104, 96)          # 4.8:1 on the paper, still lighter than the ink
 PALE = (226, 219, 205)
 RED = (192, 64, 50)
 GREEN = (78, 146, 92)
 BOIL_FPS, STEP_FPS = 8, 12
+EXIT = 0.25          # things leave faster than they arrive: a quick shrink-and-fade after `until` (a crossfade when swapped)
 
 clamp = lambda x, a=0.0, b=1.0: max(a, min(b, x))
 ease_out = lambda u: 1 - (1 - u) ** 3
@@ -184,7 +186,7 @@ def ensure_fonts():
     """The three handwriting fonts are free (SIL Open Font License): fetch them from Google Fonts the first time."""
     import urllib.request
     os.makedirs(FH, exist_ok=True)
-    for path, sub in ((HAND, "gochihand/"), (HAND2, "patrickhand/"), (ONE, "caveatbrush/")):
+    for path, sub in ((HAND, "gochihand/"), (ONE, "caveatbrush/")):
         if not os.path.exists(path):
             urllib.request.urlretrieve(_GF + sub + os.path.basename(path), path)
 
@@ -199,11 +201,29 @@ def font(path, size):
     return _FONTS[k]
 
 
+RES = 1.5          # glyphs are rasterised 1.5x and scaled down, so they stay sharp when a scene is framed tighter
+REG = None         # when a list, every T() records itself here (layout audit)
+
+
+def gfont(ch, size, path=HAND):
+    if path == HAND and ch.isdigit():
+        return font(DIGIT, size * 1.0)
+    return font(path, size)
+
+
+def adv(ch, size, path=HAND):
+    """Advance of one character on its own: letters are placed one by one, so ligatures and kerning must not shift them."""
+    key = ("adv", ch, int(size), path)
+    if key not in _GLY:
+        _GLY[key] = gfont(ch, size, path).getlength(ch)
+    return _GLY[key]
+
+
 def glyph(ch, size, col, path=HAND):
     key = (ch, int(size), col, path)
     if key in _GLY:
         return _GLY[key]
-    f = font(ONE, size * 1.04) if (ch == "1" and path == HAND) else font(path, size)
+    f = gfont(ch, size * RES, path)
     x0, y0, x1, y1 = f.getbbox(ch, anchor="ls")
     pad = 4
     w, h = max(1, x1 - x0 + 2 * pad), max(1, y1 - y0 + 2 * pad)
@@ -217,19 +237,23 @@ def glyph(ch, size, col, path=HAND):
     return _GLY[key]
 
 
+def line_w(ln, size, path=HAND):
+    return sum(adv(c, size, path) for c in ln)
+
+
 def text_w(text, size, path=HAND):
-    return max(font(path, size).getlength(ln) for ln in text.split("\n"))
+    return max(line_w(ln, size, path) for ln in text.split("\n"))
 
 
 def T(text, x, y, size=96, col=INK, at=0.0, cps=24, dur=None, anchor="l", rot=0.0, path=HAND, seed=None, lh=1.08,
       until=None, a=1.0, move=None):
     """Handwritten text written on letter by letter from `at` (y = baseline of the first line)."""
     seed = (sum(map(ord, text)) * 13 + int(x) + int(y)) if seed is None else seed
-    f = font(path, size)
     lines = text.split("\n")
-    widths = [f.getlength(ln) for ln in lines]
-    lay = [(ch, f.getlength(ln[:i]), li) for li, ln in enumerate(lines) for i, ch in enumerate(ln)]
+    widths = [line_w(ln, size, path) for ln in lines]
+    lay = [(ch, line_w(ln[:i], size, path), li) for li, ln in enumerate(lines) for i, ch in enumerate(ln)]
     r = random.Random(seed)
+    var = [(r.uniform(0.95, 1.05), r.uniform(-0.04, 0.04), r.uniform(-1.6, 1.6)) for _ in lay]   # no two letters quite alike
     times, tt = [], 0.0
     for ch, _, _ in lay:
         times.append(tt)
@@ -239,11 +263,12 @@ def T(text, x, y, size=96, col=INK, at=0.0, cps=24, dur=None, anchor="l", rot=0.
     drift = [(r.uniform(-1, 1) * size * 0.025, r.uniform(0, 6.28), r.uniform(-1.2, 1.2)) for _ in lines]
 
     def fn(ctx, t):
-        if t < at or (until is not None and t >= until):
+        if t < at or (until is not None and t >= until + EXIT):
             return
+        ex = clamp((t - until) / EXIT) if until is not None and t >= until else 0.0
         b = boil(t)
         ctx.save()
-        ctx.translate(x, y)
+        ctx.translate(x, y - 14 * ease_out(ex))
         if move:
             dx, dy = move(t - at)
             ctx.translate(dx, dy)
@@ -260,19 +285,23 @@ def T(text, x, y, size=96, col=INK, at=0.0, cps=24, dur=None, anchor="l", rot=0.
             py = li * size * lh + amp * math.sin(px / max(widths[li], 1) * 3.1 + ph) + tilt * px / 100
             rr = random.Random(seed * 31 + k * 7 + b)
             jx, jy, jr = rr.uniform(-0.9, 0.9), rr.uniform(-0.9, 0.9), rr.uniform(-0.018, 0.018)
-            sc = 1.0 if te >= 1 / STEP_FPS else 0.82
+            vs, vr, vy = var[k]
+            sc = (1.0 if te >= 1 / STEP_FPS else 0.82) * vs / RES
             surf, gx, gy, _ = glyph(ch, size, col, path)
             ctx.save()
-            ctx.translate(px + jx, py + jy)
-            ctx.rotate(jr)
+            ctx.translate(px + jx, py + jy + vy)
+            ctx.rotate(jr + vr)
             ctx.scale(sc, sc)
             ctx.set_source_surface(surf, -gx, -gy)
-            ctx.paint_with_alpha(a)
+            ctx.paint_with_alpha(a * (1 - ex))
             ctx.restore()
         ctx.restore()
 
     fn.end = at + (times[-1] if times else 0)
     fn.w = max(widths)
+    if REG is not None:
+        REG.append(dict(text=text, x=x, y=y, size=size, col=col, anchor=anchor, w=fn.w, n=len(lines), lh=lh, at=at, end=fn.end,
+                        until=until, moving=move is not None, a=a))
     return fn
 
 
@@ -290,15 +319,24 @@ def Dr(ops, at, dur=0.5, pop=False, anchor=(W / 2, H / 2), until=None, move=None
         else:
             items.append(op)
     total = sum(it[1].L for it in items if it[0] == "s") or 1.0
+    pts_all = [np.asarray(op[1], float) for op in ops if op[0] in ("s", "f")]
+    ctr = tuple(np.vstack(pts_all).mean(axis=0)) if pts_all else anchor
     texts = [T(op[1], op[2], op[3], op[4], op[5], at=at + dur * 0.6, cps=40, path=op[6] if len(op) > 6 else HAND,
-               anchor=op[7] if len(op) > 7 else "m", seed=seed * 3 + k) for k, op in enumerate(ops) if op[0] == "g"]
+               anchor=op[7] if len(op) > 7 else "m", seed=seed * 3 + k, until=until) for k, op in enumerate(ops) if op[0] == "g"]
 
     def fn(ctx, t):
-        if t < at or (until is not None and t >= until):
+        if t < at or (until is not None and t >= until + EXIT):
             return
         u = clamp((t - at) / dur) if dur > 0 else 1.0
         b = boil(t)
         ctx.save()
+        ex = clamp((t - until) / EXIT) if until is not None and t >= until else 0.0
+        aa = a * (1 - ex)
+        if ex > 0:
+            k = 1 - 0.1 * ease_out(ex)
+            ctx.translate(ctr[0], ctr[1])
+            ctx.scale(k, k)
+            ctx.translate(-ctr[0], -ctr[1])
         if move:
             dx, dy, rot, sc = move(t - at)
             ctx.translate(anchor[0] + dx, anchor[1] + dy)
@@ -308,6 +346,7 @@ def Dr(ops, at, dur=0.5, pop=False, anchor=(W / 2, H / 2), until=None, move=None
         if pop:
             sc = ease_back(clamp((t - at) / 0.25)) if t - at < 0.25 else 1.0
             sc = max(sc, 0.05)
+            ctx.translate(0, 16 * (1 - ease_out(clamp((t - at) / 0.25))))      # rises as it grows: two properties, not one
             ctx.translate(anchor[0], anchor[1])
             ctx.scale(sc, sc)
             ctx.translate(-anchor[0], -anchor[1])
@@ -316,21 +355,22 @@ def Dr(ops, at, dur=0.5, pop=False, anchor=(W / 2, H / 2), until=None, move=None
         if fa > 0:
             for it in items:
                 if it[0] == "f":
-                    fill(ctx, it[1], b, it[2], a * fa, it[3])
+                    fill(ctx, it[1], b, it[2], aa * fa, it[3])
         rem = ease_out(u) * total
         for it in items:
             if it[0] == "s":
                 fr = clamp(rem / it[1].L)
                 rem -= it[1].L
                 if fr > 0:
-                    stroke(ctx, it[1], b, it[2], it[3], fr, amp, a)
+                    stroke(ctx, it[1], b, it[2], it[3], fr, amp, aa)
             elif it[0] == "dot" and u > 0.5:
                 ctx.new_path()
                 ctx.arc(it[1], it[2], it[3], 0, 2 * math.pi)
-                ctx.set_source_rgba(*rgb(it[4], a))
+                ctx.set_source_rgba(*rgb(it[4], aa))
                 ctx.fill()
-        for tf in texts:
-            tf(ctx, t if not pop else max(t, tf.end))
+        if True:
+            for tf in texts:
+                tf(ctx, t if not pop else max(t, tf.end))
         ctx.restore()
 
     return fn
@@ -383,7 +423,7 @@ def scribble_out(x0, y0, x1, y1, at, col=INK, w=6, dur=0.45, seed=0):
     return Dr([S(P_poly(pts), w, col)], at, dur, seed=seed)
 
 
-def arrow(pts, at, col=INK, w=6.5, dur=0.4, seed=0, head=26, dashed=False):
+def arrow(pts, at, col=INK, w=6.5, dur=0.4, seed=0, head=26, dashed=False, until=None):
     parts = arrow_pts(pts, head)
     if dashed:
         sh = Path(parts[0], seed)
@@ -392,7 +432,7 @@ def arrow(pts, at, col=INK, w=6.5, dur=0.4, seed=0, head=26, dashed=False):
             segs.append(sh.p[k:k + 5])
             k += 9
         parts = segs + parts[1:]
-    return Dr([S(p, w, col) for p in parts], at, dur, seed=seed)
+    return Dr([S(p, w, col) for p in parts], at, dur, seed=seed, until=until)
 
 
 # --------------------------------------------------------------------------- stick figure
@@ -816,6 +856,7 @@ class Camera:
         self.fr = [r.uniform(0.07, 0.16), r.uniform(0.05, 0.12), r.uniform(0.3, 0.6), r.uniform(0.35, 0.7), r.uniform(0.04, 0.09)]
         self.dur, self.push, self.cx, self.cy, self.amp = dur, push, cx, cy, amp
         self.pw = r.uniform(1.6, 2.6)
+        self.frame = (1.0, W / 2, H / 2)      # scene framing: scale about a point, set by the auto-framer
 
     def apply(self, ctx, t):
         p = self.ph
@@ -829,6 +870,11 @@ class Camera:
         ctx.rotate(rot)
         ctx.scale(z, z)
         ctx.translate(-W / 2 + dx + (W / 2 - self.cx) * (z - 1) / z, -H / 2 + dy + (H / 2 - self.cy) * (z - 1) / z)
+        fs, fx, fy = self.frame
+        if fs != 1.0:
+            ctx.translate(fx, fy)
+            ctx.scale(fs, fs)
+            ctx.translate(-fx, -fy)
 
 
 def clip_ell(fn, cx, cy, rx, ry):

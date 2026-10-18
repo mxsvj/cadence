@@ -1,33 +1,33 @@
 TITRE (≤ 100 caractères, les 60 premiers sont les plus visibles)
-How to Invest Your First €1,000 So Simply It Feels Illegal
+How to Invest Your First €1,000 (8 Steps, in Order)
 
 Variantes à tester :
 How to Invest Your First €1,000 (Step by Step, for Europeans)
-8 Steps to Invest Your First €1,000
+Your First €1,000: What to Do With It, Step by Step
 
 
 DESCRIPTION (à coller telle quelle)
-You've saved your first €1,000. Now what? Here are 8 steps, in order: kill expensive debt, keep a small cushion, use the right account (PEA, ISA, ISK…), pick a regulated low-cost broker, buy the whole market with one global index ETF, automate it, don't touch it, and keep learning.
+Everyone has a plan for your first €1,000. Most of them are wrong. Here are 8 steps, in order: kill expensive debt, keep a small cushion (and if €1,000 is all you have, that's your cushion), use the right account (PEA, ISA, ISK…), pick a broker regulated where you live, buy the whole market with one global index ETF, automate it, don't touch it, and keep learning. Investing can lose money.
 
 Education only, not financial advice.
 
 CHAPTERS
-0:00 Your first €1,000: now what?
-0:29 1 · Kill expensive debt first
+0:00 Everyone has a plan for your first €1,000
+0:28 1 · Kill expensive debt first
 0:44 2 · Keep a small safety cushion
-1:01 3 · Use the right account
-1:20 4 · Pick a regulated, low-cost broker
-1:43 5 · Buy the whole market
-2:02 6 · Automate it
-2:28 7 · Then don't touch it
-2:48 8 · Keep learning, slowly
-3:00 Final message
+1:10 3 · Use the right account
+1:30 4 · Pick a regulated, low-cost broker
+1:56 5 · Buy the whole market
+2:15 6 · Automate it
+2:50 7 · Then don't touch it
+3:25 8 · Keep learning, slowly
+3:39 Final message
 
 SOURCES (checked October 2026)
 Investor Compensation Schemes Directive 97/9/EC (at least €20,000 per investor): https://eur-lex.europa.eu/eli/dir/1997/9/oj
-S&P 500 drawdown history (2020: −34%, record again in August 2020): https://dqydj.com/sp-500-drawdown-history/
+S&P 500 drawdown history (price index): 2020 bottom 23 March, record again 18 August 2020. After 2000: −49% to October 2002, back to the 2000 peak in May 2007, then −57% to March 2009, and above the 2000 peak for good from March 2013: https://dqydj.com/sp-500-drawdown-history/
 UCITS Directive 2009/65/EC: https://eur-lex.europa.eu/eli/dir/2009/65/oj
-Hypothetical examples at 7% a year: €1,000 left alone for 30 years ≈ €7,600; with €100 a month added ≈ €130,000. No brand, broker or fund is recommended. Tax accounts and rules differ by country.
+Hypothetical examples at 7% a year (effective annual rate): €1,000 left alone for 30 years ≈ €7,600; with €100 a month added ≈ €125,000 in total, of which about €37,000 is money you put in. Before fees, inflation and tax. Investing can lose money. Pick a broker authorised by a financial regulator (in the EU, a broker authorised in another member state is fine). The EU investor compensation scheme covers at least €20,000 per investor when a firm fails and cannot return your assets (some countries pay 90% of the claim); it does not cover market losses. In a PEA, only PEA-eligible ETFs can be held (global trackers there are synthetic). No brand, broker or fund is recommended. Tax accounts and rules differ by country.
 
 Voice-over: synthetic (AI) voice.
 
@@ -43,6 +43,7 @@ RÉGLAGES
 - Catégorie : Éducation.
 - Langue de la vidéo : anglais. Sous-titres : importe first_1000_subtitles_en.srt (Sous-titres → Ajouter une langue → Anglais → Importer un fichier → Avec minutage).
 - Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
-- Écran de fin (dernières 14 s) : « s'abonner » sur le bouton orange dessiné à gauche, « vidéo suivante » (Compound Interest Explained So Simply It Feels Illegal) sur le cadre dessiné à droite.
-- Miniatures « Test & compare » : C1 (« €1,000 → ? »), C2 (« 8 steps ») et C3 (« buy everything »).
+- Écran de fin (dernières 20 s, tout est déjà dessiné à ce moment-là) : l'élément « S'abonner » (rond) sur le cercle orange dessiné à gauche,
+  l'élément « Vidéo » → vidéo spécifique (Compound Interest Explained So Simply It Feels Illegal) sur le cadre 16:9 dessiné à droite. Publie cette vidéo-là avant celle-ci.
+- Miniatures « Test & compare » : C2 (« 8 steps », recommandée), C3 (« buy everything ») et C1 (« €1,000, now what? »).
 - Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris).

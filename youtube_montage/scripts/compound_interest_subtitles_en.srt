@@ -1,451 +1,403 @@
 1
-00:00:00,600 --> 00:00:04,500
-Imagine putting €10,000 away, and never touching it again.
+00:00:00,250 --> 00:00:03,140
+Leave €10,000 alone for 30 years,
 
 2
-00:00:04,900 --> 00:00:07,450
-Thirty years later, at 7% a year,
+00:00:03,180 --> 00:00:06,447
+and it turns into about €76,000.
 
 3
-00:00:07,470 --> 00:00:10,174
-it's worth about €76,000.
+00:00:06,600 --> 00:00:09,682
+At 7% a year, you don't add a single euro.
 
 4
-00:00:10,800 --> 00:00:11,755
-You added nothing.
+00:00:09,722 --> 00:00:11,350
+The money does the work.
 
 5
-00:00:11,775 --> 00:00:12,600
-Not one euro.
+00:00:11,900 --> 00:00:13,739
+That's compound interest.
 
 6
-00:00:12,620 --> 00:00:13,776
-The money did the work.
+00:00:13,779 --> 00:00:16,748
+Slow, then boring, then suddenly unbelievable.
 
 7
-00:00:14,433 --> 00:00:16,158
-This is compound interest.
-
-8
-00:00:16,178 --> 00:00:18,520
-It's often called the eighth wonder of the world.
-
-9
-00:00:18,800 --> 00:00:21,105
-That quote is usually credited to Einstein.
-
-10
-00:00:21,125 --> 00:00:23,130
-He almost certainly never said it.
-
-11
-00:00:23,150 --> 00:00:24,599
-But the maths is real.
-
-12
-00:00:25,400 --> 00:00:27,389
-And here's the part nobody tells you.
-
-13
-00:00:28,733 --> 00:00:32,938
-Compound interest is slow, then boring, then suddenly unbelievable.
-
-14
-00:00:32,958 --> 00:00:35,255
+00:00:16,788 --> 00:00:19,171
 Most people quit during the boring part.
 
-15
-00:00:36,100 --> 00:00:38,800
-Today, I'll explain it so simply it feels illegal.
-
-16
-00:00:38,820 --> 00:00:40,180
+8
+00:00:19,733 --> 00:00:21,193
 Seven ideas.
 
-17
-00:00:40,200 --> 00:00:40,982
+9
+00:00:21,233 --> 00:00:22,619
 No formulas.
 
-18
-00:00:41,002 --> 00:00:41,858
-Let's begin.
+10
+00:00:22,659 --> 00:00:24,621
+So simple, it feels illegal.
 
-19
-00:00:42,967 --> 00:00:43,219
-One.
+11
+00:00:25,633 --> 00:00:28,178
+One. Interest on interest.
 
-20
-00:00:43,239 --> 00:00:44,719
-Interest on interest.
+12
+00:00:28,800 --> 00:00:32,350
+Say you have €100, and it grows 10% a year.
 
-21
-00:00:45,567 --> 00:00:47,112
-Say you have €100,
-
-22
-00:00:47,132 --> 00:00:48,867
-and it grows 10% a year.
-
-23
-00:00:49,167 --> 00:00:51,833
+13
+00:00:32,600 --> 00:00:35,517
 After one year, you have €110.
 
-24
-00:00:52,500 --> 00:00:55,525
+14
+00:00:36,267 --> 00:00:39,542
 Next year, you don't earn 10% on €100.
 
-25
-00:00:55,545 --> 00:00:57,717
+15
+00:00:39,582 --> 00:00:41,993
 You earn it on €110.
 
-26
-00:00:58,200 --> 00:01:00,662
+16
+00:00:42,033 --> 00:00:44,745
 Your interest starts earning its own interest.
 
-27
-00:01:01,500 --> 00:01:02,331
+17
+00:00:45,400 --> 00:00:46,797
 It's a snowball.
 
-28
-00:01:02,351 --> 00:01:03,785
+18
+00:00:46,837 --> 00:00:48,601
 Small at the top of the hill.
 
-29
-00:01:03,805 --> 00:01:04,952
+19
+00:00:48,641 --> 00:00:50,123
 Huge at the bottom.
 
-30
-00:01:05,233 --> 00:01:06,873
+20
+00:00:50,167 --> 00:00:52,055
 Same snow, same slope.
 
-31
-00:01:06,893 --> 00:01:08,835
+21
+00:00:52,095 --> 00:00:54,341
 The only thing that changed is time.
 
-32
-00:01:09,967 --> 00:01:10,197
-Two.
+22
+00:00:55,367 --> 00:00:58,044
+Two. The rule of 72.
 
-33
-00:01:10,217 --> 00:01:11,739
-The rule of 72.
-
-34
-00:01:12,633 --> 00:01:14,793
+23
+00:00:58,733 --> 00:01:01,156
 Want to know how fast your money doubles?
 
-35
-00:01:14,813 --> 00:01:17,407
+24
+00:01:01,196 --> 00:01:03,983
 Divide 72 by the yearly return.
 
-36
-00:01:17,900 --> 00:01:19,230
-At 7% a year,
+25
+00:01:04,200 --> 00:01:08,826
+At 7% a year, 72 divided by 7 is about 10.
 
-37
-00:01:19,250 --> 00:01:22,145
-72 divided by 7 is about 10.
-
-38
-00:01:22,165 --> 00:01:24,676
+26
+00:01:08,866 --> 00:01:11,542
 Your money doubles roughly every ten years.
 
-39
-00:01:25,433 --> 00:01:30,732
-So €10,000 becomes €20,000, then €40,000, then €80,000.
+27
+00:01:12,100 --> 00:01:16,970
+So €10,000 becomes about €20,000, then €39,000,
 
-40
-00:01:31,133 --> 00:01:32,530
-Each doubling is bigger than
+28
+00:01:17,010 --> 00:01:20,797
+then €76,000, the number from the start.
 
-41
-00:01:32,550 --> 00:01:33,724
-all the ones before it.
+29
+00:01:20,867 --> 00:01:23,707
+Each doubling is bigger than all the ones before it.
 
-42
-00:01:35,033 --> 00:01:35,395
-Three.
+30
+00:01:24,900 --> 00:01:27,132
+Three. Time beats money.
 
-43
-00:01:35,415 --> 00:01:36,546
-Time beats money.
-
-44
-00:01:37,467 --> 00:01:38,747
+31
+00:01:27,800 --> 00:01:29,323
 Meet Anna and Ben.
 
-45
-00:01:38,767 --> 00:01:42,214
+32
+00:01:29,363 --> 00:01:33,254
 Both invest €200 a month, at 7% a year.
 
-46
-00:01:42,667 --> 00:01:44,302
+33
+00:01:33,400 --> 00:01:35,372
 Anna starts at 25.
 
-47
-00:01:44,322 --> 00:01:46,017
+34
+00:01:35,412 --> 00:01:37,409
 Ben starts at 35.
 
-48
-00:01:46,037 --> 00:01:47,561
+35
+00:01:37,449 --> 00:01:39,392
 Both stop at 65.
 
-49
-00:01:48,267 --> 00:01:50,772
+36
+00:01:40,067 --> 00:01:42,788
 Ben puts in €72,000.
 
-50
-00:01:50,792 --> 00:01:54,075
+37
+00:01:42,828 --> 00:01:46,324
 He ends with about €244,000.
 
-51
-00:01:54,533 --> 00:01:57,268
+38
+00:01:46,567 --> 00:01:49,513
 Anna puts in only €24,000 more.
 
-52
-00:01:57,288 --> 00:02:00,936
+39
+00:01:49,553 --> 00:01:53,242
 She ends with about €525,000.
 
-53
-00:02:01,600 --> 00:02:04,075
-Ten extra years more than doubled her money.
+40
+00:01:53,467 --> 00:01:56,222
+Even if Ben doubles it to €400 a month,
 
-54
-00:02:04,095 --> 00:02:06,195
+41
+00:01:56,262 --> 00:01:59,959
+he ends with about €488,000.
+
+42
+00:01:59,999 --> 00:02:01,603
+Still less than Anna.
+
+43
+00:02:02,367 --> 00:02:05,244
+Anna ends with more than twice as much as Ben.
+
+44
+00:02:05,284 --> 00:02:07,521
 Starting early beats starting big.
 
-55
-00:02:07,333 --> 00:02:07,638
-Four.
+45
+00:02:08,600 --> 00:02:10,785
+Four. The boring years.
 
-56
-00:02:07,658 --> 00:02:08,813
-The boring years.
-
-57
-00:02:09,767 --> 00:02:11,622
+46
+00:02:11,467 --> 00:02:13,559
 Here's why most people give up.
 
-58
-00:02:11,642 --> 00:02:14,062
+47
+00:02:13,599 --> 00:02:15,932
 After ten years of €200 a month,
 
-59
-00:02:14,082 --> 00:02:16,635
+48
+00:02:15,972 --> 00:02:18,971
 Anna has about €35,000.
 
-60
-00:02:17,000 --> 00:02:20,080
+49
+00:02:19,033 --> 00:02:22,210
 Only about €11,000 of that is growth.
 
-61
-00:02:20,100 --> 00:02:21,961
+50
+00:02:22,250 --> 00:02:24,386
 It feels like nothing is happening.
 
-62
-00:02:22,733 --> 00:02:24,083
-But around year 11,
+51
+00:02:25,000 --> 00:02:27,445
+But around year 11, something flips.
 
-63
-00:02:24,103 --> 00:02:25,737
-the growth in a single year becomes
+52
+00:02:27,485 --> 00:02:28,675
+One year of growth beats
 
-64
-00:02:25,757 --> 00:02:28,113
-bigger than everything she puts in that year.
+53
+00:02:28,715 --> 00:02:30,637
+everything she puts in that year.
 
-65
-00:02:28,400 --> 00:02:30,355
+54
+00:02:30,900 --> 00:02:33,126
 After that, the curve bends upward.
 
-66
-00:02:30,375 --> 00:02:32,358
+55
+00:02:33,166 --> 00:02:35,384
 The boring part was the foundation.
 
-67
-00:02:33,600 --> 00:02:33,883
-Five.
+56
+00:02:36,467 --> 00:02:39,082
+Five. It works against you too.
 
-68
-00:02:33,903 --> 00:02:35,467
-It works against you too.
-
-69
-00:02:36,467 --> 00:02:38,985
+57
+00:02:39,767 --> 00:02:42,527
 Compound interest doesn't care which side you're on.
 
-70
-00:02:39,367 --> 00:02:40,821
-Some credit cards and store
+58
+00:02:42,567 --> 00:02:46,177
+Store credit and credit cards can charge 20% a year.
 
-71
-00:02:40,841 --> 00:02:43,155
-credit charge around 20% a year.
+59
+00:02:46,867 --> 00:02:50,215
+At 20%, a debt doubles in less than four years.
 
-72
-00:02:43,967 --> 00:02:45,762
-At 20%, a debt doubles
-
-73
-00:02:45,782 --> 00:02:47,202
-in less than four years.
-
-74
-00:02:47,222 --> 00:02:50,012
+60
+00:02:50,255 --> 00:02:53,165
 That's the rule of 72, working for the bank.
 
-75
-00:02:50,300 --> 00:02:53,145
+61
+00:02:53,367 --> 00:02:56,346
 So before you invest, pay off expensive debt.
 
-76
-00:02:53,165 --> 00:02:55,155
+62
+00:02:56,386 --> 00:02:58,637
 It's the best return you'll ever get.
 
-77
-00:02:56,233 --> 00:02:56,510
-Six.
+63
+00:02:59,733 --> 00:03:02,181
+Six. Fees compound too.
 
-78
-00:02:56,530 --> 00:02:57,912
-Fees compound too.
-
-79
-00:02:58,700 --> 00:03:01,675
+64
+00:03:02,833 --> 00:03:06,078
 A fee of 1.8% a year sounds tiny.
 
-80
-00:03:01,695 --> 00:03:02,546
+65
+00:03:06,118 --> 00:03:07,220
 It isn't.
 
-81
-00:03:03,000 --> 00:03:05,535
+66
+00:03:07,800 --> 00:03:10,340
 €200 a month for 30 years:
 
-82
-00:03:05,555 --> 00:03:11,040
+67
+00:03:10,380 --> 00:03:15,591
 with fees of 0.2%, about €235,000.
 
-83
-00:03:11,060 --> 00:03:15,319
+68
+00:03:15,631 --> 00:03:20,099
 With 1.8%, about €173,000.
 
-84
-00:03:16,133 --> 00:03:17,138
+69
+00:03:20,667 --> 00:03:21,994
 Same money in.
 
-85
-00:03:17,158 --> 00:03:19,468
-Over €60,000 less out.
+70
+00:03:22,034 --> 00:03:24,676
+About €62,000 less out.
 
-86
-00:03:19,488 --> 00:03:22,056
+71
+00:03:24,716 --> 00:03:27,778
 The fee compounds against you, every single year.
 
-87
-00:03:23,200 --> 00:03:23,680
-Seven.
+72
+00:03:28,867 --> 00:03:32,319
+Seven. Inflation is compounding in reverse.
 
-88
-00:03:23,700 --> 00:03:25,947
-Inflation is compounding in reverse.
-
-89
-00:03:26,767 --> 00:03:28,732
+73
+00:03:33,067 --> 00:03:35,302
 Prices rise a little every year.
 
-90
-00:03:28,752 --> 00:03:31,427
+74
+00:03:35,342 --> 00:03:38,267
 The European Central Bank aims for 2%.
 
-91
-00:03:31,833 --> 00:03:33,368
+75
+00:03:38,467 --> 00:03:39,972
 At 2% inflation,
 
-92
-00:03:33,388 --> 00:03:35,348
-money sitting in cash loses almost
+76
+00:03:40,012 --> 00:03:43,153
+cash loses about 45% of its buying power
 
-93
-00:03:35,368 --> 00:03:37,657
-half its buying power in 30 years.
+77
+00:03:43,193 --> 00:03:44,427
+in 30 years.
 
-94
-00:03:38,367 --> 00:03:41,452
-That's why long-term money usually can't just sit still.
+78
+00:03:45,067 --> 00:03:47,619
+The same goes for every number in this video.
 
-95
-00:03:41,472 --> 00:03:47,982
-Over the last 125 years, global stocks grew about 5% a year faster than inflation,
+79
+00:03:47,659 --> 00:03:48,732
+In today's money,
 
-96
-00:03:48,002 --> 00:03:48,737
-on average.
+80
+00:03:48,772 --> 00:03:54,056
+that €76,000 from the start is worth about €42,000.
 
-97
-00:03:49,067 --> 00:03:49,957
-Not every year.
+81
+00:03:54,096 --> 00:03:56,205
+Still four times what went in.
 
-98
-00:03:49,977 --> 00:03:51,377
+82
+00:03:56,767 --> 00:03:59,317
+That's why long-term money can't just sit still.
+
+83
+00:03:59,357 --> 00:04:01,757
+Over the last 125 years,
+
+84
+00:04:01,797 --> 00:04:04,112
+global stocks grew about 5%
+
+85
+00:04:04,152 --> 00:04:05,677
+a year faster than inflation,
+
+86
+00:04:05,717 --> 00:04:08,231
+on average. Not every year.
+
+87
+00:04:08,271 --> 00:04:09,877
 Some years were terrible.
 
-99
-00:03:51,397 --> 00:03:53,866
+88
+00:04:09,917 --> 00:04:12,624
 But over decades, time did the heavy lifting.
 
-100
-00:03:55,067 --> 00:03:56,246
+89
+00:04:13,700 --> 00:04:15,129
 Final message.
 
-101
-00:03:57,333 --> 00:03:59,198
+90
+00:04:15,767 --> 00:04:18,027
 Compound interest isn't magic.
 
-102
-00:03:59,218 --> 00:04:01,463
+91
+00:04:18,067 --> 00:04:20,387
 It's just patience, written in maths.
 
-103
-00:04:02,333 --> 00:04:03,020
+92
+00:04:21,067 --> 00:04:22,324
 Start early.
 
-104
-00:04:03,040 --> 00:04:04,203
+93
+00:04:22,364 --> 00:04:24,192
 Start small if you have to.
 
-105
-00:04:04,223 --> 00:04:05,283
+94
+00:04:24,232 --> 00:04:25,589
 Keep fees low.
 
-106
-00:04:05,303 --> 00:04:06,684
+95
+00:04:25,629 --> 00:04:27,391
 Kill expensive debt.
 
-107
-00:04:07,433 --> 00:04:08,838
+96
+00:04:28,000 --> 00:04:29,756
 And then, the hardest part:
 
-108
-00:04:08,858 --> 00:04:10,657
+97
+00:04:29,796 --> 00:04:31,880
 do nothing, for a very long time.
 
-109
-00:04:11,500 --> 00:04:14,160
+98
+00:04:32,667 --> 00:04:35,522
 This is education, not financial advice.
 
-110
-00:04:14,180 --> 00:04:16,865
+99
+00:04:35,562 --> 00:04:38,262
 The numbers here are examples, not promises.
 
-111
-00:04:16,885 --> 00:04:18,585
+100
+00:04:38,302 --> 00:04:40,070
 If this helped, subscribe.
 
-112
-00:04:18,605 --> 00:04:18,835
-Next up:
-
-113
-00:04:18,855 --> 00:04:21,946
-how to save money so easily it feels illegal.
+101
+00:04:40,110 --> 00:04:43,945
+Next up: how to save money so easily it feels illegal.

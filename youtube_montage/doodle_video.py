@@ -77,26 +77,58 @@ def pauses(v, win=0.01, thr=0.012, min_len=0.09):
 
 
 cl = lambda w: w.replace("*", "")
+BREAK_BEFORE = set("and but or so because that which who when if while than to for with without in on at by from into after "
+                   "before until unless then instead".split())
+NO_BREAK_AFTER = set("a an the your my our their his her its this these those of to in on at by for from with and or very more less most "
+                     "least every each no not almost nearly about around just only over under per one two three store credit".split())
+KEEP = ["buy now, pay later"]
 
 
-def chunks(sub, mx=9):
-    sents, cur = [], []
+def sentences(sub):
+    """Split on . ? ! : followed by a space (decimals like 1.8% stay whole)."""
+    out, cur = [], []
     for w in sub.split():
         cur.append(w)
         if cl(w)[-1:] in ".:?!":
-            sents.append(cur)
+            out.append(" ".join(cur))
             cur = []
     if cur:
-        sents.append(cur)
-    out = []
-    for s in sents:
-        while len(s) > mx:
-            cut = next((j + 1 for j in range(len(s) // 2, len(s) - 2) if cl(s[j]).endswith(",")), None) or \
-                next((j + 1 for j in range(len(s) // 2, 1, -1) if cl(s[j]).endswith(",")), None) or len(s) // 2
-            out.append(s[:cut])
-            s = s[cut:]
-        out.append(s)
-    return [" ".join(c) for c in out]
+        out.append(" ".join(cur))
+    return out
+
+
+def _split(ws, keep, mx=14, mc=52):
+    if len(ws) <= mx and len(" ".join(ws)) <= mc or len(ws) < 4:
+        return [ws]
+    tot = len(" ".join(ws))
+    low = " ".join(ws).lower()
+    prot = set()
+    for ph in keep:
+        k0 = low.find(ph)
+        if k0 >= 0:
+            a = len(low[:k0].split())
+            prot |= set(range(a + 1, a + len(ph.split())))
+    best, bj = None, None
+    for j in range(2, len(ws) - 1):
+        left = len(" ".join(ws[:j]))
+        sc = abs(left - (tot - left)) / tot
+        prev, nxt = cl(ws[j - 1]).lower(), cl(ws[j]).lower().strip("\"“”(")
+        if prev.endswith((",", ";", "—")):
+            sc -= 0.7
+        if nxt in BREAK_BEFORE:
+            sc -= 0.3
+        if prev.rstrip(",") in NO_BREAK_AFTER:
+            sc += 1.0
+        if j in prot:
+            sc += 5
+        if best is None or sc < best:
+            best, bj = sc, j
+    return _split(ws[:bj], keep, mx, mc) + _split(ws[bj:], keep, mx, mc)
+
+
+def chunks(sub, keep=KEEP):
+    """Caption chunks: sentences, long ones split where a reader would breathe (comma, before 'and', 'to'...), never inside a kept phrase."""
+    return [" ".join(c) for snt in sentences(sub) for c in _split(snt.split(), keep)]
 
 
 class Scene:
@@ -146,19 +178,39 @@ def chapter(S, n, title, side, peek=True):
     else:
         nx, tx, anchor = 1560 + r.randint(-40, 30), 1250 + r.randint(-30, 20), "r"
     ny = 640 + r.randint(-40, 30)
-    S.add(T(str(n), nx, ny, 420, ORANGE, at=0.02, anchor="m", rot=rot, cps=6), snd="thump", at=0.02)
+    S.add(T(str(n), nx, ny, 420, ORANGE, at=0.02, anchor="m", rot=rot, cps=6))
     S.add(circ(nx + 4, ny - 150, 175 + r.randint(-10, 10), 200 + r.randint(-10, 15), 0.3, INK, 6.5, 0.42, seed=n))
     words = title.split("\n")
     first = re.sub(r"[^\w€%'-]", "", title.split()[0]).lower()
     t_at = S.c(first) - 0.05
     ty = 520 + r.randint(-30, 20) - (len(words) - 1) * 60
-    tf = S.text(title, tx, ty, 118, INK, at=t_at, anchor=anchor, rot=r.uniform(-2.5, 1.5), cps=30)
-    x0 = tx if anchor == "l" else tx - tf.w
-    S.add(under(x0 + 10, x0 + min(tf.w, 520), ty + (len(words) - 1) * 127 + 40, tf.end + 0.1, ORANGE, 8, 0.3, seed=n, wavy=n % 2 == 0))
+    tf = S.text(title, tx, ty, 118, INK, at=t_at, anchor=anchor, rot=r.uniform(-2.5, 1.5), cps=46)
+    lw = min(line_w(words[-1], 118), 560)
+    x0 = tx if anchor == "l" else tx - lw
+    S.add(under(x0 + 10, x0 + lw - 10, ty + (len(words) - 1) * 127 + 40, tf.end + 0.1, ORANGE, 8, 0.3, seed=n, wavy=n % 2 == 0))
     if peek:
         fx = (1650 if side == 0 else 280) + r.randint(-40, 40)
         S.add(Fig(fx, 1300, 1.3, at=0.25, poses=[("stand", 0), ("wave", 0.6)], moods=[("smile", 0), ("happy", 1.0)],
                   enter="pop", seed=n + 40, flip=side == 1))
+
+
+def endcard(S, next_title, note="education, not financial advice."):
+    """End screen drawn as soon as the last line starts, laid out for YouTube's elements: a round subscribe target on the left
+    (the channel avatar is a circle), a 16:9 video box on the right. Not auto-framed, so the boxes stay where the notes say."""
+    S.noframe = True
+    t0 = S.l(0)
+    S.text(note, 130, 150, 76, INK, at=t0 + 0.1, lh=1.1)
+    sx, sy, r = 470, 540, 125
+    S.draw([Fl(P_ell(sx, sy, r, r, 1, closed=True), ORANGE), stk(P_ell(sx, sy, r, r, 3, 0.06), 8)], t0 + 0.4, 0.45)
+    S.draw([stk(P_line(sx - 45, sy, sx + 45, sy, 0.02, 1), 11), stk(P_line(sx, sy - 45, sx, sy + 45, 0.02, 2), 11)], t0 + 0.8, 0.25, snd=None)
+    S.text("subscribe", sx, sy + r + 95, 80, INK, at=t0 + 0.9, anchor="m")
+    S.add(circ(sx, sy, r + 40, r + 40, S.c("subscribe") + 0.1, INK, 6, 0.4, seed=5))
+    vx, vy, vw, vh = 1290, 540, 720, 405
+    S.draw([Fl(P_rect(vx - vw / 2, vy - vh / 2, vw, vh, 0, r=14), (250, 248, 242)), stk(P_rect(vx - vw / 2, vy - vh / 2, vw, vh, 8, r=14), 7)],
+           t0 + 1.2, 0.5)
+    S.text("next:", vx - vw / 2 + 10, vy - vh / 2 - 30, 70, GREY, at=t0 + 1.5)
+    S.text(next_title, vx, vy - 10, 76, INK, at=t0 + 1.8, anchor="m")
+    S.add(Fig(850, 990, 0.95, at=0.0, poses=[("stand", 0), ("point_r", S.c("next") + 0.1)], moods=[("smile", 0), ("happy", S.c("subscribe"))], seed=3))
 
 
 def flow(S, items, y, at_list, x0=260, gap=520, hi=None, label_size=76):
@@ -239,8 +291,9 @@ def laptop(x, y, s=1.0):
 
 
 class Video:
-    def __init__(self, slug, say=None, voice_speed=0.95, keys=None, hush=(), tape=None, seed=0, beat_groups=("o4",)):
+    def __init__(self, slug, say=None, voice_speed=0.95, keys=None, hush=(), tape=None, seed=0, beat_groups=("o4",), keep=()):
         self.slug, self.SAY, self.speed, self.seed = slug, dict(say or {}), voice_speed, seed
+        self.keep = KEEP + [k.lower() for k in keep]
         self.keys = dict(prog=[(53, 57, 60, 64), (52, 55, 59, 62), (50, 53, 57, 60), (48, 52, 55, 59)], roots=[41, 40, 38, 36], bpm=80)
         self.keys.update(keys or {})
         self.hush, self.tape, self.beat_groups = list(hush), tape, set(beat_groups)
@@ -276,15 +329,32 @@ class Video:
             self.SCENES[f"c{n}"] = f
 
     # ------------------------------------------------------------------ voice, timing, cues
-    def tts(self, i, text):
-        raw, out = os.path.join(self.A, "voice", f"l{i:02d}_raw.wav"), os.path.join(self.A, "voice", f"l{i:02d}.wav")
-        kokoro_say(text, raw, speed=self.speed)
-        if not (os.path.exists(out) and os.path.getmtime(out) >= os.path.getmtime(raw)):
-            run(["ffmpeg", "-y", "-i", raw, "-af",
-                 "silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse",
-                 "-ar", str(SR), "-ac", "1", out])
-        with wave.open(out) as w:
-            return np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768
+    def tts(self, i, sub):
+        """One Kokoro take per sentence, trimmed, 30 ms fades on both ends, joined with a breath. The sentence spans are kept,
+        so captions and drawing cues land on what is actually being said."""
+        parts, spans, t = [], [], 0.0
+        for k, snt in enumerate(sentences(sub)):
+            raw, out = os.path.join(self.A, "voice", f"l{i:02d}s{k}_raw.wav"), os.path.join(self.A, "voice", f"l{i:02d}s{k}.wav")
+            kokoro_say(self.speak(snt), raw, speed=self.speed)
+            if not (os.path.exists(out) and os.path.getmtime(out) >= os.path.getmtime(raw)):
+                run(["ffmpeg", "-y", "-i", raw, "-af",
+                     "silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse",
+                     "-ar", str(SR), "-ac", "1", out])
+            with wave.open(out) as w:
+                v = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768
+            f = min(int(0.03 * SR), len(v) // 4)
+            v = v.copy()
+            v[:f] *= np.linspace(0, 1, f)
+            v[-f:] *= np.linspace(1, 0, f)
+            if parts:
+                gap = 0.24 if spans[-1][2].rstrip("*")[-1:] == ":" else 0.34
+                parts.append(np.zeros(int(gap * SR), np.float32))
+                t += gap
+            spans.append((t, t + len(v) / SR, snt))
+            parts.append(v)
+            t += len(v) / SR
+        self.SPANS[i] = spans
+        return np.concatenate(parts)
 
     def gap_for(self, i):
         rr = random.Random(i * 7919 + 3 + self.seed)
@@ -292,18 +362,20 @@ class Video:
         if i + 1 >= len(L_):
             return 0.0
         same = self.GI[i + 1] == self.GI[i]
-        g = 0.42 if same else 0.78
+        g = 0.42 if same else 0.95
         if CHAP.match(L_[i]["g"]):
             g = 0.95
         if CHAP.match(L_[i + 1]["g"]) or L_[i + 1]["g"] == "f0":
             g += 0.45
-        if L_[i]["g"] in self.beat_groups or L_[i]["g"] == "f0":
+        if L_[i]["g"] in self.beat_groups:
             g += 0.5
+        if L_[i]["g"] == "f0":
+            g += 0.1
         if len(L_[i]["sub"].split()) <= 5:
             g -= 0.08
         return max(0.3, g + rr.uniform(-0.12, 0.14))
 
-    def prepare(self, lead=0.6, tail=3.2):
+    def prepare(self, lead=0.25, tail=12.5):
         if self.ready:
             return
         L_ = self.LINES
@@ -315,7 +387,8 @@ class Video:
                 self.GROUPS.append((l["g"], []))
             self.GROUPS[-1][1].append(i)
         self.GI = {i: gk for gk, (g, idx) in enumerate(self.GROUPS) for i in idx}
-        self.voice = [self.tts(i, l["tts"]) for i, l in enumerate(L_)]
+        self.SPANS = {}
+        self.voice = [self.tts(i, l["sub"]) for i, l in enumerate(L_)]
         self.frames, self.starts, t = [], [], 0.0
         for i, v in enumerate(self.voice):
             n = round((len(v) / SR + self.gap_for(i) + (lead if i == 0 else 0) + (tail if i == len(L_) - 1 else 0)) * FPS)
@@ -333,42 +406,191 @@ class Video:
         write_wav(os.path.join(self.A, "voice.wav"), vt)
         self.WT = [self.word_times(i) for i in range(len(L_))]
         self.SC = []
+        import doodle as _dd
         for gk in range(len(self.GROUPS)):
             sc = Scene(self, gk)
             if sc.name not in self.SCENES:
                 raise KeyError(f"no scene for group {sc.name}")
+            _dd.REG = []
             self.SCENES[sc.name](sc)
+            sc.texts, _dd.REG = _dd.REG, None
             self.SC.append(sc)
         for gk, sc in enumerate(self.SC):                 # a slow push-in on some drawings, never the same twice
             r = random.Random(gk * 5 + 2 + self.seed)
             if sc.name in self.beat_groups:
                 continue
             if r.random() < 0.38 and sc.dur > 3.5:
-                sc.push(r.uniform(0.03, 0.075), W / 2 + r.uniform(-300, 300), H / 2 + r.uniform(-150, 150))
+                sc.push(r.uniform(0.03, 0.06), W / 2 + r.uniform(-300, 300), H / 2 + r.uniform(-150, 150))
+        self.autoframe()
+        self.LAG = [0.0]
+        for g, sc in enumerate(self.SC[1:], 1):
+            lag = 0.0
+            if not CHAP.match(sc.name):
+                for st in np.arange(0.0, 0.6, 1 / STEP_FPS):
+                    if self._ink(sc, st, q=8).mean() >= 0.004:
+                        break
+                    lag = st + 1 / STEP_FPS
+            self.LAG.append(min(lag, 0.6))
         self.GSTART = [sc.t0 for sc in self.SC]
         self.NF = sum(self.frames)
         self.ready = True
+
+    def _ink(self, sc, t, frame=True, q=4):
+        """Ink mask of a scene at time t (no paper, no handheld drift), at 1/q resolution."""
+        w, h = W // q, H // q
+        surf = cairo.ImageSurface(cairo.FORMAT_RGB24, w, h)
+        ctx = cairo.Context(surf)
+        ctx.set_source_rgb(1, 1, 1)
+        ctx.paint()
+        ctx.scale(1 / q, 1 / q)
+        fs, fx, fy = sc.cam.frame if frame else (1.0, 0, 0)
+        if fs != 1.0:
+            ctx.translate(fx, fy)
+            ctx.scale(fs, fs)
+            ctx.translate(-fx, -fy)
+        ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+        tq = math.floor(t * STEP_FPS + 1e-6) / STEP_FPS
+        for fn in sc.els:
+            fn(ctx, tq)
+        surf.flush()
+        a = np.frombuffer(surf.get_data(), np.uint8).reshape(h, w, 4)[..., :3]
+        return a.min(axis=2) < 200
+
+    def autoframe(self):
+        """Frame every drawing like a camera operator would: sparse pages are scaled up (up to 1.38x) about a point that keeps
+        their off-centre layout, anything outside the title-safe area is pulled back in. Things that bleed off an edge on
+        purpose (a figure peeking in) stay bleeding. Chapter cards and scenes that set S.noframe are left alone."""
+        q = 4
+        for sc in self.SC:
+            if getattr(sc, "noframe", False) or CHAP.match(sc.name):
+                continue
+            m = np.zeros((H // q, W // q), bool)
+            for u in (0.3, 0.5, 0.7, 0.85, 0.97):
+                m |= self._ink(sc, sc.dur * u, frame=False, q=q)
+            cols, rows = np.where(m.sum(0) >= 2)[0], np.where(m.sum(1) >= 2)[0]
+            if len(cols) < 3 or len(rows) < 3:
+                continue
+            x0, x1, y0, y1 = cols[0] * q, (cols[-1] + 1) * q, rows[0] * q, (rows[-1] + 1) * q
+            A, B, Av, Bv = 96, W - 96, 64, 1000
+            if x0 <= 8:
+                A, x0 = 0, 0
+            if x1 >= W - 8:
+                B, x1 = W, W
+            if y0 <= 8:
+                Av, y0 = 0, 0
+            if y1 >= H - 8:
+                Bv, y1 = H, H
+            s_ = clamp(min((B - A) / max(1, x1 - x0), (Bv - Av) / max(1, y1 - y0)), 0.95, 1.38)
+            if abs(s_ - 1) < 0.03:
+                continue
+
+            def fixed(a0, a1, lo, hi):
+                den = (hi - lo) - (a1 - a0)
+                return (a0 + a1) / 2 if abs(den) < 1 else (a0 * hi - a1 * lo) / den
+            fx, fy = fixed(x0, x1, A, B), fixed(y0, y1, Av, Bv)
+
+            def text_out(k):        # a zoom must never push a label into YouTube's caption band or past the side margins
+                for tx in sc.texts:
+                    sz, w = tx["size"] * k, tx["w"] * k
+                    X, Y = fx + k * (tx["x"] - fx), fy + k * (tx["y"] - fy)
+                    xl = X - (w / 2 if tx["anchor"] == "m" else (w if tx["anchor"] == "r" else 0))
+                    if Y + sz * (tx["n"] - 1) * tx["lh"] + 0.28 * sz > 890 or xl < 90 or xl + w > W - 90:
+                        return True
+                return False
+            while s_ > 1.0 and text_out(s_):
+                s_ = max(1.0, s_ - 0.02)
+            sc.cam.frame = (s_, fx, fy)
+
+    def audit(self):
+        """What the critics kept finding, measured: pages that stay (nearly) empty while the voice talks, text too small or too
+        pale for a phone, text in YouTube's caption band or off the safe area, labels that finish writing < 1 s before the cut."""
+        rep, q = [], 4
+        for sc in self.SC:
+            fs, fx, fy = sc.cam.frame
+            rep.append(f"== {sc.name}  t0={sc.t0:.1f}s  dur={sc.dur:.1f}s  frame x{fs:.2f}")
+            for k, li in enumerate(sc.li):
+                l0 = self.line_times[li][0] - sc.t0
+                ink, first = [], None
+                for st in np.arange(0.0, 3.01, 0.2):
+                    v = self._ink(sc, l0 + st, q=q).mean()
+                    ink.append(v)
+                    if first is None and v >= 0.02:
+                        first = st
+                flag = ""
+                if first is None or first > 1.0:
+                    flag = f"  <-- DEAD PAGE {('>3' if first is None else f'{first:.1f}')}s after the line starts (ink {ink[2] * 100:.1f}%)"
+                tc = self.line_times[li][0]
+                rep.append(f"   line {li} @{int(tc // 60)}:{tc % 60:04.1f} ink@0.4s={ink[2] * 100:.1f}%{flag}  | {self.LINES[li]['sub'][:70]}")
+            # "never more than ~4 s without something new" (motion-graphics rule, loosened for long-form): coarse occupancy grid,
+            # so line boil and handheld drift don't count, only things appearing, leaving or moving
+            occ, ev = None, [0.0]
+            for st in np.arange(0.0, sc.dur, 0.5):
+                m = self._ink(sc, st, q=q)
+                h_, w_ = m.shape[0] // 4 * 4, m.shape[1] // 4 * 4
+                o = m[:h_, :w_].reshape(h_ // 4, 4, w_ // 4, 4).any(axis=(1, 3))
+                if occ is not None and (o ^ occ).sum() >= 8:
+                    ev.append(st)
+                occ = o
+            ev.append(sc.dur)
+            for a_, b_ in zip(ev[:-1], ev[1:]):
+                talk = sum(max(0.0, min(b_, self.line_times[li][1] - sc.t0) - max(a_, self.line_times[li][0] - sc.t0)) for li in sc.li)
+                if b_ - a_ > 4.0 and talk > 3.0:
+                    tc = sc.t0 + a_
+                    rep.append(f"   STATIC {b_ - a_:.1f}s from @{int(tc // 60)}:{tc % 60:04.1f} with the voice talking: add a new element or a beat")
+            for tx in sc.texts:
+                sz = tx["size"] * fs
+                X = fx + fs * (tx["x"] - fx)
+                Y = fy + fs * (tx["y"] - fy)
+                w = tx["w"] * fs
+                xl = X - (w / 2 if tx["anchor"] == "m" else (w if tx["anchor"] == "r" else 0))
+                ybot = Y + sz * (tx["n"] - 1) * tx["lh"] + 0.28 * sz
+                ytop = Y - 0.75 * sz
+                fl = []
+                if sz < 58:
+                    fl.append(f"SMALL({sz:.0f}px)")
+                if tx["col"] == GREY and sz < 70:
+                    fl.append("GREY-SMALL")
+                if xl < 90 or xl + w > W - 90 or ytop < 50:
+                    fl.append("EDGE")
+                if ybot > 890:
+                    fl.append("CAPTION-BAND")
+                hold = (tx["until"] if tx["until"] is not None else sc.dur) - tx["end"]
+                if hold < 1.0:
+                    fl.append(f"SHORT-HOLD({hold:.1f}s)")
+                if fl:
+                    rep.append(f"   text {tx['text'][:40]!r:44} {' '.join(fl)}")
+        qd = os.path.join(D, f"qa_{self.slug}")
+        os.makedirs(qd, exist_ok=True)
+        open(os.path.join(qd, "audit.txt"), "w").write("\n".join(rep) + "\n")
+        dead = sum("DEAD PAGE" in r for r in rep)
+        static = sum("STATIC" in r for r in rep)
+        texts = sum(r.startswith("   text") for r in rep)
+        print(f"audit: {dead} dead-page lines, {static} static stretches, {texts} flagged texts -> {os.path.join(qd, 'audit.txt')}", flush=True)
 
     def slen(self, w):
         k = cl(w).rstrip(".,:?!")
         return len(self.SAY.get(k, k)) + 1
 
     def timed_chunks(self, i):
-        parts = chunks(self.LINES[i]["sub"])
-        t0, t1 = self.line_times[i]
-        lens = [sum(self.slen(w) for w in p.split()) for p in parts]
-        ps = [t0 + p for p in pauses(self.voice[i])]
-        bounds, acc = [t0], t0
-        for k, n in enumerate(lens[:-1]):
-            acc += (t1 - t0) * n / sum(lens)
-            b = acc
-            if cl(parts[k])[-1:] in ".,:?!" and ps:
-                near = min(ps, key=lambda p: abs(p - acc))
-                if abs(near - acc) < 0.7:
-                    b = near
-            bounds.append(max(b, bounds[-1] + 0.25))
-        bounds.append(t1)
-        return list(zip(parts, bounds[:-1], bounds[1:]))
+        t0 = self.line_times[i][0]
+        ps_all = pauses(self.voice[i])
+        out = []
+        for a, b, snt in self.SPANS[i]:
+            parts = chunks(snt, self.keep)
+            lens = [sum(self.slen(w) for w in p.split()) for p in parts]
+            ps = [p for p in ps_all if a + 0.15 < p < b - 0.15]
+            bounds, acc = [a], a
+            for k, n in enumerate(lens[:-1]):
+                acc += (b - a) * n / sum(lens)
+                bnd = acc
+                if cl(parts[k])[-1:] in ",;" and ps:
+                    near = min(ps, key=lambda p: abs(p - acc))
+                    if abs(near - acc) < 0.6:
+                        bnd = near
+                bounds.append(max(bnd, bounds[-1] + 0.25))
+            bounds.append(b)
+            out += [(p, t0 + u, t0 + v) for p, u, v in zip(parts, bounds[:-1], bounds[1:])]
+        return out
 
     def word_times(self, i):
         out = []
@@ -396,34 +618,68 @@ class Video:
         def stamp(t):
             ms = int(round(t * 1000))
             return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
-        cues = [(part, a, b) for i in range(len(self.LINES)) for part, a, b in self.timed_chunks(i)]
+        raw = [(part, a, b) for i in range(len(self.LINES)) for part, a, b in self.timed_chunks(i)]
+        cues, k = [], 0
+        while k < len(raw):
+            txt, a, b = raw[k]
+            while b - a < 0.9 and k + 1 < len(raw) and raw[k + 1][1] - b < 0.7 and len(txt) + len(raw[k + 1][0]) < 60:
+                k += 1
+                txt, b = txt + " " + raw[k][0], raw[k][2]
+            cues.append((txt, a, b))
+            k += 1
         out = []
         for c, (part, a, b) in enumerate(cues):
-            end = min(b + 0.05, cues[c + 1][1] - 0.02) if c + 1 < len(cues) else b + 0.05
-            out.append(f"{c + 1}\n{stamp(a)} --> {stamp(end)}\n{part}\n")
+            nxt = cues[c + 1][1] - 0.04 if c + 1 < len(cues) else b + 1.0
+            end = min(max(b + 0.3, a + 1.0), nxt)
+            out.append(f"{c + 1}\n{stamp(a)} --> {stamp(end)}\n{cl(part)}\n")
         open(path, "w").write("\n".join(out))
 
     def _overlay(self, ctx, t):
-        if not hasattr(self, "_nfa"):
-            self._nfa = T("not financial advice · just education", 70, 70, 34, GREY, at=0.4, path=HAND2, cps=60)
-        if t < self.starts[min(3, len(self.starts) - 1)]:
-            self._nfa(ctx, t)
+        """Nothing in the corner any more: the disclaimer is said and written on the end card, and sits in the description."""
+        return
+
+    SLIDE = 0.3
+
+    def _page(self, ctx, sc, tl, paper, PW, PH, dx=0.0):
+        ctx.save()
+        if dx:
+            ctx.rectangle(dx, 0, W - dx, H)
+            ctx.clip()
+            ctx.translate(dx, 0)
+        sc.cam.apply(ctx, tl)
+        ctx.set_source_surface(paper, (W - PW) / 2, (H - PH) / 2)
+        ctx.paint()
+        tq = math.floor(tl * STEP_FPS + 1e-6) / STEP_FPS
+        for fn in sc.els:
+            fn(ctx, tq)
+        ctx.restore()
 
     def frame(self, surf, paper, PW, PH, t):
         g = max(j for j in range(len(self.SC)) if self.GSTART[j] <= t + 1e-6)
         sc = self.SC[g]
         tl = t - sc.t0
-        tq = math.floor(tl * STEP_FPS + 1e-6) / STEP_FPS
         ctx = cairo.Context(surf)
         ctx.set_line_cap(cairo.LINE_CAP_ROUND)
         ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-        ctx.save()
-        sc.cam.apply(ctx, tl)
-        ctx.set_source_surface(paper, (W - PW) / 2, (H - PH) / 2)
-        ctx.paint()
-        for fn in sc.els:
-            fn(ctx, tq)
-        ctx.restore()
+        if g > 0 and CHAP.match(sc.name) and tl < self.SLIDE:
+            # a new sheet slides in from the right, stepped at 15 fps like paper pushed by hand, with a soft shadow on its edge
+            u = math.floor(tl / self.SLIDE * self.SLIDE * 15 + 1e-6) / (self.SLIDE * 15)
+            dx = W * (1 - ease_out(u))
+            prev = self.SC[g - 1]
+            self._page(ctx, prev, min(t - prev.t0, prev.dur), paper, PW, PH)
+            grad = cairo.LinearGradient(dx - 46, 0, dx, 0)
+            grad.add_color_stop_rgba(0, 0, 0, 0, 0)
+            grad.add_color_stop_rgba(1, 0.12, 0.10, 0.08, 0.28)
+            ctx.rectangle(dx - 46, 0, 46, H)
+            ctx.set_source(grad)
+            ctx.fill()
+            self._page(ctx, sc, tl, paper, PW, PH, dx)
+        elif g > 0 and tl < self.LAG[g]:
+            # L-cut (sound first, picture follows): hold the last drawing until the new page has its first marks, never a blank flash
+            prev = self.SC[g - 1]
+            self._page(ctx, prev, min(t - prev.t0, prev.dur + 0.6), paper, PW, PH)
+        else:
+            self._page(ctx, sc, tl, paper, PW, PH)
         self._overlay(ctx, math.floor(t * STEP_FPS) / STEP_FPS)
         surf.flush()
 
@@ -452,17 +708,31 @@ class Video:
         mtof = lambda m: 440 * 2 ** ((m - 69) / 12)
         mr = np.random.default_rng(5 + self.seed)
 
+        def release(x, r=0.35):
+            k = min(len(x), int(r * SR))
+            x[-k:] *= np.cos(np.linspace(0, np.pi / 2, k)) ** 2
+            return x
+
         def keys(f, dur, vel):
             m = int(dur * SR)
             tt = np.arange(m) / SR
-            x = (np.sin(2 * np.pi * f * tt) + 0.3 * np.exp(-tt / 0.35) * np.sin(4 * np.pi * f * tt)
-                 + 0.1 * np.exp(-tt / 0.12) * np.sin(6 * np.pi * f * tt) + 0.04 * np.exp(-tt / 0.04) * np.sin(2 * np.pi * 7.1 * f * tt))
-            return (x * np.exp(-tt / 1.15) * (1 - np.exp(-tt / 0.006)) * (1 + 0.12 * np.sin(2 * np.pi * 4.3 * tt)) * vel).astype(np.float32)
+            x = (np.sin(2 * np.pi * f * tt) + 0.42 * np.exp(-tt / 0.9) * np.sin(4 * np.pi * f * tt)
+                 + 0.22 * np.exp(-tt / 0.5) * np.sin(6 * np.pi * f * tt) + 0.12 * np.exp(-tt / 0.25) * np.sin(8 * np.pi * f * tt)
+                 + 0.04 * np.exp(-tt / 0.04) * np.sin(2 * np.pi * 7.1 * f * tt))
+            return release((x * np.exp(-tt / 1.6) * (1 - np.exp(-tt / 0.006)) * (1 + 0.12 * np.sin(2 * np.pi * 4.3 * tt)) * vel).astype(np.float32))
 
         def bass(f, dur, vel):
             m = int(dur * SR)
             tt = np.arange(m) / SR
-            return ((np.sin(2 * np.pi * f * tt) + 0.2 * np.sin(4 * np.pi * f * tt)) * np.exp(-tt / 0.55) * (1 - np.exp(-tt / 0.01)) * vel).astype(np.float32)
+            return release(((np.sin(2 * np.pi * f * tt) + 0.2 * np.sin(4 * np.pi * f * tt)) * np.exp(-tt / 0.7) * (1 - np.exp(-tt / 0.01)) * vel).astype(np.float32), 0.2)
+
+        def pad(ch, dur, vel):
+            """A quiet held chord an octave up: the bed never drops out, and it sits where phone speakers play."""
+            m = int(dur * SR)
+            tt = np.arange(m) / SR
+            x = sum(np.sin(2 * np.pi * mtof(c + 12) * tt + j) + 0.25 * np.sin(4 * np.pi * mtof(c + 12) * tt) for j, c in enumerate(ch))
+            env = np.minimum(1, tt / 0.5) * np.clip((dur - tt) / 0.6, 0, 1)
+            return (x * env * (1 + 0.08 * np.sin(2 * np.pi * 0.7 * tt)) * vel).astype(np.float32)
 
         def place(x, at):
             i0 = int(at * SR)
@@ -473,40 +743,51 @@ class Video:
         beat = 60 / bpm
         bar = 4 * beat
         hush = [(self.q_at(a) - 0.05, self.q_at(b) - 0.2) for a, b in self.hush]
+        tape = None
         if self.tape:
-            hush.append((self.q_at(self.tape) - 0.05, self.starts[self.LINES.index(next(l for l in self.LINES if l["sub"].startswith(self.tape))) + 1]))
+            ti = self.LINES.index(next(l for l in self.LINES if l["sub"].startswith(self.tape)))
+            tape = (self.q_at(self.tape) - 0.05, self.starts[ti + 1])
         tb, bi = 0.4, 0
         while tb < self.TOTAL:
-            if not any(a - 0.2 <= tb < b for a, b in hush):
-                ch, rt = PROG[bi % len(PROG)], ROOT[bi % len(ROOT)]
-                hj = lambda: mr.uniform(-0.014, 0.014)
-                for j, m_ in enumerate(ch):
-                    place(keys(mtof(m_), 2.6, 0.16 * mr.uniform(0.8, 1.05)), tb + 0.012 * j + hj())
-                if mr.random() < 0.85:
-                    for m_ in ch[2:]:
-                        place(keys(mtof(m_), 1.6, 0.09 * mr.uniform(0.7, 1.0)), tb + 1.5 * beat + hj())
-                if mr.random() < 0.55:
-                    place(keys(mtof(ch[mr.integers(1, len(ch))] + 12), 1.2, 0.07 * mr.uniform(0.7, 1.0)), tb + 3 * beat + hj())
-                if bi >= 2:
-                    place(bass(mtof(rt), 1.4, 0.34), tb + hj())
-                    place(bass(mtof(rt), 1.0, 0.22), tb + 2 * beat + hj())
+            ch, rt = PROG[bi % len(PROG)], ROOT[bi % len(ROOT)]
+            hj = lambda: mr.uniform(-0.014, 0.014)
+            for j, m_ in enumerate(ch):
+                place(keys(mtof(m_), 4.2, 0.16 * mr.uniform(0.8, 1.05)), tb + 0.012 * j + hj())
+            place(pad(ch, bar + 0.7, 0.022), tb - 0.2)
+            if mr.random() < 0.85:
+                for m_ in ch[2:]:
+                    place(keys(mtof(m_ + 12), 2.2, 0.07 * mr.uniform(0.7, 1.0)), tb + 1.5 * beat + hj())
+            if mr.random() < 0.55:
+                place(keys(mtof(ch[mr.integers(1, len(ch))] + 12), 1.8, 0.07 * mr.uniform(0.7, 1.0)), tb + 3 * beat + hj())
+            if mr.random() < 0.7:
+                place(keys(mtof(ch[mr.integers(0, len(ch))] + 24), 1.4, 0.045 * mr.uniform(0.7, 1.0)), tb + (0.5 + mr.integers(0, 3)) * beat + hj())
+            if bi >= 2:
+                place(bass(mtof(rt), 1.8, 0.3), tb + hj())
+                place(bass(mtof(rt), 1.4, 0.2), tb + 2 * beat + hj())
             tb += bar
             bi += 1
         tm = np.arange(n) / SR
         env = np.minimum(1, tm / 2.0) * np.clip((self.TOTAL - tm) / 2.5, 0, 1)
-        for a, b in hush:
-            env[int(a * SR):int(b * SR)] = 0
-            r0 = int(b * SR)
-            env[r0:r0 + int(1.2 * SR)] *= np.linspace(0, 1, len(env[r0:r0 + int(1.2 * SR)]))
+        dips = hush + ([tape] if tape else [])
+        for k, (a, b) in enumerate(dips):
+            floor_ = 0.0 if tape and k == len(dips) - 1 else 0.16      # a dip (about -16 dB), never a hole; only the tape stop goes quiet
+            i0, i1 = int(a * SR), int(b * SR)
+            f = int(0.06 * SR)
+            env[i0:i0 + f] *= np.linspace(1, floor_, len(env[i0:i0 + f]))
+            env[i0 + f:i1] *= floor_
+            ramp = int((0.6 if floor_ == 0 else 1.0) * SR)
+            env[i1:i1 + ramp] *= np.linspace(floor_, 1, len(env[i1:i1 + ramp]))
         mus *= env.astype(np.float32)
-        if self.tape:
-            a_, b_ = int((hush[-1][0] - 0.7) * SR), int(hush[-1][0] * SR)
+        if tape:
+            a_, b_ = int((tape[0] - 0.7) * SR), int(tape[0] * SR)
             seg = mus[a_:b_].copy()
             pos = np.cumsum(np.linspace(1, 0, len(seg)) ** 1.3)
             pos -= pos[0]
             mus[a_:b_] = np.interp(pos, np.arange(len(seg)), seg) * np.linspace(1, 0.4, len(seg))
         mus /= max(1e-6, np.max(np.abs(mus)))
-        write_wav(os.path.join(self.E, "music.wav"), mus[: int(self.TOTAL * SR)] * 0.6)
+        room = np.convolve(np.random.default_rng(77).standard_normal(n), np.ones(24) / 24, "same").astype(np.float32)
+        mus = mus * 0.6 + room * 0.02                                  # room tone: the track is never digital zero
+        write_wav(os.path.join(self.E, "music.wav"), mus[: int(self.TOTAL * SR)])
 
     def sfx(self):
         n = int(self.TOTAL * SR) + SR
@@ -532,7 +813,7 @@ class Video:
             return (np.sin(2 * np.pi * np.cumsum(70 + 60 * np.exp(-tt / 0.03)) / SR) * np.exp(-tt / 0.16)).astype(np.float32)
 
         def put(x, at, g):
-            i0 = int(max(0, at) * SR)
+            i0 = int(max(0, at - 0.08) * SR)
             sfx[i0:i0 + len(x)] += (x * g)[: n - i0]
 
         for kind, at in [ev for sc in self.SC for ev in sc.snd]:
@@ -545,12 +826,14 @@ class Video:
                 put(thump(), at, 0.35 * sr_.uniform(0.7, 1.0))
         write_wav(os.path.join(self.E, "sfx.wav"), sfx[: int(self.TOTAL * SR)])
 
-    def render(self, sample=None):
+    def render(self, sample=None, remix=False):
         la, lb = sample or (0, len(self.LINES))
         K0, K1 = round(self.starts[la] * FPS), (round(self.starts[lb] * FPS) if lb < len(self.LINES) else self.NF)
+        vid = os.path.join(self.E, "video_sample.mp4" if sample else "video.mp4")
+        if remix:
+            return self._finish(vid, K0, K1, sample)
         paper, _parr, PW, PH = make_paper(seed=3 + self.seed)
         surf = cairo.ImageSurface(cairo.FORMAT_RGB24, W, H)
-        vid = os.path.join(self.E, "video_sample.mp4" if sample else "video.mp4")
         enc = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "bgr0", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
                                 "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p", vid], stdin=subprocess.PIPE)
         for k in range(K0, K1):
@@ -561,20 +844,25 @@ class Video:
         enc.stdin.close()
         enc.wait()
         print("video ok", flush=True)
+        self._finish(vid, K0, K1, sample)
+
+    def _finish(self, vid, K0, K1, sample):
         self.music()
         self.sfx()
         mix = os.path.join(self.E, "mix.wav")
         run(["ffmpeg", "-y", "-i", os.path.join(self.A, "voice.wav"), "-i", os.path.join(self.E, "music.wav"), "-i", os.path.join(self.E, "sfx.wav"),
              "-filter_complex",
-             "[0:a]aformat=channel_layouts=stereo,highpass=f=90,acompressor=threshold=-20dB:ratio=3:attack=5:release=90,asplit=2[v1][v2];"
-             "[1:a]aformat=channel_layouts=stereo,volume=0.3[m];[m][v1]sidechaincompress=threshold=0.02:ratio=3:attack=40:release=500[md];"
+             "[0:a]aformat=channel_layouts=stereo,highpass=f=90,deesser=i=0.45:m=0.5:f=0.55,acompressor=threshold=-20dB:ratio=3:attack=5:release=90,"
+             "asplit=2[v1][v2];"
+             "[1:a]aformat=channel_layouts=stereo,volume=0.27[m];[m][v1]sidechaincompress=threshold=0.012:ratio=6:attack=30:release=450[md];"
              "[2:a]aformat=channel_layouts=stereo,volume=0.6[fx];"
-             "[v2][md][fx]amix=inputs=3:duration=first:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[out]",
+             "[v2][md][fx]amix=inputs=3:duration=first:normalize=0,loudnorm=I=-14:TP=-2:LRA=11,"
+             "alimiter=limit=0.7:attack=3:release=60:level=disabled:latency=1[out]",            # AAC overshoots ~1.5 dB on thumps: keep the file under -1 dBTP
              "-map", "[out]", "-ar", str(SR), mix])
         self.write_srt(os.path.join(self.E, "subtitles_en.srt"))
         final = os.path.join(self.O, f"{self.slug}_sample.mp4" if sample else f"{self.slug}_16x9.mp4")
         T0, T1 = K0 / FPS, K1 / FPS
-        run(["ffmpeg", "-y", "-i", vid, "-ss", f"{T0:.3f}", "-t", f"{T1 - T0:.3f}", "-i", mix, "-vf", f"fade=t=out:st={T1 - T0 - 0.6:.2f}:d=0.6",
+        run(["ffmpeg", "-y", "-i", vid, "-ss", f"{T0:.3f}", "-t", f"{T1 - T0:.3f}", "-i", mix, "-vf", f"fade=t=out:st={T1 - T0 - 0.4:.2f}:d=0.4",
              "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
              "-movflags", "+faststart", "-shortest", final])
         print(f"done total={self.TOTAL:.2f}s -> {final}", flush=True)
@@ -583,6 +871,11 @@ class Video:
         self.prepare()
         if os.environ.get("STILLS"):
             self.stills()
+            if os.environ.get("AUDIT"):
+                self.audit()
+            return
+        if os.environ.get("AUDIT"):
+            self.audit()
             return
         s = os.environ.get("SAMPLE")
-        self.render(tuple(int(v) for v in s.split(":")) if s else None)
+        self.render(tuple(int(v) for v in s.split(":")) if s else None, remix=bool(os.environ.get("REMIX")))

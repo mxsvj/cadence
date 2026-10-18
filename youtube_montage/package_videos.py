@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import sys
+import time
 import zipfile
 
 D = os.path.dirname(os.path.abspath(__file__))
@@ -82,6 +83,9 @@ def build(k, v):
         files[n_] = ("file", p)
     zp = os.path.join(OUT, f"EuroUnboxed {k} - {v['name']}.zip")
     with zipfile.ZipFile(zp, "w", zipfile.ZIP_STORED) as z:
+        if "replaces" in v:
+            z.writestr("remplace.txt", "\n".join([v["name"]] + v["replaces"]) + "\n")
+            z.writestr(f"{v['name']}/.version", time.strftime("%Y-%m-%d %H:%M") + "\n")
         for n_, (kind, data) in files.items():
             arc = f"{v['name']}/{n_}"
             if kind == "file":
@@ -93,17 +97,19 @@ def build(k, v):
 
 NIGHT2 = [
     dict(name="Compound Interest Explained So Simply It Feels Illegal", video="web/compound_interest.mp4",
-         kit="kit_compound/compound_interest_youtube_upload.txt", srt="kit_compound/compound_interest_subtitles_en.srt",
-         thumbs=[("A1", TD + "/A1_time.jpg"), ("A2", TD + "/A2_anna_ben.jpg"), ("A3", TD + "/A3_rule_72.jpg")]),
+         kit="kit_compound/compound_interest_youtube_upload.txt", srt="kit_compound/compound_interest_subtitles_en.srt", replaces=[],
+         thumbs=[("A4", TD + "/A4_10k_76k.jpg"), ("A2", TD + "/A2_anna_ben.jpg"), ("A3", TD + "/A3_rule_72.jpg")]),
     dict(name="7 Tricks Shops Use to Make You Spend More", video="web/shop_tricks.mp4",
-         kit="kit_tricks/shop_tricks_youtube_upload.txt", srt="kit_tricks/shop_tricks_subtitles_en.srt",
+         kit="kit_tricks/shop_tricks_youtube_upload.txt", srt="kit_tricks/shop_tricks_subtitles_en.srt", replaces=[],
          thumbs=[("B1", TD + "/B1_999.jpg"), ("B2", TD + "/B2_fake_timer.jpg"), ("B3", TD + "/B3_decoy.jpg")]),
-    dict(name="How to Invest Your First 1,000 euros So Simply It Feels Illegal", video="web/first_1000.mp4",
+    dict(name="How to Invest Your First 1,000 euros (8 Steps, in Order)", video="web/first_1000.mp4",
          kit="kit_first1000/first_1000_youtube_upload.txt", srt="kit_first1000/first_1000_subtitles_en.srt",
-         thumbs=[("C1", TD + "/C1_now_what.jpg"), ("C2", TD + "/C2_8_steps.jpg"), ("C3", TD + "/C3_buy_everything.jpg")]),
-    dict(name="How to Pay Off Debt So Fast It Feels Illegal", video="web/pay_off_debt.mp4",
+         replaces=["How to Invest Your First 1,000 euros So Simply It Feels Illegal"],
+         thumbs=[("C2", TD + "/C2_8_steps.jpg"), ("C3", TD + "/C3_buy_everything.jpg"), ("C1", TD + "/C1_now_what.jpg")]),
+    dict(name="The Minimum Payment Trap (and How to Escape It)", video="web/pay_off_debt.mp4",
          kit="kit_debt/pay_off_debt_youtube_upload.txt", srt="kit_debt/pay_off_debt_subtitles_en.srt",
-         thumbs=[("D1", TD + "/D1_boulder.jpg"), ("D2", TD + "/D2_minimum_button.jpg"), ("D3", TD + "/D3_which_order.jpg")]),
+         replaces=["How to Pay Off Debt So Fast It Feels Illegal"],
+         thumbs=[("D2", TD + "/D2_minimum_button.jpg"), ("D1", TD + "/D1_boulder.jpg")]),
 ]
 if BATCH == "night2":
     VIDEOS = [v for v in NIGHT2 if os.path.exists(os.path.join(D, v["video"]))]
@@ -127,7 +133,9 @@ for k, (name, vids, tname, ttxt) in enumerate(packs if BATCH == "night1" else []
     zips.append(zp)
 
 PS1 = r'''# Range les vidéos Euro Unboxed : chaque zip "EuroUnboxed N - ..." de ce dossier devient un dossier numéroté
-# dans Bureau\YouTube, à la suite des dossiers déjà présents. Une vidéo déjà rangée (même nom de dossier) est ignorée.
+# dans Bureau\YouTube, à la suite des dossiers déjà présents. Une vidéo déjà rangée (même nom de dossier) est ignorée,
+# sauf si le zip contient remplace.txt (nouvelle version) : l'ancien dossier part dans "_anciennes versions" et la
+# nouvelle version reprend son numéro. Rien n'est supprimé.
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $yt = Join-Path ([Environment]::GetFolderPath("Desktop")) "YouTube"
@@ -141,9 +149,28 @@ foreach ($z in $zips) {
   $tmp = Join-Path $yt ("_tmp_" + [guid]::NewGuid().ToString("N"))
   try {
     Expand-Archive -LiteralPath $z.FullName -DestinationPath $tmp
+    $rp = Join-Path $tmp "remplace.txt"
+    $repl = @()
+    if (Test-Path -LiteralPath $rp) { $repl = @(Get-Content -LiteralPath $rp -Encoding UTF8 | Where-Object { $_.Trim() -ne "" }) }
     foreach ($f in Get-ChildItem -LiteralPath $tmp -Directory) {
-      $already = $existing | Where-Object { $_.Name.EndsWith($f.Name) }
-      if ($already) { Write-Host ("Deja range : " + $f.Name); continue }
+      $names = @($f.Name) + $repl
+      $old = @($existing | Where-Object { $d = $_; $d.Name -match '^\d' -and @($names | Where-Object { $d.Name.EndsWith($_) }).Count -gt 0 }) | Select-Object -First 1
+      if ($old -and $repl.Count -eq 0) { Write-Host ("Deja range : " + $f.Name); continue }
+      $nv = Join-Path $f.FullName ".version"
+      $ov = if ($old) { Join-Path $old.FullName ".version" } else { "" }
+      if ($old -and (Test-Path -LiteralPath $ov) -and (Test-Path -LiteralPath $nv) -and ((Get-Content -LiteralPath $ov -Raw) -eq (Get-Content -LiteralPath $nv -Raw))) {
+        Write-Host ("Deja a jour : " + $old.Name); continue
+      }
+      if ($old) {
+        $prefix = ($old.Name -split ' - ')[0]
+        $arch = Join-Path $yt "_anciennes versions"
+        New-Item -ItemType Directory -Force -Path $arch | Out-Null
+        Move-Item -LiteralPath $old.FullName -Destination (Join-Path $arch ($old.Name + " (" + (Get-Date -Format "yyyy-MM-dd HHmm") + ")"))
+        $dest = Join-Path $yt ($prefix + " - " + $f.Name)
+        Move-Item -LiteralPath $f.FullName -Destination $dest
+        Write-Host ("Nouvelle version : " + $dest + "  (l'ancienne est dans _anciennes versions)")
+        continue
+      }
       $n = $n + 1
       $dest = Join-Path $yt (("{0:D2}" -f $n) + " - " + $f.Name)
       Move-Item -LiteralPath $f.FullName -Destination $dest
@@ -160,7 +187,8 @@ Start-Process explorer.exe $yt
 BAT = '@echo off\r\npowershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ranger_mes_videos.ps1"\r\npause\r\n'
 CMD = r'''#!/bin/bash
 # Range les vidéos Euro Unboxed (Mac) : chaque zip "EuroUnboxed N - ..." de ce dossier devient un dossier numéroté
-# dans Bureau/YouTube, à la suite des dossiers déjà présents. Une vidéo déjà rangée est ignorée.
+# dans Bureau/YouTube, à la suite des dossiers déjà présents. Une vidéo déjà rangée est ignorée, sauf si le zip contient
+# remplace.txt (nouvelle version) : l'ancien dossier part dans "_anciennes versions", la nouvelle reprend son numéro.
 cd "$(dirname "$0")" || exit 1
 YT="$HOME/Desktop/YouTube"
 mkdir -p "$YT"
@@ -170,9 +198,26 @@ n=$((10#$n))
 while IFS= read -r z; do
   tmp="$YT/_tmp_$$"
   mkdir -p "$tmp" && unzip -q "$z" -d "$tmp"
+  repl=""
+  [ -f "$tmp/remplace.txt" ] && repl=$(cat "$tmp/remplace.txt")
   for f in "$tmp"/*/; do
     name=$(basename "$f")
-    if ls -1 "$YT" | grep -v '^_tmp_' | grep -qF -- "$name"; then echo "Déjà rangé : $name"; continue; fi
+    old=""
+    while IFS= read -r cand; do
+      [ -z "$cand" ] && continue
+      hit=$(ls -1 "$YT" | grep -E '^[0-9]' | grep -F -- "$cand" | head -1)
+      [ -n "$hit" ] && { old="$hit"; break; }
+    done < <(printf '%s\n%s\n' "$name" "$repl")
+    if [ -n "$old" ] && [ -z "$repl" ]; then echo "Déjà rangé : $name"; continue; fi
+    if [ -n "$old" ] && [ -f "$YT/$old/.version" ] && cmp -s "$YT/$old/.version" "$f/.version"; then echo "Déjà à jour : $old"; continue; fi
+    if [ -n "$old" ]; then
+      prefix="${old%% - *}"
+      mkdir -p "$YT/_anciennes versions"
+      mv "$YT/$old" "$YT/_anciennes versions/$old ($(date '+%Y-%m-%d %H%M'))"
+      mv "$f" "$YT/$prefix - $name"
+      echo "Nouvelle version : $prefix - $name  (l'ancienne est dans _anciennes versions)"
+      continue
+    fi
     n=$((n + 1))
     mv "$f" "$YT/$(printf '%02d' "$n") - $name"
     echo "Rangé : $(printf '%02d' "$n") - $name"

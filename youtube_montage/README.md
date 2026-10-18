@@ -210,12 +210,29 @@ Le script suit la structure de « simple, actually » : ouverture sur une scène
 
 | Vidéo | Fichier | Durée |
 |---|---|---|
-| Compound Interest Explained So Simply It Feels Illegal | `build_compound.py` | 4 min 25 |
-| 7 Tricks Shops Use to Make You Spend More (and How to Beat Them) | `build_tricks.py` | 4 min 22 |
-| How to Invest Your First €1,000 So Simply It Feels Illegal | `build_first1000.py` | 3 min 30 |
-| How to Pay Off Debt So Fast It Feels Illegal | `build_debt.py` | 3 min 34 |
+| Compound Interest Explained So Simply It Feels Illegal | `build_compound.py` | 4 min 56 |
+| 7 Tricks Shops Use to Make You Spend More (and How to Beat Them) | `build_tricks.py` | 4 min 53 |
+| How to Invest Your First €1,000 (8 Steps, in Order) | `build_first1000.py` | 4 min 20 |
+| The Minimum Payment Trap (and How to Escape It) | `build_debt.py` | 4 min 29 |
 
 - `STILLS=1 python3 build_x.py` dessine la planche de contrôle (`qa_<nom>/`), `SAMPLE=a:b` ne rend que les lignes a à b−1 ;
 - `python3 kit_doodle.py compound|tricks|first1000|debt` écrit le titre, la description avec les vrais chapitres et les sources, les tags, les réglages et les sous-titres ;
-- `thumbs_doodle.py` dessine trois miniatures par vidéo (A1–A3, B1–B3, C1–C3, D1–D3) ;
+- `thumbs_doodle.py` dessine les miniatures (la recommandée en premier dans chaque kit : A4, B1, C2, D2), avec un cadre à l'encre pour le mode clair de YouTube ;
 - `python3 package_videos.py night2` fait les zips de ces vidéos (numérotés à partir de 9) ; le même `ranger_mes_videos.bat` les range dans Bureau\YouTube à la suite.
+
+#### Révision du 18 octobre (skill video-use : critiques, auto-évaluation, corrections)
+
+Chaque vidéo est passée deux fois devant un critique (rapports `out/edit/verify/critic*_<nom>.md`, non versionnés), avec correction et nouveau rendu après chaque passage. Ce qui a changé dans le moteur, pour toutes les vidéos doodle :
+
+- **Voix** : une prise Kokoro par phrase, fondus de 30 ms, une respiration entre les phrases ; les sous-titres et les repères de dessin tombent sur ce qui est vraiment dit. Dé-esseur sur la voix.
+- **Sous-titres** : découpés par longueur (52 caractères au plus), de préférence à une virgule ou devant « and », « to »… ; une expression protégée (`keep=`) n'est jamais coupée ; un sous-titre de moins de 0,9 s est fusionné avec le suivant.
+- **Musique** : une nappe continue (accord tenu une octave plus haut, clochettes deux octaves plus haut, pour les haut-parleurs de téléphone), baissée sous la voix ; les « silences » sont des creux à −16 dB, jamais un vrai zéro numérique (bruit de pièce). Limiteur avant l'AAC (crête vraie sous −1 dBTP).
+- **Lettrage** : une seule écriture (Gochi Hand) ; les chiffres viennent de Caveat Brush (les 1, 5 et 9 de Gochi et de Kalam se lisaient « 7 », « S », « q » ou « / ») ; les lettres sont posées une par une à leur propre chasse (les ligatures déformaient « afford ») ; gris assombri (4,8:1 sur le papier).
+- **Cadrage** : chaque dessin est cadré automatiquement (jusqu'à ×1,38, en gardant sa composition décentrée), sans jamais pousser un texte sous y = 890 (zone des sous-titres YouTube sur deux lignes) ni hors des marges ; `S.noframe = True` pour un cadrage fait à la main.
+- **Mouvement** (règles du skill remotion-motion-graphics adaptées au dessin) : ce qui part rétrécit et s'efface en 0,25 s (`until=`), ce qui apparaît grossit en montant, une carte de chapitre arrive comme une nouvelle feuille qui glisse ; quand une scène commence sur une page vide, l'image précédente reste jusqu'au premier trait (coupe « le son d'abord »).
+- **Écran de fin** : `endcard()` dessine dès le début de la dernière phrase un rond « s'abonner » à gauche et un cadre 16:9 « vidéo suivante » à droite, puis 12,5 s d'image fixe.
+- **Contrôle** : `AUDIT=1 python3 build_x.py` écrit `qa_<nom>/audit.txt` : pages vides pendant que la voix parle, plus de 4 s sans nouvel élément, textes trop petits, trop pâles, au bord ou sous les sous-titres, textes lus moins d'une seconde avant la coupe. `REMIX=1` refait seulement le son. `verify_tools/self_eval.py <nom> <module>` mesure le volume, les crêtes, les silences et fait les planches aux coupes.
+- **Livraison** : `web_copy.py` encode en deux passes à la taille visée (27 Mo) au lieu d'un CRF fixe, pour donner à YouTube le meilleur fichier qui passe la limite d'envoi.
+- **Rangement** : un zip qui contient `remplace.txt` est une nouvelle version : le script de rangement déplace l'ancien dossier dans `YouTube\_anciennes versions` (rien n'est supprimé) et la nouvelle version reprend son numéro ; relancé, il ne refait rien.
+
+Changements de contenu : accroches qui montrent la miniature dès la première image, chiffres recalculés (dont l'inflation et le « vrai » taux des remises), exemple dette où avalanche et boule de neige diffèrent, avertissements sur le risque et les règles nationales, titres qui tiennent leur promesse (« The Minimum Payment Trap », « 8 Steps, in Order »).
