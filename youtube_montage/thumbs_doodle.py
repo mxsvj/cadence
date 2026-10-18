@@ -47,7 +47,8 @@ for k, (x, end, col, name) in enumerate(((930, 244, (150, 186, 214), "Ben"), (14
 els += [T("+10 years", 110, 330, 200, INK, at=0, rot=-4), T("= ×2", 170, 580, 250, ORANGE, at=0, rot=-4)]
 ims.append(render("A2_anna_ben", els))
 ims.append(render("A4_10k_76k", [d(money_bag(330, 640, 1.0)), T("€10,000", 140, 400, 140, INK, at=0, rot=-3),
-                                 arrow(P_bez((560, 600), (760, 520), (900, 560)), 0, INK, 10, 0.0),
+                                 arrow(P_bez((540, 640), (740, 560), (900, 600)), 0, INK, 13, 0.0, head=40),
+                                 T("30 years", 560, 520, 110, INK, at=0, rot=-6),
                                  d(money_bag(1330, 600, 2.3), 2), T("€76,000", 980, 250, 220, ORANGE, at=0, rot=-3),
                                  T("do nothing.", 150, 930, 140, INK, at=0, rot=-2)]))
 ims.append(render("A3_rule_72", [T("72", 200, 780, 640, ORANGE, at=0, rot=-6), T("÷ your return", 1000, 430, 140, INK, at=0, rot=-3),
