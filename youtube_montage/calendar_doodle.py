@@ -18,7 +18,7 @@ LONG = {"compound": "Compound Interest Explained So Simply It Feels Illegal",
 PLAN = [
     ("2026-10-18", 18, "short", "compound", 0, ""),
     ("2026-10-18", 19, "setup", None, None, "Mise en place (30 min) : passe les 3 anciennes vidéos en privé, change la photo de profil et la bannière, "
-                                             "puis mets en ligne les 3 vidéos et les Shorts qui restent en « Programmer » aux dates ci-dessous."),
+                                             "Ensuite, publie toi-même chaque vidéo et chaque Short le jour indiqué (un rappel sonne 15 min avant)."),
     ("2026-10-19", 18, "short", "compound", 1, ""),
     ("2026-10-20", 18, "short", "compound", 2, ""),
     ("2026-10-20", 19, "stats", "compound", None, ""),
@@ -101,8 +101,8 @@ for k, (day, hour, kind, key, idx, note) in enumerate(PLAN):
         .replace("Fri", "ven").replace("Sat", "sam").replace("Sun", "dim")
     if kind == "long":
         title = f"▶ Vidéo : {LONG[key]}"
-        desc = (f"Publication programmée (dossier YouTube de la vidéo). Miniature : la « recommandée » + Test & compare. Sous-titres, chapitres, "
-                f"écran de fin : voir « tags et reglages.txt ». {note}").strip()
+        desc = (f"À publier maintenant (dossier YouTube de la vidéo) : titre, description, sous-titres, miniature « recommandée » + Test & "
+                f"compare, écran de fin : tout est dans le dossier. {note}").strip()
     elif kind == "short":
         stitle, dur, path = short_info(key, idx)
         fname = f"{day} - {safe(stitle)}.mp4"
@@ -125,7 +125,7 @@ for k, (day, hour, kind, key, idx, note) in enumerate(PLAN):
         desc = note
     rows.append(f"{when}  {title.replace('▶ ', '').replace('📊 ', '').replace('🛠 ', '').replace('📈 ', '')}" + (f"\n            {desc}" if kind != "long" or note else ""))
     u = start.astimezone(dt.timezone.utc)
-    alarm = "" if kind in ("long", "short") else "BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:Rappel\r\nTRIGGER:-PT15M\r\nEND:VALARM\r\n"
+    alarm = "BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:Rappel\r\nTRIGGER:-PT15M\r\nEND:VALARM\r\n"
     events.append("BEGIN:VEVENT\r\n"
                   f"UID:euro-unboxed-{day}-{k}@cadence\r\nDTSTAMP:20261018T120000Z\r\n"
                   f"DTSTART:{u:%Y%m%dT%H%M%SZ}\r\nDTEND:{(u + dt.timedelta(minutes=30)):%Y%m%dT%H%M%SZ}\r\n"
@@ -135,8 +135,9 @@ os.makedirs(OUT, exist_ok=True)
 ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Euro Unboxed//calendrier//FR\r\nCALSCALE:GREGORIAN\r\n" + "".join(events) + "END:VCALENDAR\r\n"
 open(os.path.join(OUT, "calendrier Euro Unboxed.ics"), "w", newline="").write(ics)
 txt = ("CALENDRIER EURO UNBOXED (heure de Paris)\n\n"
-       "Le plus simple : mets tout en ligne d'un coup et choisis « Programmer » pour chaque vidéo et chaque Short, à la date ci-dessous. "
-       "Importe « calendrier Euro Unboxed.ics » dans Google Agenda (Paramètres → Importer) ou ouvre-le sur ton téléphone : tu auras les rappels.\n"
+       "Tu publies toi-même, le jour et vers l'heure indiqués. Importe « calendrier Euro Unboxed.ics » dans Google Agenda (Paramètres → "
+       "Importer) ou ouvre-le sur ton téléphone : un rappel sonne 15 min avant chaque publication. Si tu publies un peu plus tard, ce n'est "
+       "pas grave : l'important est la régularité (une vidéo longue jeudi et dimanche, un Short par jour).\n"
        "Vidéos longues : jeudi et dimanche à 16 h. Shorts : un par jour à 18 h, chacun relié à sa vidéo longue (« Vidéo associée »).\n"
        "Compound Interest est sortie le dimanche 18 octobre. Ordre des vidéos suivantes imposé par les écrans de fin : chaque vidéo pointe vers "
        "une vidéo déjà en ligne. 7 Tricks pointe vers « How to Save Money So Easily It Feels Illegal » : laisse-la publique (elle est déjà dans "
@@ -145,7 +146,7 @@ txt = ("CALENDRIER EURO UNBOXED (heure de Paris)\n\n"
 open(os.path.join(OUT, "calendrier.txt"), "w").write(txt)
 head = ("Pour chaque Short, dans YouTube Studio (depuis l'ordinateur) : mets le fichier en ligne, colle le titre et la description, "
         "choisis la « Vidéo associée » (c'est ce lien qui envoie vers la vidéo longue ; si elle n'est pas encore publiée, ajoute-le le jour de "
-        "sa sortie), puis « Programmer » à la date indiquée.\n\n\n")
+        "sa sortie), puis « Publier » le jour indiqué.\n\n\n")
 for n, (key, lst) in enumerate(files.items(), 13):
     zp = os.path.join(OUT, f"EuroUnboxed {n} - {FOLDER[key]}.zip")
     with zipfile.ZipFile(zp, "w", zipfile.ZIP_STORED) as z:
