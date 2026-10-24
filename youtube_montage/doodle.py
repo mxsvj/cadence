@@ -470,8 +470,9 @@ def _blend(p0, p1, u):
 
 
 def Fig(x, y, s=1.0, at=0.0, poses=(("stand", 0.0),), moods=(("smile", 0.0),), kind="you", enter="draw", seed=1, until=None,
-        look=0.0, walk=None, held=None, idle=1.0, rot=0.0, flip=False, yfn=None):
-    """Stick figure standing on (x, y). poses/moods: [(name, time)]; walk: (x0, x1, t0, t1); held(ctx, t, hand_xy, b)."""
+        look=0.0, walk=None, held=None, idle=1.0, rot=0.0, flip=False, yfn=None, skin=None):
+    """Stick figure standing on (x, y). poses/moods: [(name, time)]; walk: (x0, x1, t0, t1); held(ctx, t, hand_xy, b).
+    skin: head fill (default the paper colour)."""
     poses = [(POSES[p] if isinstance(p, str) else p, tt) for p, tt in poses]
     rr = random.Random(seed)
     ph = [rr.uniform(0, 6.28) for _ in range(6)]
@@ -558,7 +559,7 @@ def Fig(x, y, s=1.0, at=0.0, poses=(("stand", 0.0),), moods=(("smile", 0.0),), k
             held(ctx, t, parts[4][2], b)
         ctx.new_path()
         ctx.arc(hc[0], hc[1], R - 1, 0, 2 * math.pi)
-        ctx.set_source_rgba(*rgb(PAPER))
+        ctx.set_source_rgba(*rgb(skin or PAPER))
         ctx.fill()
         stroke(ctx, head, b, w, INK, clamp(fr))
         for j, k in enumerate(order):
@@ -584,6 +585,14 @@ def _face(ctx, hc, R, tilt, mood, t, b, look, blinks, seed):
     blink = any(bt <= t < bt + 0.12 for bt in blinks)
     ey = -R * 0.08
     for ex in (-R * 0.33, R * 0.33):
+        if mood in ("blank", "stare"):                # blank: hollow eyes, nobody home; stare: wide open, tiny pupils, never blinking
+            stroke(ctx, Path(P_ell(ex, ey, 8.5, 9.5, seed + 3, 0.08), seed + 3), b, 3.8, INK, amp=0.3)
+            if mood == "stare":
+                ctx.new_path()
+                ctx.arc(ex, ey + 1, 2.8, 0, 2 * math.pi)
+                ctx.set_source_rgba(*rgb(INK))
+                ctx.fill()
+            continue
         if mood in ("sleep",):
             stroke(ctx, Path(P_arc(ex, ey, 7, 5, 20, 160), seed + 3), b, 4, INK, amp=0.3)
         elif blink or mood == "happy":
@@ -603,6 +612,8 @@ def _face(ctx, hc, R, tilt, mood, t, b, look, blinks, seed):
         "worried": P_wave(-R * 0.26, R * 0.26, my + 2, 3, 18),
         "smug": P_bez((-R * 0.22, my + 2), (R * 0.1, my + 4), (R * 0.32, my - 8)),
         "sleep": P_ell(0, my + 2, 5, 4, 1, 0.0, closed=True),
+        "blank": P_line(-R * 0.16, my + 4, R * 0.18, my + 2, 0, 3),
+        "stare": P_bez((-R * 0.4, my - 6), (0, my + 14), (R * 0.4, my - 6)),
     }.get(mood)
     if mood in ("o", "wow"):
         rr = 7 if mood == "o" else 10
@@ -640,6 +651,11 @@ def _hair(ctx, hc, R, tilt, kind, b, seed):
         stroke(ctx, Path(P_line(-R * 0.13, -R * 0.1, R * 0.13, -R * 0.1, 0.1, 3), seed + 31), b, 3.5, INK, amp=0.3)
     elif kind == "bob":
         stroke(ctx, Path(P_arc(0, 0, R + 9, R + 11, 160, 380, 50), seed + 40), b, 7, INK)
+    elif kind == "long":                   # hair to the shoulders, parted on one side
+        stroke(ctx, Path(P_arc(0, 0, R + 8, R + 10, 165, 375, 50), seed + 42), b, 7, INK)
+        for side in (-1, 1):
+            stroke(ctx, Path(P_bez((side * (R + 7), -R * 0.1), (side * (R + 12), R * 0.6), (side * (R + 4), R * 1.1), (side * (R + 14), R * 1.45)),
+                             seed + 43 + side), b, 7, INK)
     elif kind == "spiky":
         pts = [(-R * 0.7, -R * 0.6), (-R * 0.45, -R * 1.25), (-R * 0.15, -R * 0.85), (R * 0.15, -R * 1.35), (R * 0.4, -R * 0.85), (R * 0.75, -R * 1.2), (R * 0.75, -R * 0.55)]
         stroke(ctx, Path(P_poly(pts), seed + 41), b, 6, INK)
