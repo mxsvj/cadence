@@ -613,7 +613,7 @@ def _face(ctx, hc, R, tilt, mood, t, b, look, blinks, seed):
         "smug": P_bez((-R * 0.22, my + 2), (R * 0.1, my + 4), (R * 0.32, my - 8)),
         "sleep": P_ell(0, my + 2, 5, 4, 1, 0.0, closed=True),
         "blank": P_line(-R * 0.16, my + 4, R * 0.18, my + 2, 0, 3),
-        "stare": P_bez((-R * 0.4, my - 6), (0, my + 14), (R * 0.4, my - 6)),
+        "stare": P_bez((-R * 0.3, my - 3), (0, my + 8), (R * 0.3, my - 3)),
     }.get(mood)
     if mood in ("o", "wow"):
         rr = 7 if mood == "o" else 10

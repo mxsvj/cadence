@@ -42,7 +42,7 @@ def peephole(cx, cy, r, ms, mood="stare"):
         d([Fl(P_poly([(mx - 48 * ms, cy + 48 * ms), (mx + 48 * ms, cy + 48 * ms), (mx + 110 * ms, cy + 170 * ms), (mx - 110 * ms, cy + 170 * ms)], True), COAT),
            stk(P_poly([(mx - 48 * ms, cy + 48 * ms), (mx + 48 * ms, cy + 48 * ms), (mx + 110 * ms, cy + 170 * ms), (mx - 110 * ms, cy + 170 * ms)], True), 8)], 3),
         Fig(mx, my, ms, poses=[("stand", 0)], moods=[(mood, 0)], kind="long", seed=21, enter="none", idle=0.0),
-        d([("dot", mx - 42 * ms, cy + 30 * ms, 7 * ms, ORANGE), ("dot", mx + 42 * ms, cy + 30 * ms, 7 * ms, ORANGE)], 4))
+        d([("dot", mx - 45 * ms, cy + 14 * ms, 3.6 * ms, ORANGE), ("dot", mx + 45 * ms, cy + 14 * ms, 3.6 * ms, ORANGE)], 4))     # at the ears, as in the episode
     return [clip_ell(inside, cx, cy, r, r), d([stk(P_ell(cx, cy, r + 8, r + 8, 1, 0.05), 18, (90, 86, 92))], 5)]
 
 

@@ -9,11 +9,13 @@ import hashlib
 import wave
 
 from doodle_video import *  # noqa: F401,F403
-from doodle_video import kokoro_say, run, sentences, write_wav
+from doodle_video import cl, kokoro_say, run, sentences, write_wav
 
-FX = {"door": "lowpass=f=1700,highpass=f=150,aecho=0.8:0.5:26:0.2,volume=1.3",
+FX = {"door": "lowpass=f=3000,highpass=f=160,aecho=0.8:0.45:24:0.18",
       "radio": "highpass=f=330,lowpass=f=3300,acompressor=threshold=-26dB:ratio=4:attack=5:release=80,volume=1.4",
-      "whisper": "highpass=f=120,volume=1.15"}
+      "whisper": "highpass=f=120",
+      "child": "asetrate=27700,aresample=24000,atempo=0.8664,highpass=f=150"}     # +2.5 semitones, same speed
+TARGET = -20.0          # every line's speech level (dBFS RMS over its voiced 20 ms windows), plus the line's own gain
 
 
 def _read(path):
@@ -22,13 +24,20 @@ def _read(path):
 
 
 def knock_s(rng, vel=1.0):
-    """A knuckle on a wooden door: a click, then the panel's low modes ringing for a few tens of ms."""
-    m = int(0.28 * SR)
+    """A knuckle on a wooden door: a bright crack (what a phone speaker plays), the panel's low modes ringing for a few
+    tens of ms, and the door rattling in its frame."""
+    m = int(0.3 * SR)
     tt = np.arange(m) / SR
     body = sum(a * np.sin(2 * np.pi * f * rng.uniform(0.97, 1.03) * tt + rng.uniform(0, 6)) * np.exp(-tt / d)
-               for f, a, d in ((92, 1.0, 0.075), (168, 0.75, 0.05), (305, 0.45, 0.03), (540, 0.22, 0.018)))
-    click = np.convolve(rng.standard_normal(m), np.ones(4) / 4, "same") * np.exp(-tt / 0.0035) * 0.9
-    x = (body + click) * (1 - np.exp(-tt / 0.0012))
+               for f, a, d in ((92, 1.0, 0.075), (168, 0.75, 0.05), (305, 0.5, 0.03), (540, 0.3, 0.018), (1150, 0.25, 0.01)))
+    nz = rng.standard_normal(m)
+    hp = nz - np.convolve(nz, np.ones(10) / 10, "same")
+    crack = np.convolve(hp, np.ones(3) / 3, "same") * np.exp(-tt / 0.006) * 1.6
+    rattle = np.zeros(m)
+    for d in (0.028, 0.051, 0.07):
+        k0 = int(d * SR)
+        rattle[k0:] += hp[: m - k0] * np.exp(-(tt[: m - k0]) / 0.004) * rng.uniform(0.15, 0.3)
+    x = (0.8 * body + crack + rattle) * (1 - np.exp(-tt / 0.0012))
     return (x / np.max(np.abs(x)) * vel).astype(np.float32)
 
 
@@ -50,8 +59,8 @@ class Story(Video):
         super().__init__(slug, **kw)
         self.tapes = list(tapes)
 
-    def L(self, g, sub, voice="af_heart", fx=None, speed=None, after=0.0):
-        self.LINES.append(dict(g=g, sub=sub, voice=voice, fx=fx, speed=speed, after=after))
+    def L(self, g, sub, voice="af_heart", fx=None, speed=None, after=0.0, gain=0.0):
+        self.LINES.append(dict(g=g, sub=sub, voice=voice, fx=fx, speed=speed, after=after, gain=gain))
 
     def speak(self, sub):
         return super().speak(sub.replace('"', ""))
@@ -72,6 +81,11 @@ class Story(Video):
                       "areverse" + (("," + FX[fx]) if fx else ""))
                 run(["ffmpeg", "-y", "-i", raw, "-af", af, "-ar", str(SR), "-ac", "1", out])
             v = _read(out).copy()
+            win = int(0.02 * SR)
+            rms = np.sqrt(np.convolve(v ** 2, np.ones(win) / win, "same")[::win])
+            act = rms[rms > 0.1 * rms.max()]
+            g = 10 ** ((TARGET + l["gain"]) / 20) / max(1e-6, np.sqrt(np.mean(act ** 2)))
+            v *= min(g, 0.98 / max(1e-6, np.abs(v).max()))           # level-matched between characters, never clipped
             f = min(int(0.03 * SR), len(v) // 4)
             v[:f] *= np.linspace(0, 1, f)
             v[-f:] *= np.linspace(1, 0, f)
@@ -92,29 +106,57 @@ class Story(Video):
         return next(j for j, l in enumerate(self.LINES) if l["sub"].startswith(prefix))
 
     def music(self):
-        """The bed, then each tape stop: the music winds down in 0.7 s as the line ends and stays out (room tone only) until
-        the line it comes back on."""
-        super().music()
-        path = os.path.join(self.E, "music.wav")
-        mus = _read(path).copy()
-        room = np.convolve(np.random.default_rng(78).standard_normal(len(mus)), np.ones(24) / 24, "same").astype(np.float32) * 0.02
-        for a_line, b_line in self.tapes:
+        """A low D drone that breathes, and a lone high note every few seconds (a music box nobody wound). Then the dips,
+        the tape stops ("tape": winds down in 0.7 s) or hard cuts ("cut"), and the bed pulled out under every knock."""
+        n = int(self.TOTAL * SR) + SR
+        tt = np.arange(n) / SR
+        rng = np.random.default_rng(5 + self.seed)
+        mtof = lambda m: 440 * 2 ** ((m - 69) / 12)
+        mus = sum(a * np.sin(2 * np.pi * f * tt + p) for f, a, p in ((73.42, 1.0, 0), (73.58, 0.8, 1), (110.0, 0.45, 2), (146.83, 0.22, 3)))
+        mus = (mus * (0.7 + 0.3 * np.sin(2 * np.pi * 0.045 * tt + 1.0)) * 0.22).astype(np.float32)
+        t = 1.6
+        while t < self.TOTAL:
+            f = mtof(int(rng.choice([74, 77, 81, 84, 76, 70])))
+            k = np.arange(int(3.2 * SR)) / SR
+            x = (np.sin(2 * np.pi * f * k) + 0.3 * np.sin(2 * np.pi * 2.01 * f * k)) * np.exp(-k / 1.1) * (1 - np.exp(-k / 0.004)) * 0.14
+            i0 = int(t * SR)
+            mus[i0:i0 + len(x)] += x[: n - i0].astype(np.float32)
+            t += rng.uniform(4.5, 8.5)
+        mus /= max(1e-6, np.abs(mus).max())
+        duck = np.ones(n, np.float32)
+        for a_, b_ in [(self.q_at(a) - 0.05, self.q_at(b) - 0.2) for a, b in self.hush]:
+            duck[int(a_ * SR):int(b_ * SR)] *= 0.16
+        for kind, at in [ev for sc in self.SC for ev in sc.snd]:
+            if kind in ("knock3", "knock1"):
+                duck[int((at - 0.12) * SR):int((at + (1.4 if kind == "knock3" else 0.5)) * SR)] *= 0.2
+        w = int(0.08 * SR)                                              # 80 ms ramps, so a dip never clicks
+        c = np.concatenate([[0.0], np.cumsum(duck, dtype=np.float64)])
+        duck = ((c[w:] - c[:-w]) / w).astype(np.float32)
+        duck = np.concatenate([duck, np.ones(n - len(duck), np.float32)])
+        env = np.minimum(1, tt / 2.0) * np.clip((self.TOTAL - tt) / 2.5, 0, 1)
+        mus *= (env * duck).astype(np.float32)
+        room = np.convolve(np.random.default_rng(78).standard_normal(n), np.ones(24) / 24, "same").astype(np.float32) * 0.02
+        for tp in self.tapes:
+            a_line, b_line, mode = (tp + ("tape",))[:3]
             ts = self.line_times[self._line(a_line)][1] + 0.05
             tb = self.line_times[self._line(b_line)][0] - 0.35
-            a_, b_, c_ = int((ts - 0.7) * SR), int(ts * SR), int(tb * SR)
+            a_, b_, c_ = int((ts - (0.7 if mode == "tape" else 0.06)) * SR), int(ts * SR), int(tb * SR)
             seg = mus[a_:b_].copy()
-            pos = np.cumsum(np.linspace(1, 0, len(seg)) ** 1.3)
-            pos -= pos[0]
-            mus[a_:b_] = np.interp(pos, np.arange(len(seg)), seg) * np.linspace(1, 0.3, len(seg))
-            mus[b_:c_] = room[b_:c_]
+            if mode == "tape":
+                pos = np.cumsum(np.linspace(1, 0, len(seg)) ** 1.3)
+                pos -= pos[0]
+                mus[a_:b_] = np.interp(pos, np.arange(len(seg)), seg) * np.linspace(1, 0.3, len(seg))
+            else:
+                mus[a_:b_] = seg * np.linspace(1, 0, len(seg))
+            mus[b_:c_] = 0.0
             r = min(int(0.9 * SR), len(mus) - c_)
-            mus[c_:c_ + r] = mus[c_:c_ + r] * np.linspace(0, 1, r) + room[c_:c_ + r] * np.linspace(1, 0, r)
-        write_wav(path, mus)
+            mus[c_:c_ + r] *= np.linspace(0, 1, r)
+        mus = mus * 0.6 + room                                         # room tone: never digital zero, even in the silences
+        write_wav(os.path.join(self.E, "music.wav"), mus[: int(self.TOTAL * SR)])
 
     def sfx(self):
-        super().sfx()
-        path = os.path.join(self.E, "sfx.wav")
-        fx = _read(path).copy()
+        """Only the sounds the story needs: knocks and the phone. No scribbles, no pops."""
+        fx = np.zeros(int(self.TOTAL * SR), np.float32)
         rng = np.random.default_rng(31 + self.seed)
 
         def put(x, at, g):
@@ -125,7 +167,39 @@ class Story(Video):
         for kind, at in [ev for sc in self.SC for ev in sc.snd]:
             if kind == "knock3":
                 for k, dt in enumerate((0.0, 0.5, 1.0)):
-                    put(knock_s(rng), at + dt + rng.uniform(-0.03, 0.03), 0.62 * (1.0, 0.92, 1.04)[k])
+                    put(knock_s(rng), at + dt + rng.uniform(-0.03, 0.03), 1.5 * (1.0, 0.92, 1.04)[k])
+            elif kind == "knock1":
+                put(knock_s(rng), at, 1.5)
             elif kind == "buzz":
                 put(buzz_s(rng), at, 0.16)
-        write_wav(path, fx)
+        write_wav(os.path.join(self.E, "sfx.wav"), fx)
+
+    CUE = {"knock3": ("[three slow knocks]", 1.4), "knock1": ("[a knock]", 1.0), "buzz": ("[phone buzzing]", 1.0)}
+
+    def write_srt(self, path):
+        """As Video.write_srt, but a cue never mixes two speakers, and the knocks and the buzz get their own cues
+        (for people watching on mute)."""
+        def stamp(t):
+            ms = int(round(t * 1000))
+            return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
+        raw = [(part, a, b, i) for i in range(len(self.LINES)) for part, a, b in self.timed_chunks(i)]
+        cues, k = [], 0
+        while k < len(raw):
+            txt, a, b, i = raw[k]
+            while (b - a < 0.9 and k + 1 < len(raw) and raw[k + 1][3] == i and raw[k + 1][1] - b < 0.7
+                   and len(txt) + len(raw[k + 1][0]) < 60):
+                k += 1
+                txt, b = txt + " " + raw[k][0], raw[k][2]
+            cues.append((cl(txt), a, b))
+            k += 1
+        spoken = [(a, b) for _, a, b in cues]
+        for kind, at in [ev for sc in self.SC for ev in sc.snd]:
+            if kind in self.CUE and not any(a < at + 0.5 and at < b for a, b in spoken):   # only in the gaps: never cut a line short
+                cues.append((self.CUE[kind][0], at, at + self.CUE[kind][1]))
+        cues.sort(key=lambda c: c[1])
+        out = []
+        for c, (part, a, b) in enumerate(cues):
+            nxt = cues[c + 1][1] - 0.04 if c + 1 < len(cues) else b + 1.0
+            end = min(max(b + 0.3, a + 1.0), nxt)
+            out.append(f"{c + 1}\n{stamp(a)} --> {stamp(end)}\n{part}\n")
+        open(path, "w").write("\n".join(out))
