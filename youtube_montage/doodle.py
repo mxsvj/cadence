@@ -586,10 +586,11 @@ def _face(ctx, hc, R, tilt, mood, t, b, look, blinks, seed):
     ey = -R * 0.08
     for ex in (-R * 0.33, R * 0.33):
         if mood in ("blank", "stare"):                # blank: hollow eyes, nobody home; stare: wide open, tiny pupils, never blinking
-            stroke(ctx, Path(P_ell(ex, ey, 8.5, 9.5, seed + 3, 0.08), seed + 3), b, 3.8, INK, amp=0.3)
+            er = 1.25 if mood == "stare" else 1.0
+            stroke(ctx, Path(P_ell(ex, ey, 8.5 * er, 9.5 * er, seed + 3, 0.08), seed + 3), b, 3.8, INK, amp=0.3)
             if mood == "stare":
                 ctx.new_path()
-                ctx.arc(ex, ey + 1, 2.8, 0, 2 * math.pi)
+                ctx.arc(ex, ey + 1, 2.2, 0, 2 * math.pi)
                 ctx.set_source_rgba(*rgb(INK))
                 ctx.fill()
             continue
@@ -613,7 +614,7 @@ def _face(ctx, hc, R, tilt, mood, t, b, look, blinks, seed):
         "smug": P_bez((-R * 0.22, my + 2), (R * 0.1, my + 4), (R * 0.32, my - 8)),
         "sleep": P_ell(0, my + 2, 5, 4, 1, 0.0, closed=True),
         "blank": P_line(-R * 0.16, my + 4, R * 0.18, my + 2, 0, 3),
-        "stare": P_bez((-R * 0.3, my - 3), (0, my + 8), (R * 0.3, my - 3)),
+        "stare": P_bez((-R * 0.42, my - 1), (0, my + 5), (R * 0.42, my - 1)),
     }.get(mood)
     if mood in ("o", "wow"):
         rr = 7 if mood == "o" else 10

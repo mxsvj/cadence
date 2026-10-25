@@ -14,7 +14,8 @@ from doodle_video import cl, kokoro_say, run, sentences, write_wav
 FX = {"door": "lowpass=f=3000,highpass=f=160,aecho=0.8:0.45:24:0.18",
       "radio": "highpass=f=330,lowpass=f=3300,acompressor=threshold=-26dB:ratio=4:attack=5:release=80,volume=1.4",
       "whisper": "highpass=f=120",
-      "child": "asetrate=27700,aresample=24000,atempo=0.8664,highpass=f=150"}     # +2.5 semitones, same speed
+      # a child: +5 semitones with the formants kept, then everything up 12 % (formants too), same speed: about 265 Hz
+      "child": "rubberband=pitch=1.335:formant=preserved,asetrate=26880,aresample=24000,atempo=0.8929,highpass=f=170"}
 TARGET = -20.0          # every line's speech level (dBFS RMS over its voiced 20 ms windows), plus the line's own gain
 
 
@@ -55,12 +56,16 @@ def buzz_s(rng, vel=1.0):
 
 
 class Story(Video):
-    def __init__(self, slug, tapes=(), **kw):
-        super().__init__(slug, **kw)
-        self.tapes = list(tapes)
+    KNOCK_GAP = 0.85        # slow, polite
 
-    def L(self, g, sub, voice="af_heart", fx=None, speed=None, after=0.0, gain=0.0):
-        self.LINES.append(dict(g=g, sub=sub, voice=voice, fx=fx, speed=speed, after=after, gain=gain))
+    def __init__(self, slug, tapes=(), swells=(), dips=(), **kw):
+        """tapes: (line it stops after, line it comes back on, "tape" | "cut"); swells: (line, last line, seconds after it):
+        a low rumble that rises and is chopped off; dips: (line, line or None for the end, gain) on the music."""
+        super().__init__(slug, **kw)
+        self.tapes, self.swells, self.dips = list(tapes), list(swells), list(dips)
+
+    def L(self, g, sub, voice="af_heart", fx=None, speed=None, after=0.0, gain=0.0, who=None):
+        self.LINES.append(dict(g=g, sub=sub, voice=voice, fx=fx, speed=speed, after=after, gain=gain, who=who))
 
     def speak(self, sub):
         return super().speak(sub.replace('"', ""))
@@ -126,9 +131,11 @@ class Story(Video):
         duck = np.ones(n, np.float32)
         for a_, b_ in [(self.q_at(a) - 0.05, self.q_at(b) - 0.2) for a, b in self.hush]:
             duck[int(a_ * SR):int(b_ * SR)] *= 0.16
+        for a, b, gn in self.dips:
+            duck[int(self.q_at(a) * SR):(int(self.q_at(b) * SR) if b else n)] *= gn
         for kind, at in [ev for sc in self.SC for ev in sc.snd]:
             if kind in ("knock3", "knock1"):
-                duck[int((at - 0.12) * SR):int((at + (1.4 if kind == "knock3" else 0.5)) * SR)] *= 0.2
+                duck[int((at - 0.12) * SR):int((at + (2 * self.KNOCK_GAP + 0.4 if kind == "knock3" else 0.5)) * SR)] *= 0.2
         w = int(0.08 * SR)                                              # 80 ms ramps, so a dip never clicks
         c = np.concatenate([[0.0], np.cumsum(duck, dtype=np.float64)])
         duck = ((c[w:] - c[:-w]) / w).astype(np.float32)
@@ -151,6 +158,16 @@ class Story(Video):
             mus[b_:c_] = 0.0
             r = min(int(0.9 * SR), len(mus) - c_)
             mus[c_:c_ + r] *= np.linspace(0, 1, r)
+        for a_line, b_line, off in self.swells:                       # a rumble that builds, then stops dead on the cut
+            t0, t1 = self.line_times[self._line(a_line)][0], self.line_times[self._line(b_line)][1] + off
+            i0, i1 = int(t0 * SR), int(t1 * SR)
+            k = np.arange(i1 - i0) / SR
+            u = k / max(1e-6, k[-1])
+            sub = (np.sin(2 * np.pi * 41 * k) + 0.6 * np.sin(2 * np.pi * 82.4 * k + 1) + 0.25 * np.sin(2 * np.pi * 123.5 * k + 2)
+                   + 0.3 * np.convolve(rng.standard_normal(len(k)), np.ones(60) / 60, "same") * 8)
+            env_s = u ** 2 * 0.55 * (1 + 0.15 * np.sin(2 * np.pi * 0.9 * k))
+            env_s[-int(0.01 * SR):] *= np.linspace(1, 0, int(0.01 * SR))
+            mus[i0:i1] += (sub * env_s).astype(np.float32)
         mus = mus * 0.6 + room                                         # room tone: never digital zero, even in the silences
         write_wav(os.path.join(self.E, "music.wav"), mus[: int(self.TOTAL * SR)])
 
@@ -166,15 +183,17 @@ class Story(Video):
 
         for kind, at in [ev for sc in self.SC for ev in sc.snd]:
             if kind == "knock3":
-                for k, dt in enumerate((0.0, 0.5, 1.0)):
-                    put(knock_s(rng), at + dt + rng.uniform(-0.03, 0.03), 1.5 * (1.0, 0.92, 1.04)[k])
+                for k in range(3):
+                    put(knock_s(rng), at + k * self.KNOCK_GAP + rng.uniform(-0.03, 0.03), 1.06 * (1.0, 0.92, 1.04)[k])
             elif kind == "knock1":
-                put(knock_s(rng), at, 1.5)
+                put(knock_s(rng), at, 1.06)
+            elif kind == "knock1m":                                    # a knock heard from behind a wall
+                put(np.convolve(knock_s(rng), np.ones(14) / 14, "same").astype(np.float32), at, 0.8)
             elif kind == "buzz":
                 put(buzz_s(rng), at, 0.16)
         write_wav(os.path.join(self.E, "sfx.wav"), fx)
 
-    CUE = {"knock3": ("[three slow knocks]", 1.4), "knock1": ("[a knock]", 1.0), "buzz": ("[phone buzzing]", 1.0)}
+    CUE = {"knock3": ("[three slow knocks]", 2.0), "knock1": ("[a knock]", 1.0), "buzz": ("[phone buzzing]", 1.0)}
 
     def write_srt(self, path):
         """As Video.write_srt, but a cue never mixes two speakers, and the knocks and the buzz get their own cues
@@ -182,7 +201,8 @@ class Story(Video):
         def stamp(t):
             ms = int(round(t * 1000))
             return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
-        raw = [(part, a, b, i) for i in range(len(self.LINES)) for part, a, b in self.timed_chunks(i)]
+        raw = [((f"{self.LINES[i]['who']}: " if self.LINES[i]["who"] and j == 0 else "") + part, a, b, i)
+               for i in range(len(self.LINES)) for j, (part, a, b) in enumerate(self.timed_chunks(i))]       # who speaks, for viewers on mute
         cues, k = [], 0
         while k < len(raw):
             txt, a, b, i = raw[k]
