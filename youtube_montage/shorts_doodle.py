@@ -181,7 +181,7 @@ def make(key, idx):
                 e(ctx, tq)
         if outro and t >= to:
             if "_out" not in cap_cache:
-                (qa, qb, _q), (ca, _cb, _c) = osp[:2]
+                qa, qb, ca = osp[0][0], osp[-2][1], osp[-1][0]     # the question can be spoken in two parts ("avalanche or snowball: which one...")
                 l1, l2 = outro[0], outro[1]
                 cps = (len(l1) + len(l2)) / max(0.8, qb - qa)
                 cap_cache["_out"] = [T(l1, SW / 2 - 40, CAP_Y, min(CAP_SIZE, CAP_W / text_w(l1, 1)), INK, at=to + qa - t0, anchor="m", cps=cps),
