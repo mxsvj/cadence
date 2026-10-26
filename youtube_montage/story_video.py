@@ -16,6 +16,10 @@ FX = {"door": "lowpass=f=3000,highpass=f=160,aecho=0.8:0.45:24:0.18",
       "whisper": "highpass=f=120",
       # a child: +5 semitones with the formants kept, then everything up 12 % (formants too), same speed: about 265 Hz
       "child": "rubberband=pitch=1.335:formant=preserved,asetrate=26880,aresample=24000,atempo=0.8929,highpass=f=170"}
+FX["hall"] = "aecho=0.8:0.55:70|130:0.3|0.2"                                    # said out in the stairwell
+FX["child_hall"] = FX["child"] + "," + FX["hall"]
+FX["child_far"] = FX["child"] + ",lowpass=f=2600,aecho=0.8:0.6:90|170:0.35|0.25"   # from a flat upstairs
+FX["self_door"] = FX["door"]                                                     # Maya's own words, coming back through the door
 TARGET = -20.0          # every line's speech level (dBFS RMS over its voiced 20 ms windows), plus the line's own gain
 
 
@@ -191,9 +195,16 @@ class Story(Video):
                 put(np.convolve(knock_s(rng), np.ones(14) / 14, "same").astype(np.float32), at, 0.8)
             elif kind == "buzz":
                 put(buzz_s(rng), at, 0.16)
+            elif kind == "clink":                                      # an empty bottle knocked over on a tiled floor
+                m = int(0.5 * SR)
+                tt = np.arange(m) / SR
+                x = sum(a * np.sin(2 * np.pi * f * tt) * np.exp(-tt / d) for f, a, d in ((2480, 1.0, 0.09), (3910, 0.6, 0.06), (6150, 0.3, 0.03)))
+                x[int(0.11 * SR):] += 0.5 * x[: m - int(0.11 * SR)]                    # it bounces once
+                put((x / np.abs(x).max()).astype(np.float32), at, 0.5)
         write_wav(os.path.join(self.E, "sfx.wav"), fx)
 
-    CUE = {"knock3": ("[three slow knocks]", 2.0), "knock1": ("[a knock]", 1.0), "buzz": ("[phone buzzing]", 1.0)}
+    CUE = {"knock3": ("[three slow knocks]", 2.0), "knock1": ("[a knock]", 1.0), "buzz": ("[phone buzzing]", 1.0),
+           "clink": ("[a bottle rolls on the floor]", 1.4)}
 
     def write_srt(self, path):
         """As Video.write_srt, but a cue never mixes two speakers, and the knocks and the buzz get their own cues
