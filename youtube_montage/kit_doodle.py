@@ -117,7 +117,7 @@ META = {
                "Schuldnerberatung (your local council or Caritas/Diakonie) · France: Point conseil budget · Netherlands: Geldfit. "
                "Which service helped you? Add yours for your country below.",
         thumbs="D2 (bouton « PAY MINIMUM », recommandée) et D1 (rocher « DEBT »)",
-        next="How to Invest Your First €1,000 (8 Steps, in Order)"),
+        next=None, tail=4.5),                # ends on its own outro question, no end screen
 }
 
 SETTINGS = """RÉGLAGES
@@ -125,8 +125,7 @@ SETTINGS = """RÉGLAGES
 - Catégorie : Éducation.
 - Langue de la vidéo : anglais. Sous-titres : importe {srt} (Sous-titres → Ajouter une langue → Anglais → Importer un fichier → Avec minutage).
 - Contenu modifié ou synthétique : la voix est synthétique mais n'imite aucune personne réelle ; lis la consigne affichée au moment de l'upload.
-- Écran de fin (dernières {end:.0f} s, tout est déjà dessiné à ce moment-là) : l'élément « S'abonner » (rond) sur le cercle orange dessiné à gauche,
-  l'élément « Vidéo » → vidéo spécifique ({next}) sur le cadre 16:9 dessiné à droite. Publie cette vidéo-là avant celle-ci.
+{endscreen}
 - Miniatures « Test & compare » : {thumbs}.
 - Publication : planifiée un dimanche ou un jeudi vers 16 h (heure de Paris)."""
 
@@ -136,8 +135,14 @@ def main(key):
     D = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, D)
     V = importlib.import_module(m["module"]).V
-    V.prepare()
+    V.prepare(tail=m.get("tail", 12.5))
     out = os.path.join(D, f"kit_{key}")
+    if m["next"]:
+        endscreen = (f"- Écran de fin (dernières {min(20.0, V.TOTAL - V.starts[-1]):.0f} s, tout est déjà dessiné à ce moment-là) : l'élément « S'abonner » "
+                     f"(rond) sur le cercle orange dessiné à gauche,\n  l'élément « Vidéo » → vidéo spécifique ({m['next']}) sur le cadre 16:9 dessiné "
+                     "à droite. Publie cette vidéo-là avant celle-ci.")
+    else:
+        endscreen = "- Écran de fin : aucun. La vidéo se termine sur sa propre outro (une question), sans proposition de vidéo."
     os.makedirs(out, exist_ok=True)
     mmss = lambda t: f"{int(t) // 60}:{int(t) % 60:02d}"
     chap = [f"0:00 {m['first']}"]
@@ -150,7 +155,7 @@ def main(key):
     assert len(m["tags"]) <= 500
     kit = (f"TITRE (≤ 100 caractères, les 60 premiers sont les plus visibles)\n{m['title']}\n\nVariantes à tester :\n" + "\n".join(m["variants"])
            + f"\n\n\nDESCRIPTION (à coller telle quelle)\n{desc}\n\n\nTAGS (YouTube → Détails → Afficher plus → Tags ; 500 caractères max, "
-           f"{len(m['tags'])} ici)\n{m['tags']}\n\n\n" + SETTINGS.format(srt=srt, end=min(20.0, V.TOTAL - V.starts[-1]), next=m["next"], thumbs=m["thumbs"]) + "\n")
+           f"{len(m['tags'])} ici)\n{m['tags']}\n\n\n" + SETTINGS.format(srt=srt, endscreen=endscreen, thumbs=m["thumbs"]) + "\n")
     if m.get("pinned"):
         kit += f"\n\nCOMMENTAIRE ÉPINGLÉ (poste-le toi-même juste après la publication, puis « Épingler »)\n{m['pinned']}\n"
     open(os.path.join(out, f"{m['file']}_youtube_upload.txt"), "w").write(kit)

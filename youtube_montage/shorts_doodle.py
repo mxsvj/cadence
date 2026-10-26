@@ -28,7 +28,7 @@ SHORTS = {
     "tricks": [(5, 8, "€9.99", "isn't nine.", "Why €9.99 Isn't Nine Euros"),
                (10, 14, "the option", "nobody picks.", "The Price Option Nobody Picks (and Why It Exists)"),
                (22, 26, "\"half price!\"", "really?", "\"Half Price!\" Is It Really?")],
-    "first1000": [(0, 5, "your first €1,000:", "most plans are wrong.", "Your First €1,000: Most Plans Are Wrong"),
+    "first1000": [(0, 4, "your first €1,000:", "most plans are wrong.", "Your First €1,000: Most Plans Are Wrong"),
                   (23, 26, "€100 a month", "for 30 years?", "€100 a Month for 30 Years"),
                   (28, 31, "the market crashed.", "now what?", "The Market Crashed. Now What?")],
     "debt": [(0, 2, "the most expensive", "button in your app.", "The Most Expensive Button in Your Card App"),
@@ -39,6 +39,12 @@ SHORTS = {
 # voice says: the question, then "Tell me in the comments.")
 OUTROS = {
     ("tricks", 2): ("ever fallen for a", "fake half price?", "Ever fallen for a fake half price? Tell me in the comments."),
+    ("first1000", 0): ("what would you do with", "your first €1,000?", "What would you do with your first thousand euros? Tell me in the comments."),
+    ("first1000", 1): ("could you put €100", "aside every month?", "Could you put a hundred euros aside every month? Tell me in the comments."),
+    ("first1000", 2): ("how often do you", "check your account?", "How often do you check your account? Tell me in the comments."),
+    ("debt", 0): ("have you ever paid", "just the minimum?", "Have you ever paid just the minimum? Tell me in the comments."),
+    ("debt", 1): ("avalanche or snowball:", "which one are you?", "Avalanche or snowball: which one are you? Tell me in the comments."),
+    ("debt", 2): ("did you know it could", "take 30 years?", "Did you know it could take thirty years? Tell me in the comments."),
 }
 MODULES = {"compound": "build_compound", "tricks": "build_tricks", "first1000": "build_first1000", "debt": "build_debt"}
 
@@ -122,7 +128,7 @@ def make(key, idx):
     vhook = sc0.t0 + min(hook + 0.4, 3.0)       # +0.4 s: let the first word being written finish; the first frame shows the first drawing already there (and never the scene before: line
                                 # times are rounded to samples, so "the line's start" can fall a hair before its scene)
     caps = captions(V, la, lb)
-    crop = crops(V, t0, t1)
+    crop = crops(V, t0, tv)
     os.makedirs(OUT, exist_ok=True)
     name = f"short_{key}_{idx + 1}"
     paper, _p, PW, PH = make_paper(seed=3 + V.seed)

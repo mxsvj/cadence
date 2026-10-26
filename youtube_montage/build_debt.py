@@ -62,7 +62,7 @@ L("f1", "Debt isn't a character flaw. It's a maths problem, and maths problems c
 L("f2", "List it. Pay more than the minimum. Pick an order. One at a time. Lower the rate. Don't refill it.")
 L("f2", "That's the whole plan. Screenshot it, and stick it on the fridge.")
 L("end", "This is education, not financial advice. If debt feels unmanageable, many countries have free debt advice services. "
-         "If this helped, subscribe. Next up: how to invest your first thousand euros.")
+         "So: which debt are you killing first? Tell me in the comments.")
 
 # the three debts used from step 1 on: the highest rate and the smallest balance are different debts, so the two orders really differ
 DEBTS = [("store credit", 800, 9, 25), ("card", 2200, 21, 45), ("car loan", 3500, 7, 60)]
@@ -470,8 +470,26 @@ def _(S):
 
 @V.scene("end")
 def _(S):
-    endcard(S, "invest your\nfirst €1,000.", note="education, not financial advice.\nfree debt help exists in most countries.")
+    """The outro: no next-video box, no subscribe target. The fridge list from step 6, its last line crossed out on
+    "killing", you pointing at it, and the question."""
+    S.noframe = True
+    t0 = S.l(0)
+    S.text("education, not financial advice.\nfree debt help exists in most countries.", 130, 150, 64, GREY, at=t0 + 0.1, lh=1.1)
+    fx, fy = 1520, 560
+    S.draw([Fl(P_rect(fx - 260, fy - 420, 520, 880, 0, r=30), (236, 240, 246)), stk(P_rect(fx - 260, fy - 420, 520, 880, 8, r=30), 8),
+            stk(P_line(fx - 260, fy - 120, fx + 260, fy - 120, 0.01, 1), 6), stk(P_line(fx - 200, fy - 360, fx - 200, fy - 220, 0.01, 2), 8),
+            stk(P_line(fx - 200, fy - 60, fx - 200, fy + 120, 0.01, 3), 8)], t0 + 0.3, 0.5)
+    S.draw([Fl(P_rect(fx - 100, fy - 40, 260, 340, 0), (250, 248, 242)), stk(P_rect(fx - 100, fy - 40, 260, 340, 6), 5)], t0 + 0.8, 0.3, snd=None)
+    for k in range(4):
+        y = fy + 30 + k * 70
+        S.draw([stk(P_line(fx - 70, y, fx + 120, y, 0.02, k), 4.5, GREY)], t0 + 1.0 + 0.1 * k, 0.15, snd=None)
+        S.add(strike(fx - 80, y + 4, fx + 135, y - 4, (t0 + 1.6 + 0.3 * k) if k < 3 else S.c("killing") + 0.3, RED, 6, seed=k))
+    S.add(Fig(1130, 990, 0.95, poses=[("stand", 0), ("point_r", S.c("which") + 0.1)], moods=[("smile", 0), ("happy", S.c("comments"))], seed=3))
+    S.text("which debt are you", 130, 520, 110, INK, at=S.c("which") - 0.2, rot=-2)
+    S.text("killing first?", 160, 690, 150, ORANGE, at=S.c("killing") - 0.2, rot=-2)
+    S.text("tell me in the comments.", 170, 850, 72, INK, at=S.c("comments") - 0.4, rot=-1)
 
 
 if __name__ == "__main__":
+    V.prepare(tail=4.5)              # a short outro, not a 12 s end screen
     V.main()
