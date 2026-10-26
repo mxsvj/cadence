@@ -20,6 +20,9 @@ FX["hall"] = "aecho=0.8:0.55:70|130:0.3|0.2"                                    
 FX["child_hall"] = FX["child"] + "," + FX["hall"]
 FX["child_far"] = FX["child"] + ",lowpass=f=2600,aecho=0.8:0.6:90|170:0.35|0.25"   # from a flat upstairs
 FX["self_door"] = FX["door"]                                                     # Maya's own words, coming back through the door
+FX["phone"] = "highpass=f=350,lowpass=f=3400,acompressor=threshold=-24dB:ratio=3:attack=5:release=80"
+# a child crying from a flat upstairs: higher still, far, shaking
+FX["child_far2"] = FX["child"] + ",rubberband=pitch=1.12,lowpass=f=2400,aecho=0.8:0.6:90|170:0.35|0.25,tremolo=f=6:d=0.35,vibrato=f=5.5:d=0.25"
 TARGET = -20.0          # every line's speech level (dBFS RMS over its voiced 20 ms windows), plus the line's own gain
 
 
@@ -90,6 +93,14 @@ class Story(Video):
                       "areverse" + (("," + FX[fx]) if fx else ""))
                 run(["ffmpeg", "-y", "-i", raw, "-af", af, "-ar", str(SR), "-ac", "1", out])
             v = _read(out).copy()
+            if fx == "whisper":                                       # breath instead of voice: keep a little tone, mostly shaped noise
+                rw = np.random.default_rng(i * 31 + k)
+                env = np.convolve(np.abs(v), np.ones(441) / 441, "same")
+                nz = rw.standard_normal(len(v))
+                band = np.convolve(nz - np.convolve(nz, np.ones(6) / 6, "same"), np.ones(3) / 3, "same")
+                breath = band * env
+                breath *= np.sqrt(np.mean(v ** 2)) / max(1e-9, np.sqrt(np.mean(breath ** 2)))
+                v = (0.3 * v + 0.9 * breath).astype(np.float32)
             win = int(0.02 * SR)
             rms = np.sqrt(np.convolve(v ** 2, np.ones(win) / win, "same")[::win])
             act = rms[rms > 0.1 * rms.max()]
@@ -171,7 +182,8 @@ class Story(Video):
                    + 0.3 * np.convolve(rng.standard_normal(len(k)), np.ones(60) / 60, "same") * 8)
             env_s = u ** 2 * 0.55 * (1 + 0.15 * np.sin(2 * np.pi * 0.9 * k))
             env_s[-int(0.01 * SR):] *= np.linspace(1, 0, int(0.01 * SR))
-            mus[i0:i1] += (sub * env_s).astype(np.float32)
+            hi = (np.sin(2 * np.pi * 1480 * k) + np.sin(2 * np.pi * 1568 * k) + 0.6 * np.sin(2 * np.pi * 2217 * k + 1)) * 0.12   # a high, beating layer phones can play
+            mus[i0:i1] += ((sub + hi * u) * env_s).astype(np.float32)
         mus = mus * 0.6 + room                                         # room tone: never digital zero, even in the silences
         write_wav(os.path.join(self.E, "music.wav"), mus[: int(self.TOTAL * SR)])
 
@@ -201,6 +213,17 @@ class Story(Video):
                 x = sum(a * np.sin(2 * np.pi * f * tt) * np.exp(-tt / d) for f, a, d in ((2480, 1.0, 0.09), (3910, 0.6, 0.06), (6150, 0.3, 0.03)))
                 x[int(0.11 * SR):] += 0.5 * x[: m - int(0.11 * SR)]                    # it bounces once
                 put((x / np.abs(x).max()).astype(np.float32), at, 0.5)
+                m2 = int(1.1 * SR)                                     # then rolls: a low rumble with glassy ticks, slowing down
+                t2 = np.arange(m2) / SR
+                rum = np.convolve(rng.standard_normal(m2), np.ones(40) / 40, "same") * 3
+                ticks = np.zeros(m2)
+                tk = 0.0
+                while tk < 1.0:
+                    j = int(tk * SR)
+                    ticks[j:j + 400] += np.sin(2 * np.pi * 3100 * np.arange(min(400, m2 - j)) / SR) * np.exp(-np.arange(min(400, m2 - j)) / 60)
+                    tk += 0.06 + 0.2 * tk
+                roll = (rum * 0.6 + ticks * 0.5) * np.clip((1.1 - t2) / 1.1, 0, 1)
+                put((roll / np.abs(roll).max()).astype(np.float32), at + 0.2, 0.25)
         write_wav(os.path.join(self.E, "sfx.wav"), fx)
 
     CUE = {"knock3": ("[three slow knocks]", 2.0), "knock1": ("[a knock]", 1.0), "buzz": ("[phone buzzing]", 1.0),
