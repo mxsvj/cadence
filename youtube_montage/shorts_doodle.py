@@ -6,6 +6,7 @@ import importlib
 import os
 import subprocess
 import sys
+import wave
 
 import cairocffi as cairo
 import numpy as np
@@ -33,6 +34,11 @@ SHORTS = {
     "debt": [(0, 2, "the most expensive", "button in your app.", "The Most Expensive Button in Your Card App"),
              (16, 20, "avalanche or", "snowball?", "Avalanche or Snowball? Which Debt First"),
              (10, 14, "a 2% minimum", "= 30+ years.", "A 2% Minimum Payment Can Take 30+ Years")],
+}
+# (key, index): a spoken closing question instead of "full video on the channel." (question line 1, line 2 in orange, what the
+# voice says: the question, then "Tell me in the comments.")
+OUTROS = {
+    ("tricks", 2): ("ever fallen for a", "fake half price?", "Ever fallen for a fake half price? Tell me in the comments."),
 }
 MODULES = {"compound": "build_compound", "tricks": "build_tricks", "first1000": "build_first1000", "debt": "build_debt"}
 
@@ -89,12 +95,26 @@ def captions(V, la, lb):
     return out
 
 
+def read_wav(path, a, b):
+    with wave.open(path) as w:
+        w.setpos(int(round(a * SR)))
+        v = np.frombuffer(w.readframes(int(round((b - a) * SR))), dtype=np.int16).astype(np.float32) / 32768
+    return np.pad(v, (0, max(0, int(round((b - a) * SR)) - len(v))))
+
+
 def make(key, idx):
     V = importlib.import_module(MODULES[key]).V
     V.prepare()
     la, lb, h1, h2, ytitle = SHORTS[key][idx]
     t0 = V.line_times[la][0] - 0.05
     t1 = V.line_times[lb][1] + 0.7
+    tv = t1                                     # the drawing stops here: after it the long video moves on to its next part
+    outro = OUTROS.get((key, idx))
+    if outro:
+        ov = V.tts(900 + idx, outro[2])
+        osp = V.SPANS[900 + idx]
+        to = t1 + 0.05                          # the outro voice starts here
+        t1 = to + len(ov) / SR + 1.3
     g0 = V.GI[la]
     V.LAG[g0] = 0.0                                       # a Short starts on its own drawing, never on the previous one
     sc0 = V.SC[g0]
@@ -120,7 +140,7 @@ def make(key, idx):
     n = int(round((t1 - t0) * FPS))
     for k in range(n):
         t = t0 + k / FPS
-        V.frame(frame, paper, PW, PH, max(t, vhook))
+        V.frame(frame, paper, PW, PH, min(max(t, vhook), tv))
         frame.flush()
         ctx = cairo.Context(out)
         ctx.set_line_cap(cairo.LINE_CAP_ROUND)
@@ -130,7 +150,7 @@ def make(key, idx):
         tq = math.floor((t - t0) * STEP_FPS) / STEP_FPS
         for e in title:
             e(ctx, tq)
-        g = max(j for j in range(len(V.SC)) if V.GSTART[j] <= max(t, vhook) + 1e-6)
+        g = max(j for j in range(len(V.SC)) if V.GSTART[j] <= min(max(t, vhook), tv) + 1e-6)
         cx, cy, cw, ch = crop.get(g, (0, 0, W, H))
         sc_ = min((SW - 60) / cw, BAND_H / ch)
         ox, oy = (SW - cw * sc_) / 2, BAND_Y + (BAND_H - ch * sc_) / 2
@@ -153,7 +173,18 @@ def make(key, idx):
                 cap_cache[cur[0]] = [T(ln, SW / 2 - 40, CAP_Y + j * CAP_SIZE * 1.15, CAP_SIZE, INK, at=-9, anchor="m") for j, ln in enumerate(lines[:3])]
             for e in cap_cache[cur[0]]:
                 e(ctx, tq)
-        if t > t1 - 2.4:
+        if outro and t >= to:
+            if "_out" not in cap_cache:
+                (qa, qb, _q), (ca, _cb, _c) = osp[:2]
+                l1, l2 = outro[0], outro[1]
+                cps = (len(l1) + len(l2)) / max(0.8, qb - qa)
+                cap_cache["_out"] = [T(l1, SW / 2 - 40, CAP_Y, min(CAP_SIZE, CAP_W / text_w(l1, 1)), INK, at=to + qa - t0, anchor="m", cps=cps),
+                                     T(l2, SW / 2 - 40, CAP_Y + 1.15 * CAP_SIZE, min(CAP_SIZE, CAP_W / text_w(l2, 1)), ORANGE,
+                                       at=to + qa + len(l1) / cps - t0, anchor="m", cps=cps),
+                                     T("tell me in the comments.", SW / 2 - 40, CAP_Y + 2.45 * CAP_SIZE, 62, GREY, at=to + ca - t0, anchor="m", cps=40)]
+            for e in cap_cache["_out"]:
+                e(ctx, tq)
+        elif not outro and t > t1 - 2.4:
             if "_cta" not in cap_cache:
                 cap_cache["_cta"] = T("full video on the channel.", SW / 2 - 40, CAP_Y + 3.4 * CAP_SIZE, 58, GREY, at=t1 - 2.4 - t0, anchor="m", cps=40)
             cap_cache["_cta"](ctx, tq)
@@ -164,10 +195,35 @@ def make(key, idx):
     mix = os.path.join(V.E, "mix.wav")
     final = os.path.join(OUT, name + ".mp4")
     d = t1 - t0
-    run(["ffmpeg", "-y", "-i", vid, "-ss", f"{t0:.3f}", "-t", f"{d:.3f}", "-i", mix,
-         "-af", f"afade=t=in:st=0:d=0.03,afade=t=out:st={d - 0.45:.3f}:d=0.45,loudnorm=I=-14:TP=-2:LRA=11,"
-                "alimiter=limit=0.7:attack=3:release=60:level=disabled:latency=1",
-         "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-movflags", "+faststart", "-shortest", final])
+    if outro:
+        # the long mix carries on into the next part after tv: rebuild the end from the stems instead - the voice with the
+        # outro line added, the music running on under it, no effects - through the same chain as the long video's mix
+        voice = read_wav(os.path.join(V.A, "voice.wav"), t0, t1)
+        voice[int(round((tv - t0) * SR)):] = 0
+        s0 = int(round((to - t0) * SR))
+        voice[s0:s0 + len(ov)] += ov[: len(voice) - s0]
+        sfx = read_wav(os.path.join(V.E, "sfx.wav"), t0, t1)
+        sfx[int(round((tv - t0) * SR)):] = 0
+        stems = [os.path.join(OUT, f"{name}_{k}.wav") for k in ("voice", "music", "sfx")]
+        for path, data in zip(stems, (voice, read_wav(os.path.join(V.E, "music.wav"), t0, t1), sfx)):
+            write_wav(path, data)
+        run(["ffmpeg", "-y", "-i", vid, "-i", stems[0], "-i", stems[1], "-i", stems[2], "-filter_complex",
+             "[1:a]aformat=channel_layouts=stereo,highpass=f=90,deesser=i=0.45:m=0.5:f=0.55,acompressor=threshold=-20dB:ratio=3:attack=5:release=90,"
+             "asplit=2[v1][v2];"
+             "[2:a]aformat=channel_layouts=stereo,volume=0.27[m];[m][v1]sidechaincompress=threshold=0.012:ratio=6:attack=30:release=450[md];"
+             "[3:a]aformat=channel_layouts=stereo,volume=0.6[fx];"
+             f"[v2][md][fx]amix=inputs=3:duration=first:normalize=0,afade=t=in:st=0:d=0.03,afade=t=out:st={d - 1.0:.3f}:d=1.0,"
+             "loudnorm=I=-14:TP=-2:LRA=11,alimiter=limit=0.7:attack=3:release=60:level=disabled:latency=1[out]",
+             "-map", "0:v", "-map", "[out]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-movflags", "+faststart",
+             "-shortest", final])
+        for path in stems:
+            os.remove(path)
+        caps = caps + [(snt, to + a, to + b) for a, b, snt in osp]
+    else:
+        run(["ffmpeg", "-y", "-i", vid, "-ss", f"{t0:.3f}", "-t", f"{d:.3f}", "-i", mix,
+             "-af", f"afade=t=in:st=0:d=0.03,afade=t=out:st={d - 0.45:.3f}:d=0.45,loudnorm=I=-14:TP=-2:LRA=11,"
+                    "alimiter=limit=0.7:attack=3:release=60:level=disabled:latency=1",
+             "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-movflags", "+faststart", "-shortest", final])
     os.remove(vid)
     with open(os.path.join(OUT, name + ".txt"), "w") as f:
         f.write(f"{ytitle}\n{d:.1f}\n" + "\n".join(f"{a - t0:.2f}\t{b - t0:.2f}\t{c}" for c, a, b in caps) + "\n")
