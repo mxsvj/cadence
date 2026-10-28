@@ -857,7 +857,7 @@ class Video:
              "[1:a]aformat=channel_layouts=stereo,volume=0.27[m];[m][v1]sidechaincompress=threshold=0.012:ratio=6:attack=30:release=450[md];"
              "[2:a]aformat=channel_layouts=stereo,volume=0.6[fx];"
              "[v2][md][fx]amix=inputs=3:duration=first:normalize=0,loudnorm=I=-14:TP=-2:LRA=11,"
-             "alimiter=limit=0.7:attack=3:release=60:level=disabled:latency=1[out]",            # AAC overshoots ~1.5 dB on thumps: keep the file under -1 dBTP
+             f"alimiter=limit={getattr(self, 'limit', 0.7)}:attack=3:release=60:level=disabled:latency=1[out]",   # AAC overshoots ~1.5 dB on thumps: keep the file under -1 dBTP
              "-map", "[out]", "-ar", str(SR), mix])
         self.write_srt(os.path.join(self.E, "subtitles_en.srt"))
         final = os.path.join(self.O, f"{self.slug}_sample.mp4" if sample else f"{self.slug}_16x9.mp4")

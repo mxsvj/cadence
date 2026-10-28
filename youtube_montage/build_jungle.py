@@ -25,6 +25,7 @@ V = Story("jungle", say={"Koepcke": "Kepka"}, beat_groups=(), seed=31, voice_spe
           hush=STOPS, silences=STOPS,                        # music down under the question, then nothing at all under the 3-2-1
           tapes=[("Out here, the jungle", "Hour one.", "cut"), ("The helicopter turns.", "Juliane Koepcke lived", "tape")],
           dips=[("So: how many", None, 0.5)])
+V.limit = 0.6                        # the rotor thumps overshoot more than speech after AAC: keep the true peak under -1 dBTP
 L = V.L
 
 # ------------------------------------------------------------------ the crash
