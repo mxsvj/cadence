@@ -31,9 +31,10 @@ SHORTS = {
     "first1000": [(0, 4, "your first €1,000:", "most plans are wrong.", "Your First €1,000: Most Plans Are Wrong"),
                   (23, 26, "€100 a month", "for 30 years?", "€100 a Month for 30 Years"),
                   (28, 31, "the market crashed.", "now what?", "The Market Crashed. Now What?")],
-    "debt": [(0, 2, "the most expensive", "button in your app.", "The Most Expensive Button in Your Card App"),
-             (16, 20, "avalanche or", "snowball?", "Avalanche or Snowball? Which Debt First"),
-             (10, 14, "a 2% minimum", "= 30+ years.", "A 2% Minimum Payment Can Take 30+ Years")],
+    # the long video's hook was cut to two lines on 28 Oct; the 31 Oct Short was rendered from the longer hook before that
+    "debt": [(0, 1, "the most expensive", "button in your app.", "The Most Expensive Button in Your Card App"),
+             (14, 18, "avalanche or", "snowball?", "Avalanche or Snowball? Which Debt First"),
+             (8, 12, "a 2% minimum", "= 30+ years.", "A 2% Minimum Payment Can Take 30+ Years")],
 }
 # (key, index): a spoken closing question instead of "full video on the channel." (question line 1, line 2 in orange, what the
 # voice says: the question, then "Tell me in the comments.")

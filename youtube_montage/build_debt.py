@@ -15,9 +15,7 @@ V = Video("debt", say=SAY, seed=31, keys=dict(prog=[(57, 60, 64, 67), (55, 59, 6
 L = V.L
 
 L("o1", "The minimum payment is the most expensive button in your card app.")
-L("o1", "On a €3,000 card, the minimum starts at €60 a month. Keep paying just that, and it takes about nine years. Pay €150, and it's gone in about two.")
-L("o2", "That's not because you're bad with money. The lower the minimum, the longer you pay, and the more the lender earns.")
-L("o5", "Here's how to escape it, in six steps.")
+L("o1", "Pay only that on a €3,000 card, and it takes about nine years. Here are six steps out.")
 
 L("c1", "One. Put it all on one page.")
 L("c1a", "Write down every debt: how much you owe, the interest rate, and the minimum payment.")
@@ -128,36 +126,11 @@ def _(S):
     S.text("the most expensive", 720, 250, 100, INK, at=-3.0)
     S.text("button.", 740, 370, 120, RED, at=-3.0, rot=-2)
     S.add(arrow(P_bez((720, 330), (640, 420), (590, 520)), -1.0, RED, 8, 0.0))
-    S.text("on €3,000:", 720, 540, 76, INK, at=S.c("€3,000", 1) - 0.2)
-    S.text("€60 a month", 720, 650, 84, INK, at=S.c("€60", 1) - 0.2)
+    S.text("minimum only,", 720, 540, 76, INK, at=S.c("only", 1) - 0.2)            # said first: "pay only that on a €3,000 card"
+    S.text("on €3,000:", 720, 650, 84, INK, at=S.c("€3,000", 1) - 0.2)
     S.draw([stk(P_line(720, 700, 720 + 9 * 110, 700, 0.005, 1), 24, (226, 150, 138))], S.c("nine", 1) - 0.6, 0.6, snd=None)
     S.text("9 years", 720 + 9 * 110, 655, 110, RED, at=S.c("nine", 1) - 0.25, anchor="r", rot=-2)
-    S.text("€150 a month", 720, 810, 84, INK, at=S.c("€150", 1) - 0.2)
-    S.draw([stk(P_line(720, 850, 720 + 2 * 110, 850, 0.005, 2), 24, GREEN)], S.c("gone", 1) - 0.3, 0.3, snd=None)
-    S.text("2 years", 1240, 830, 110, GREEN, at=S.c("two", 1) - 0.35, rot=-2)
-
-
-@V.scene("o2")
-def _(S):
-    S.text("bad with money", 200, 230, 110, INK, at=0.05)
-    S.add(strike(180, 195, 200 + text_w("bad with money", 110), 187, S.c("money") + 0.2, RED, 10))
-    S.text("lower minimum", 200, 430, 96, INK, at=S.c("lower") - 0.15)
-    S.add(arrow(P_line(330, 470, 330, 540, 0.02, 1), S.c("longer") - 0.35, INK, 7, 0.2))
-    S.text("longer to pay", 200, 630, 96, INK, at=S.c("longer") - 0.15)
-    S.add(arrow(P_line(330, 670, 330, 740, 0.02, 2), S.c("more") - 0.35, INK, 7, 0.2))
-    S.text("more for the lender", 200, 830, 100, RED, at=S.c("more") - 0.15, rot=-2)
-    S.draw(bank(1380, 560, 1.1), 0.2, 0.5)
-    for k in range(5):
-        S.draw(coin(1750 + (k % 2) * 14, 720 - k * 46, 0.6), S.c("earns") - 0.3 + 0.1 * k, 0.15, snd="pop" if k == 0 else None)
-    S.text("the lender", 1380, 170, 80, INK, at=0.4, anchor="m")
-
-
-@V.scene("o5")
-def _(S):
-    S.text("6", 300, 600, 380, ORANGE, at=0.1, anchor="m", rot=-6, cps=8)
-    S.text("steps", 470, 520, 130, INK, at=S.c("steps") - 0.1)
-    S.text("out of the trap.", 500, 690, 96, INK, at=0.05)
-    S.add(Fig(1550, 880, 1.2, at=0.0, poses=[("stand", 0), ("wave", S.c("steps"))], moods=[("smile", 0), ("happy", S.c("steps"))], seed=3, flip=True))
+    S.text("6 steps out.", 720, 840, 100, ORANGE, at=S.c("six", 1) - 0.2, rot=-2)
 
 
 V.chapters({1: ("Put it all\non one page.", 0), 2: ("Escape the\nminimum payment.", 1), 3: ("Pick an\norder.", 0), 4: ("One debt\nat a time.", 1),
