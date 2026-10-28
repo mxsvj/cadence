@@ -19,10 +19,11 @@ NIGHT = (24, 23, 28)
 POSES["hang"] = dict(la=(150, 170), ra=(-150, -170), ll=(-10, -5), rl=(10, 5), lean=0, tilt=0)        # drawn rotated 180°: arms hang, legs up
 POSES["sit_hug"] = dict(la=(40, 120), ra=(-40, -120), ll=(70, 10), rl=(80, 14), lean=-4, tilt=8)
 
-V = Story("jungle", say={"Koepcke": "Kepka"}, beat_groups=(), seed=31,
-          hush=[("Stop. What do you do? Option A", "If you chose option A"), ("Stop. Option A: drink", "The puddle is full"),
-                ("Stop. Option A: eat", "Some jungle berries"), ("Stop. Option A: climb", "Uphill, the jungle"), ("Stop. Option A: shout", "Under the canopy")],
-          tapes=[("Out here, the jungle", "Your Plane Goes Down", "cut"), ("The helicopter turns.", "This is close to", "tape")],
+STOPS = [("Stop. What do you do? Option A", "If you chose A, you did"), ("Stop. Option A: wait", "If you chose B: puddle"),
+         ("Stop. Option A: eat", "If you chose A: some"), ("Stop. Option A: find", "If you chose B: uphill"), ("Stop. Option A: run", "If you chose B: under")]
+V = Story("jungle", say={"Koepcke": "Kepka"}, beat_groups=(), seed=31, voice_speed=0.9,
+          hush=STOPS, silences=STOPS,                        # music down under the question, then nothing at all under the 3-2-1
+          tapes=[("Out here, the jungle", "Hour one.", "cut"), ("The helicopter turns.", "Juliane Koepcke lived", "tape")],
           dips=[("So: how many", None, 0.5)])
 L = V.L
 
@@ -30,54 +31,54 @@ L = V.L
 L("o1", "You wake up upside down, still strapped into your seat.")
 L("o1", "Around you: green. Thick, wet, silent green. The rest of the plane is gone.")
 L("o2", "You have a bottle of water, half full. A phone with no signal. And a cut on your arm that won't stop bleeding.")
-L("o3", "Out here, the jungle doesn't need to attack you. It just needs you to make one wrong choice.", after=0.8)
-L("c1", "Your Plane Goes Down in the Jungle. Can you survive?")
+L("o3", "Out here, the jungle doesn't need to attack you. It just needs you to make one wrong choice.")
 # ------------------------------------------------------------------ 1. stay or go
 L("c2", "Hour one.")
 L("d1a", "The wreck is still smoking. Your head is pounding. Every instinct says: walk. Find people.")
 L("d1", "Stop. What do you do? Option A: walk away and look for help. Or option B: stay with the wreck.", after=2.4)
-L("d1x", "If you chose option A, you did what most people would do.")
+L("d1x", "If you chose A, you did what most people would do.")
 L("d1x", "Under this canopy, a rescue plane can't see one person. Walk ten minutes in the wrong direction, and you may never find the wreck again.")
-L("d1y", "Option B is the better choice. A plane is far bigger than you, and it's what search teams look for first.")
+L("d1y", "Option B. A plane is far bigger than you, and it's what search teams look for first.")
 L("d1y", "It's metal for shelter. And if its emergency beacon survived the crash, it may already be calling for help.")
 L("d1y", "So you stay. You wait. You listen for engines.")
 # ------------------------------------------------------------------ 2. water
 L("c3", "Day two.")
 L("d2a", "The bottle is empty. The heat sits on your face like a wet towel. Without water, you have roughly three days. This is day two.")
 L("d2a", "Next to the wreck there's a puddle. Brown, warm, full of leaves.")
-L("d2", "Stop. Option A: drink from the puddle. Or option B: wait for the rain.", after=2.4)
-L("d2x", "The puddle is full of bacteria and parasites. By tomorrow you could have diarrhea, and diarrhea drains water out of you faster than the heat.")
-L("d2x", "The puddle would make you thirstier.")
-L("d2y", "Option B. In a rainforest, it rains often, usually in the afternoon.")
+L("d2", "Stop. Option A: wait for the rain. Or option B: drink from the puddle.", after=2.4)
+L("d2x", "If you chose B: puddle water can carry bacteria and parasites. Within days, they can give you diarrhea, and that drains water out of you faster than the heat.")
+L("d2x", "With no rain coming, you'd drink it anyway. Thirst kills faster. But here, the rain is coming.")
+L("d2y", "Option A. In a rainforest, it rains often, usually in the afternoon.")
 L("d2y", "Spread a sheet of plastic from the cabin, or big leaves. Let the first rinse run off, then fill the bottle.")
 L("d2y", "It isn't perfect water. If you can boil it, boil it. But it's far safer than the puddle.")
-L("d2y", "At four o'clock, the sky opens.")
+L("d2y", "At four o'clock, the sky opens.", after=1.5)          # let the rain fall before "day 3"
 # ------------------------------------------------------------------ 3. food
 L("c4", "Day three.")
 L("d3a", "Nobody has come. Your stomach hurts. On a bush by the wreck: bright red berries. Hundreds of them.")
-L("d3", "Stop. Option A: eat the berries. Or option B: eat nothing you don't know.", after=2.4)
-L("d3x", "Some jungle berries are food. Some will make you vomit for a day. Out here, vomiting means losing water you can't replace.")
+L("d3", "Stop. Option A: eat the berries. Or option B: eat nothing yet.", after=2.4)
+L("d3x", "If you chose A: some jungle berries are food. Some can kill you. Even a mild one can make you vomit, and out here, vomiting means losing water you can't replace.")
 L("d3y", "Option B. A healthy person can last weeks without food. Hunger feels urgent. It isn't. Thirst is.")
 L("d3y", "You search the wreck. A bag of crackers. You eat four. You keep the rest.")
 # ------------------------------------------------------------------ 4. which way
 L("c5", "Day four.")
 L("d4a", "The engines never came. The trees hide the wreck, and the cut on your arm is turning red. Staying is now the danger.")
 L("d4a", "You have to move. But which way?")
-L("d4", "Stop. Option A: climb uphill to see where you are. Or option B: find a stream and follow it downhill.", after=2.4)
-L("d4x", "Uphill, the jungle is just as thick. You see more trees, and you've spent water and strength you don't have.")
-L("d4y", "Option B. Water runs downhill. Small streams join bigger streams, and bigger streams become rivers. And people live by rivers.")
+L("d4", "Stop. Option A: find a stream and follow it downhill. Or option B: climb uphill to see where you are.", after=2.4)
+L("d4x", "If you chose B: uphill, the jungle is just as thick. You see more trees, and you've spent water and strength you don't have.")
+L("d4y", "Option A. Water runs downhill. Small streams join bigger streams, and bigger streams become rivers. And people live by rivers.")
 L("d4y", "You find a trickle of water between the roots. You follow it.")
 # ------------------------------------------------------------------ 5. the helicopter
 L("c6", "Day seven.")
 L("d5a", "The stream is a river now. And then you hear it: a helicopter. Close. Somewhere above the trees.")
-L("d5", "Stop. Option A: shout and wave from where you are. Or option B: get out onto the open riverbank and make a signal.", after=2.4)
-L("d5x", "Under the canopy, you're invisible. It flies right over you. The sound fades, and doesn't come back.")
-L("d5y", "Option B. On the open bank, lay out anything bright you have, as big as you can. Three of anything means help: three piles, three fires.")
+L("d5", "Stop. Option A: run out onto the open riverbank and signal. Or option B: stay under the trees and shout.", after=2.4)
+L("d5x", "If you chose B: under the canopy, you're invisible. It flies right over you. The sound fades, and doesn't come back.")
+L("d5y", "Option A. On the open bank, lay out anything bright you have, as big as you can. Three of anything means help: three piles, three fires.")
 L("d5y", "A pilot looking down a river sees the bank, not the forest.")
 L("d5y", "The helicopter turns.", after=1.2)
 # ------------------------------------------------------------------ it happened
-L("t1", "This is close to what really happened to Juliane Koepcke. She was seventeen.")
+L("t1", "Juliane Koepcke lived through something close to this. She was seventeen.")
 L("t1", "In 1971, her plane broke apart in a storm over the Peruvian jungle, and she fell about three kilometers, still strapped to her seat.")
+L("t1b", "She heard the search planes. Under the trees, they never saw her.")
 L("t2", "Her parents were biologists, and she remembered what her father taught her: follow the water.")
 L("t2", "She walked and waded for about ten days, with maggots in a wound on her arm, until she found a hut by the river. The next day, the men who worked there found her.")
 L("t3", "In 2023, four children survived forty days in the Colombian Amazon after their small plane crashed.")
@@ -220,20 +221,24 @@ def decision(S, a_label, a_ops, b_label, b_ops, a_at=None, b_at=None):
     S.text("what do you do?", 640, 190, 84, WHITE, at=S.c("stop") + 0.4, rot=-2)
     for k, (lab, ops, at, x) in enumerate((("A", a_ops, a_at, 150), ("B", b_ops, b_at, 990))):
         S.draw([Fl(P_rect(x, 280, 780, 470, 0, r=26), (236, 232, 222)), stk(P_rect(x, 280, 780, 470, 7, r=26), 8)], at - 0.3, 0.3, snd=None)
-        S.text(lab, x + 40, 400, 120, RED if k == 0 else (60, 120, 70), at=at - 0.1)
+        S.text(lab, x + 40, 400, 120, ORANGE, at=at - 0.1)          # same colour for both: the letter never gives the answer away
         S.draw(ops, at, 0.4, snd=None)
         S.text((a_label, b_label)[k], x + 390, 720, fit((a_label, b_label)[k], x + 30, 66, x + 750) , INK, at=at + 0.1, anchor="m")
     t = S.e(0) + 0.1
     for k, n in enumerate("321"):
-        S.text(n, 960, 860, 100, WHITE, at=t + 0.75 * k, anchor="m", until=t + 0.75 * (k + 1) - 0.25, cps=60)
+        S.text(n, 960, 950, 200, WHITE, at=t + 0.75 * k, anchor="m", until=t + 0.75 * (k + 1) - 0.25, cps=60)
 
 
-def verdict(S, ok, x=1800, y=110):
-    """The result stamp on an outcome page: a red cross for the wrong choice, a green tick for the right one."""
+def verdict(S, ok, letter, x=1560, y=40):
+    """The result badge on an outcome page: the option's letter and a red cross (wrong) or a green tick (right). Call it last in
+    the scene so the canopy never covers it."""
+    at = S.l(0) + 0.1
+    S.draw([Fl(P_rect(x, y, 300, 170, 0, r=30), (236, 232, 222)), stk(P_rect(x, y, 300, 170, 7, r=30), 8)], at - 0.2, 0.2, snd=None)
+    S.text(letter, x + 40, y + 140, 130, ORANGE, at=at - 0.1)
     if ok:
-        S.add(check(x, y, 50, S.l(0) + 0.1, (60, 140, 70), 13))
+        S.add(check(x + 200, y + 85, 58, at + 0.1, (60, 140, 70), 18))
     else:
-        S.add(cross(x, y, 48, S.l(0) + 0.1, RED, 13))
+        S.add(cross(x + 200, y + 85, 54, at + 0.1, RED, 18))
 
 
 # --------------------------------------------------------------------------- the crash
@@ -242,8 +247,14 @@ def _(S):
     S.noframe = True
     jungle_bg(S, 1)
     S.draw([stk(P_bez((620, -10), (640, 120), (600, 230), (640, 300)), 8, LEAF2)], 0.0, 0.0, snd=None)
-    S.add(Dr(seat(640, 470, 1.6), 0.0, 0.0, seed=3))
-    S.add(you(640, 200, 1.5, pose="hang", mood=[("sleep", 0), ("wow", S.c("wake") + 0.2)], rot=180, enter="none"))
+    S.add(Dr(seat(640, 470, 1.6), 0.0, 0.0, seed=3, move=lambda u: (0, 0, math.pi, 1), anchor=(640, 390)))
+    S.add(you(640, 200, 1.5, pose="hang", mood=[("worried", 0), ("wow", S.c("wake") + 0.2)], rot=180, enter="none"))
+    for k, (bx, by) in enumerate(((1700, 1000), (1830, 960), (300, 1010))):
+        shard = [(bx - 60, by + 40), (bx - 20, by - 30), (bx + 50, by - 10), (bx + 70, by + 40)]
+        S.draw([Fl(P_poly(shard, True), (214, 214, 210)), stk(P_poly(shard, True), 6)], 0.0, 0.0, snd=None)
+    for k in range(3):
+        sx = 1740 + k * 34
+        S.draw([stk(P_bez((sx, 990), (sx - 50, 860), (sx + 50, 760), (sx - 10, 640)), 7, GREY)], 0.0, 0.0, snd=None)
     S.draw([stk(P_line(560, 420, 720, 420, 0.02, 4), 10, (200, 170, 60))], 0.0, 0.0, snd=None)
     S.text("upside down.", 1000, 400, 110, INK, at=S.c("upside") - 0.1, rot=-3)
     S.text("silent.", 1060, 600, 100, (60, 120, 70), at=S.c("silent", 1) - 0.1, rot=-3)
@@ -275,15 +286,6 @@ def _(S):
     S.text("one wrong choice.", 340, 620, 110, RED, at=S.c("one") - 0.2, rot=-3)
 
 
-@V.scene("c1")
-def _(S):
-    S.noframe = True
-    S.add(black(0.95, (30, 46, 32)))
-    S.text("Your plane goes down", 140, 360, 140, WHITE, at=S.c("plane") - 0.1, rot=-3, cps=36)
-    S.text("in the jungle.", 180, 540, 160, (150, 210, 130), at=S.c("jungle") - 0.1, rot=-3, cps=30)
-    S.text("can you survive?", 200, 760, 110, RED, at=S.c("survive") - 0.3, rot=-2)
-
-
 # --------------------------------------------------------------------------- 1. stay or go
 @V.scene("c2")
 def _(S):
@@ -303,7 +305,7 @@ def _(S):
 @V.scene("d1")
 def _(S):
     a_ops = [stk(P_line(420, 640, 760, 640, 0.02, 1), 6), stk(P_poly([(720, 610), (770, 640), (720, 670)]), 6)] + leaf(560, 470, 0.8, -60, LEAF, 3)
-    decision(S, "walk for help", a_ops, "stay with the wreck", wreck(1390, 690, 0.6, smoke=False), a_at=S.c("walk"), b_at=S.c("stay"))
+    decision(S, "walk for help", a_ops, "stay with the wreck", wreck(1390, 640, 0.6, smoke=False), a_at=S.c("walk"), b_at=S.c("stay"))
     S.add(you(330, 690, 0.8, at=S.c("walk"), pose="point_r", enter="pop"))
     S.add(you(1690, 690, 0.8, at=S.c("stay"), pose="stand", enter="pop"))
 
@@ -314,19 +316,18 @@ def _(S):
     S.add(black(0.15))
     S.draw(canopy(True, 4, 18), 0.0, 0.0, snd=None)
     S.draw(canopy(True, 5, 16, LEAF), 0.0, 0.0, snd=None)
-    verdict(S, False)
     S.draw([stk(P_line(120, 300, 1800, 300, 0.01, 1), 4, GREY)], 0.1, 0.3, snd=None)
-    S.add(Dr(heli(1500, 120, 0.6), S.c("rescue", 1) - 0.3, 0.3, seed=11, move=lambda u: (-500 * min(1, u / 4), 0, 0, 1), anchor=(1500, 120)))
+    S.add(Dr(heli(1300, 150, 0.6), S.l(0) + 0.3, 0.3, seed=11, move=lambda u: (-700 * min(1, u / 9), 0, 0, 1), anchor=(1300, 150)))
     S.add(you(900, 900, 0.7, pose="stand", mood="worried"))
     S.text("can't see\none person.", 200, 500, 96, INK, at=S.c("person", 1) - 0.3, lh=1.1, rot=-2)
     S.add(arrow(P_bez((900, 740), (1100, 640), (1400, 760)), S.c("wrong", 1) - 0.2, RED, 7, 0.5, dashed=True))
     S.text("never find it again.", 1050, 600, 80, RED, at=S.c("never", 1) - 0.2, rot=-2)
+    verdict(S, False, "A")
 
 
 @V.scene("d1y")
 def _(S):
     jungle_bg(S, 6, trunks=(120, 1820))
-    verdict(S, True)
     S.draw(wreck(800, 860, 1.4, smoke=False), 0.0, 0.3, snd=None)
     S.add(you(1350, 960, 1.1, mood="flat"))
     S.text("bigger than you.", 260, 330, 96, INK, at=S.c("bigger") - 0.2, rot=-2)
@@ -338,6 +339,9 @@ def _(S):
 
 
 # --------------------------------------------------------------------------- 2. water
+    verdict(S, True, "B")
+
+
 @V.scene("c3")
 def _(S):
     day_card(S, "day 2")
@@ -358,13 +362,12 @@ def _(S):
 
 @V.scene("d2")
 def _(S):
-    rain = [stk(P_line(1200 + k * 60, 330, 1170 + k * 60, 420, 0, k), 5, WATER) for k in range(9)]
-    decision(S, "drink the puddle", puddle(540, 600, 0.9), "wait for the rain", rain + bottle(1380, 700, 0.8, 0.2), a_at=S.c("drink"), b_at=S.c("wait"))
+    rain = [stk(P_line(360 + k * 60, 330, 330 + k * 60, 420, 0, k), 5, WATER) for k in range(9)]
+    decision(S, "wait for the rain", rain + bottle(540, 650, 0.7, 0.2), "drink the puddle", puddle(1380, 600, 0.9), a_at=S.c("wait"), b_at=S.c("drink"))
 
 
 @V.scene("d2x")
 def _(S):
-    verdict(S, False)
     S.draw(puddle(560, 820, 1.4), 0.0, 0.3, snd=None)
     r = random.Random(4)
     for k in range(9):
@@ -375,16 +378,18 @@ def _(S):
     S.add(Dr([Fl(P_rect(1155, 505, 420, 60, 0, r=28), WATER)], S.c("drains") - 0.1, 0.0, seed=40, until=S.c("faster") - 0.1 - EXIT))
     S.add(Dr([Fl(P_rect(1155, 505, 120, 60, 0, r=28), WATER)], S.c("faster") - 0.1, 0.0, seed=41))
     S.text("water out.", 1250, 430, 84, RED, at=S.c("drains") - 0.1, rot=-2)
-    S.text("thirstier.", 1250, 760, 120, RED, at=S.c("thirstier", 1) - 0.3, rot=-3)
+    S.text("no rain? drink it anyway.", 1150, 700, fit("no rain? drink it anyway.", 1150, 84), INK, at=S.c("anyway", 1) - 0.4, rot=-2)
+    S.text("thirst kills faster.", 1150, 830, fit("thirst kills faster.", 1150, 96), RED, at=S.c("kills", 1) - 0.3, rot=-3)
+    verdict(S, False, "B")
 
 
 @V.scene("d2y")
 def _(S):
-    verdict(S, True)
     S.draw([Fl(P_ell(cx_, 150, 170, 70, k, closed=True), (200, 206, 214)) for k, cx_ in enumerate((500, 760, 1020, 1280))]
            + [stk(P_arc(cx_, 150, 170, 70, 180 + (25 if k else 0), 360 - (25 if k < 3 else 0), 30), 6) for k, cx_ in enumerate((500, 760, 1020, 1280))]
            + [stk(P_line(340, 205, 1440, 205, 0.01, 7), 6)], S.l(0) + 0.05, 0.4)
-    t_rain = S.c("rains")
+    t_rain = S.c("opens", 3) - 0.2
+    S.add(snd="rain", at=t_rain - 0.3)
     for k in range(18):
         S.add(Dr([stk(P_line(260 + k * 70, 250 + (k % 3) * 30, 235 + k * 70, 350 + (k % 3) * 30, 0, k), 6, WATER)], t_rain + 0.05 * k, 0.1, seed=50 + k))
     sheet = [(600, 560), (1300, 520), (1000, 760)]
@@ -397,6 +402,9 @@ def _(S):
 
 
 # --------------------------------------------------------------------------- 3. food
+    verdict(S, True, "A")
+
+
 @V.scene("c4")
 def _(S):
     day_card(S, "day 3")
@@ -413,25 +421,26 @@ def _(S):
 
 @V.scene("d3")
 def _(S):
-    decision(S, "eat the berries", berries(540, 560, 1.0), "eat nothing you don't know", [stk(P_ell(1380, 560, 120, 120, 1, 0.06), 9, (60, 120, 70)),
+    decision(S, "eat the berries", berries(540, 560, 1.0), "eat nothing yet", [stk(P_ell(1380, 560, 120, 120, 1, 0.06), 9, (60, 120, 70)),
                                                                                            stk(P_line(1300, 640, 1460, 480, 0.02, 2), 9, (60, 120, 70))],
              a_at=S.c("eat"), b_at=S.c("eat", 0, 1))
 
 
 @V.scene("d3x")
 def _(S):
-    verdict(S, False)
     S.draw(berries(500, 640, 1.4), 0.0, 0.3, snd=None)
     S.text("food?", 300, 330, 110, INK, at=S.c("food") - 0.1, rot=-2)
-    S.text("or poison.", 1100, 330, 110, RED, at=S.c("vomit") - 0.4, rot=-2)
+    S.text("or poison.", 1100, 330, 110, RED, at=S.c("kill") - 0.3, rot=-2)
     S.add(you(1350, 980, 1.1, pose="sad", mood="sad", at=S.c("vomit") - 0.1, enter="pop"))
     S.text("= losing water.", 1100, 520, 92, RED, at=S.c("losing") - 0.2, rot=-2)
+    verdict(S, False, "A")
 
 
 @V.scene("d3y")
 def _(S):
-    verdict(S, True)
     S.text("weeks without food.", 200, 300, 100, INK, at=S.l(0) + 0.2, rot=-2)
+    S.add(you(560, 980, 1.0, pose="sit_hug", mood="flat"))
+    S.draw(bottle(900, 760, 0.7, 0.15), S.c("thirst") - 0.3, 0.3)
     S.text("days without water.", 200, 460, 100, RED, at=S.c("thirst") - 0.3, rot=-2)
     bag = [(1150, 600), (1450, 580), (1470, 860), (1140, 880)]
     S.draw([Fl(P_poly(bag, True), (230, 200, 140)), stk(P_poly(bag, True), 7), ("g", "crackers", 1305, 740, 60, INK, HAND, "m")], S.c("crackers", 1) - 0.3, 0.4)
@@ -442,6 +451,9 @@ def _(S):
 
 
 # --------------------------------------------------------------------------- 4. which way
+    verdict(S, True, "B")
+
+
 @V.scene("c5")
 def _(S):
     day_card(S, "day 4")
@@ -450,8 +462,9 @@ def _(S):
 @V.scene("d4a")
 def _(S):
     jungle_bg(S, 9)
-    S.draw([stk(P_bez((300, 760), (420, 720), (520, 700), (660, 650)), 40), stk(P_line(460, 710, 560, 690, 0.05, 2), 9, RED)], 0.0, 0.3, snd=None)
-    S.add(Dr([Fl(P_ell(520, 700, 90, 50, 1, closed=True), (230, 120, 100))], S.c("red") - 0.2, 0.4, seed=70, a=0.55))
+    arm = np.vstack([P_bez((240, 800), (400, 740), (540, 715), (700, 660)), P_bez((710, 720), (560, 775), (420, 800), (250, 870))])
+    S.draw([Fl(arm, (236, 214, 190)), stk(arm, 7), stk(P_line(440, 750, 600, 725, 0.05, 2), 9, RED)], 0.0, 0.3, snd=None)
+    S.add(Dr([Fl(P_ell(520, 745, 110, 55, 1, closed=True), (230, 120, 100))], S.c("red") - 0.2, 0.4, seed=70, a=0.55))
     S.text("turning red.", 260, 400, 100, RED, at=S.c("red") - 0.2, rot=-3)
     S.text("staying is now\nthe danger.", 1050, 330, 96, INK, at=S.c("danger") - 0.4, lh=1.1, rot=-2)
     S.text("which way?", 1100, 700, 130, RED, at=S.c("way", 1) - 0.3, rot=-3)
@@ -459,25 +472,23 @@ def _(S):
 
 @V.scene("d4")
 def _(S):
-    hill = [stk(P_bez((200, 720), (380, 380), (560, 380), (740, 720)), 8)]
-    decision(S, "climb uphill", hill + [stk(P_poly([(470, 420), (470, 340), (500, 360)]), 6)], "follow a stream downhill",
-             stream(1040, 380, 1700, 680, 10, 50), a_at=S.c("climb"), b_at=S.c("stream"))
+    hill = [stk(P_bez((1040, 720), (1220, 380), (1400, 380), (1580, 720)), 8), stk(P_poly([(1310, 420), (1310, 340), (1340, 360)]), 6)]
+    decision(S, "follow a stream downhill", stream(300, 430, 860, 650, 10, 50), "climb uphill", hill, a_at=S.c("stream"), b_at=S.c("climb"))
 
 
 @V.scene("d4x")
 def _(S):
-    verdict(S, False)
     S.draw([stk(P_bez((100, 1000), (600, 300), (1300, 300), (1820, 1000)), 9)], 0.0, 0.4, snd=None)
     S.add(you(960, 410, 0.9, pose="hips", mood="sad"))
     for k in range(10):
         S.add(Dr(leaf(150 + k * 180, 700 + (k % 2) * 60, 1.3, -90 + (k % 3) * 30, LEAF2, 80 + k), S.c("thick") + 0.06 * k, 0.2, seed=90 + k))
     S.text("just more trees.", 220, 250, 96, INK, at=S.c("trees") - 0.3, rot=-2)
-    S.text("water spent.", 1250, 250, 96, RED, at=S.c("spent") - 0.2, rot=-2)
+    S.text("water spent.", 1150, 300, 96, RED, at=S.c("spent") - 0.2, rot=-2)
+    verdict(S, False, "B")
 
 
 @V.scene("d4y")
 def _(S):
-    verdict(S, True)
     S.draw(stream(140, 260, 900, 520, 10, 30), S.l(0) + 0.1, 0.5)
     S.draw(stream(900, 520, 1500, 760, 30, 70), S.c("bigger") - 0.2, 0.5)
     S.draw(stream(1500, 760, 1900, 900, 70, 150), S.c("rivers") - 0.2, 0.4)
@@ -489,6 +500,9 @@ def _(S):
 
 
 # --------------------------------------------------------------------------- 5. the helicopter
+    verdict(S, True, "A")
+
+
 @V.scene("c6")
 def _(S):
     day_card(S, "day 7")
@@ -503,51 +517,59 @@ def _(S):
     for k in range(3):
         S.add(Dr([stk(P_arc(1400, 120, 80 + 60 * k, 50 + 40 * k, 20, 160, 14), 6, INK)], S.c("helicopter") + 0.25 * k, 0.2, seed=100 + k))
     S.text("a helicopter.", 1150, 380, 104, RED, at=S.c("helicopter") - 0.2, rot=-3)
+    S.add(snd="heli_in", at=S.c("hear") - 0.3)
     S.text("above the trees.", 1150, 520, 84, INK, at=S.c("trees") - 0.3, rot=-2)
 
 
 @V.scene("d5")
 def _(S):
-    decision(S, "shout from the trees", leaf(300, 560, 1.0, -40, LEAF2, 1) + leaf(560, 520, 1.1, -140, LEAF, 2),
-             "open bank + a signal", [stk(P_line(1260, 470, 1460, 670, 0.02, 1), 16, ORANGE), stk(P_line(1460, 470, 1260, 670, 0.02, 2), 16, ORANGE)],
-             a_at=S.c("shout"), b_at=S.c("riverbank"))
+    cloth = [Fl(P_rect(300, 480, 260, 130, 0, r=10), ORANGE), stk(P_rect(300, 480, 260, 130, 5, r=10), 6)]
+    piles = [op for k, x in enumerate((640, 720, 800)) for op in (Fl(P_poly([(x - 30, 640), (x, 580), (x + 30, 640)], True), (200, 160, 110)),
+                                                                  stk(P_poly([(x - 30, 640), (x, 580), (x + 30, 640)], True), 5))]
+    decision(S, "open bank + a signal", cloth + piles, "stay under the trees", leaf(1140, 560, 1.0, -40, LEAF2, 1) + leaf(1400, 520, 1.1, -140, LEAF, 2),
+             a_at=S.c("riverbank"), b_at=S.c("trees"))
 
 
 @V.scene("d5x")
 def _(S):
     S.noframe = True
-    verdict(S, False)
     S.draw(canopy(True, 11, 20), 0.0, 0.0, snd=None)
     S.draw(canopy(True, 12, 16, LEAF), 0.0, 0.0, snd=None)
     S.add(you(900, 980, 0.9, pose="wave", mood="wow"))
     S.add(Dr(heli(400, 100, 0.55), 0.0, 0.0, seed=12, move=lambda u: (1600 * min(1, u / 6), 0, 0, 1), anchor=(400, 100)))
+    S.add(snd="heli_out", at=0.1)
     S.text("invisible.", 200, 500, 120, RED, at=S.c("invisible") - 0.2, rot=-3)
     S.text("it doesn't come back.", 1000, 520, 84, INK, at=S.c("back") - 0.4, rot=-2)
+    verdict(S, False, "B")
 
 
 @V.scene("d5y")
 def _(S):
     S.noframe = True
-    verdict(S, True)
     S.draw(stream(0, 760, 1920, 920, 180, 260), 0.0, 0.0, snd=None)
     S.draw([Fl(P_rect(0, 560, 1920, 160, 0), (226, 210, 170))], 0.0, 0.0, snd=None)
     S.draw(canopy(True, 13, 14), 0.0, 0.0, snd=None)
-    S.draw([stk(P_line(700, 580, 1000, 700, 0.02, 1), 20, ORANGE), stk(P_line(1000, 580, 700, 700, 0.02, 2), 20, ORANGE)], S.c("bright") - 0.2, 0.4)
+    S.draw([Fl(P_rect(680, 590, 340, 110, 0, r=10), ORANGE), stk(P_rect(680, 590, 340, 110, 5, r=10), 7)], S.c("bright") - 0.2, 0.4)
     for k, x in enumerate((1250, 1420, 1590)):
         S.add(Dr([Fl(P_poly([(x - 50, 690), (x, 600), (x + 50, 690)], True), (200, 160, 110)), stk(P_poly([(x - 50, 690), (x, 600), (x + 50, 690)], True), 5)],
                  S.c("three", 0, 1) + 0.2 * k, 0.0, pop=True, anchor=(x, 650), seed=110 + k))
     S.text("three = help.", 1200, 480, 92, RED, at=S.c("help") - 0.3, rot=-2)
     S.text("the bank, not the forest.", 200, 480, 84, INK, at=S.c("bank", 1) - 0.3, rot=-2)
-    S.add(Dr(heli(1500, 180, 0.6), S.c("turns", 2) - 0.6, 0.0, seed=13, move=lambda u: (-300 * min(1, u / 2), 60 * min(1, u / 2), -0.15 * min(1, u / 2), 1), anchor=(1500, 180)))
+    S.add(Dr(heli(1400, 290, 1.1), S.c("turns", 2) - 0.6, 0.0, seed=13, move=lambda u: (-260 * min(1, u / 2.5), 40 * min(1, u / 2.5), -0.22 * min(1, u / 2.5), 1),
+             anchor=(1400, 290)))
+    S.add(snd="heli_turn", at=S.c("turns", 2) - 1.2)
 
 
 # --------------------------------------------------------------------------- it happened
+    verdict(S, True, "A")
+
+
 @V.scene("t1")
 def _(S):
     S.noframe = True
     S.add(black(0.9))
     S.text("1971", 160, 330, 200, WHITE, at=S.c("1971", 1) - 0.1, rot=-3)
-    S.text("Juliane Koepcke, 17", 160, 470, 92, DIM, at=S.c("juliane") + 0.1, rot=-2)
+    S.text("Juliane Koepcke, 17", 160, 470, 100, WHITE, at=S.l(0) + 0.1, rot=-2)
     for k in range(3):
         S.add(Dr([stk(P_poly([(1250 + k * 160, 120), (1210 + k * 160, 230), (1260 + k * 160, 230), (1220 + k * 160, 340)]), 8, (240, 220, 120))],
                  S.c("storm", 1) + 0.1 * k, 0.15, seed=120 + k))
@@ -555,6 +577,22 @@ def _(S):
     S.add(arrow(P_line(1400, 420, 1400, 560, 0.0, 3), S.c("fell", 1), WHITE, 7, 0.3))
     S.text("3 km", 1500, 500, 110, RED, at=S.c("three", 1) - 0.1, rot=-3)
     S.draw(canopy(False, 21, 16), S.c("jungle", 1) - 0.2, 0.5, snd=None)
+
+
+@V.scene("t1b")
+def _(S):
+    S.noframe = True
+    S.add(black(0.6, (30, 46, 32)))
+    px, py = 300, 150
+    wing = [(px - 30, py), (px + 40, py - 120), (px + 70, py - 120), (px + 40, py)]
+    plane = [Fl(P_ell(px, py, 150, 34, 1, closed=True), (214, 214, 210)), stk(P_ell(px, py, 150, 34, 2, 0.05), 6),
+             Fl(P_poly(wing, True), (214, 214, 210)), stk(P_poly(wing, True), 5), stk(P_line(px - 150, py, px - 190, py - 60, 0.02, 3), 6)]
+    S.add(Dr(plane, 0.1, 0.0, seed=140, move=lambda u: (1500 * min(1, u / 6), 0, 0, 1), anchor=(300, 150)))
+    S.draw(canopy(True, 23, 18), 0.0, 0.0, snd=None)
+    S.draw(canopy(True, 24, 14, LEAF), 0.0, 0.0, snd=None)
+    S.add(Fig(1450, 980, 0.9, poses=[("stand", 0)], moods=[("wow", 0)], kind="long", seed=141, enter="none"))
+    S.text("she heard them.", 200, 520, 110, WHITE, at=S.l(0) + 0.2, rot=-2)
+    S.text("they never saw her.", 220, 700, 110, RED, at=S.c("never") - 0.3, rot=-2)
 
 
 @V.scene("t2")
@@ -580,13 +618,14 @@ def _(S):
     S.draw([stk(P_line(560, 760, 860, 700, 0.02, 1), 9), stk(P_line(640, 690, 760, 790, 0.02, 2), 8), stk(P_line(840, 690, 870, 760, 0.02, 3), 7)],
            S.c("plane") - 0.2, 0.3)
     S.text("the oldest: 13", 1050, 300, 84, INK, at=S.c("oldest", 1) - 0.1, rot=-2)
-    S.text("cassava flour + fruit they knew", 900, 420, fit("cassava flour + fruit they knew", 900, 70), (60, 100, 60), at=S.c("cassava", 1) - 0.2, rot=-2)
+    S.text("cassava flour + fruit they knew", 900, 420, fit("cassava flour + fruit they knew", 900, 70), INK, at=S.c("cassava", 1) - 0.2, rot=-2)
 
 
 @V.scene("t4")
 def _(S):
     S.noframe = True
     S.add(black(0.93, (30, 46, 32)))
+    S.text("the jungle doesn't care how strong you are.", 200, 250, fit("the jungle doesn't care how strong you are.", 200, 76), DIM, at=S.l(0) + 0.1, rot=-1)
     S.text("it cares", 200, 450, 170, WHITE, at=S.c("cares") - 0.2, rot=-3)
     S.text("what you choose.", 240, 680, 170, (150, 210, 130), at=S.c("choose") - 0.4, rot=-3)
 

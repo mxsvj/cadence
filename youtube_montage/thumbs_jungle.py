@@ -39,11 +39,11 @@ els = [black(0.95, GREEN_DARK),
        d(wreck(1380, 880, 1.45), 3), d(canopy(True, 3, 10), 4),
        you(1700, 1040, 1.15, mood="wow", enter="none", idle=0.0),
        T("would you", 100, 330, 170, WHITE, at=0, rot=-4), T("survive?", 130, 560, 210, RED, at=0, rot=-4),
-       T("day 1.", 140, 800, 110, (150, 210, 130), at=0, rot=-3)]
+       T("hour 1.", 140, 800, 110, (150, 210, 130), at=0, rot=-3)]
 ims.append(render("J1_would_you_survive", els))
 # ---------------------------------------------------------------- J2: the first choice
 els = [black(0.95, GREEN_DARK)]
-for k, (lab, x, col) in enumerate((("A", 120, RED), ("B", 980, (60, 140, 70)))):
+for k, (lab, x, col) in enumerate((("A", 120, ORANGE), ("B", 980, ORANGE))):
     els += [d([Fl(P_rect(x, 330, 820, 560, 0, r=28), (236, 232, 222)), stk(P_rect(x, 330, 820, 560, 8, r=28), 9)], 10 + k),
             T(lab, x + 40, 470, 150, col, at=0)]
 els += [d([stk(P_line(330, 720, 720, 720, 0.02, 1), 8), stk(P_poly([(680, 690), (730, 720), (680, 750)]), 8)] + leaf(500, 520, 1.0, -60, LEAF, 3), 20),

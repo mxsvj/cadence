@@ -62,14 +62,49 @@ def buzz_s(rng, vel=1.0):
     return (x / np.max(np.abs(x)) * vel).astype(np.float32)
 
 
+def heli_s(rng, shape, dur=6.0):
+    """Rotor blades (a low thump about five times a second through band-limited noise) and a faint turbine. shape: "in" grows
+    and holds, "out" starts close and fades with its pitch dropping, "turn" swells as it comes back."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    u = t / dur
+    nz = rng.standard_normal(n)
+    lp = np.convolve(nz, np.ones(30) / 30, "same")
+    band = lp - np.convolve(lp, np.ones(400) / 400, "same")
+    rate = 5.2 * (1 - 0.06 * u if shape == "out" else 1.0)
+    blade = (0.5 + 0.5 * np.cos(2 * np.pi * np.cumsum(np.full(n, rate)) / SR)) ** 6
+    x = band * blade * 3.0 + 0.6 * np.sin(2 * np.pi * 55 * t) * blade + 0.05 * np.sin(2 * np.pi * 310 * t)
+    env = {"in": np.minimum(1, u / 0.7) ** 2, "out": (1 - u) ** 1.6, "turn": np.minimum(1, u / 0.6) ** 1.5}[shape]
+    env = env * np.clip(u / 0.03, 0, 1) * np.clip((1 - u) / 0.08, 0, 1)
+    x = x * env
+    return (x / np.abs(x).max()).astype(np.float32)
+
+
+def rain_s(rng, dur=5.5):
+    """Heavy rain on leaves: bright noise with a slow swell, and drops ticking on top."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    nz = rng.standard_normal(n)
+    hiss = nz - np.convolve(nz, np.ones(8) / 8, "same")
+    hiss = np.convolve(hiss, np.ones(3) / 3, "same")
+    drops = np.zeros(n)
+    for _ in range(int(dur * 35)):
+        j = int(rng.uniform(0, n - 300))
+        drops[j:j + 300] += rng.uniform(0.3, 1.0) * np.sin(2 * np.pi * rng.uniform(1800, 4200) * np.arange(300) / SR) * np.exp(-np.arange(300) / 40)
+    env = np.clip(t / 1.2, 0, 1) * np.clip((dur - t) / 1.6, 0, 1) * (0.85 + 0.15 * np.sin(2 * np.pi * 0.3 * t))
+    x = (hiss + 0.5 * drops) * env
+    return (x / np.abs(x).max()).astype(np.float32)
+
+
 class Story(Video):
     KNOCK_GAP = 0.85        # slow, polite
 
-    def __init__(self, slug, tapes=(), swells=(), dips=(), **kw):
+    def __init__(self, slug, tapes=(), swells=(), dips=(), silences=(), **kw):
         """tapes: (line it stops after, line it comes back on, "tape" | "cut"); swells: (line, last line, seconds after it):
-        a low rumble that rises and is chopped off; dips: (line, line or None for the end, gain) on the music."""
+        a low rumble that rises and is chopped off; dips: (line, line or None for the end, gain) on the music;
+        silences: (line, next line): no music at all from the end of the first to the start of the second (room tone only)."""
         super().__init__(slug, **kw)
-        self.tapes, self.swells, self.dips = list(tapes), list(swells), list(dips)
+        self.tapes, self.swells, self.dips, self.silences = list(tapes), list(swells), list(dips), list(silences)
 
     def L(self, g, sub, voice="af_heart", fx=None, speed=None, after=0.0, gain=0.0, who=None):
         self.LINES.append(dict(g=g, sub=sub, voice=voice, fx=fx, speed=speed, after=after, gain=gain, who=who))
@@ -151,6 +186,8 @@ class Story(Video):
         for kind, at in [ev for sc in self.SC for ev in sc.snd]:
             if kind in ("knock3", "knock1"):
                 duck[int((at - 0.12) * SR):int((at + (2 * self.KNOCK_GAP + 0.4 if kind == "knock3" else 0.5)) * SR)] *= 0.2
+        for a_line, b_line in self.silences:
+            duck[int((self.line_times[self._line(a_line)][1] + 0.05) * SR):int((self.line_times[self._line(b_line)][0] - 0.25) * SR)] = 0.0
         w = int(0.08 * SR)                                              # 80 ms ramps, so a dip never clicks
         c = np.concatenate([[0.0], np.cumsum(duck, dtype=np.float64)])
         duck = ((c[w:] - c[:-w]) / w).astype(np.float32)
@@ -188,7 +225,7 @@ class Story(Video):
         write_wav(os.path.join(self.E, "music.wav"), mus[: int(self.TOTAL * SR)])
 
     def sfx(self):
-        """Only the sounds the story needs: knocks and the phone. No scribbles, no pops."""
+        """Only the sounds the story needs: knocks, the phone, a helicopter, rain. No scribbles, no pops."""
         fx = np.zeros(int(self.TOTAL * SR), np.float32)
         rng = np.random.default_rng(31 + self.seed)
 
@@ -224,10 +261,15 @@ class Story(Video):
                     tk += 0.06 + 0.2 * tk
                 roll = (rum * 0.6 + ticks * 0.5) * np.clip((1.1 - t2) / 1.1, 0, 1)
                 put((roll / np.abs(roll).max()).astype(np.float32), at + 0.2, 0.25)
+            elif kind in ("heli_in", "heli_out", "heli_turn"):
+                put(heli_s(rng, kind[5:]), at, 0.42)
+            elif kind == "rain":
+                put(rain_s(rng), at, 0.16)
         write_wav(os.path.join(self.E, "sfx.wav"), fx)
 
     CUE = {"knock3": ("[three slow knocks]", 2.0), "knock1": ("[a knock]", 1.0), "buzz": ("[phone buzzing]", 1.0),
-           "clink": ("[a bottle rolls on the floor]", 1.4)}
+           "clink": ("[a bottle rolls on the floor]", 1.4), "heli_in": ("[a helicopter, getting closer]", 1.6),
+           "heli_out": ("[the helicopter fades away]", 1.6), "heli_turn": ("[the helicopter turns back]", 1.6), "rain": ("[heavy rain]", 1.4)}
 
     def write_srt(self, path):
         """As Video.write_srt, but a cue never mixes two speakers, and the knocks and the buzz get their own cues
